@@ -15,8 +15,8 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 module dcache #(
-    parameter INDEX_WIDTH       = 4,
-    parameter WORD_OFFSET_WIDTH = 2
+    parameter INDEX_WIDTH       = 6,
+    parameter WORD_OFFSET_WIDTH = 6
 )(
     input                   clk,
     input                   rstn,
@@ -31,6 +31,8 @@ module dcache #(
     output reg              wready,             // ready signal of write request to pipeline
     input [31:0]            wdata,              // write data from pipeline
     input [3:0]             wstrb,              // write mask of each write-back word from pipeline, if the request is a read request, wstrb is 4'b0
+    //input                   op,
+    //input                   uncache,            // indicate whether the request is an uncache request
 
     /* from AXI arbiter */
     // read

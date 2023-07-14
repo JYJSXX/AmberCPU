@@ -5,3 +5,7 @@
 ## AXI部分
 
 > TODO: AXI~SRAM转接桥中将部分reg型output转为wire型
+
+## CPU部分
+
+> TODO: 若除法器处于关键路径上，可以考虑赋值单拎一周期
