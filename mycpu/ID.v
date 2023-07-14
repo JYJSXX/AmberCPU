@@ -1,20 +1,51 @@
-module ID(
-    input aclk,arestn, //时钟, 复位
-    ////控制信号////
-    input input_valid,
-    input flush,
-    input [1:0]read_en,         //读取使能，00: 不读取, 01: 读取一条, 11: 读取两条, 10:无效
-    output full,                //full信号相当于stall
-    input [1:0] plv,            //当前的特权等级
-    ////输入信号////
-    input [31:0] inst0, inst1,  //两条待解码指令
-    input first_inst_jmp,       //第一条指令发生了跳转（即inst1无效）
-    ////输出信号////
-    output [31:0] ctrl0,ctrl1,  //控制信号
-    output [31:0] imm0,imm1,    //立即数段
-    output [4:0] rd0,rd1,       //rd段
-    output [4:0] rj0,rj1,       //rj段
-    output [4:0] rk0,rk1       //rk段
+`include "define.vh"
+module id_stage
+(
+    input aclk,
+    input aresetn,
+    input inst0,
+    input inst1,
+    input pc0,
+    input pc1,
+    output is_syscall_0,
+    output is_syscall_1,
+    output is_break_0,
+    output is_break_1,
+    output is_priviledged_0,
+    output is_priviledged_1,
+    output [`WIDTH_UOP-1:0] uop0,
+    output [`WIDTH_UOP-1:0] uop1,
+    output [31:0] imm0,
+    output [31:0] imm1,
+    output [4:0] rd0,
+    output [4:0] rd1,
+    output [4:0] rj0,
+    output [4:0] rj1,
+    output [4:0] rk0,
+    output [4:0] rk1
 );
-
+ID_decoder id_decoder1(
+    .inst(inst0_i),
+    .pc(pc_i),
+    .is_syscall(is_syscall),
+    .is_break(is_break),
+    .is_priviledged(is_priviledged),
+    .uop(uop0),
+    .imm(imm0),
+    .rd(rd0),
+    .rj(rj0),
+    .rk(rk0)
+);
+ID_decoder id_decoder2(
+    .inst(inst1_i),
+    .pc(pc_i),
+    .is_syscall(is_syscall),
+    .is_break(is_break),
+    .is_priviledged(is_priviledged),
+    .uop(uop1),
+    .imm(imm1),
+    .rd(rd1),
+    .rj(rj1),
+    .rk(rk1)
+);
 endmodule

@@ -5,7 +5,7 @@ module IF_ID(
     input aresetn,
     input flush,
     input flush_cause,
-    input[6:0] stall,
+    input[1:0] stall,
     
     input[31:0] pc_i,
     input[31:0] npc_i,
@@ -38,12 +38,12 @@ module IF_ID(
             inst0_o <= `INST_NOP;
             inst1_o <= `INST_NOP;
             issue_o <= 'b11;
-        end else if (stall[1] == 1 && stall[2] == 1) begin
+        end else if (stall[1] == 1 && stall[0] == 1) begin
             pc_o <= `INIT_ADDR;
             npc_o <= `INIT_ADDR;
             branch_flag_o <= 0;
-            inst0_o <= `INIT_ADDR;
-            inst1_o <= `INIT_ADDR;
+            inst0_o <= `INST_NOP;
+            inst1_o <= `INST_NOP;
             issue_o <= 'b11;
         end else if (stall[1] == 1) begin
             pc_o <= pc_i;
