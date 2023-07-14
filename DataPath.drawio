@@ -1,0 +1,16 @@
+<mxfile host="65bd71144e">
+    <diagram id="LVtk7bsY1YIprPnr39kH" name="AXI">
+        <mxGraphModel dx="1058" dy="824" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="2" value="&lt;h1&gt;PIN TYPES&lt;/h1&gt;&lt;br&gt;can be specified via format string&lt;br&gt;&quot;NAME:TYPE&quot;&lt;br&gt;in the properties.&lt;br&gt;(multiple types can be set)&lt;br&gt;&lt;br&gt;You may specify multiple pins at once&lt;br&gt;(separated by comma)&lt;br&gt;or set a number of pins&lt;br&gt;and specify each pin on its own." style="shadow=0;dashed=0;align=center;html=1;strokeWidth=1;shape=mxgraph.rtl.abstract.entity;container=1;collapsible=0;drawPins=1;leftArr=aclk%3Ac,aresetn%3An,%5B3%EF%BC%9A0%5D%20ar_id%3Ao,%5B31%EF%BC%9A0%5D%20ar_addr%3Ao,%5B7%EF%BC%9A0%5D%20ar_len%3Ao,%5B2%EF%BC%9A0%5D%20ar_size%3Ao,%5B1%EF%BC%9A0%5D%20ar_burst%3Ao,ar_valid%3Ao,ar_ready%3Ai,%5B3%EF%BC%9A0%5D%20r_id%3Ai,%5B31%EF%BC%9A0%5Dr_data%3Ai,r_last%3Ai,r_valid%3Ai,,,,,,,;rightArr=output:o,output:out,input/output:io,input%2Foutput%3Ainout,multiple types:nc:n:clk;left=20;right=5;topArr=1,2,3,4;top=0;bottom=0;bottomArr=no pin:no,no pin:np,no pin:nopin,negated:n,negated:neg,negated:not;topRot=240;topAnchor=right;bottomRot=30;leftRot=0;type=none;kind=sequential;pinSnap=5;" vertex="1" parent="1">
+                    <mxGeometry x="220" y="220" width="760" height="780" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="130" y="90" width="120" height="60" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

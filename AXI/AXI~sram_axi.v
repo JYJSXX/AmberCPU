@@ -18,7 +18,7 @@ module sram_axi(
     input           [31:0]      r_data,     //读数据
     input                       r_last,     //读数据结束
     input                       r_valid,    //读数据有效
-    output  reg [:] ;                 r_ready,    //读数据准备好
+    output  reg                 r_ready,    //读数据准备好
 
     //aw channel
     output  reg     [31:0]      aw_addr,
