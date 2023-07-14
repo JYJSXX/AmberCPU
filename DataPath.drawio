@@ -1,0 +1,13 @@
+<mxfile host="65bd71144e">
+    <diagram id="eY5ESSAJJcH18CEgnYGT" name="第 1 页">
+        <mxGraphModel dx="884" dy="553" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="4681" pageHeight="3300" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="3" value="&lt;h1&gt;PIN TYPES&lt;/h1&gt;&lt;br&gt;can be specified via format string&lt;br&gt;&quot;NAME:TYPE&quot;&lt;br&gt;in the properties.&lt;br&gt;(multiple types can be set)&lt;br&gt;&lt;br&gt;You may specify multiple pins at once&lt;br&gt;(separated by comma)&lt;br&gt;or set a number of pins&lt;br&gt;and specify each pin on its own." style="shadow=0;dashed=0;align=center;html=1;strokeWidth=1;shape=mxgraph.rtl.abstract.entity;container=1;collapsible=0;drawPins=1;leftArr=no style,input:i,input:in;rightArr=output:o,output:out,input/output:io,input/output:inout,multiple types:nc:n:clk;left=3;right=5;topArr=1,2,3,4;top=3;bottom=6;bottomArr=no pin:no,no pin:np,no pin:nopin,negated:n,negated:neg,negated:not;topRot=240;topAnchor=left;bottomRot=30;bottomAnchor=left;kind=sequential;type=none;type_loc=topLeft;type_size=100;" vertex="1" parent="1">
+                    <mxGeometry x="1750" y="240" width="400" height="540" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
