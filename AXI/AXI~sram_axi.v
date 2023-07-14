@@ -72,7 +72,7 @@ localparam [2:0]
                 R_DADDR = 3,
                 R_DDATA = 4;
 
-reg [2:0] r_state, r_next_state;
+reg [2:0] r_state = R_IDLE, r_next_state = R_IDLE;
 
 always @(posedge aclk or negedge aresetn)
 begin
@@ -194,7 +194,7 @@ localparam [1:0]
                 W_DDATA = 2,
                 W_DLAST = 3;
 
-reg [1:0] w_state, w_next_state;
+reg [1:0] w_state = W_IDLE, w_next_state = W_IDLE;
 
 always @(posedge aclk or negedge aresetn)
 begin
