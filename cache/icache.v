@@ -1,5 +1,7 @@
 
 `timescale 1ns / 1ps
+`include "../config.vh"
+`include "../exception.vh"
 //////////////////////////////////////////////////////////////////////////////////
 //
 // Author: Ma Zirui
@@ -26,32 +28,31 @@ module icache #(
     output reg          rready,         // ready signal of read request to pipeline
     input [31:0]        raddr,          // read address from pipeline
     input [31:0]        p_addr,         // physical address from pipeline
-    output [31:0]       rdata,          // read data to pipeline
+    output [63:0]       rdata,          // read data to pipeline
     // for AXI arbiter
     output reg          i_rvalid,       // valid signal of read request to main memory
     input               i_rready,       // ready signal of read request from main memory
     output [31:0]       i_raddr,        // read address to main memory
     input [511:0]        i_rdata,        // read data from main memory
+    // 暂时用不到
     // input               i_rlast,        // indicate the last beat of read data from main memory
     // output [2:0]        i_rsize,        // indicate the size of read data once, if i_rsize = n then read 2^n bytes once
     // output [7:0]        i_rlen          // indicate the number of read data, if i_rlen = n then read n+1 times
     
-    // output [31:0] badv,
-    // output [6:0] exception,
-    // // 暂时用不到
-    // input               flush,          // flush signal from pipeline
-    // input               uncache,        // uncache signal from pipeline
-    // input  [COOKIE_WIDTH-1:0] cookie_in, // cookie from pipeline
-    // output [COOKIE_WIDTH-1:0] cookie_out, // cookie to pipeline
-    // output [63:0]       r_data_cpu,     // read data to pipeline    
+    output [31:0] badv,
+    output [6:0] exception,
+    input               flush,          // flush signal from pipeline
+    input               uncache,        // uncache signal from pipeline
+    input  [COOKIE_WIDTH-1:0] cookie_in, // cookie from pipeline
+    output [COOKIE_WIDTH-1:0] cookie_out, // cookie to pipeline
+    output [63:0]       r_data_cpu,     // read data to pipeline    
     // 
-    // input cacop_en,
-    // input [1:0] cacop_cmd,
-    // output cacop_ready,
-    // output cacop_complete,
+    input cacop_en,
+    input [1:0] cacop_code,
+    output cacop_ready,
+    output cacop_complete,
 
-    // input [6:0] tlb_exception         
-
+    input [6:0] tlb_exception         
 );
     localparam 
         BYTE_OFFSET_WIDTH   = WORD_OFFSET_WIDTH + 2,                // total offset bits
@@ -114,6 +115,18 @@ module icache #(
         end
     end
 
+    /* physical address buffer */
+    reg [31:0] paddr_buf;
+    reg pbuf_we;
+    always @(posedge clk) begin
+        if(!rstn) begin
+            paddr_buf <= 0;
+        end
+        else if(pbuf_we) begin
+            paddr_buf <= p_addr;
+        end
+    end
+
     /* 2-way data memory */
     // read index
     assign r_index = raddr[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
@@ -144,6 +157,9 @@ module icache #(
     );
 
     /* 2-way tagv memory: the highest bit is the valid bit */
+    wire vaild[1:0];
+    assign valid[0] = tag_rdata[0][TAG_WIDTH];
+    assign valid[1] = tag_rdata[1][TAG_WIDTH];
     // the tag ready to be written to tagv table
     assign w_tag = req_buf[31:32-TAG_WIDTH];
     BRAM_common #(
@@ -175,18 +191,25 @@ module icache #(
     assign i_raddr  = {req_buf[31:BYTE_OFFSET_WIDTH], {BYTE_OFFSET_WIDTH{1'b0}}};   // align to the block address
 
     /* hit */
-    /* TODO: calculate the hit signal correctly */
-    assign tag          = req_buf[31:32-TAG_WIDTH]; // the tag of the request
-    assign hit[0]       = 0;        // TODO 
-    assign hit[1]       = 0;        // TODO 
-    assign hit_way      = hit[0] ? 0 : 1;           // only when cache_hit, hit_way is valid
+    assign tag          = p_addr[31:32-TAG_WIDTH]; // the tag of the request
+    assign hit[0]       = valid[0] && (tag_rdata[0][TAG_WIDTH-1:0] == tag); // hit in way 0
+    assign hit[1]       = valid[1] && (tag_rdata[1][TAG_WIDTH-1:0] == tag); // hit in way 1
+    assign hit_way      = hit[0] ? 0 : 1;           
     assign cache_hit    = |hit;
+    // only when cache_hit, hit_way is valid
+    wire hit_way_valid;
+    assign hit_way_valid = cache_hit ? hit_way : 0;
     
 
     /* read control */
     // choose data from mem or return buffer 
     // TODO: use the signal 'data_from_mem' and address in request buffer to choose the data source
-    assign rdata = 0; // TODO
+    wire [BIT_NUM-1:0] o_rdata;
+    assign o_rdata = data_from_mem ? mem_rdata[hit_way_valid] : ret_buf; 
+    always (@*) begin
+        case()
+    end
+
     
     /* LRU */
     /* 
@@ -240,12 +263,14 @@ module icache #(
         tagv_we                 = 0;
         mem_we                  = 0;
         data_from_mem           = 1;
+        pbuf_we                 = 0;
 
         case(state)
         IDLE: begin
             req_buf_we      = 1;
         end
         LOOKUP: begin
+            pbuf_we                 = 1;
             if(cache_hit) begin
                 rready              = 1;
                 req_buf_we          = rvalid;
