@@ -15,8 +15,9 @@
 
 
 module icache #(
-    parameter INDEX_WIDTH       = 4,
-    parameter WORD_OFFSET_WIDTH = 2
+    parameter INDEX_WIDTH       = 6,
+    parameter WORD_OFFSET_WIDTH = 4,
+    parameter COOKIE_WIDTH      = 32
 )(
     input               clk,            
     input               rstn,           
@@ -24,15 +25,33 @@ module icache #(
     input               rvalid,         // valid signal of read request from pipeline
     output reg          rready,         // ready signal of read request to pipeline
     input [31:0]        raddr,          // read address from pipeline
+    input [31:0]        p_addr,         // physical address from pipeline
     output [31:0]       rdata,          // read data to pipeline
     // for AXI arbiter
     output reg          i_rvalid,       // valid signal of read request to main memory
     input               i_rready,       // ready signal of read request from main memory
     output [31:0]       i_raddr,        // read address to main memory
-    input [31:0]        i_rdata,        // read data from main memory
-    input               i_rlast,        // indicate the last beat of read data from main memory
-    output [2:0]        i_rsize,        // indicate the size of read data once, if i_rsize = n then read 2^n bytes once
-    output [7:0]        i_rlen          // indicate the number of read data, if i_rlen = n then read n+1 times
+    input [511:0]        i_rdata,        // read data from main memory
+    // input               i_rlast,        // indicate the last beat of read data from main memory
+    // output [2:0]        i_rsize,        // indicate the size of read data once, if i_rsize = n then read 2^n bytes once
+    // output [7:0]        i_rlen          // indicate the number of read data, if i_rlen = n then read n+1 times
+    
+    // output [31:0] badv,
+    // output [6:0] exception,
+    // // 暂时用不到
+    // input               flush,          // flush signal from pipeline
+    // input               uncache,        // uncache signal from pipeline
+    // input  [COOKIE_WIDTH-1:0] cookie_in, // cookie from pipeline
+    // output [COOKIE_WIDTH-1:0] cookie_out, // cookie to pipeline
+    // output [63:0]       r_data_cpu,     // read data to pipeline    
+    // 
+    // input cacop_en,
+    // input [1:0] cacop_cmd,
+    // output cacop_ready,
+    // output cacop_complete,
+
+    // input [6:0] tlb_exception         
+
 );
     localparam 
         BYTE_OFFSET_WIDTH   = WORD_OFFSET_WIDTH + 2,                // total offset bits
@@ -71,7 +90,7 @@ module icache #(
     // read control
     reg                         data_from_mem;
 
-    // statistics
+    // statistics 统计信息
     reg     [63:0]              total_time;
     reg     [63:0]              total_hit;
 
@@ -91,7 +110,7 @@ module icache #(
             ret_buf <= 0;
         end
         else if(i_rvalid && i_rready) begin
-            ret_buf <= {i_rdata, ret_buf[BIT_NUM-1:32]};
+            ret_buf <= i_rdata;
         end
     end
 
