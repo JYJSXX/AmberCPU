@@ -44,7 +44,7 @@ module sram_axi(
     output                      i_rready,   //指令cache读准备好
     // input           [7:0]       i_rlen,     //指令cache读长度
     // input           [2:0]       i_rsize,    //指令cache读大小
-    // output              i_rlast,    //指令cache读结束
+    // output                      i_rlast,    //指令cache读结束
 
     input           [31:0]      d_raddr,    //数据cache读地址
     output          [511:0]     d_rdata,    //数据cache读数据
