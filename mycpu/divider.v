@@ -4,7 +4,8 @@ module divider(
     input           [31:0]          dividend,
     input           [31:0]          divisor,
     input                           en,
-    input                           flush_exception,
+    input                           flush_exception, //TODO:
+    input                           sign,
 
     output  reg     [31:0]          quotient,
     output  reg     [31:0]          remainder,
@@ -14,6 +15,8 @@ module divider(
 
     wire    [5:0]   digit_dividend = $clog2(dividend);
     wire    [5:0]   digit_divisor = $clog2(divisor);
+    wire    [31:0]  dividend_abs = dividend[31] ? ~dividend + 1 : dividend;
+    wire    [31:0]  divisor_abs = divisor[31] ? ~divisor + 1 : divisor;
     reg     [63:0]  dividend_reg = 0;
     reg     [63:0]  divisor_reg = 0;
     reg             shift = 0;
@@ -25,13 +28,14 @@ module divider(
         else if (shift)
             divisor_reg <= {1'b0, divisor_reg[63:1]};
         else
-            divisor_reg <= {divisor, 32'b0};
+            divisor_reg <= {divisor_abs, 32'b0};
     end
 
     localparam [1:0]
                     DIV_IDLE = 0,
-                    DIV_CALC = 1,
-                    DIV_DONE = 2;
+                    DIV_INIT = 1,
+                    DIV_CALC = 2,
+                    DIV_DONE = 3;
 
     reg     [1:0]   div_state = DIV_IDLE, div_next_state = DIV_IDLE;
     assign ready = (div_state == DIV_DONE);
@@ -51,10 +55,14 @@ module divider(
             DIV_IDLE:
             begin
                 if(en)
-                    if (digit_divisor > digit_dividend || digit_divisor == 0)
-                        div_next_state = DIV_DONE;
-                    else
-                        div_next_state = DIV_CALC;
+                    div_next_state = DIV_INIT;
+            end
+            DIV_INIT:
+            begin
+                if(digit_divisor > digit_dividend || (~|digit_divisor))
+                    div_next_state = DIV_DONE;
+                else 
+                    div_next_state = DIV_CALC;
             end
             DIV_CALC:
             begin
@@ -86,19 +94,24 @@ module divider(
                 begin
                     if(en)
                     begin
-                        if (digit_divisor > digit_dividend || digit_divisor == 0)
+                        if (digit_divisor > digit_dividend || (~|digit_divisor))
                         begin
                             dividend_reg <= 0;
-                            divisor_reg <= 0;
+                            shift <= 0;
                             quotient <= 0;
                             remainder <= dividend;
+                        end
+                        else
+                        begin
+                            dividend_reg <= {32'b0, dividend_abs};
+                            
                         end
                     end
 
                     else
                     begin
                         dividend_reg <= 0;
-                        divisor_reg <= 0;
+                        shift <= 0;
                     end
                 end
                 DIV_CALC:
