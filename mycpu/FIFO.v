@@ -37,6 +37,12 @@ module FIFO(
         .full                       ( full     ),
         .fifo_exception             (fifo_exception)
     );
+    pre_decoder pre_decoder(
+        .inst0_i    ( inst0_i ),
+        .inst1_i    ( inst1_i ),
+        .type       ( type   )
+    );
+
     always @(posedge clk or negedge rstn) begin
         if (!rstn) begin
 
