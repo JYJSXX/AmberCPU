@@ -86,7 +86,9 @@ module icache #(
     wire    [TAG_WIDTH-1:0]     tag;
 
     // LRU
+    reg  [INDEX_WIDTH-1:0]      lru_index; //0: way0, 1: way1
     wire                        lru_sel;
+    reg                         lru_we;
 
     // read control
     reg                         data_from_mem;
@@ -127,6 +129,16 @@ module icache #(
         end
     end
 
+    reg uncache_buf;
+    always @(posedge clk) begin
+        if(!rstn) begin
+            uncache_buf <= 0;
+        end
+        else if(req_buf_we) begin
+            uncache_buf <= uncache;
+        end
+    end
+
     /* 2-way data memory */
     // read index
     assign r_index = raddr[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
@@ -161,7 +173,7 @@ module icache #(
     assign valid[0] = tag_rdata[0][TAG_WIDTH];
     assign valid[1] = tag_rdata[1][TAG_WIDTH];
     // the tag ready to be written to tagv table
-    assign w_tag = req_buf[31:32-TAG_WIDTH];
+    assign w_tag = paddr_buf[31:32-TAG_WIDTH];
     BRAM_common #(
       .DATA_WIDTH(TAG_WIDTH+1),
       .ADDR_WIDTH (INDEX_WIDTH)
@@ -188,7 +200,7 @@ module icache #(
     /* settings of miss request */
     assign i_rlen   = WORD_NUM-1;                                                   // WORD_NUM words per visit
     assign i_rsize  = 3'h2;                                                         // 2 ^ 2 = 4 bytes per beat
-    assign i_raddr  = {req_buf[31:BYTE_OFFSET_WIDTH], {BYTE_OFFSET_WIDTH{1'b0}}};   // align to the block address
+    assign i_raddr  = uncache_buf ? {paddr_buf[31:3], 3'b0} : {paddr_buf[31:6], 6'b0};
 
     /* hit */
     assign tag          = p_addr[31:32-TAG_WIDTH]; // the tag of the request
@@ -203,24 +215,35 @@ module icache #(
 
     /* read control */
     // choose data from mem or return buffer 
-    // TODO: use the signal 'data_from_mem' and address in request buffer to choose the data source
+    // 双发射因此一次读取64位
     wire [BIT_NUM-1:0] o_rdata;
     assign o_rdata = data_from_mem ? mem_rdata[hit_way_valid] : ret_buf; 
     always (@*) begin
-        case()
+        case(req_buf[5:3])
+        3'd0: rdata <= o_rdata[63:0];
+        3'd1: rdata <= o_rdata[127:64];
+        3'd2: rdata <= o_rdata[191:128];
+        3'd3: rdata <= o_rdata[255:192];
+        3'd4: rdata <= o_rdata[319:256];
+        3'd5: rdata <= o_rdata[383:320];
+        3'd6: rdata <= o_rdata[447:384];
+        3'd7: rdata <= o_rdata[511:448];
+        endcase
     end
 
     
     /* LRU */
-    /* 
-        TODO:
-            1. Design a LRU module to record the Least Recent Use information of each set
-            2. Design some signals in the main FSM to update the LRU information when cache_hit or refill
-    */
-    assign lru_sel = 0; // TODO
+    always @(posedge clk) begin
+        if(!rstn) begin
+            lru <= 0;
+        end
+        else if(lru_we) begin
+            lru[w_index] <= hit_way;
+        end
+    end
+    assign lru_sel = !lru[w_index];
 
     /* main FSM */
-    // TODO: No.2 TODO in LRU module
     localparam [2:0] 
         IDLE    = 3'b000, 
         LOOKUP  = 3'b001,
@@ -248,7 +271,8 @@ module icache #(
                 else                    next_state = MISS;
             end
             MISS: begin
-                if(i_rready && i_rlast) next_state = REFILL;
+                // if(i_rready && i_rlast) next_state = REFILL;
+                if(i_rready) next_state = REFILL;
                 else                    next_state = MISS;
             end
             REFILL:                     next_state = rvalid ? LOOKUP : IDLE;
@@ -264,16 +288,20 @@ module icache #(
         mem_we                  = 0;
         data_from_mem           = 1;
         pbuf_we                 = 0;
+        lru_we                  = 0;
 
         case(state)
         IDLE: begin
             req_buf_we      = 1;
+            lru_we          = 0;
         end
         LOOKUP: begin
             pbuf_we                 = 1;
+            lru_we                  = 0;
             if(cache_hit) begin
                 rready              = 1;
                 req_buf_we          = rvalid;
+                lru_we              = 1;
             end
         end
         MISS: begin
