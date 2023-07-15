@@ -60,13 +60,9 @@ module core_top(
     output debug1_valid
 );
 
-    wire if_buf_full;
-    wire icache_ready;
-    wire pc_stall_n=icache_ready & ~if_buf_full;
-
-    wire [31:0] fetch_pc;
-    wire set_pc_by_id,set_pc_by_ex,set_pc_by_wb;
-    wire [31:0] pc_decoder,pc_executer,pc_writeback,ex_pc_tar;
-    //具体处理到具体模块再进行赋值
+    reg [63:0] stable_counter;
+    always @(posedge aclk)
+        if(~aresetn) stable_counter<=0;
+        else stable_counter <= stable_counter+1;
     
 endmodule

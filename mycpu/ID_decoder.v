@@ -76,7 +76,7 @@ module ID_decoder
     // end
     //上面注释的和下面一样的，不知道下面的会不会快一点
     wire [1:0] src1,src2;
-    assign src1 = is_lui?`CTRL_SRC1_ZERO:is_pcadd?`CTRL_SRC1_PC:is_time&&inst[10]==0&&inst[4:0]==0?`CTRL_SRC1_CNTID:`CTRL_SRC1_RF;
+    assign src1 = is_lui|inst[10]==0&&inst[4:0]!=0?`CTRL_SRC1_ZERO:is_pcadd?`CTRL_SRC1_PC:is_time&&inst[10]==0&&inst[4:0]==0?`CTRL_SRC1_CNTID:`CTRL_SRC1_RF;
     assign src2 = is_alu_imm||is_alu_sfti||is_lui||is_pcadd?`CTRL_SRC2_IMM:is_time?inst[10]==0&&inst[4:0]!=0?`CTRL_SRC2_CNTL:`CTRL_SRC2_CNTH:`CTRL_SRC2_RF;
 
 
@@ -85,7 +85,7 @@ module ID_decoder
     reg alu_op_invalid;
     always @* begin
         alu_op_invalid=0;
-        alu_op=`CTRL_ALU_ADD;
+        alu_op=`CTRL_ALU_ADD; //lui和pcadd也当成add处理，修改一下src1就行了
         if(is_alu)
             alu_op=inst[18:15];
         else if(is_alu_imm) begin
