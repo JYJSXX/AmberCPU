@@ -44,7 +44,7 @@ module core_top(
     input    [ 1:0] bresp,
     input           bvalid,
     output          bready,
-
+    //debug
     output [31:0] debug0_wb_pc,
     output [ 3:0] debug0_wb_rf_wen,
     output [ 4:0] debug0_wb_rf_wnum,
