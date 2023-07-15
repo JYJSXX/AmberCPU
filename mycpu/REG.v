@@ -29,7 +29,7 @@ module regfile(
 	
 	//读端口4
 	input wire[4:0]    raddr4,
-	output reg[31:0]        rdata4,
+	output reg[31:0]        rdata4
 	
 	//output wire[31:0] reg1 //存放BL指令的返回地址
 	
