@@ -31,12 +31,12 @@ module regfile(
 	input wire[4:0]    raddr4,
 	output reg[31:0]        rdata4,
 	
-	output wire[31:0] reg1 //存放BL指令的返回地址
+	//output wire[31:0] reg1 //存放BL指令的返回地址
 	
 );
 
     reg[31:0]  regs[0:31];
-    assign reg1 = regs[1];
+    //assign reg1 = regs[1];
 
     always @ (posedge clk) begin
         

@@ -9,7 +9,7 @@ module IF_ID(
     
     input[31:0] pc_i,
     input[31:0] npc_i,
-    input               branch_flag_i,
+    input       branch_flag_i,
     input[31:0] inst0_i,
     input[31:0] inst1_i,
     input [1:0] issue_i, //issue_i[0] is for inst0, issue_i[1] is for inst1

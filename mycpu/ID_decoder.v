@@ -7,6 +7,7 @@ module ID_decoder
 (
     input [31:0] inst,
     output [31:0] pc, //目前未考虑分支预测，异常等等
+    output is_ALU,
     output is_syscall,
     output is_break,
     output is_priviledged,
@@ -53,7 +54,7 @@ module ID_decoder
     assign type_[`INS_SC_OR_LL] = inst[30:25]=='b0010000; //sc或者ll
     wire is_sc = type_[`INS_SC_OR_LL]&inst[24];
     wire is_ll = type_[`INS_SC_OR_LL]&~inst[24];
-
+    assign is_ALU=is_alu||is_alu_imm||is_alu_sfti||is_sra||is_time||is_pcadd||is_lui;
 //判断操作数种类
     // reg [1:0]src1,src2;
     // always @* begin
