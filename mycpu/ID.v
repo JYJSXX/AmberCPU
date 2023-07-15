@@ -7,6 +7,8 @@ module id_stage
     input inst1,
     input pc0,
     input pc1,
+    output is_ALU_0,
+    output is_ALU_1,
     output is_syscall_0,
     output is_syscall_1,
     output is_break_0,
@@ -26,7 +28,8 @@ module id_stage
 );
 ID_decoder id_decoder1(
     .inst(inst0_i),
-    .pc(pc_i),
+    .pc(pc0),
+    .is_ALU(is_ALU_0),
     .is_syscall(is_syscall),
     .is_break(is_break),
     .is_priviledged(is_priviledged),
@@ -38,7 +41,8 @@ ID_decoder id_decoder1(
 );
 ID_decoder id_decoder2(
     .inst(inst1_i),
-    .pc(pc_i),
+    .pc(pc1),
+    .is_ALU(is_ALU_1),
     .is_syscall(is_syscall),
     .is_break(is_break),
     .is_priviledged(is_priviledged),

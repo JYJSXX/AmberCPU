@@ -7,6 +7,7 @@ module ID_decoder
 (
     input [31:0] inst,
     output [31:0] pc, //目前未考虑分支预测，异常等等
+    output is_ALU,
     output is_syscall,
     output is_break,
     output is_priviledged,
@@ -53,7 +54,7 @@ module ID_decoder
     assign type_[`INS_SC_OR_LL] = inst[30:25]=='b0010000; //sc或者ll
     wire is_sc = type_[`INS_SC_OR_LL]&inst[24];
     wire is_ll = type_[`INS_SC_OR_LL]&~inst[24];
-
+    assign is_ALU=is_alu||is_alu_imm||is_alu_sfti||is_sra||is_time||is_pcadd||is_lui;
 //判断操作数种类
     // reg [1:0]src1,src2;
     // always @* begin
@@ -75,7 +76,7 @@ module ID_decoder
     // end
     //上面注释的和下面一样的，不知道下面的会不会快一点
     wire [1:0] src1,src2;
-    assign src1 = is_lui?`CTRL_SRC1_ZERO:is_pcadd?`CTRL_SRC1_PC:is_time&&inst[10]==0&&inst[4:0]==0?`CTRL_SRC1_CNTID:`CTRL_SRC1_RF;
+    assign src1 = is_lui|inst[10]==0&&inst[4:0]!=0?`CTRL_SRC1_ZERO:is_pcadd?`CTRL_SRC1_PC:is_time&&inst[10]==0&&inst[4:0]==0?`CTRL_SRC1_CNTID:`CTRL_SRC1_RF;
     assign src2 = is_alu_imm||is_alu_sfti||is_lui||is_pcadd?`CTRL_SRC2_IMM:is_time?inst[10]==0&&inst[4:0]!=0?`CTRL_SRC2_CNTL:`CTRL_SRC2_CNTH:`CTRL_SRC2_RF;
 
 
@@ -84,7 +85,7 @@ module ID_decoder
     reg alu_op_invalid;
     always @* begin
         alu_op_invalid=0;
-        alu_op=`CTRL_ALU_ADD;
+        alu_op=`CTRL_ALU_ADD; //lui和pcadd也当成add处理，修改一下src1就行了
         if(is_alu)
             alu_op=inst[18:15];
         else if(is_alu_imm) begin

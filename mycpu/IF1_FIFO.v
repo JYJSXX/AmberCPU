@@ -1,5 +1,5 @@
 `include "define.vh"
-module IF_ID(
+module IF1_FIFO(
 
     input aclk,
     input aresetn,
@@ -13,16 +13,29 @@ module IF_ID(
     input[31:0] inst0_i,
     input[31:0] inst1_i,
     input [1:0] issue_i, //issue_i[0] is for inst0, issue_i[1] is for inst1
+
+    //hand shake signal
+    input           fetch_buf_full,
+    input           if1_valid,
+    output  reg     if1_ready,
+    input           fifo_ready,
+    output  reg     fifo_valid,
+
+
     
-    output reg[31:0] pc_o,
-    output reg[31:0] npc_o,
-    output reg               branch_flag_o,
-    output reg[31:0] inst0_o,
-    output reg[31:0] inst1_o,
-    output reg  [1:0] issue_o
+    output reg[31:0]    pc_o,
+    output reg[31:0]    npc_o,
+    output reg          branch_flag_o,
+    output reg[31:0]    inst0_o,
+    output reg[31:0]    inst1_o,
+    output reg  [1:0]   issue_o
     
     );
-    
+    always @(*) begin//combinational logic for hand shake
+        if(fetch_buf_full)begin
+            if1_ready=0;
+        end
+    end
     always @ (posedge aclk) begin
         if (~aresetn) begin
             pc_o <= `INIT_ADDR;
