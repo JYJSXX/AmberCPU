@@ -32,8 +32,7 @@ module icache #(
     //input               flush,          // flush signal from pipeline
     input               uncache,        // uncache signal from pipeline
     input  [COOKIE_WIDTH-1:0] cookie_in, // cookie from pipeline
-    output [COOKIE_WIDTH-1:0] cookie_out, // cookie to pipeline
-    output [63:0]       r_data_cpu,     // read data to pipeline    
+    output [COOKIE_WIDTH-1:0] cookie_out, // cookie to pipeline  
 
     input cacop_en,
     input [1:0] cacop_code,
