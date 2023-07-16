@@ -68,3 +68,4 @@
 
 `define zero 32'h00000000
 `define INIT_ADDR 32'h1c00_0000
+`define PC_RESET//指令集手册68复位
