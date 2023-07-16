@@ -1,7 +1,7 @@
 `include "../config.vh"
 
 module cache_reg#(
-    parameter DATA_WIDTH = 32,
+    parameter DATA_WIDTH = 32
     )(
     input clk,
     input rstn,
