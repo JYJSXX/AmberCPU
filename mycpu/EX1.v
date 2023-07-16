@@ -3,8 +3,8 @@ module EX1(
     input   clk,
     input   aresetn,
     input   flush,
-    input   pc0,
-    input   pc1,
+    input   [31:0] pc0,
+    input   [31:0] pc1,
     input   is_ALU_0,
     input   is_ALU_1,
     input   is_syscall_0,
@@ -28,19 +28,23 @@ module EX1(
     input   [4:0] ex_rd0,
     input   [4:0] ex_rd1,
 
+    output [31:0] alu_result0,
+    output [31:0] alu_result1,
+    output alu_result0_valid,
+    output alu_result1_valid,
 
 
     //前递用到的信号
     //从ex1_ex2段间输入
-    input [4:0] ex1_ex2_rd_0,
-    input [4:0] ex1_ex2_rd_1,
+    input [4:0] ex1_ex2_rd0,
+    input [4:0] ex1_ex2_rd1,
     input [31:0] ex1_ex2_data_0,
     input [31:0] ex1_ex2_data_1,
     input ex1_ex2_data_0_valid, //可不可以前递，没算好不能前递
     input ex1_ex2_data_1_valid,
     //从ex2_wb段间输入
-    input [4:0] ex2_wb_rd_0,
-    input [4:0] ex2_wb_rd_1,
+    input [4:0] ex2_wb_rd0,
+    input [4:0] ex2_wb_rd1,
     input [31:0] ex2_wb_data_0,
     input [31:0] ex2_wb_data_1,
     input ex2_wb_data_0_valid,
@@ -67,25 +71,38 @@ module EX1(
     output [3:0] write_type_dcache, //写入类型,0b0001为byte,0b0011为half,0b1111为word
     output [31:0] addr_dcache,
     output [31:0] w_data_dcache,
-    output [0:0] is_atom_dcache,
+    output  is_atom_dcache,
 
     //给mul
     output [31:0] mul_stage1_res_hh,
     output [31:0] mul_stage1_res_hl,
     output [31:0] mul_stage1_res_lh,
     output [31:0] mul_stage1_res_ll,
-    output [31:0] mul_compensate
+    output [31:0] mul_compensate,
+
+    //给divider
+    output [31:0] quotient,
+    output [31:0] remainder,
+    output stall_divider,
+    output div_ready
 
 );
-wire [3:0] ctrl0;
+wire [3:0] cond0;
 wire [31:0] a_1;
 wire [31:0] b_1;
 wire [31:0] y_1;
-wire [3:0] ctrl1;
+wire [3:0] cond1;
 wire [31:0] a_2;
 wire [31:0] b_2;
 wire [31:0] y_2;
-assign ctrl0 = uop0[`UOP_ALUOP];
+wire pc_add_4; //根据控制信号判断要写入pc+4还是y
+assign pc_add_4 = pc0 + 4;
+assign cond0 = uop0[`UOP_COND];
+assign cond1 = uop1[`UOP_COND];
+assign alu_result0_valid = is_ALU_0 || uop0[`INS_BR];
+assign alu_result1_valid = is_ALU_1 || uop1[`INS_BR]; //beq之类的就向r0写，应该也没什么问题
+assign alu_result0 = uop0[`INS_BR]? pc_add_4:y_1;
+assign alu_result1 = y_2; //跳转指令单发，只在0号，1号alu不发射跳转
 EX1_FORWARD ex1_forward1(
     .ex1_rj(ex_rj0),
     .ex1_rk(ex_rk0),
@@ -93,14 +110,14 @@ EX1_FORWARD ex1_forward1(
     .ex1_ex2_data_1_valid(ex1_ex2_data_1_valid),
     .ex1_ex2_data_0(ex1_ex2_data_0),
     .ex1_ex2_data_1(ex1_ex2_data_1),
-    .ex1_ex2_rd_0(ex1_ex2_rd_0),
-    .ex1_ex2_rd_1(ex1_ex2_rd_1),
+    .ex1_ex2_rd0(ex1_ex2_rd0),
+    .ex1_ex2_rd1(ex1_ex2_rd1),
     .ex2_wb_data_0_valid(ex2_wb_data_0_valid),
     .ex2_wb_data_1_valid(ex2_wb_data_1_valid),
     .ex2_wb_data_0(ex2_wb_data_0),
     .ex2_wb_data_1(ex2_wb_data_1),
-    .ex2_wb_rd_0(ex2_wb_rd_0),
-    .ex2_wb_rd_1(ex2_wb_rd_1),
+    .ex2_wb_rd0(ex2_wb_rd0),
+    .ex2_wb_rd1(ex2_wb_rd1),
     .ex1_rj_data(ex_rj0_data),
     .ex1_rk_data(ex_rk0_data),
     .ex1_rj_data_o(rj0_data_o),
@@ -112,16 +129,15 @@ assign a_1 = uop0[`UOP_SRC1] == `CTRL_SRC1_RF ? rj0_data_o :
             uop0[`UOP_SRC1] == `CTRL_SRC1_PC ? pc0 :
             uop0[`UOP_SRC1] == `CTRL_SRC1_ZERO ? 0 :tid;
 assign b_1= uop0[`UOP_SRC2] == `CTRL_SRC2_RF ? rk0_data_o : 
-            uop0[`UOP_SRC2] == `CTRL_SRC2_IMM ? imm0_o :
+            uop0[`UOP_SRC2] == `CTRL_SRC2_IMM ? imm0 :
             uop0[`UOP_SRC2] == `CTRL_SRC2_CNTL ? stable_counter[31:0] : stable_counter[63:32];
 EX_ALU ex_alu1(
-    .ctrl(ctrl0),
+    .ctrl(cond0),
     .a(a_1),
     .b(b_1),
     .y(y_1)
 );
-wire pc_add_4; //根据控制信号判断要写入pc+4还是y
-assign pc_add_4 = pc0 + 4;
+
 
 EX1_FORWARD ex1_forward2(
     .ex1_rj(ex_rj1),
@@ -130,14 +146,14 @@ EX1_FORWARD ex1_forward2(
     .ex1_ex2_data_1_valid(ex1_ex2_data_1_valid),
     .ex1_ex2_data_0(ex1_ex2_data_0),
     .ex1_ex2_data_1(ex1_ex2_data_1),
-    .ex1_ex2_rd_0(ex1_ex2_rd_0),
-    .ex1_ex2_rd_1(ex1_ex2_rd_1),
+    .ex1_ex2_rd0(ex1_ex2_rd0),
+    .ex1_ex2_rd1(ex1_ex2_rd1),
     .ex2_wb_data_0_valid(ex2_wb_data_0_valid),
     .ex2_wb_data_1_valid(ex2_wb_data_1_valid),
     .ex2_wb_data_0(ex2_wb_data_0),
     .ex2_wb_data_1(ex2_wb_data_1),
-    .ex2_wb_rd_0(ex2_wb_rd_0),
-    .ex2_wb_rd_1(ex2_wb_rd_1),
+    .ex2_wb_rd0(ex2_wb_rd0),
+    .ex2_wb_rd1(ex2_wb_rd1),
     .ex1_rj_data(ex_rj0_data),
     .ex1_rk_data(ex_rk0_data),
     .ex1_rj_data_o(rj1_data_o),
@@ -148,10 +164,10 @@ assign a_2 = uop1[`UOP_SRC1] == `CTRL_SRC1_RF ? rj1_data_o :
             uop1[`UOP_SRC1] == `CTRL_SRC1_PC ? pc1 :
             uop1[`UOP_SRC1] == `CTRL_SRC1_ZERO ? 0 :tid;
 assign b_2= uop1[`UOP_SRC2] == `CTRL_SRC2_RF ? rk1_data_o : 
-            uop1[`UOP_SRC2] == `CTRL_SRC2_IMM ? imm1_o :
+            uop1[`UOP_SRC2] == `CTRL_SRC2_IMM ? imm1:
             uop1[`UOP_SRC2] == `CTRL_SRC2_CNTL ? stable_counter[31:0] : stable_counter[63:32];
 EX_ALU ex_alu2(
-    .ctrl(ctrl1),
+    .ctrl(cond1),
     .a(a_2),
     .b(b_2),
     .y(y_2)
@@ -182,6 +198,20 @@ Mul_Stage_1 mul_1(
     .mul_stage1_res_ll(mul_stage1_res_ll),
     .mul_compensate(mul_compensate)
 );
-
-
+divider divider1(
+    .clk(clk),
+    .rstn(aresetn),
+    .dividend(rj0_data_o),
+    .divisor(rk0_data_o),
+    .quotient(quotient),
+    .remainder(remainder),
+    .stall(stall_divider),
+    .ready(div_ready)
+);
+assign is_atom_dcache = uop0[`UOP_MEM_ATM];
+assign valid_dcache=uop0[`INS_MEM];
+assign op_dcache=cond0[2];
+assign write_type_dcache=(cond0[1:0]==0)?4'b0001:(cond0[1:0]==1)?4'b0011:4'b1111;
+assign addr_dcache = rj0_data_o+imm0;
+assign w_data_dcache = rk0_data_o;
 endmodule

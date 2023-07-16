@@ -3,10 +3,10 @@
 module ID_REG(
     input aclk,
     input aresetn,
-    input inst0,
-    input inst1,
-    input pc0,
-    input pc1,
+    input [31:0] inst0,
+    input [31:0] inst1,
+    input [31:0] pc0,
+    input [31:0] pc1,
     input is_ALU_0,
     input is_ALU_1,
     input is_syscall_0,
@@ -26,71 +26,71 @@ module ID_REG(
     input [4:0] rk0,
     input [4:0] rk1,
 
-    output reg pc0_o,
-    output reg pc1_o,
-    output reg is_ALU_0_o,
-    output reg is_ALU_1_o,
-    output reg is_syscall_0_o,
-    output reg is_syscall_1_o,
-    output reg is_break_0_o,
-    output reg is_break_1_o,
-    output reg is_priviledged_0_o,
-    output reg is_priviledged_1_o,
-    output reg [`WIDTH_UOP-1:0] uop0_o,
-    output reg [`WIDTH_UOP-1:0] uop1_o,
-    output reg [31:0] imm0_o,
-    output reg [31:0] imm1_o,
-    output reg [4:0] rd0_o,
-    output reg [4:0] rd1_o,
-    output reg [4:0] rj0_o,
-    output reg [4:0] rj1_o,
-    output reg [4:0] rk0_o,
-    output reg [4:0] rk1_o
+    output reg [31:0] id_reg_pc0,
+    output reg [31:0] id_reg_pc1,
+    output reg id_reg_is_ALU_0 ,
+    output reg id_reg_is_ALU_1 ,
+    output reg id_reg_is_syscall_0 ,
+    output reg id_reg_is_syscall_1 ,
+    output reg id_reg_is_break_0 ,
+    output reg id_reg_is_break_1 ,
+    output reg id_reg_is_priviledged_0 ,
+    output reg id_reg_is_priviledged_1 ,
+    output reg [`WIDTH_UOP-1:0] id_reg_uop0 ,
+    output reg [`WIDTH_UOP-1:0] id_reg_uop1 ,
+    output reg [31:0] id_reg_imm0 ,
+    output reg [31:0] id_reg_imm1 ,
+    output reg [4:0] id_reg_rd0 ,
+    output reg [4:0] id_reg_rd1 ,
+    output reg [4:0] id_reg_rj0 ,
+    output reg [4:0] id_reg_rj1 ,
+    output reg [4:0] id_reg_rk0 ,
+    output reg [4:0] id_reg_rk1 
 );
 //没考虑flush stall，之后再说
 always@(posedge aclk) begin
     if(~aresetn) begin
-        pc0_o <= 0;
-        pc1_o <= 0;
-        is_ALU_0_o <= 0;
-        is_ALU_1_o <= 0;
-        is_syscall_0_o <= 0;
-        is_syscall_1_o <= 0;
-        is_break_0_o <= 0;
-        is_break_1_o <= 0;
-        is_priviledged_0_o <= 0;
-        is_priviledged_1_o <= 0;
-        uop0_o <= 0;
-        uop1_o <= 0;
-        imm0_o <= 0;
-        imm1_o <= 0;
-        rd0_o <= 0;
-        rd1_o <= 0;
-        rj0_o <= 0;
-        rj1_o <= 0;
-        rk0_o <= 0;
-        rk1_o <= 0;
+        id_reg_pc0  <= 0;
+        id_reg_pc1  <= 0;
+        id_reg_is_ALU_0  <= 0;
+        id_reg_is_ALU_1  <= 0;
+        id_reg_is_syscall_0  <= 0;
+        id_reg_is_syscall_1  <= 0;
+        id_reg_is_break_0  <= 0;
+        id_reg_is_break_1  <= 0;
+        id_reg_is_priviledged_0  <= 0;
+        id_reg_is_priviledged_1  <= 0;
+        id_reg_uop0  <= 0;
+        id_reg_uop1  <= 0;
+        id_reg_imm0  <= 0;
+        id_reg_imm1  <= 0;
+        id_reg_rd0  <= 0;
+        id_reg_rd1  <= 0;
+        id_reg_rj0  <= 0;
+        id_reg_rj1  <= 0;
+        id_reg_rk0  <= 0;
+        id_reg_rk1  <= 0;
     end else begin
-        pc0_o <= pc0;
-        pc1_o <= pc1;
-        is_ALU_0_o <= is_ALU_0;
-        is_ALU_1_o <= is_ALU_1;
-        is_syscall_0_o <= is_syscall_0;
-        is_syscall_1_o <= is_syscall_1;
-        is_break_0_o <= is_break_0;
-        is_break_1_o <= is_break_1;
-        is_priviledged_0_o <= is_priviledged_0;
-        is_priviledged_1_o <= is_priviledged_1;
-        uop0_o <= uop0;
-        uop1_o <= uop1;
-        imm0_o <= imm0;
-        imm1_o <= imm1;
-        rd0_o <= rd0;
-        rd1_o <= rd1;
-        rj0_o <= rj0;
-        rj1_o <= rj1;
-        rk0_o <= rk0;
-        rk1_o <= rk1;
+        id_reg_pc0  <= pc0;
+        id_reg_pc1  <= pc1;
+        id_reg_is_ALU_0  <= is_ALU_0;
+        id_reg_is_ALU_1  <= is_ALU_1;
+        id_reg_is_syscall_0  <= is_syscall_0;
+        id_reg_is_syscall_1  <= is_syscall_1;
+        id_reg_is_break_0  <= is_break_0;
+        id_reg_is_break_1  <= is_break_1;
+        id_reg_is_priviledged_0  <= is_priviledged_0;
+        id_reg_is_priviledged_1  <= is_priviledged_1;
+        id_reg_uop0  <= uop0;
+        id_reg_uop1  <= uop1;
+        id_reg_imm0  <= imm0;
+        id_reg_imm1  <= imm1;
+        id_reg_rd0  <= rd0;
+        id_reg_rd1  <= rd1;
+        id_reg_rj0  <= rj0;
+        id_reg_rj1  <= rj1;
+        id_reg_rk0  <= rk0;
+        id_reg_rk1  <= rk1;
     
     end
 

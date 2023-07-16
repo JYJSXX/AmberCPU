@@ -16,7 +16,7 @@
 
 module dcache #(
     parameter INDEX_WIDTH       = 6,
-    parameter WORD_OFFSET_WIDTH = 6
+    parameter WORD_OFFSET_WIDTH = 4
 )(
     input                   clk,
     input                   rstn,
@@ -31,8 +31,9 @@ module dcache #(
     output reg              wready,             // ready signal of write request to pipeline
     input [31:0]            wdata,              // write data from pipeline
     input [3:0]             wstrb,              // write mask of each write-back word from pipeline, if the request is a read request, wstrb is 4'b0
-    //input                   op,
-    //input                   uncache,            // indicate whether the request is an uncache request
+    
+    input                   op,                 // 0: read, 1: write
+    input                   uncache,            // indicate whether the request is an uncache request
 
     /* from AXI arbiter */
     // read
@@ -56,6 +57,13 @@ module dcache #(
     // back
     input                   d_bvalid,           // valid signal of write back request from main memory
     output reg              d_bready            // ready signal of write back request to main memory
+
+    // diff test
+    `ifdef DIFFTEST
+    ,output            [31:0] vaddr_diff,
+    output            [31:0] paddr_diff,
+    output            [31:0] data_diff
+    `endif
 );
     localparam 
         BYTE_OFFSET_WIDTH   = WORD_OFFSET_WIDTH + 2,                // total offset bits
