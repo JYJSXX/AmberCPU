@@ -168,7 +168,9 @@ assign uop[`UOP_PRIVILEDGED] = type_[`INS_CACHE] | type_[`INS_TLB] | type_[`INS_
         {3'b0,type_[`INS_DIV]&inst[15]} | //1为模 0为除
         {3'b0,type_[`INS_MUL]&(inst[15]|inst[16])} | //取高位
         //inst[27]==1时是保留取字和条件存字，宽度是32位
-        {4{type_[`INS_MEM]}}&{1'b0,inst[24],inst[27]?inst[23:22]:2'b10}|
+        {4{type_[`INS_MEM]}}&{1'b0,inst[24],inst[27]?inst[23:22]:2'b10}| 
+        //27是0则为原子访存，否则为普通访存；24为1则为store 否则为load ； 普通访存的23:22控制
+        //23:22为00是byte 01是h 10是字
         {4{type_[`INS_BR]}}&cond;
 
 

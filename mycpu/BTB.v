@@ -49,8 +49,8 @@ module BTB #(
     reg [1:0] TOP_STATE , NEXT_TOP_STATE;
     reg [1<<(PC_INDEX_WIDTH-1):0]   MASK;
     reg [1:0]  SCORE;
+    reg taken;
 
-    wire taken;
     wire we;//TODO
     wire [31:0] pred_pc_hang;
     wire       hit;

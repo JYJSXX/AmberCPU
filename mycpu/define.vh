@@ -10,10 +10,10 @@
 `define INS_ALU   0
 `define INS_MUL   1
 `define INS_DIV   2
-`define INS_ERTN  3
+`define INS_CSR   3
 `define INS_CACHE 4
 `define INS_TLB   5
-`define INS_CSR   6
+`define INS_ERTN  6
 `define INS_IDLE  7
 `define INS_MEM   8
 `define INS_BAR   9
@@ -68,3 +68,4 @@
 
 `define zero 32'h00000000
 `define INIT_ADDR 32'h1c00_0000
+`define PC_RESET//指令集手册68复位

@@ -5,8 +5,8 @@ module EX1_EX2(
     input   flush_in,
     output  flush_out,
 
-    input   reg_ex1_pc0,//这些信号直接从REG_EX1中接入
-    input   reg_ex1_pc1,
+    input   [31:0] reg_ex1_pc0,//这些信号直接从REG_EX1中接入
+    input   [31:0] reg_ex1_pc1,
     input   reg_ex1_is_ALU_0,
     input   reg_ex1_is_ALU_1,
     input   reg_ex1_is_syscall_0,

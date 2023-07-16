@@ -1,5 +1,5 @@
 
-#`include "define.vh"
+`include "define.vh"
 module FIFO(
     input clk,
     input rstn,
@@ -14,8 +14,8 @@ module FIFO(
     output reg[31:0] inst0_o,
     output reg[31:0] inst1_o,
     output fetch_buf_empty,
-    output fetch_buf_full,
-    #`ifdef FIFO_ID_DIFFTEST
+    output fetch_buf_full
+    `ifdef FIFO_ID_DIFFTEST
 
     `endif 
 );
