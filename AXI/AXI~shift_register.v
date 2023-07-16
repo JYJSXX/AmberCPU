@@ -1,8 +1,7 @@
-```timescale 1ns/1ps
+`timescale 1ns/1ps
 
-module shift_register#
-(
-    parameter WIDTH = 512;
+module shift_register#(
+    parameter WIDTH = 512
 )
 (
     input clk,
@@ -22,9 +21,8 @@ end
 
 endmodule
 
-module shift_register_n#
-(
-    parameter WIDTH = 512;
+module shift_register_n#(
+    parameter WIDTH = 512
 )
 (
     input clk,
@@ -40,7 +38,7 @@ reg [WIDTH - 1 : 0] data_buffer;
 always @ (posedge clk or negedge rstn)
 begin
     if (~rstn)
-        data_out <= 0;
+        data_buffer <= 0;
     else if (data_in_valid)
         data_buffer <= data_in;
     else if (ready)

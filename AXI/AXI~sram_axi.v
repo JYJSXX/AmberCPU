@@ -1,4 +1,4 @@
-```timescale 1ns/1ps
+`timescale 1ns/1ps
 
 module sram_axi(
     input                       aclk,           //时钟信号
@@ -123,7 +123,7 @@ shift_register#(.WIDTH(480)) OUTPUT_BUFFER(
     .rstn(aresetn),
     .data_in(r_data),
     .data_out(rdata_buffer),
-    .ready(r_ready),
+    .ready(r_ready)
 );
 
 always @(*)
@@ -237,7 +237,7 @@ shift_register_n INPUT_BUFFER(
     .data_in(d_wdata),
     .data_out(w_data),
     .ready(w_ready),
-    .data_in_valid(d_wvalid & (~|w_state)),
+    .data_in_valid(d_wvalid & (~|w_state))
 );
 
 always @(*)
