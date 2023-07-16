@@ -13,3 +13,4 @@ EX段划了三段，目的是使相关的指令可以同时运行
 > CSR>MUL/DIV>ALU
 > 以下类型可以双发：ALU+ALU，ALU+CSR，LD/ST+ALU，ALU+LD/ST
 > 其余类型在ID段diapatch单发，另一个发射槽设为NOP
+
