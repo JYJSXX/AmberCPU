@@ -3,8 +3,8 @@ module EX1(
     input   clk,
     input   aresetn,
     input   flush,
-    input   pc0,
-    input   pc1,
+    input   [31:0] pc0,
+    input   [31:0] pc1,
     input   is_ALU_0,
     input   is_ALU_1,
     input   is_syscall_0,
@@ -71,7 +71,7 @@ module EX1(
     output [3:0] write_type_dcache, //写入类型,0b0001为byte,0b0011为half,0b1111为word
     output [31:0] addr_dcache,
     output [31:0] w_data_dcache,
-    output [0:0] is_atom_dcache,
+    output  is_atom_dcache,
 
     //给mul
     output [31:0] mul_stage1_res_hh,
@@ -87,20 +87,20 @@ module EX1(
     output div_ready
 
 );
-wire [3:0] ctrl0;
+wire [3:0] cond0;
 wire [31:0] a_1;
 wire [31:0] b_1;
 wire [31:0] y_1;
-wire [3:0] ctrl1;
+wire [3:0] cond1;
 wire [31:0] a_2;
 wire [31:0] b_2;
 wire [31:0] y_2;
 wire pc_add_4; //根据控制信号判断要写入pc+4还是y
 assign pc_add_4 = pc0 + 4;
-assign ctrl0 = uop0[`INS_ALU] | uop0[`INS_BR];
-assign ctrl1 = uop1[`INS_ALU];
-assign alu_result0_valid = is_ALU_0;
-assign alu_result1_valid = is_ALU_1;
+assign cond0 = uop0[`UOP_COND];
+assign cond1 = uop1[`UOP_COND];
+assign alu_result0_valid = is_ALU_0 || uop0[`INS_BR];
+assign alu_result1_valid = is_ALU_1 || uop1[`INS_BR]; //beq之类的就向r0写，应该也没什么问题
 assign alu_result0 = uop0[`INS_BR]? pc_add_4:y_1;
 assign alu_result1 = y_2; //跳转指令单发，只在0号，1号alu不发射跳转
 EX1_FORWARD ex1_forward1(
@@ -132,7 +132,7 @@ assign b_1= uop0[`UOP_SRC2] == `CTRL_SRC2_RF ? rk0_data_o :
             uop0[`UOP_SRC2] == `CTRL_SRC2_IMM ? imm0 :
             uop0[`UOP_SRC2] == `CTRL_SRC2_CNTL ? stable_counter[31:0] : stable_counter[63:32];
 EX_ALU ex_alu1(
-    .ctrl(ctrl0),
+    .ctrl(cond0),
     .a(a_1),
     .b(b_1),
     .y(y_1)
@@ -167,7 +167,7 @@ assign b_2= uop1[`UOP_SRC2] == `CTRL_SRC2_RF ? rk1_data_o :
             uop1[`UOP_SRC2] == `CTRL_SRC2_IMM ? imm1:
             uop1[`UOP_SRC2] == `CTRL_SRC2_CNTL ? stable_counter[31:0] : stable_counter[63:32];
 EX_ALU ex_alu2(
-    .ctrl(ctrl1),
+    .ctrl(cond1),
     .a(a_2),
     .b(b_2),
     .y(y_2)
@@ -208,5 +208,10 @@ divider divider1(
     .stall(stall_divider),
     .ready(div_ready)
 );
-
+assign is_atom_dcache = uop0[`UOP_MEM_ATM];
+assign valid_dcache=uop0[`INS_MEM];
+assign op_dcache=cond0[2];
+assign write_type_dcache=(cond0[1:0]==0)?4'b0001:(cond0[1:0]==1)?4'b0011:4'b1111;
+assign addr_dcache = rj0_data_o+imm0;
+assign w_data_dcache = rk0_data_o;
 endmodule
