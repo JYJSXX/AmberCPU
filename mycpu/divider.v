@@ -5,7 +5,7 @@ module divider(
     input           [31:0]          dividend,
     input           [31:0]          divisor,
     input                           en,
-    input                           flush_exception, //TODO:
+    input                           flush_exception,                        //异常处理时清空除法器
     input                           sign,
 
     output  reg     [31:0]          quotient,
@@ -45,6 +45,11 @@ module divider(
             divisor_reg <= 0;
             shift_count <= 0;
         end
+        else if (flush_exception)
+        begin
+            divisor_reg <= 0;
+            shift_count <= 0;
+        end
         else if (shift)
         begin
             divisor_reg <= {1'b0, divisor_reg[63:1]};
@@ -70,6 +75,8 @@ module divider(
     always @(posedge clk or negedge rstn)
     begin
         if(~rstn)
+            div_state <= DIV_IDLE;
+        else if (flush_exception)
             div_state <= DIV_IDLE;
         else
             div_state <= div_next_state;
@@ -106,6 +113,17 @@ module divider(
     always @(posedge clk or negedge rstn)
     begin
         if(~rstn)
+        begin
+            digit_dividend_reg <= 0;
+            digit_divisor_reg <= 0;
+            dividend_reg <= 0;
+            divisor_reg <= 0;
+            quotient <= 0;
+            remainder <= 0;
+            shift <= 0;
+        end
+
+        else if (flush_exception)
         begin
             digit_dividend_reg <= 0;
             digit_divisor_reg <= 0;
