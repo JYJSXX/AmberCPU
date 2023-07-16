@@ -1,3 +1,4 @@
+
 module divider(
     input                           clk,
     input                           rstn,
@@ -15,8 +16,8 @@ module divider(
 
     wire    [31:0]  dividend_abs = sign & dividend[31] ? ~dividend + 1 : dividend; //被除数的绝对值
     wire    [31:0]  divisor_abs = sign & divisor[31] ? ~divisor + 1 : divisor;     //除数的绝对值
-    wire    [5:0]   digit_dividend = $clog2(dividend_abs);
-    wire    [5:0]   digit_divisor = $clog2(divisor_abs);
+    wire    [5:0]   digit_dividend;
+    wire    [5:0]   digit_divisor;
     reg     [63:0]  dividend_reg = 0;                                       //被除数寄存器
     reg     [63:0]  divisor_reg = 0;                                        //除数寄存器
     wire    [63:0]  minus = dividend_reg - divisor_reg;                     //差值
@@ -26,6 +27,16 @@ module divider(
     reg             dividend_sign = 0;                                      //记录被除数的符号
     reg             divisor_sign = 0;                                       //记录除数的符号
     reg     [5:0]   shift_count = 0;
+    wire    [31:0]  quotient_nxt = {quotient[30:0], ~minus[63]};              //商的下一个值
+
+    clog2 dividend_clog2(
+        .in(dividend_abs),
+        .out(digit_dividend)
+    );
+    clog2 divisor_clog2(
+        .in(divisor_abs),
+        .out(digit_divisor)
+    );
 
     always @(posedge clk or negedge rstn)
     begin
@@ -41,7 +52,7 @@ module divider(
         end
         else
         begin
-            divisor_reg <= {divisor_abs, 32'b0};
+            divisor_reg <= divisor_abs << (digit_dividend - digit_divisor + 1);
             shift_count <= 0;
         end
     end
@@ -156,28 +167,39 @@ module divider(
                     if(shift_count == digit_dividend_reg - digit_divisor_reg + 1)
                     begin
                         shift <= 0;
-                        quotient <= sign & (dividend_sign ^ divisor_sign) ? ~quotient + 1 : quotient;
-                        remainder <= sign & dividend_sign ? ~minus + 1 : minus;
+                        quotient <= sign & (dividend_sign ^ divisor_sign) ? ~quotient_nxt + 1 : quotient_nxt;
+                        remainder <= (sign & dividend_sign) ? ~(minus[63] ? dividend_reg : minus) + 1 : (minus[63] ? dividend_reg : minus);
                     end
 
                     else
                     begin
                         shift <= 1;
-                        dividend_reg <= minus;
-                        remainder <= minus;
+                        remainder <= 0;
                         digit_dividend_reg <= digit_dividend_reg;
                         digit_divisor_reg <= digit_divisor_reg;
                         dividend_sign <= dividend_sign;
                         divisor_sign <= divisor_sign;
+                        quotient <= quotient_nxt;
                         if (minus[63] == 0)
-                            quotient <= {quotient[30:0], 1'b1};
+                        begin
+                            dividend_reg <= minus;
+                        end
                         else
-                            quotient <= {quotient[30:0], 1'b0};
+                        begin
+                            dividend_reg <= dividend_reg;
+                        end
                     end
                 end
                 DIV_DONE:
                 begin
                     shift <= 0;
+                    quotient <= 0;
+                    remainder <= 0;
+                    digit_dividend_reg <= 0;
+                    digit_divisor_reg <= 0;
+                    dividend_reg <= 0;
+                    dividend_sign <= 0;
+                    divisor_sign <= 0;
                 end
             endcase
     end
