@@ -86,6 +86,7 @@ module ID_decoder
     always @* begin
         alu_op_invalid=0;
         alu_op=`CTRL_ALU_ADD; //lui和pcadd也当成add处理，修改一下src1就行了
+        
         if(is_alu)
             alu_op=inst[18:15];
         else if(is_alu_imm) begin
@@ -151,6 +152,7 @@ assign uop[`UOP_PRIVILEDGED] = type_[`INS_CACHE] | type_[`INS_TLB] | type_[`INS_
     end
 
     //assign uop[`UOP_TYPE]=(!uop_nempty||invalid_instruction)?0:type_;
+    assign uop[`UOP_TYPE]=type_;
     assign uop[`UOP_SRC1]=src1;
     assign uop[`UOP_SRC2]=src2;
     assign uop[`UOP_MEM_ATM]= ~inst[27];
