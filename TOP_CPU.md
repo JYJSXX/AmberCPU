@@ -9,3 +9,8 @@ EX段划了三段，目的是使相关的指令可以同时运行
 > 段间寄存器使用valid——ready协议握手来解决Stall的产生丢失指令或者重复发射指令的问题,流水级间，发出数据的是主，接受数据的是从
 > 空指令NOP使用定义的ADDI R0,R0,0来替代
 > Flush信号的优先级可以考虑和rstn统一处理，不需要经过valid-ready握手
+>
+> CSR>MUL/DIV>ALU
+> 以下类型可以双发：ALU+ALU，ALU+CSR，LD/ST+ALU，ALU+LD/ST
+> 其余类型在ID段diapatch单发，另一个发射槽设为NOP
+
