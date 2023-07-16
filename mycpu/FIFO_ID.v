@@ -1,5 +1,4 @@
-
-#`include "define.vh"
+`include "define.vh"
 module FIFO_ID (
     input clk,
     input rstn,
@@ -18,7 +17,7 @@ module FIFO_ID (
     input [31:0] inst1_i,
     output [31:0] inst0_o,
     output [31:0] inst1_o
-    #`ifdef FIFO_ID_DIFFTEST
+    `ifdef FIFO_ID_DIFFTEST
 
     `endif 
 );
