@@ -12,7 +12,7 @@ module icache #(
     input               rstn,           
     // for pipeline 
     input               rvalid,         // valid signal of read request from pipeline
-    output reg          rready,         // ready signal of read request to pipeline
+    output              rready,         // ready signal of read request to pipeline
     input [31:0]        raddr,          // read address from pipeline
     input [31:0]        p_addr,         // physical address from pipeline
     output [63:0]       rdata,          // read data to pipeline
@@ -29,7 +29,7 @@ module icache #(
     
     output [31:0] badv,               // 无效虚拟地址
     output [6:0] exception,
-    //input               flush,          // flush signal from pipeline
+    input               flush,          // flush signal from pipeline
     input               uncache,        // uncache signal from pipeline
     input  [COOKIE_WIDTH-1:0] cookie_in, // cookie from pipeline
     output [COOKIE_WIDTH-1:0] cookie_out, // cookie to pipeline  
@@ -83,8 +83,10 @@ module icache #(
     reg                         data_from_mem;
 
 
-    // // flush signal -> valid signal
-    // reg                         flush_valid;
+    // flush signal -> valid signal
+    reg                         flush_valid;
+    reg                         rready_temp;
+    assign rready = rready_temp & flush_valid;
 
     // // statistics 统计信息
     // reg     [63:0]              total_time;
@@ -196,14 +198,14 @@ module icache #(
     assign exception_normal = (exception_temp1 == 0 || tlb_exception == `EXP_ADEF)? tlb_exception : exception_temp1;
     assign exception = exception_sel ? exception_buf : exception_normal;
 
-    // /* flush signal */
-    // always @(posedge clk)
-    //     if(flush || !rstn) begin
-    //         flush_valid <= 0;
-    //     end
-    //     else if(req_buf_we) begin
-    //         flush_valid <= rvalid;
-    //     end
+    /* flush signal */
+    always @(posedge clk)
+        if(flush || !rstn) begin
+            flush_valid <= 0;
+        end
+        else if(req_buf_we) begin
+            flush_valid <= rvalid;
+        end
 
     /* 2-way data memory */
     // read index
@@ -374,7 +376,7 @@ module icache #(
     always @(*) begin
         req_buf_we              = 0;
         i_rvalid                = 0;
-        rready                  = 0;
+        rready_temp                  = 0;
         tagv_we                 = 0;
         mem_we                  = 0;
         data_from_mem           = 1;
@@ -402,14 +404,14 @@ module icache #(
                 lru_we                  = 0;
                 if(!cache_hit || uncache_buf) missbuf_we = 1;
                 else begin
-                    rready              = 1;
+                    rready_temp              = 1;
                     req_buf_we          = rvalid;
                     way_visit           = hit_way;
                     lru_we              = 1;
                     cacop_ready         = 1;
                 end
             end
-            else rready = 1;
+            else rready_temp = 1;
         end
         MISS: begin
             i_rvalid        = 1;
@@ -422,7 +424,7 @@ module icache #(
                 way_visit               = lru_sel[1];
                 lru_we                  = 1;
             end
-            rready                  = 1;
+            rready_temp                  = 1;
             req_buf_we              = rvalid;
             data_from_mem           = 0;
             cacop_ready             = 1;
@@ -434,12 +436,12 @@ module icache #(
             else if(store_tag || index_invalid) begin
                 tagv_clear = 1;
                 tagv_we    = tagv_way_sel;
-                rready     = 1;
+                rready_temp     = 1;
             end
             else if(hit_invalid) begin
                 tagv_clear = 1;
                 tagv_we    = hit;
-                rready     = 1;
+                rready_temp     = 1;
             end
         end
         default:;

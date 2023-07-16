@@ -36,6 +36,7 @@
 - rvalid(1)：cpu读请求
 - raddr(32): cpu读请求pc（VA虚拟地址）
 - p_addr(32): cpu读请求pc（物理地址，比VA晚一个时钟到来）
+- flush(1): 来自cpu的flush信号（用于冲刷当前指令，不会再输出rready信号，相当于此次访存没有发生）
 - uncache(1): 绕过cache访存信号
 - cookie_in(32): 附加信息（cache不做处理仅仅缓存一级）
 - cacop_en(1): cacop指令对icache的操作（需要先判断cacop操作对象后直接传给icache)
@@ -65,10 +66,6 @@
 - i_rready(1): AXI向cache完成访存信号
 - i_rdata(512): AXI向cache传递的数据块
 
-> Cache接收到AXI的return值是类低位存储的数据！
->
-> （不断接收到数据然后左移的结果）
-
 # Dcache接口
 
 **平凡输入**
@@ -81,18 +78,31 @@
 输入端
 
 - addr(32)：读写地址
+- p_addr(32): 物理地址
 - rvalid (1)：来自流水线的读请求的有效信号。
 - wvalid (1)：来自流水线的写请求的有效信号。
 - wdata (32)：来自流水线的写数据。
 - wstrb (4)：每个写回字（word）的写掩码，如果请求是读请求，则wstrb为4'b0。
 - op (1)：操作类型，0表示读操作，1表示写操作。
 - uncache (1)：指示请求是否为非缓存请求。
+- signed_ext (1): 是否要存储符号位扩展的数据（1就扩展）
+- tlb_exception (7): TLB异常信息码
+- cacop_en(1): cacop指令对dcache的操作（需要先判断cacop操作对象后直接传给dcache)
+- cacop_code(2)： cacop指令code[4:3]，操作码
+- is_atom (1): 原子指令load信号
+- llbit (1): 原子指令llbit
 
 输出端
 
 - rready (1)：向流水线发送的读请求的就绪信号。
 - rdata (32)：读取的数据返回给流水线。
 - wready (1): 写请求的就绪信号
+- exception (7): 异常信息码
+- badv (32): 无效虚拟地址
+- cacop_ready(1)：接受到cacop指令，开始执行操作
+- cacop_complete(1)：完成cacop指令
+- llbit_set (1): 完成原子指令load，将llbit置为1
+- llbit_clear (1): 完成原子指令store，将llbit清零
 
 **与AXI交流**
 
@@ -132,9 +142,13 @@
 
 输入： d_bvalid (1)：来自主存的写回请求的有效信号。
 
-> Cache接收到AXI的return值是类低位存储的数据！
->
-> （不断接收到数据然后左移的结果）
+**DIFFTEST**
+
+output       [31:0] vaddr_diff,
+
+output       [31:0] paddr_diff,
+
+output       [31:0] data_diff
 
 # 优化方向
 
