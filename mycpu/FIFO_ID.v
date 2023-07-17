@@ -13,12 +13,14 @@ module FIFO_ID (
     output  fifo_ready,//to fifo stage,tell fifo I'm ready
     input fifo_valid,//from fifo stage,told fifo is valid
 
+    input [31:0] fifo_inst0,
+    input [31:0] fifo_inst1,
+    input [31:0] fifo_pc,
     input fetch_buf_empty,
     input fetch_buf_full,
-    input [31:0] inst0_i,
-    input [31:0] inst1_i,
     output reg[31:0] fifo_id_inst0,
-    output reg[31:0] fifo_id_inst1
+    output reg[31:0] fifo_id_inst1,
+    output reg[31:0] fifo_id_pc
     `ifdef FIFO_ID_DIFFTEST
 
     `endif 
@@ -26,10 +28,17 @@ module FIFO_ID (
 
     assign id_valid=fifo_valid&!fifo_id_stall;
     assign fifo_ready=id_ready&!fetch_buf_full;
+
+
     always @(posedge clk or negedge rstn) begin
-        if (~rstn) begin
-            fifo_id_inst0<=`INST_NOP;
-            fifo_id_inst1<=`INST_NOP;
+        if (~rstn|fifo_id_flush) begin
+            fifo_id_inst0   <=`INST_NOP;
+            fifo_id_inst1   <=`INST_NOP;
+            fifo_id_pc      <=`PC_RESET;
+        end else if(!fifo_id_stall&fifo_valid)begin
+            fifo_id_inst0   <=fifo_inst0;
+            fifo_id_inst1   <=fifo_inst1;
+            fifo_id_pc      <=fifo_pc;
         end
     end
 endmodule
