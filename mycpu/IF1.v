@@ -9,8 +9,6 @@ module IF1 (
     input   [31:0] if0_if1_pc,
     output  [31:0] if1_fifo_pc,
 
-    output [31:0] inst0,
-    output [31:0] inst1,
 
     input rready,
     input [63:0] rdata,
@@ -27,7 +25,9 @@ module IF1 (
     output [6:0] icache_exception,
     output [31:0]icache_cookie_out,
     output if1_cacop_ready,
-    output if1_cacop_complete
+    output if1_cacop_complete,
+    output [31:0] if1_inst0,
+    output [31:0] if1_inst1
 
 );
     assign if1_fifo_pc = if0_if1_pc;
@@ -35,7 +35,7 @@ module IF1 (
     assign inst1 = rdata[63:32];
     assign icache_ready = rready;
     assign icache_pc_out = pc_out;
-    assign icache_badv  = if_badv;
+    assign icache_badv  = badv;
     assign icache_exception = exception;
     assign icache_cookie_out = cookie_out;
     assign if1_cacop_ready = cacop_ready;

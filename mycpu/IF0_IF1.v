@@ -3,11 +3,6 @@ module IF0_IF1 (
     input               clk,
     input               rstn,
 
-    //for Cache
-    input               rready,
-    input  [31:0]       rdata,
-    input  [31:0]       pc_out,
-
     //hand shake
     input               if0_valid,
     output              if0_ready,
@@ -36,5 +31,4 @@ module IF0_IF1 (
             end
         end
     end
-cjb
 endmodule

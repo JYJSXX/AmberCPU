@@ -4,9 +4,17 @@ module EX1_EX2(
     input   aresetn,
     input   flush_in,
     output  flush_out,
+    input   ex1_valid,
+    output  reg ex1_ready,
+    input   ex2_ready,
+    output  reg ex2_valid,
+    input   forward_stall,
+
 
     input   [31:0] reg_ex1_pc0,//这些信号直接从REG_EX1中接入
     input   [31:0] reg_ex1_pc1,
+    input   [31:0] reg_ex1_inst0,
+    input   [31:0] reg_ex1_inst1,
     input   reg_ex1_is_ALU_0,
     input   reg_ex1_is_ALU_1,
     input   reg_ex1_is_syscall_0,
@@ -31,6 +39,10 @@ module EX1_EX2(
     input   [31:0] mul_stage1_res_ll,
     input   [31:0] mul_compensate,
 
+    output  reg [31:0] ex1_ex2_pc0,
+    output  reg [31:0] ex1_ex2_pc1,
+    output  reg [31:0] ex1_ex2_inst0,
+    output  reg [31:0] ex1_ex2_inst1,
     output  reg ex1_ex2_is_syscall_0,
     output  reg ex1_ex2_is_syscall_1,
     output  reg ex1_ex2_is_break_0,
@@ -60,12 +72,18 @@ module EX1_EX2(
     output reg [31:0] ex1_ex2_data_0,
     output reg [31:0] ex1_ex2_data_1,
     output reg ex1_ex2_data_0_valid,
-    output reg ex1_ex2_data_1_valid
+    output reg ex1_ex2_data_1_valid,
 
+    input dcache_ready,
+    input div_ready
 
 );
 always@(posedge clk) begin
-    if(~aresetn) begin
+    if(~aresetn | (~ex1_valid & ex2_ready)) begin
+        ex1_ex2_pc0<=0;
+        ex1_ex2_pc1<=0;
+        ex1_ex2_inst0<=0;
+        ex1_ex2_inst1<=0;
         ex1_ex2_is_syscall_0<=0;
         ex1_ex2_is_syscall_1<=0;
         ex1_ex2_is_break_0<=0;
@@ -91,7 +109,11 @@ always@(posedge clk) begin
         ex1_ex2_mul_stage1_res_lh<=0;
         ex1_ex2_mul_stage1_res_ll<=0;
         ex1_ex2_mul_compensate<=0;
-    end else begin
+    end else if(ex1_valid&&ex2_ready)begin
+        ex1_ex2_pc0<=reg_ex1_pc0;
+        ex1_ex2_pc1<=reg_ex1_pc1;
+        ex1_ex2_inst0<=reg_ex1_inst0;
+        ex1_ex2_inst1<=reg_ex1_inst1;
         ex1_ex2_is_syscall_0<=reg_ex1_is_syscall_0;
         ex1_ex2_is_syscall_1<=reg_ex1_is_syscall_1;
         ex1_ex2_is_break_0<=reg_ex1_is_break_0;
@@ -118,5 +140,46 @@ always@(posedge clk) begin
         ex1_ex2_mul_stage1_res_ll<=mul_stage1_res_ll;
         ex1_ex2_mul_compensate<=mul_compensate;
     end
+    else begin
+        //~ex2_ready,寄存器保持不变
+        ex1_ex2_pc0<=ex1_ex2_pc0;
+        ex1_ex2_pc1<=ex1_ex2_pc1;
+        ex1_ex2_inst0<=ex1_ex2_inst0;
+        ex1_ex2_inst1<=ex1_ex2_inst1;
+        ex1_ex2_is_syscall_0<=ex1_ex2_is_syscall_0;
+        ex1_ex2_is_syscall_1<=ex1_ex2_is_syscall_1;
+        ex1_ex2_is_break_0<=ex1_ex2_is_break_0;
+        ex1_ex2_is_break_1<=ex1_ex2_is_break_1;
+        ex1_ex2_is_priviledged_0<=ex1_ex2_is_priviledged_0;
+        ex1_ex2_is_priviledged_1<=ex1_ex2_is_priviledged_1;
+        ex1_ex2_uop0<=ex1_ex2_uop0;
+        ex1_ex2_uop1<=ex1_ex2_uop1;
+        ex1_ex2_imm0<=ex1_ex2_imm0;
+        ex1_ex2_imm1<=ex1_ex2_imm1;
+        ex1_ex2_rj0<=ex1_ex2_rj0;
+        ex1_ex2_rj1<=ex1_ex2_rj1;
+        ex1_ex2_rk0<=ex1_ex2_rk0;
+        ex1_ex2_rk1<=ex1_ex2_rk1;
+        ex1_ex2_rd0<=ex1_ex2_rd0;
+        ex1_ex2_rd1<=ex1_ex2_rd1;
+        ex1_ex2_data_0<=ex1_ex2_data_0;
+        ex1_ex2_data_1<=ex1_ex2_data_1;
+        ex1_ex2_data_0_valid<=ex1_ex2_data_0_valid;
+        ex1_ex2_data_1_valid<=ex1_ex2_data_1_valid;
+        ex1_ex2_mul_stage1_res_hh<=ex1_ex2_mul_stage1_res_hh;
+        ex1_ex2_mul_stage1_res_hl<=ex1_ex2_mul_stage1_res_hl;
+        ex1_ex2_mul_stage1_res_lh<=ex1_ex2_mul_stage1_res_lh;
+        ex1_ex2_mul_stage1_res_ll<=ex1_ex2_mul_stage1_res_ll;
+        ex1_ex2_mul_compensate<=ex1_ex2_mul_compensate;
+
+    end
 end
+always@(*)begin
+    ex1_ready=0;
+    if(ex1_valid & ~forward_stall)begin
+        ex1_ready=1;
+    end
+    ex2_valid = ex1_valid & ~forward_stall; //由于forward_stall停顿
+end
+
 endmodule

@@ -21,31 +21,76 @@ module EX1_FORWARD(
     input [31:0] ex2_wb_data_1,
     //向ex1段输出
     output reg [31:0] ex1_rj_data_o,
-    output reg [31:0] ex1_rk_data_o
+    output reg [31:0] ex1_rk_data_o,
+
+    output reg forward_stall
 );
     always@(*)begin
-        if(ex1_rj==ex1_ex2_rd1 && ex1_ex2_data_1_valid) begin
-            ex1_rj_data_o=ex1_ex2_data_1;
-        end else if(ex1_rj==ex1_ex2_rd0 && ex1_ex2_data_0_valid) begin
-            ex1_rj_data_o=ex1_ex2_data_0;
-        end else if(ex1_rj==ex2_wb_rd1 && ex2_wb_data_1_valid) begin
-            ex1_rj_data_o=ex2_wb_data_1;
-        end else if(ex1_rj==ex2_wb_rd0 && ex2_wb_data_0_valid) begin
-            ex1_rj_data_o=ex2_wb_data_0;
-        end else begin
-            ex1_rj_data_o=ex1_rj_data;
-        end
+        ex1_rj_data_o=ex1_rj_data;
+        ex1_rk_data_o=ex1_rk_data;
+        forward_stall=0;
+        if(ex1_rj==ex1_ex2_rd1 ) begin
+            if(ex1_ex2_data_1_valid) begin
+                forward_stall=0;
+                ex1_rj_data_o=ex1_ex2_data_1;
+            end else begin
+                forward_stall=1;
+            end
+            
+        end else if(ex1_rj==ex1_ex2_rd0) begin
+            if(ex1_ex2_data_0_valid) begin
+                forward_stall=0;
+                ex1_rj_data_o=ex1_ex2_data_0;
+            end else begin
+                forward_stall=1;
+            end
+        
+        end else if(ex1_rj==ex2_wb_rd1) begin
+            if(ex2_wb_data_1_valid)begin
+                forward_stall=0;
+                ex1_rj_data_o=ex2_wb_data_1;
+            end else begin
+                forward_stall=1;
+            end
+        end else if(ex1_rj==ex2_wb_rd0) begin
+            if(ex2_wb_data_0_valid)begin
+                forward_stall=0;
+                ex1_rj_data_o=ex2_wb_data_0;
+            end else begin
+                forward_stall=1;
+            end
+        end 
 
-        if(ex1_rk==ex1_ex2_rd1) begin
-            ex1_rk_data_o=ex1_ex2_data_1;
+        if(ex1_rk==ex1_ex2_rd1 ) begin
+            if(ex1_ex2_data_1_valid) begin
+                forward_stall=0;
+                ex1_rk_data_o=ex1_ex2_data_1;
+            end else begin
+                forward_stall=1;
+            end
+            
         end else if(ex1_rk==ex1_ex2_rd0) begin
-            ex1_rk_data_o=ex1_ex2_data_0;
+            if(ex1_ex2_data_0_valid) begin
+                forward_stall=0;
+                ex1_rk_data_o=ex1_ex2_data_0;
+            end else begin
+                forward_stall=1;
+            end
+        
         end else if(ex1_rk==ex2_wb_rd1) begin
-            ex1_rk_data_o=ex2_wb_data_1;
+            if(ex2_wb_data_1_valid)begin
+                forward_stall=0;
+                ex1_rk_data_o=ex2_wb_data_1;
+            end else begin
+                forward_stall=1;
+            end
         end else if(ex1_rk==ex2_wb_rd0) begin
-            ex1_rk_data_o=ex2_wb_data_0;
-        end else begin
-            ex1_rk_data_o=ex1_rk_data;
+            if(ex2_wb_data_0_valid)begin
+                forward_stall=0;
+                ex1_rk_data_o=ex2_wb_data_0;
+            end else begin
+                forward_stall=1;
+            end
         end
 
     end

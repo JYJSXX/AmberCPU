@@ -124,7 +124,7 @@ shift_register#(.WIDTH(480)) OUTPUT_BUFFER(
     .rstn(aresetn),
     .data_in(r_data),
     .data_out(rdata_buffer),
-    .ready(r_ready)
+    .ready(r_ready & r_valid)
 );
 
 always @(*)
@@ -234,7 +234,7 @@ begin
         begin
             if(b_valid & b_ready)
                 w_next_state = W_IDLE;
-        end        
+        end
     endcase
 end
 
