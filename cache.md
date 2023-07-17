@@ -60,6 +60,7 @@
 
 - i_rvalid(1): icache向AXI请求数据信号
 - i_raddr(32): icache向AXI请求数据起始地址（uncache会做特殊处理，请求的地址为要的指令的起始地址）
+- i_rlen (8): 默认15，当uncache访问的时候是1；
 
 输入端：
 
