@@ -4,50 +4,66 @@ module  REG_EX1(
     input   clk,
     input   aresetn,
     input   flush,
-    input   is_syscall_0,
-    input   is_syscall_1,
-    input   is_break_0,
-    input   is_break_1,
-    input   is_priviledged_0,
-    input   is_priviledged_1,
-    input   [`WIDTH_UOP-1:0] uop0,
-    input   [`WIDTH_UOP-1:0] uop1,
-    input   [31:0] imm0,
-    input   [31:0] imm1,
+    input   reg_valid,
+    output  reg reg_ready,
+    input   ex_ready,
+    output  reg ex_valid,
+    input   [31:0] id_reg_pc0,
+    input   [31:0] id_reg_pc1,
+    input   [31:0] id_reg_inst0,
+    input   [31:0] id_reg_inst1,
+    input   id_reg_is_ALU_0,
+    input   id_reg_is_ALU_1,
+    input   id_reg_is_syscall_0,
+    input   id_reg_is_syscall_1,
+    input   id_reg_is_break_0,
+    input   id_reg_is_break_1,
+    input   id_reg_is_priviledged_0,
+    input   id_reg_is_priviledged_1,
+    input   [`WIDTH_UOP-1:0] id_reg_uop0,
+    input   [`WIDTH_UOP-1:0] id_reg_uop1,
+    input   [31:0] id_reg_imm0,
+    input   [31:0] id_reg_imm1,
     input   [4:0] wb_rd0,
     input   [4:0] wb_rd1,
     input   we_0,
     input   we_1,
     input  [31:0] rd0_data,
     input  [31:0] rd1_data,
-    input   [4:0] ex_rj0,
-    input   [4:0] ex_rj1,
-    input   [4:0] ex_rk0,
-    input   [4:0] ex_rk1,
-    input   [4:0] ex_rd0,
-    input   [4:0] ex_rd1,
+    input   [4:0] id_reg_rj0,
+    input   [4:0] id_reg_rj1,
+    input   [4:0] id_reg_rk0,
+    input   [4:0] id_reg_rk1,
+    input   [4:0] id_reg_rd0,
+    input   [4:0] id_reg_rd1,
 
-    output  reg is_syscall_0_o,
-    output  reg is_syscall_1_o,
-    output  reg is_break_0_o,
-    output  reg is_break_1_o,
-    output  reg is_priviledged_0_o,
-    output  reg is_priviledged_1_o,
-    output  reg [`WIDTH_UOP-1:0] uop0_o,
-    output  reg [`WIDTH_UOP-1:0] uop1_o,
-    output  reg [31:0] imm0_o,
-    output  reg [31:0] imm1_o,
+    output  reg [31:0] reg_ex_pc0,
+    output  reg [31:0] reg_ex_pc1,
+    output  reg [31:0] reg_ex_inst0,
+    output  reg [31:0] reg_ex_inst1,
+    output  reg reg_ex_is_ALU_0,
+    output  reg reg_ex_is_ALU_1,
+    output  reg reg_ex_is_syscall_0,
+    output  reg reg_ex_is_syscall_1,
+    output  reg reg_ex_is_break_0,
+    output  reg reg_ex_is_break_1,
+    output  reg reg_ex_is_priviledged_0,
+    output  reg reg_ex_is_priviledged_1,
+    output  reg [`WIDTH_UOP-1:0] reg_ex_uop0,
+    output  reg [`WIDTH_UOP-1:0] reg_ex_uop1,
+    output  reg [31:0] reg_ex_imm0,
+    output  reg [31:0] reg_ex_imm1,
 
-    output  reg [31:0] rj0_data_o,
-    output  reg [31:0] rj1_data_o,
-    output  reg [31:0] rk0_data_o,
-    output  reg [31:0] rk1_data_o,
-    output  reg [4:0] ex_rj0_o,
-    output  reg [4:0] ex_rj1_o,
-    output  reg [4:0] ex_rk0_o,
-    output  reg [4:0] ex_rk1_o,
-    output  reg [4:0] ex_rd0_o,
-    output  reg [4:0] ex_rd1_o
+    output  reg [31:0] reg_ex_rj0_data,
+    output  reg [31:0] reg_ex_rj1_data,
+    output  reg [31:0] reg_ex_rk0_data,
+    output  reg [31:0] reg_ex_rk1_data,
+    output  reg [4:0] reg_ex_rj0,
+    output  reg [4:0] reg_ex_rj1,
+    output  reg [4:0] reg_ex_rk0,
+    output  reg [4:0] reg_ex_rk1,
+    output  reg [4:0] reg_ex_rd0,
+    output  reg [4:0] reg_ex_rd1
 
 
 );
@@ -64,50 +80,115 @@ regfile regfile1( //内部自带写优先
     .we2(we_1),
     .waddr2(wb_rd1),
     .wdata2(rd1_data),
-    .raddr1(ex_rj0),
+    .raddr1(id_reg_rj0),
     .rdata1(rj0_data),
-    .raddr2(ex_rj1),
+    .raddr2(id_reg_rj1),
     .rdata2(rj1_data),
-    .raddr3(ex_rk0),
+    .raddr3(id_reg_rk0),
     .rdata3(rk0_data),
-    .raddr4(ex_rk1),
+    .raddr4(id_reg_rk1),
     .rdata4(rk1_data)
 );
 always@(posedge clk)begin
-    if(aresetn | flush) begin
-        is_syscall_0_o <= 0;
-        is_syscall_1_o <= 0;
-        is_break_0_o <= 0;
-        is_break_1_o <= 0;
-        is_priviledged_0_o <= 0;
-        is_priviledged_1_o <= 0;
-        uop0_o <= 0;
-        uop1_o <= 0;
-        imm0_o <= 0;
-        imm1_o <= 0;
-        rj0_data_o <= 0;
-        rj1_data_o <= 0;
-        rk0_data_o <= 0;
-        rk1_data_o <= 0;
+    if(~aresetn | flush | (~reg_valid & ex_ready) ) begin
+        reg_ex_pc0 <= 0;
+        reg_ex_pc1 <= 0;
+        reg_ex_inst0 <= 0;
+        reg_ex_inst1 <= 0;
+        reg_ex_is_ALU_0 <= 0;
+        reg_ex_is_ALU_1 <= 0;
+        reg_ex_is_syscall_0 <= 0;
+        reg_ex_is_syscall_1 <= 0;
+        reg_ex_is_break_0 <= 0;
+        reg_ex_is_break_1 <= 0;
+        reg_ex_is_priviledged_0 <= 0;
+        reg_ex_is_priviledged_1 <= 0;
+        reg_ex_uop0 <= 0;
+        reg_ex_uop1 <= 0;
+        reg_ex_imm0 <= 0;
+        reg_ex_imm1 <= 0;
+        reg_ex_rj0_data <= 0;
+        reg_ex_rj1_data <= 0;
+        reg_ex_rk0_data <= 0;
+        reg_ex_rk1_data <= 0;
+        reg_ex_rj0 <= 0;
+        reg_ex_rj1 <= 0;
+        reg_ex_rk0 <= 0;
+        reg_ex_rk1 <= 0;
+        reg_ex_rd0 <= 0;
+        reg_ex_rd1 <= 0;
+
+    end
+    else if(reg_valid&&ex_ready)begin
+        reg_ex_pc0 <= id_reg_pc0;
+        reg_ex_pc1 <= id_reg_pc1;
+        reg_ex_inst0 <= id_reg_inst0;
+        reg_ex_inst1 <= id_reg_inst1;
+        reg_ex_is_ALU_0 <= id_reg_is_ALU_0;
+        reg_ex_is_ALU_1 <= id_reg_is_ALU_1;
+        reg_ex_is_syscall_0 <= id_reg_is_syscall_0;
+        reg_ex_is_syscall_1 <= id_reg_is_syscall_1;
+        reg_ex_is_break_0 <= id_reg_is_break_0;
+        reg_ex_is_break_1 <= id_reg_is_break_1;
+        reg_ex_is_priviledged_0 <= id_reg_is_priviledged_0;
+        reg_ex_is_priviledged_1 <= id_reg_is_priviledged_1;
+        reg_ex_uop0 <= id_reg_uop0;
+        reg_ex_uop1 <= id_reg_uop1;
+        reg_ex_imm0 <= id_reg_imm0;
+        reg_ex_imm1 <= id_reg_imm1;
+        reg_ex_rj0_data <= rj0_data;
+        reg_ex_rj1_data <= rj1_data;
+        reg_ex_rk0_data <= rk0_data;
+        reg_ex_rk1_data <= rk1_data;
+        reg_ex_rj0 <= id_reg_rj0;
+        reg_ex_rj1 <= id_reg_rj1;
+        reg_ex_rk0 <= id_reg_rk0;
+        reg_ex_rk1 <= id_reg_rk1;
+        reg_ex_rd0 <= id_reg_rd0;
+        reg_ex_rd1 <= id_reg_rd1;
 
     end
     else begin
-        is_syscall_0_o <= is_syscall_0;
-        is_syscall_1_o <= is_syscall_1;
-        is_break_0_o <= is_break_0;
-        is_break_1_o <= is_break_1;
-        is_priviledged_0_o <= is_priviledged_0;
-        is_priviledged_1_o <= is_priviledged_1;
-        uop0_o <= uop0;
-        uop1_o <= uop1;
-        imm0_o <= imm0;
-        imm1_o <= imm1;
-        rj0_data_o <= rj0_data;
-        rj1_data_o <= rj1_data;
-        rk0_data_o <= rk0_data;
-        rk1_data_o <= rk1_data;
+        //寄存器保持不变
+        reg_ex_pc0 <= reg_ex_pc0;
+        reg_ex_pc1 <= reg_ex_pc1;
+        reg_ex_inst0 <= reg_ex_inst0;
+        reg_ex_inst1 <= reg_ex_inst1;
+        reg_ex_is_ALU_0 <= reg_ex_is_ALU_0;
+        reg_ex_is_ALU_1 <= reg_ex_is_ALU_1;
+        reg_ex_is_syscall_0 <= reg_ex_is_syscall_0;
+        reg_ex_is_syscall_1 <= reg_ex_is_syscall_1;
+        reg_ex_is_break_0 <= reg_ex_is_break_0;
+        reg_ex_is_break_1 <= reg_ex_is_break_1;
+        reg_ex_is_priviledged_0 <= reg_ex_is_priviledged_0;
+        reg_ex_is_priviledged_1 <= reg_ex_is_priviledged_1;
+        reg_ex_uop0 <= reg_ex_uop0;
+        reg_ex_uop1 <= reg_ex_uop1;
+        reg_ex_imm0 <= reg_ex_imm0;
+        reg_ex_imm1 <= reg_ex_imm1;
+        reg_ex_rj0_data <= reg_ex_rj0_data;
+        reg_ex_rj1_data <= reg_ex_rj1_data;
+        reg_ex_rk0_data <= reg_ex_rk0_data;
+        reg_ex_rk1_data <= reg_ex_rk1_data;
+        reg_ex_rj0 <= reg_ex_rj0;
+        reg_ex_rj1 <= reg_ex_rj1;
+        reg_ex_rk0 <= reg_ex_rk0;
+        reg_ex_rk1 <= reg_ex_rk1;
+        reg_ex_rd0 <= reg_ex_rd0;
+        reg_ex_rd1 <= reg_ex_rd1;
+
     end
     
+    
 
+end
+always@(*)begin
+    reg_ready=0;
+
+    if(reg_valid)begin
+        reg_ready=1;
+    end
+    ex_valid=reg_valid;
+     //没啥停顿的，前面能流就跟着流就行吧,但是后面ex1段给不给ready就不好说了
 end
 endmodule

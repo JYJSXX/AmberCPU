@@ -14,3 +14,31 @@ EX段划了三段，目的是使相关的指令可以同时运行
 > 以下类型可以双发：ALU+ALU，ALU+CSR，LD/ST+ALU，ALU+LD/ST
 > 其余类型在ID段diapatch单发，另一个发射槽设为NOP
 
+> 
+
+```mermaid
+graph LR
+    流水级1--valid_12-->流水级2
+    流水级2--ready_21-->流水级1
+    流水级2--valid_23-->流水级3
+    流水级3--ready_23-->流水级2
+```
+
+这里的流水级指的是段间寄存器
+
+```
+valid_23和ready_21还与流水级自身情况有关，这里假设自身准备好，如果自身没准备好，对外valid_23和ready_21均为0
+valid_23不能受ready_23控制
+伪代码表示：
+valid_23 = valid_12 && valid (valid表示自身情况)
+if(valid_12 && ready_23)
+	更新流水级2
+	ready_21=1
+if(valid_12 && ~ready_23)
+	维持流水级2（所有寄存器值不动）
+	ready_21=0
+if(~valid_12 && ready_23)
+	清空流水级2（所有控制信号置为0，防止上一周期的指令被重复执行）
+	ready_21=1
+```
+

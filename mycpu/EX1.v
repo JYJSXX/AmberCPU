@@ -49,7 +49,7 @@ module EX1(
     input [31:0] ex2_wb_data_1,
     input ex2_wb_data_0_valid,
     input ex2_wb_data_1_valid,
-
+    output forward_stall, //需要前递，但还没算出来，给段间寄存器ready信号用
     //csr
     input [31:0] tid, //读时钟id的指令RDCNTID用到
 
@@ -66,12 +66,29 @@ module EX1(
     output [31:0] fact_tpc, //目标地址pc
 
     //给cache
-    output valid_dcache,
+    output rvalid_dcache,
+    output wvalid_dcache,
     output op_dcache, //0读1写
     output [3:0] write_type_dcache, //写入类型,0b0001为byte,0b0011为half,0b1111为word
     output [31:0] addr_dcache,
     output [31:0] w_data_dcache,
     output  is_atom_dcache,
+   // output uncache, 由csr负责
+//     输入端
+
+// - addr(32)：读写地址
+// - rvalid (1)：来自流水线的读请求的有效信号。
+// - wvalid (1)：来自流水线的写请求的有效信号。
+// - wdata (32)：来自流水线的写数据。
+// - wstrb (4)：每个写回字（word）的写掩码，如果请求是读请求，则wstrb为4'b0。
+// - op (1)：操作类型，0表示读操作，1表示写操作。
+// - uncache (1)：指示请求是否为非缓存请求。
+
+// 输出端
+
+// - rready (1)：向流水线发送的读请求的就绪信号。
+// - rdata (32)：读取的数据返回给流水线。
+// - wready (1): 写请求的就绪信号
 
     //给mul
     output [31:0] mul_stage1_res_hh,
@@ -121,8 +138,8 @@ EX1_FORWARD ex1_forward1(
     .ex1_rj_data(ex_rj0_data),
     .ex1_rk_data(ex_rk0_data),
     .ex1_rj_data_o(rj0_data_o),
-    .ex1_rk_data_o(rk0_data_o)
-
+    .ex1_rk_data_o(rk0_data_o),
+    .forward_stall(forward_stall)
 );
 
 assign a_1 = uop0[`UOP_SRC1] == `CTRL_SRC1_RF ? rj0_data_o : 
@@ -209,7 +226,8 @@ divider divider1(
     .ready(div_ready)
 );
 assign is_atom_dcache = uop0[`UOP_MEM_ATM];
-assign valid_dcache=uop0[`INS_MEM];
+assign rvalid_dcache=uop0[`INS_MEM] & ~cond0[2] & ~forward_stall;
+assign wvalid_dcache=uop0[`INS_MEM] & cond0[2] & ~forward_stall;
 assign op_dcache=cond0[2];
 assign write_type_dcache=(cond0[1:0]==0)?4'b0001:(cond0[1:0]==1)?4'b0011:4'b1111;
 assign addr_dcache = rj0_data_o+imm0;

@@ -1,96 +1,111 @@
-`include "clap_config.vh"
+`include "../config.vh"
+`include "../exception.vh"
+`include "../csr.vh"
 
 /* verilator lint_off DECLFILENAME */
-module mem0 (
-    //从exe0段输入
-    input  [4:0]       mem_rd_in,
-    input  [31:0]      mem_data_in,
-    input  [ 0:0 ]     mem_en_in,
-    input  [ 31:0 ]    mem_sr,
-    input  [ 31:0 ]    mem_imm,
-    input  [ 0:0 ]     mem_write,
-    input  [ 1:0 ]     mem_width_in,
-    input  [6:0]       mem_exp_in,
-    input  [0:0]       mem_sign,
-    input  [0:0]       is_atom_in,
-    input              is_preload,
-    //向cache输出
-    output [0:0]       valid,                 //    valid request
-    output [0:0]       op,                    //    write: 1, read: 0
-    output [31:0]      addr,
-    output reg [ 3:0 ] write_type,          //    byte write enable
-    output [ 31:0 ]    w_data_CPU,         //    write data
-    output [0:0]       is_atom_out,
-    //向exe0段后输出
-    output [6:0]       mem_exp_out,
-    output [4:0]       mem_rd_out,
-    output [0:0]       mem_en_out,
-    output [0:0]       signed_ext
-);
-    assign valid = mem_en_in;
-    assign op    = mem_write;
-    wire [31:0] addr_tmp = mem_sr + mem_imm;
-    assign addr  = {addr_tmp[31:3],addr_tmp[2:0]&~{3{is_preload}}};
+module writeback
+(   
+    input eu0_valid,eu1_valid,
+    input [31:0] eu0_data,eu1_data,
+    input [4:0] eu0_rd,eu1_rd,
+    input [31:0] eu0_pc,eu1_pc,
+    input [6:0] eu0_exception,
+    input [31:0] eu0_badv,
+    input [31:0] eu0_inst,eu1_inst,
 
-    always @(*) begin
-        case (mem_width_in)
-            0:       write_type = 'b0001;
-            1:       write_type = 'b0011;
-            2:       write_type = 'b1111;
-            default: write_type = 'b1111;
-        endcase
+    //connect to register file
+    output wen0,wen1,
+    output [4:0] waddr0,waddr1,
+    output [31:0] wdata0,wdata1,
+
+    //debug port
+    output [31:0] debug0_wb_pc,
+    output [ 3:0] debug0_wb_rf_wen,
+    output [ 4:0] debug0_wb_rf_wnum,
+    output [31:0] debug0_wb_rf_wdata,
+    output [31:0] debug0_wb_inst,
+
+    output [31:0] debug1_wb_pc,
+    output [ 3:0] debug1_wb_rf_wen,
+    output [ 4:0] debug1_wb_rf_wnum,
+    output [31:0] debug1_wb_rf_wdata,
+    output [31:0] debug1_wb_inst,
+
+    //connect to PC
+    output set_pc,
+    output [31:0] pc,
+
+    //CSR
+    input [31:0] eentry,tlbrentry,
+    output [31:0] era,
+    output era_wen,
+    output store_state,
+    output back_to_direct_translate,
+    output [18:0] vppn,
+    output vppn_we,
+    output [6:0] expcode_out,
+    output expcode_wen,
+    output [31:0] badv,
+    output badv_wen,
+    input [`PGD_BASE] pgdl,pgdh,
+    output [`PGD_BASE] pgd,
+    output pgd_wen
+);
+    wire has_exception = eu0_valid && eu0_exception!=0;
+    reg set_badv;
+    reg set_vppn;
+    always @* begin
+        set_badv = 0;
+        if(eu0_valid)
+            case(eu0_exception)
+            `EXP_TLBR, `EXP_ADEF, `EXP_ADEM, `EXP_ALE, `EXP_PIL, `EXP_PIS,
+            `EXP_PIF, `EXP_PME, `EXP_PPI:
+                set_badv = 1;
+            default: set_badv = 0;
+            endcase
     end
-    assign is_atom_out  = is_atom_in;
-    assign w_data_CPU   = mem_data_in;
-    assign mem_en_out   = mem_en_in;
-    assign mem_exp_out  = mem_exp_in;
-    assign mem_rd_out   = mem_en_out?mem_rd_in:0;
-    assign signed_ext   = mem_sign;
-endmodule
+    always @* begin
+        set_vppn = 0;
+        if(eu0_valid)
+            case(eu0_exception)
+            `EXP_TLBR, `EXP_PIL, `EXP_PIS, `EXP_PIF, `EXP_PME, `EXP_PPI:
+                set_vppn = 1;
+            default: set_vppn = 0;
+            endcase
+    end
+    assign set_pc = has_exception;
+    assign store_state = has_exception;
+    assign expcode_wen = has_exception;
+    assign era_wen     = has_exception;
+    wire is_tlb_exp = eu0_exception==`EXP_TLBR;
+    assign pc = is_tlb_exp ? tlbrentry:eentry;
+    assign back_to_direct_translate = is_tlb_exp;
+    assign era = eu0_pc;
+    assign expcode_out = eu0_exception;
+    assign badv = eu0_badv;
+    assign pgd = eu0_badv[31]?pgdh:pgdl;
+    assign badv_wen = set_badv;
+    assign pgd_wen = set_badv;
+    assign vppn = eu0_badv[31:13];
+    assign vppn_we = set_vppn;
 
-module mem1 (
-    //从exe0段后输入
-    input [6:0]    mem_exp_in,
-    input [4:0]    mem_rd_in,
-    input [0:0]    mem_en_in,
-    //从cache输入
-    //input addr_valid,                  //    read: addr has been accepted; write: addr and data have been accepted
-    input [0:0]    data_valid,                   //    read: data has returned; write: data has been written in
-    input [ 31:0 ] r_data_CPU,          //    read data to CPU
-    input [31:0]   cache_badv_in,
-    input [6:0]    cache_exception,
-    `ifdef CLAP_CONFIG_DIFFTEST
-    input [31:0]vaddr_diff_in,
-    input [31:0]paddr_diff_in,
-    input [31:0]data_diff_in,
-    `endif
-    //向exe1后输出
-    output [6:0]   mem_exp_out,
-    output [4:0]   mem_rd_out,
-    output [31:0]  mem_data_out,
-    output [0:0]   mem_en_out,
-    output [31:0]  cache_badv_out,
-    `ifdef CLAP_CONFIG_DIFFTEST
-    output [31:0] vaddr_diff_out,
-    output [31:0] paddr_diff_out,
-    output [31:0] data_diff_out,
-    `endif
-    //向全局输出
-    output [0:0]   stall_by_cache
-);
+    assign wen0 = eu0_valid && eu0_exception==0;
+    //第一条指令出现异常时，第二条指令不能被写回
+    assign wen1 = eu1_valid && !has_exception;
+    assign waddr0 = eu0_rd;
+    assign waddr1 = eu1_rd;
+    assign wdata0 = eu0_data;
+    assign wdata1 = eu1_data;
+    
+    assign debug0_wb_pc = eu0_pc;
+    assign debug0_wb_rf_wen = {4{wen0}};
+    assign debug0_wb_rf_wnum = eu0_rd;
+    assign debug0_wb_rf_wdata = eu0_data;
+    assign debug0_wb_inst = eu0_inst;
 
-    assign stall_by_cache = mem_en_in&!(data_valid | (|cache_exception));
-    assign mem_exp_out         = mem_exp_in|cache_exception;
-
-    assign mem_data_out        = {32{mem_en_out}}&{32{data_valid}}&r_data_CPU;
-    assign mem_rd_out          = {5{mem_en_out}}&mem_rd_in;
-    assign mem_en_out          = mem_en_in;
-    assign cache_badv_out      = {32{mem_en_in}}&cache_badv_in;
-
-`ifdef CLAP_CONFIG_DIFFTEST
-assign vaddr_diff_out={32{data_valid}}&vaddr_diff_in;
-assign paddr_diff_out={32{data_valid}}&paddr_diff_in;
-assign data_diff_out={32{data_valid}}&data_diff_in;
-`endif
-
+    assign debug1_wb_pc = eu1_pc;
+    assign debug1_wb_rf_wen = {4{wen1}};
+    assign debug1_wb_rf_wnum = eu1_rd;
+    assign debug1_wb_rf_wdata = eu1_data;
+    assign debug1_wb_inst = eu1_inst;
 endmodule

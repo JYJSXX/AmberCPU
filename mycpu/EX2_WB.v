@@ -4,8 +4,12 @@ module EX2_WB(
     input aresetn,
     input flush_in,
     output flush_out,
+    //input ex2_valid, 这个信号不要了，由下面一堆valid/div_ready/dcache_ready来代替
+    output reg ex2_ready,
     input [31:0] pc0,
     input [31:0] pc1,
+    input [31:0] ex1_ex2_inst0,
+    input [31:0] ex1_ex2_inst1,
     input [`WIDTH_UOP-1:0] uop0,
     input [`WIDTH_UOP-1:0] uop1,
     input [31:0] ex2_result0, //乘法和要写的分支已经在里面了
@@ -32,7 +36,20 @@ module EX2_WB(
 
     //dcache
     input [31:0] dcache_data,
-    input dcache_ready
+    input dcache_ready,
+
+    //debug port
+    output reg [31:0] debug0_wb_pc,
+    output  [ 3:0] debug0_wb_rf_wen,
+    output  [ 4:0] debug0_wb_rf_wnum,
+    output  [31:0] debug0_wb_rf_wdata,
+    output reg [31:0] debug0_wb_inst,
+
+    output reg [31:0] debug1_wb_pc,
+    output  [ 3:0] debug1_wb_rf_wen,
+    output  [ 4:0] debug1_wb_rf_wnum,
+    output  [31:0] debug1_wb_rf_wdata,
+    output reg [31:0] debug1_wb_inst
 
 );
 wire [3:0] cond0;
@@ -118,4 +135,24 @@ assign cond1 = uop1[`UOP_COND];
         end
 
     end
+always@(*) begin
+    ex2_ready=0;
+    if((ex2_wb_data_0_valid | dcache_ready | div_ready) && ex2_wb_data_1_valid) begin
+        ex2_ready=1;
+    end
+end
+
+always@(posedge clk)begin
+    debug0_wb_pc <= pc0;
+    debug0_wb_inst <= ex1_ex2_inst0;
+    debug1_wb_pc <= pc1;
+    debug1_wb_inst <= ex1_ex2_inst1;
+end
+//下面这些自带一个周期延迟，和上面的同步
+assign debug0_wb_rf_wen = ex2_wb_we0;
+assign debug0_wb_rf_wnum = ex2_wb_rd0;
+assign debug0_wb_rf_wdata = ex2_wb_data_0;
+assign debug1_wb_rf_wen = ex2_wb_we1;
+assign debug1_wb_rf_wnum = ex2_wb_rd1;
+assign debug1_wb_rf_wdata = ex2_wb_data_1;
 endmodule

@@ -3,6 +3,10 @@
 module ID_REG(
     input aclk,
     input aresetn,
+    input           id_valid,
+    output  reg     id_ready,
+    input           reg_ready,
+    output  reg     reg_valid,
     input [31:0] inst0,
     input [31:0] inst1,
     input [31:0] pc0,
@@ -28,6 +32,8 @@ module ID_REG(
 
     output reg [31:0] id_reg_pc0,
     output reg [31:0] id_reg_pc1,
+    output reg [31:0] id_reg_inst0,
+    output reg [31:0] id_reg_inst1,
     output reg id_reg_is_ALU_0 ,
     output reg id_reg_is_ALU_1 ,
     output reg id_reg_is_syscall_0 ,
@@ -52,6 +58,8 @@ always@(posedge aclk) begin
     if(~aresetn) begin
         id_reg_pc0  <= 0;
         id_reg_pc1  <= 0;
+        id_reg_inst0  <= 0;
+        id_reg_inst1  <= 0;
         id_reg_is_ALU_0  <= 0;
         id_reg_is_ALU_1  <= 0;
         id_reg_is_syscall_0  <= 0;
@@ -73,6 +81,8 @@ always@(posedge aclk) begin
     end else begin
         id_reg_pc0  <= pc0;
         id_reg_pc1  <= pc1;
+        id_reg_inst0  <= inst0;
+        id_reg_inst1  <= inst1;
         id_reg_is_ALU_0  <= is_ALU_0;
         id_reg_is_ALU_1  <= is_ALU_1;
         id_reg_is_syscall_0  <= is_syscall_0;
@@ -94,5 +104,17 @@ always@(posedge aclk) begin
     
     end
 
+end
+always @(*) begin//combinational logic for hand shake
+    id_ready=1;
+    if(id_valid)begin
+        id_ready=0;
+    end
+end
+always @(*) begin//combinational logic for hand shake
+    reg_valid=0;
+    if(id_ready && reg_ready)begin
+        reg_valid=1;
+    end
 end
 endmodule
