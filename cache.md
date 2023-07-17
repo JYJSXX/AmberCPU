@@ -20,6 +20,14 @@
 
 实现方式为将指定cache行的tag清零
 
+**栅障指令**
+
+待完成：
+
+Icache：无效掉TagV表中的所有行
+
+Dcache：无效掉TagV表中的所有行，同时将脏行写回主存
+
 # Icache接口
 
 > 信号名后括号中为位宽，eg: pc(32)
@@ -42,6 +50,7 @@
 - cacop_en(1): cacop指令对icache的操作（需要先判断cacop操作对象后直接传给icache)
 - cacop_code(2)： cacop指令code[4:3]，操作码
 - tlb_exception(7): TLB异常信息码
+- ibar(1): 栅障指令信号
 
 输出端：
 
