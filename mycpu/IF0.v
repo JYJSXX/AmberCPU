@@ -35,6 +35,9 @@ module IF0 (
     
     assign pc_next      =   pred_taken?pc+8:fetch_pc;
     assign fetch_pc     =   pc;
+    assign rvalid       =   1;
+    assign r_addr       =   pc;
+    assign p_addr       =   pc;//TODO
 
     always @(posedge clk or negedge rstn) begin
         if (~rstn) begin
