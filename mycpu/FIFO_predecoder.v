@@ -6,7 +6,7 @@ module pre_decoder (
 
     input [31:0]        fifo_inst0,
     input [31:0]        fifo_inst1,
-    input  [31:0]       if1_if0_pc,
+    input  [31:0]       if1_fifo_pc,
 
     //signal for ibar
     output   reg        ibar_signal=0,//00 normal, 01 ibar,10 unconditional branch
@@ -24,7 +24,7 @@ module pre_decoder (
     assign  ibar_1=(fifo_inst1[31:27]==5'b00111)&&fifo_inst1[15];
     assign  ibar_exist=ibar_0||ibar_1;
     assign  ibar_pos=ibar_0?0:1;
-    assign  pc_from_ibar = if1_if0_pc;
+    assign  pc_from_ibar = if1_fifo_pc;
 
     always @(posedge clk or negedge rstn) begin
         if (!rstn) begin
