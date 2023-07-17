@@ -1,18 +1,6 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-//
-// Author: Ma Zirui
-// Course: Coputer Organization and Design
-// Module: Instruction Cache
-// TODO: something in the TODO list can be copied from icache
-//     1. Complete hit logic in hit module
-//     2. Correctly choose the correct read data in read control module
-//     3. Complete LRU module
-//     4. Complete the main FSM
-//     5. Complete the input of miss buffer
-//     6. Complete the dirty table
-// 
-//////////////////////////////////////////////////////////////////////////////////
+`include "../config.vh"
+`include "../exception.vh"
 
 module dcache #(
     parameter INDEX_WIDTH       = 6,
@@ -42,7 +30,7 @@ module dcache #(
     output reg              d_rvalid,           // valid signal of read request to main memory
     input                   d_rready,           // ready signal of read request from main memory
     output [31:0]           d_raddr,            // read address to main memory
-    input [31:0]            d_rdata,            // read data from main memory
+    input [511:0]           d_rdata,            // read data from main memory
     input                   d_rlast,            // indicate the last beat of read data from main memory
     output [2:0]            d_rsize,            // indicate the size of read data once, if d_rsize = n then read 2^n bytes once
     output [7:0]            d_rlen,             // indicate the number of read data, if d_rlen = n then read n+1 times
@@ -58,7 +46,7 @@ module dcache #(
 
     // back
     input                   d_bvalid,           // valid signal of write back request from main memory
-    output reg              d_bready,            // ready signal of write back request to main memory
+    output reg              d_bready,           // ready signal of write back request to main memory
 
     // exception
     output            [6:0] exception,
@@ -68,15 +56,18 @@ module dcache #(
     // cacop
     input             [1:0] cacop_code,
     input                   cacop_en,
-    output                  cacop_complete,
-    output                  cacop_ready,
+    output reg             cacop_complete,
+    output reg             cacop_ready,
 
     // atom load
     input                   is_atom,        // indicate whether the request is an atom load request
     output                  llbit_set,      // indicate whether the request is an atom load request and the load is successful
     //atom store
     input                   llbit,          // indicate whether the request is an atom store request
-    output                  llbit_clear      // indicate whether the request is an atom store request and the store is successful
+    output                  llbit_clear,      // indicate whether the request is an atom store request and the store is successful
+    
+    // ibar
+    input                   ibar
     
     // diff test
     `ifdef DIFFTEST
@@ -93,6 +84,12 @@ module dcache #(
         BYTE_NUM            = 1 << BYTE_OFFSET_WIDTH,               // bytes per block(set)
         BIT_NUM             = BYTE_NUM << 3;                        // bits per block(set)                     
 
+    localparam
+        READ_OP              = 1'b0,
+        WRITE_OP             = 1'b1,
+        BYTE              = 4'b0001,
+        HALF              = 4'b0011,
+        WORD              = 4'b1111;
     // request buffer
     reg     [67:0]              req_buf;
     reg                         req_buf_we;
@@ -130,7 +127,10 @@ module dcache #(
     reg                         data_from_mem;
 
     // LRU replace
-    wire                        lru_sel;
+    reg  [INDEX_WIDTH-1:0]      lru; //0: way0, 1: way1
+    wire [1:0]                  lru_sel;
+    reg                         lru_we;
+    reg                         missbuf_we;
 
     // dirty table
     wire                        dirty_info;
@@ -153,6 +153,20 @@ module dcache #(
     // statistics
     reg     [63:0]              total_time;
     reg     [63:0]              total_hit;
+
+    // cache operation
+    reg tagv_clear;
+    reg [1:0] cacop_code_buf;
+    reg cacop_en_buf;
+    wire tagv_sel;
+    //wire [INDEX_WIDTH-1:0] tagv_index;
+    wire store_tag, index_invalid, hit_invalid;
+    assign store_tag     = (cacop_code_buf == 2'b00);
+    assign index_invalid = (cacop_code_buf == 2'b01);
+    assign hit_invalid   = (cacop_code_buf == 2'b10);
+    assign tagv_way_sel      = req_buf[0] ? 2 : 1;
+    //assign tagv_index        = req_buf[INDEX_WIDTH + BYTE_OFFSET_WIDTH - 1: BYTE_OFFSET_WIDTH];
+
 
     /* request buffer : lock the read request addr */
     // [31:0] addr, [63:32] wdata [67:64] wstrb
@@ -178,6 +192,55 @@ module dcache #(
             ret_buf <= {d_rdata, ret_buf[BIT_NUM-1:32]};
         end
     end
+
+    /* physical address buffer */
+    reg [31:0] paddr_buf;
+    reg pbuf_we;
+    always @(posedge clk) begin
+        if(!rstn) begin
+            paddr_buf <= 0;
+        end
+        else if(pbuf_we) begin
+            paddr_buf <= p_addr;
+        end
+    end
+
+    /* uncache buffer*/
+    reg uncache_buf;
+    always @(posedge clk) begin
+        if(!rstn) begin
+            uncache_buf <= 0;
+        end
+        else if(req_buf_we) begin
+            uncache_buf <= uncache;
+        end
+    end
+
+    /* cache operation */
+    always @(posedge clk) begin
+        if(!rstn) begin
+            cacop_en_buf <= 0;
+            cacop_code_buf <= 0;
+        end
+        else if(req_buf_we) begin
+            cacop_en_buf <= cacop_en;
+            cacop_code_buf <= cacop_code;
+        end
+    end
+
+    `ifdef DIFFTEST
+        assign paddr_diff = paddr_buf;
+        always @(posedge clk) begin
+            if(!rstn) begin
+                vaddr_diff <= 0;
+                data_diff <= 0;
+            end
+            else if(1) begin
+                vaddr_diff <= address;
+                data_diff <= wdata_pipe;
+            end
+        end
+    `endif
 
     /* 2-way data memory */
     assign r_index = addr[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
@@ -209,37 +272,48 @@ module dcache #(
     );
 
     /* 2-way tagv memory */
-    assign w_tag = address[31:32-TAG_WIDTH];
-    BRAM_common #(
-        .DATA_WIDTH(TAG_WIDTH+1),
-        .ADDR_WIDTH (INDEX_WIDTH)
+    wire valid[1:0];
+    wire [TAG_WIDTH:0] tag_in;
+    assign valid[0] = tag_rdata[0][TAG_WIDTH];
+    assign valid[1] = tag_rdata[1][TAG_WIDTH];
+    // the tag ready to be written to tagv table
+    assign w_tag = paddr_buf[31:32-TAG_WIDTH];
+    assign tag_in = tagv_clear ? 0 : {1'b1, w_tag};
+    wire [INDEX_WIDTH-1:0] tag_index;
+    assign tag_index = tagv_clear ? req_buf[INDEX_WIDTH+BYTE_OFFSET_WIDTH-1:BYTE_OFFSET_WIDTH] : paddr_buf[INDEX_WIDTH+BYTE_OFFSET_WIDTH-1:BYTE_OFFSET_WIDTH];
+    BRAM_tagv #(
+      .DATA_WIDTH(TAG_WIDTH+1),
+      .ADDR_WIDTH (INDEX_WIDTH)
     ) tagv_mem0 (
-        .clk      (clk ),
-        .raddr    (r_index),
-        .waddr    (w_index),
-        .din      ({1'b1, w_tag}),
-        .we       (tagv_we[0]),
-        .dout     (tag_rdata[0])
+      .clk      (clk ),
+      .raddr    (r_index),
+      .waddr    (tag_index),
+      .din      (tag_in),
+      .we       (tagv_we[0]),
+      .ibar     (ibar),
+      .dout     (tag_rdata[0])
     );
-    BRAM_common #(
-        .DATA_WIDTH(TAG_WIDTH+1),
-        .ADDR_WIDTH (INDEX_WIDTH)
+    BRAM_tagv #(
+      .DATA_WIDTH(TAG_WIDTH+1),
+      .ADDR_WIDTH (INDEX_WIDTH)
     ) tagv_mem1 (
-        .clk      (clk ),
-        .raddr    (r_index),
-        .waddr    (w_index),
-        .din      ({1'b1, w_tag}),
-        .we       (tagv_we[1]),
-        .dout     (tag_rdata[1])
+      .clk      (clk ),
+      .raddr    (r_index),
+      .waddr    (tag_index),
+      .din      (tag_in),
+      .we       (tagv_we[1]),
+      .ibar     (ibar),
+      .dout     (tag_rdata[1])
     );
 
     /* hit */
-    // TODO
-    assign tag          = address[31:32-TAG_WIDTH];     // the tag of the request
-    assign hit[0]       = 0;        // TODO
-    assign hit[1]       = 0;        // TODO
+    assign tag          = p_addr[31:32-TAG_WIDTH];     // the tag of the request
+    assign hit[0]       = valid[0] && (tag_rdata[0][TAG_WIDTH-1:0] == tag); // hit in way 0
+    assign hit[1]       = valid[1] && (tag_rdata[1][TAG_WIDTH-1:0] == tag); // hit in way 1
     assign cache_hit    = |hit;
     assign hit_way      = hit[0] ? 0 : 1;               // only when cache_hit, hit_way is valid
+    wire hit_way_valid;
+    assign hit_way_valid = cache_hit ? hit_way : 0;
 
     /* write control */
     assign wdata_pipe_512 = ({{(BIT_NUM-32){1'b0}}, wdata_pipe} << address[1:0]) << {address[BYTE_OFFSET_WIDTH-1:2], 5'b0};
@@ -257,16 +331,36 @@ module dcache #(
 
     /* read control */
     // choose data from mem or return buffer 
-    // TODO: use the signal 'data_from_mem' and address in request buffer to choose the data source
-    assign rdata = 0;
+    wire [BIT_NUM-1:0] o_rdata;
+    reg [63:0]        rdata_cache;
+    assign o_rdata = data_from_mem ? mem_rdata[hit_way_valid] : ret_buf; 
+    always @(*) begin
+        case(req_buf[5:3])
+        3'd0: rdata_cache = o_rdata[63:0];
+        3'd1: rdata_cache = o_rdata[127:64];
+        3'd2: rdata_cache = o_rdata[191:128];
+        3'd3: rdata_cache = o_rdata[255:192];
+        3'd4: rdata_cache = o_rdata[319:256];
+        3'd5: rdata_cache = o_rdata[383:320];
+        3'd6: rdata_cache = o_rdata[447:384];
+        3'd7: rdata_cache = o_rdata[511:448];
+        endcase
+    end
+    // uncached read
+
 
     /* LRU replace */
-    /* 
-        TODO:
-            1. Design a LRU module to record the Least Recent Use information of each set
-            2. Design some signals in the main FSM to update the LRU information when cache_hit or refill
-    */
-    assign lru_sel = 0; // TODO
+    reg way_visit;  // 0: way0, 1: way1
+    always @(posedge clk) begin
+        if(!rstn) begin
+            lru <= 0;
+        end
+        else if(lru_we) begin
+            lru[w_index] <= way_visit;
+        end
+    end
+    assign lru_sel = (store_tag || index_invalid) ? tagv_way_sel : (hit_invalid) ? hit : lru[w_index] ? 1 : 2;
+
 
     /* dirty table */
     // record the dirty information of each set

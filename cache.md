@@ -22,9 +22,9 @@
 
 **栅障指令**
 
-待完成：
-
 Icache：无效掉TagV表中的所有行
+
+待完成：
 
 Dcache：无效掉TagV表中的所有行，同时将脏行写回主存
 
@@ -165,4 +165,6 @@ output       [31:0] data_diff
 victim cache
 
 预取
+
+Dcache写缓冲区
 
