@@ -17,10 +17,17 @@ module IF1_FIFO(
     //hand shake signal
     input           fetch_buf_full,
     input           if1_valid,
-    output  reg     if1_ready,
+    output          if1_ready,
     input           fifo_ready,
-    output  reg     fifo_valid,
+    output          fifo_valid,
 
+    input icache_rready,
+    input [31:0]icache_pc_out,
+    input [31:0]icache_badv,
+    input [6:0] icache_exception,
+    input [31:0]icache_cookie_out,
+    input if1_cacop_ready,
+    input if1_cacop_complete   
 
     
     output reg[31:0]    pc_o,
@@ -31,11 +38,10 @@ module IF1_FIFO(
     output reg  [1:0]   issue_o
     
     );
-    always @(*) begin//combinational logic for hand shake
-        if(fetch_buf_full)begin
-            if1_ready=0;
-        end
-    end
+    
+    assign if1_ready = fifo_ready;
+    assign fifo_valid = if1_valid&icache_rready;
+
     always @ (posedge aclk) begin
         if (~aresetn) begin
             pc_o <= `INIT_ADDR;
