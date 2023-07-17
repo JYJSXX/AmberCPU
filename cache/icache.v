@@ -25,7 +25,7 @@ module icache #(
     // 暂时用不到
     // input               i_rlast,        // indicate the last beat of read data from main memory
     // output [2:0]        i_rsize,        // indicate the size of read data once, if i_rsize = n then read 2^n bytes once
-    // output [7:0]        i_rlen          // indicate the number of read data, if i_rlen = n then read n+1 times
+    output reg [7:0]    i_rlen,          // indicate the number of read data, if i_rlen = n then read n+1 times
     
     output [31:0] badv,               // 无效虚拟地址
     output [6:0] exception,
@@ -269,8 +269,7 @@ module icache #(
     );
     
     /* settings of miss request */
-    assign i_rlen   = WORD_NUM-1;                                                   // WORD_NUM words per visit
-    assign i_rsize  = 3'h2;                                                         // 2 ^ 2 = 4 bytes per beat
+    //assign i_rsize  = 3'h2;                                                         // 2 ^ 2 = 4 bytes per beat
     assign i_raddr  = uncache_buf ? {paddr_buf[31:3], 3'b0} : {paddr_buf[31:6], 6'b0};
 
     /* hit */
@@ -376,13 +375,14 @@ module icache #(
     always @(*) begin
         req_buf_we              = 0;
         i_rvalid                = 0;
-        rready_temp                  = 0;
+        rready_temp             = 0;
         tagv_we                 = 0;
         mem_we                  = 0;
         data_from_mem           = 1;
         pbuf_we                 = 0;
         lru_we                  = 0;
         way_visit               = 0;
+        i_rlen                  = 8'd15;
         
         cacop_complete          = 0;
         cacop_ready             = 0;
@@ -415,6 +415,9 @@ module icache #(
         end
         MISS: begin
             i_rvalid        = 1;
+            if(uncache_buf) begin
+                i_rlen = 8'd1;
+            end
         end
         // ! 这里存在一个问题，lru_sel在miss的情况下是否需要缓存？
         REFILL: begin
