@@ -25,7 +25,10 @@ module IF0 (
     output rvalid,
     output [31:0] raddr,
     output [31:0] p_addr.
-    output reg[31:0]cookie_in=114514,
+    output reg[31:0]cookie_in=114514
+
+
+    
 );
     reg  [31:0] pc=`PC_RESET;//指令集手册P68
     wire [31:0] pc_next;
