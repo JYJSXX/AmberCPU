@@ -25,8 +25,9 @@ module icache #(
     // 暂时用不到
     // input               i_rlast,        // indicate the last beat of read data from main memory
     // output [2:0]        i_rsize,        // indicate the size of read data once, if i_rsize = n then read 2^n bytes once
-    // output [7:0]        i_rlen          // indicate the number of read data, if i_rlen = n then read n+1 times
+    output reg [7:0]    i_rlen,          // indicate the number of read data, if i_rlen = n then read n+1 times
     
+    input [6:0] tlb_exception,         
     output [31:0] badv,               // 无效虚拟地址
     output [6:0] exception,
     input               flush,          // flush signal from pipeline
@@ -39,7 +40,7 @@ module icache #(
     output reg cacop_ready,         // ready signal of cacop
     output reg cacop_complete,      // complete signal of cacop
 
-    input [6:0] tlb_exception         
+    input ibar                      // 栅障指令
 );
     localparam 
         BYTE_OFFSET_WIDTH   = WORD_OFFSET_WIDTH + 2,                // total offset bits
@@ -244,33 +245,35 @@ module icache #(
     // the tag ready to be written to tagv table
     assign w_tag = paddr_buf[31:32-TAG_WIDTH];
     assign tag_in = tagv_clear ? 0 : {1'b1, w_tag};
-    
-    BRAM_common #(
+    wire [INDEX_WIDTH-1:0] tag_index;
+    assign tag_index = tagv_clear ? req_buf[INDEX_WIDTH+BYTE_OFFSET_WIDTH-1:BYTE_OFFSET_WIDTH] : paddr_buf[INDEX_WIDTH+BYTE_OFFSET_WIDTH-1:BYTE_OFFSET_WIDTH];
+    BRAM_tagv #(
       .DATA_WIDTH(TAG_WIDTH+1),
       .ADDR_WIDTH (INDEX_WIDTH)
     ) tagv_mem0 (
       .clk      (clk ),
       .raddr    (r_index),
-      .waddr    (w_index),
+      .waddr    (tag_index),
       .din      (tag_in),
       .we       (tagv_we[0]),
+      .ibar     (ibar),
       .dout     (tag_rdata[0])
     );
-    BRAM_common #(
+    BRAM_tagv #(
       .DATA_WIDTH(TAG_WIDTH+1),
       .ADDR_WIDTH (INDEX_WIDTH)
     ) tagv_mem1 (
       .clk      (clk ),
       .raddr    (r_index),
-      .waddr    (w_index),
+      .waddr    (tag_index),
       .din      (tag_in),
       .we       (tagv_we[1]),
+      .ibar     (ibar),
       .dout     (tag_rdata[1])
     );
     
     /* settings of miss request */
-    assign i_rlen   = WORD_NUM-1;                                                   // WORD_NUM words per visit
-    assign i_rsize  = 3'h2;                                                         // 2 ^ 2 = 4 bytes per beat
+    //assign i_rsize  = 3'h2;                                                         // 2 ^ 2 = 4 bytes per beat
     assign i_raddr  = uncache_buf ? {paddr_buf[31:3], 3'b0} : {paddr_buf[31:6], 6'b0};
 
     /* hit */
@@ -345,7 +348,7 @@ module icache #(
                 else                    next_state = IDLE;
             end
             LOOKUP: begin
-                if(exception != 0)      next_state = IDLE;
+                if((exception != 0) || ibar)      next_state = IDLE;
                 else if(uncache_buf)    next_state = MISS;
                 else if(cache_hit) begin
                     if(cacop_en)        next_state = CACOP;
@@ -356,16 +359,18 @@ module icache #(
             end
             MISS: begin
                 // if(i_rready && i_rlast) next_state = REFILL;
-                if(i_rready) next_state = REFILL;
+                if(ibar)                next_state = IDLE;
+                else if(i_rready)       next_state = REFILL;
                 else                    next_state = MISS;
             end
             REFILL: begin
-                if(cacop_en)           next_state = CACOP;
+                if(ibar)                next_state = IDLE;
+                else if(cacop_en)       next_state = CACOP;
                 else if(rvalid)         next_state = LOOKUP;
                 else                    next_state = IDLE;
             end
             CACOP: begin
-                if(exception != 0)      next_state = IDLE;
+                if((exception != 0) || ibar)     next_state = IDLE;
                 else                    next_state = REFILL;
             end
             //                    next_state = rvalid ? LOOKUP : IDLE;
@@ -376,13 +381,14 @@ module icache #(
     always @(*) begin
         req_buf_we              = 0;
         i_rvalid                = 0;
-        rready_temp                  = 0;
+        rready_temp             = 0;
         tagv_we                 = 0;
         mem_we                  = 0;
         data_from_mem           = 1;
         pbuf_we                 = 0;
         lru_we                  = 0;
         way_visit               = 0;
+        i_rlen                  = 8'd15;
         
         cacop_complete          = 0;
         cacop_ready             = 0;
@@ -415,6 +421,9 @@ module icache #(
         end
         MISS: begin
             i_rvalid        = 1;
+            if(uncache_buf) begin
+                i_rlen = 8'd1;
+            end
         end
         // ! 这里存在一个问题，lru_sel在miss的情况下是否需要缓存？
         REFILL: begin
