@@ -15,13 +15,14 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 module dcache #(
-    parameter INDEX_WIDTH       = 4,
-    parameter WORD_OFFSET_WIDTH = 2
+    parameter INDEX_WIDTH       = 6,
+    parameter WORD_OFFSET_WIDTH = 4
 )(
     input                   clk,
     input                   rstn,
     /* from pipeline */
     input [31:0]            addr,               // read/write address
+    input [31:0]            p_addr,             // physical address
     // read
     input                   rvalid,             // valid signal of read request from pipeline
     output reg              rready,             // ready signal of read request to pipeline
@@ -31,6 +32,10 @@ module dcache #(
     output reg              wready,             // ready signal of write request to pipeline
     input [31:0]            wdata,              // write data from pipeline
     input [3:0]             wstrb,              // write mask of each write-back word from pipeline, if the request is a read request, wstrb is 4'b0
+    
+    input                   op,                 // 0: read, 1: write
+    input                   uncache,            // indicate whether the request is an uncache request
+    input                   signed_ext,         // indicate whether the request is a signed extension request
 
     /* from AXI arbiter */
     // read
@@ -53,7 +58,32 @@ module dcache #(
 
     // back
     input                   d_bvalid,           // valid signal of write back request from main memory
-    output reg              d_bready            // ready signal of write back request to main memory
+    output reg              d_bready,            // ready signal of write back request to main memory
+
+    // exception
+    output            [6:0] exception,
+    input             [6:0] tlb_exception,
+    output           [31:0] badv,
+
+    // cacop
+    input             [1:0] cacop_code,
+    input                   cacop_en,
+    output                  cacop_complete,
+    output                  cacop_ready,
+
+    // atom load
+    input                   is_atom,        // indicate whether the request is an atom load request
+    output                  llbit_set,      // indicate whether the request is an atom load request and the load is successful
+    //atom store
+    input                   llbit,          // indicate whether the request is an atom store request
+    output                  llbit_clear      // indicate whether the request is an atom store request and the store is successful
+    
+    // diff test
+    `ifdef DIFFTEST
+    ,output            [31:0] vaddr_diff,
+    output            [31:0] paddr_diff,
+    output            [31:0] data_diff
+    `endif
 );
     localparam 
         BYTE_OFFSET_WIDTH   = WORD_OFFSET_WIDTH + 2,                // total offset bits

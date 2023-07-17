@@ -25,7 +25,7 @@ module axi2dpram(
 	//ar channel
 	input [3:0]ar_id,
 	input [31:0]ar_addr,
-	//input [3:0]ar_len = 0,
+	input [3:0]ar_len,
 	input [2:0] arsize,
     //input [1:0] arburst = 2'b01,
 	input ar_valid,

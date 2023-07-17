@@ -10,14 +10,21 @@
 1. CPU
 
 # 分支预测器（BTB）
+组成部分
 1. Branch Address
 2. Target Address
 3. Branch Type
 4. Prediction
 5. Valid Bit
+6. BIM(Branch History Info):分支历史信息，记录历史行为用于分支预测
+7. RAS(Return Address Stack)返回地址栈，用于函数调用的处理。处理器遇到函数地址后，将返回地址推入RSA中，当函数执行完毕是，处理器会从RSAzhong弹出返回地址。
 
-1. BIM(Branch History Info):分支历史信息，记录历史行为用于分支预测
-2. RAS(Return Address Stack)返回地址栈，用于函数调用的处理。处理器遇到函数地址后，将返回地址推入RSA中，当函数执行完毕是，处理器会从RSAzhong弹出返回地址。
+# Issue
+![Alt text](image-3.png)
+![Alt text](image-1.png)
+![Alt text](image.png)
+![Alt text](image-4.png)
+结构功能
 
 # 分派器
 在顺序双发射（Sequential Dual-Issue）CPU中，分派器（Dispatcher）是一项关键的功能单元，用于将指令从指令队列中选择并发送给可用的执行单元进行并行执行。

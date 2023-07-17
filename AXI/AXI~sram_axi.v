@@ -1,67 +1,68 @@
-```timescale 1ns/1ps
+`timescale 1ns/1ps
 
 module sram_axi(
-    input                       aclk,       //时钟信号
-    input                       aresetn,    //复位信号
+    input                       aclk,           //时钟信号
+    input                       aresetn,        //复位信号
 
-    //ar channel
-    output  reg     [3:0]       ar_id,      //读ID 0 for instruction, 1 for data
-    output  reg     [31:0]      ar_addr,    //读地址
-    output  reg     [7:0]       ar_len,     //读长度 默认为0xf
-    output  reg     [2:0]       ar_size,    //读大小即粒度 num of bytes = 2^size 默认为2
-    output  reg     [1:0]       ar_burst,   //读突发类型 默认为1 increamental
-    output  reg                 ar_valid,   //读有效
-    input                       ar_ready,   //读准备好
+    //ar channel    
+    output  reg     [3:0]       ar_id,          //读ID 0 for instruction, 1 for data
+    output  reg     [31:0]      ar_addr,        //读地址
+    output  reg     [7:0]       ar_len,         //读长度 默认为0xf
+    output  reg     [2:0]       ar_size,        //读大小即粒度 num of bytes = 2^size 默认为2
+    output  reg     [1:0]       ar_burst,       //读突发类型 默认为1 increamental
+    output  reg                 ar_valid,       //读有效
+    input                       ar_ready,       //读准备好
 
-    //r channel
-    input           [3:0]       r_id,       //读数据对应读地址ID
-    input           [31:0]      r_data,     //读数据
-    input                       r_last,     //读数据结束
-    input                       r_valid,    //读数据有效
-    output  reg [:] ;                 r_ready,    //读数据准备好
+    //r channel 
+    input           [3:0]       r_id,           //读数据对应读地址ID
+    input           [31:0]      r_data,         //读数据
+    input                       r_last,         //读数据结束
+    input                       r_valid,        //读数据有效
+    output  reg                 r_ready,        //读数据准备好
 
-    //aw channel
-    output  reg     [31:0]      aw_addr,
-    output  reg     [2:0]       aw_size,
-    output  reg     [7:0]       aw_len,
-    output  reg     [1:0]       aw_burst,
-    output  reg                 aw_valid,
-    input                       aw_ready,
+    //aw channel    
+    output          [31:0]      aw_addr,        //写地址
+    output  reg     [2:0]       aw_size,        //写大小
+    output  reg     [7:0]       aw_len,         //写长度
+    output  reg     [1:0]       aw_burst,       //写突发类型
+    output  reg                 aw_valid,       //写有效
+    input                       aw_ready,       //写准备好
 
     //w channel
-    output  reg     [31:0]      w_data,
-    output  reg                 w_valid,
-    input                       w_ready,
+    output          [31:0]      w_data,         //写数据
+    output  reg                 w_valid,        //写有效
+    input                       w_ready,        //写准备好
+    output          [3:0]       w_last,         //写使能
 
-    //b channel
-    input                       b_valid,
-    output                      b_ready,
+    //b channel 
+    input                       b_valid,        //写响应有效
+    output  reg                 b_ready,        //写响应准备好
 
     //sram
-    input           [31:0]      i_raddr,    //指令cache读地址
-    output          [31:0]      i_rdata,    //指令cache读数据
-    input                       i_rvalid,   //指令cache读有效
-    output                      i_rready,   //指令cache读准备好
-    // input           [7:0]       i_rlen,     //指令cache读长度
-    // input           [2:0]       i_rsize,    //指令cache读大小
-    // output              i_rlast,    //指令cache读结束
+    input           [31:0]      i_raddr,        //指令cache读地址
+    output  reg     [511:0]     i_rdata,        //指令cache读数据
+    input                       i_rvalid,       //指令cache读有效
+    output  reg                 i_rready,       //指令cache读准备好
+    input           [7:0]       i_rlen,         //指令cache读长度
+    // input           [2:0]       i_rsize,        //指令cache读大小
+    // output                      i_rlast,     //指令cache读结束
 
-    input           [31:0]      d_raddr,    //数据cache读地址
-    output          [511:0]     d_rdata,    //数据cache读数据
-    input                       d_rvalid,   //数据cache读有效
-    output                      d_rready,   //数据cache读准备好
-    // input           [7:0]       d_rlen,     //数据cache读长度
-    // input           [2:0]       d_rsize,    //数据cache读大小
-    // output                      d_rlast,    //数据cache读结束
+    input           [31:0]      d_raddr,        //数据cache读地址
+    output  reg     [511:0]     d_rdata,        //数据cache读数据
+    input                       d_rvalid,       //数据cache读有效
+    output  reg                 d_rready,       //数据cache读准备好
+    input           [7:0]       d_rlen,         //数据cache读长度
+    // input           [2:0]       d_rsize,        //数据cache读大小
+    // output                      d_rlast,     //数据cache读结束
 
-    input           [31:0]      d_waddr,
-    input           [511:0]     d_wdata,
-    input                       d_wvalid,
-    output                      d_wready
-    // input           [7:0]       d_wlen,
-    // input           [2:0]       d_wsize,
-    // input           [3:0]       d_wstrb,
-    // input                       d_wlast
+    input           [31:0]      d_waddr,        //数据cache写地址
+    input           [511:0]     d_wdata,        //数据cache写数据
+    input                       d_wvalid,       //数据cache写有效
+    output  reg                 d_wready,       //数据cache写准备好
+    input           [7:0]       d_wlen          //数据cache写长度
+    // input           [2:0]       d_wsize         //数据cache写大小
+    // input           [3:0]       d_wstrb,     //数据cache写使能
+    // input                       d_wlast      //数据cache写结束
 
 );
 
@@ -72,7 +73,7 @@ localparam [2:0]
                 R_DADDR = 3,
                 R_DDATA = 4;
 
-reg [2:0] r_state, r_next_state;
+reg [2:0] r_state = R_IDLE, r_next_state = R_IDLE;
 
 always @(posedge aclk or negedge aresetn)
 begin
@@ -123,7 +124,7 @@ shift_register#(.WIDTH(480)) OUTPUT_BUFFER(
     .rstn(aresetn),
     .data_in(r_data),
     .data_out(rdata_buffer),
-    .ready(r_ready),
+    .ready(r_ready)
 );
 
 always @(*)
@@ -140,6 +141,8 @@ begin
 
     i_rdata = 0;
     i_rready = 1'b0;
+    d_rdata = 0;
+    d_rready = 1'b0;
     case(r_state)
         R_IDLE:
         begin
@@ -148,10 +151,12 @@ begin
                 ar_valid = 1'b1;
                 ar_addr = d_raddr;
                 ar_id = 4'b0001;
+                ar_len = d_rlen;
             end
             else if(i_rvalid)
             begin
                 ar_valid = 1'b1;
+                ar_len = i_rlen;
                 ar_addr = i_raddr;
             end
         end
@@ -159,13 +164,14 @@ begin
         begin
             ar_valid = 1'b1;
             ar_addr = i_raddr;
+            ar_len = i_rlen;
         end
         R_IDATA:
         begin
             r_ready = 1'b1;
-            // if (r_valid) r_ready = 1'b1;
-            if (r_last) begin
-                i_rdata = {rdata_buffer, r_data[31:0]};
+            if(r_last)
+            begin
+                i_rdata = {r_data, rdata_buffer};
                 i_rready = 1'b1;
             end
         end
@@ -173,20 +179,20 @@ begin
         begin
             ar_valid = 1'b1;
             ar_addr = d_raddr;
+            ar_len = d_rlen;
         end
         R_DDATA:
         begin
             r_ready = 1'b1;
-            // if (r_valid) r_ready = 1'b1;
-            if (r_last) begin
-                d_rdata = {rdata_buffer, r_data[31:0]};
+            if (r_last)
+            begin
+                d_rdata = {r_data, rdata_buffer};
                 d_rready = 1'b1;
             end
         end
     endcase
 end
 
-assign aw_id = 4'b0000;
 assign aw_addr = d_waddr;
 
 localparam [1:0] 
@@ -195,7 +201,7 @@ localparam [1:0]
                 W_DDATA = 2,
                 W_DLAST = 3;
 
-reg [1:0] w_state, w_next_state;
+reg [1:0] w_state = W_IDLE, w_next_state = W_IDLE;
 
 always @(posedge aclk or negedge aresetn)
 begin
@@ -238,8 +244,24 @@ shift_register_n INPUT_BUFFER(
     .data_in(d_wdata),
     .data_out(w_data),
     .ready(w_ready),
-    .data_in_valid(d_wvalid & (~|w_state)),
+    .data_in_valid(d_wvalid & (~|w_state))
 );
+
+reg [4:0] w_count = 5'b0;
+
+always @(posedge aclk or negedge aresetn)
+begin
+    if(~aresetn)
+        w_count <= 5'b0;
+    else if (w_last & w_valid & w_ready)
+        w_count <= 5'b0;
+    else if(w_ready)
+        w_count <= w_count + 1;
+    else
+        w_count <= w_count;
+end
+
+assign w_last = (w_count == d_wlen);
 
 always @(*)
 begin
@@ -251,23 +273,26 @@ begin
 
     w_valid = 1'b0;
     b_ready = 1'b0;
+    d_wready = 1'b0;
     case(w_state)
         W_IDLE:
         begin
             if(d_wvalid)
             begin
                 aw_valid = 1'b1;
+                aw_len = d_wlen;
             end
         end
         W_DADDR:
         begin
             aw_valid = 1'b1;
+            aw_len = d_wlen;
         end
         W_DDATA:
         begin
             w_valid = 1'b1;
             // if (w_ready) w_valid = 1'b1;
-            if (w_last) begin
+            if (w_last & w_valid & w_ready) begin
                 d_wready = 1'b1;
             end
         end
@@ -276,6 +301,7 @@ begin
             b_ready = 1'b1;
         end
     endcase
+    
 end
 
 endmodule

@@ -44,7 +44,7 @@ module core_top(
     input    [ 1:0] bresp,
     input           bvalid,
     output          bready,
-
+    //debug
     output [31:0] debug0_wb_pc,
     output [ 3:0] debug0_wb_rf_wen,
     output [ 4:0] debug0_wb_rf_wnum,
@@ -60,26 +60,9 @@ module core_top(
     output debug1_valid
 );
 
-    wire if_buf_full;
-    wire icache_ready;
-    wire pc_stall_n=icache_ready & ~if_buf_full;
-
-    reg [31:0] pc;
-    wire [31:0] pc_next;
-    wire set_pc_by_id,set_pc_by_ex,set_pc_by_wb;
-    wire [31:0] pc_decoder,pc_executer,pc_writeback,ex_pc_tar;
-    //具体处理到具体模块再进行赋值
-    always @(posedge aclk) begin
-        if(~aresetn)
-            //龙芯架构32位精简版参考手册  p55 中断例外章节结尾
-            pc <= 32'h1C000000;
-        else if(set_pc_by_wb)
-            pc <= pc_writeback; //出现中断时，pc_writeback会被赋值为中断向量地址，内容由CSR控制
-        else if(set_pc_by_ex)
-            pc <= pc_executer; //由于跳转或特权指令
-        else if(set_pc_by_id)
-            pc <= pc_decoder; //受分支预测相关控制
-        else if(pc_stall_n)
-            pc <= pc_next; //icache未准备好或if_buf已满，pc_next见分支预测器
-    end
+    reg [63:0] stable_counter;
+    always @(posedge aclk)
+        if(~aresetn) stable_counter<=0;
+        else stable_counter <= stable_counter+1;
+    
 endmodule
