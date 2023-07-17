@@ -1,18 +1,12 @@
 `include "define.vh"
 module IF1_FIFO(
 
-    input aclk,
-    input aresetn,
+    input clk,
+    input rstn,
     input flush,
+    input stall,
     input flush_cause,
-    input[1:0] stall,
     
-    input[31:0] pc_i,
-    input[31:0] npc_i,
-    input               branch_flag_i,
-    input[31:0] inst0_i,
-    input[31:0] inst1_i,
-    input [1:0] issue_i, //issue_i[0] is for inst0, issue_i[1] is for inst1
 
     //hand shake signal
     input           fetch_buf_full,
@@ -27,54 +21,32 @@ module IF1_FIFO(
     input [6:0] icache_exception,
     input [31:0]icache_cookie_out,
     input if1_cacop_ready,
-    input if1_cacop_complete   
+    input if1_cacop_complete,
+    input [31:0]    if1_inst0,
+    input [31:0]    if1_inst1,
 
-    
-    output reg[31:0]    pc_o,
-    output reg[31:0]    npc_o,
-    output reg          branch_flag_o,
-    output reg[31:0]    inst0_o,
-    output reg[31:0]    inst1_o,
-    output reg  [1:0]   issue_o
+    output reg[31:0]    if1_fifo_pc,
+    output reg[31:0]    if1_fifo_inst0,
+    output reg[31:0]    if1_fifo_inst1
     
     );
     
-    assign if1_ready = fifo_ready;
+    assign if1_ready  = fifo_ready&!stall;
     assign fifo_valid = if1_valid&icache_rready;
 
-    always @ (posedge aclk) begin
-        if (~aresetn) begin
-            pc_o <= `INIT_ADDR;
-            npc_o <= `INIT_ADDR;
-            branch_flag_o <= 0;
-            inst0_o <= `INST_NOP;
-            inst1_o <= `INST_NOP;
-            issue_o <= 'b11;
-        end else if (flush == 1) begin
-            pc_o <= `INIT_ADDR;
-            npc_o <= `INIT_ADDR;
-            branch_flag_o <= 0;
-            inst0_o <= `INST_NOP;
-            inst1_o <= `INST_NOP;
-            issue_o <= 'b11;
-        end else if (stall[1] == 1 && stall[0] == 1) begin
-            pc_o <= `INIT_ADDR;
-            npc_o <= `INIT_ADDR;
-            branch_flag_o <= 0;
-            inst0_o <= `INST_NOP;
-            inst1_o <= `INST_NOP;
-            issue_o <= 'b11;
-        end else if (stall[1] == 1) begin
-            pc_o <= pc_i;
-            npc_o <= npc_i;
-            branch_flag_o <= branch_flag_i;
-            inst0_o <= inst0_i;
-            inst1_o <= inst1_i;
-            issue_o <= issue_i;
+    always @ (posedge clk or negedge rstn) begin
+        if (~rstn || flush) begin
+            if1_fifo_pc     <=  `PC_RESET;
+            if1_fifo_inst0  <=  `INST_NOP;
+            if1_fifo_inst1  <=  `INST_NOP; 
         end
+        else if (if1_valid) begin
+            if1_fifo_pc     <=  icache_pc_out;
+            if1_fifo_inst0  <=  if1_inst0;
+            if1_fifo_inst1  <=  if1_inst1;
+        end 
     end
 
     
-
     
 endmodule

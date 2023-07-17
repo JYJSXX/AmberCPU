@@ -23,7 +23,7 @@ module pre_decoder (
     assign  ibar_0=(fifo_inst0[31:27]==5'b00111)&&fifo_inst0[15];
     assign  ibar_1=(fifo_inst1[31:27]==5'b00111)&&fifo_inst1[15];
     assign  ibar_exist=ibar_0||ibar_1;
-    assign  ibar_pos=ibar_0?:0:1;
+    assign  ibar_pos=ibar_0?0:1;
     assign  pc_from_ibar = if1_if0_pc;
 
     always @(posedge clk or negedge rstn) begin

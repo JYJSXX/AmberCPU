@@ -31,5 +31,4 @@ module IF0_IF1 (
             end
         end
     end
-cjb
 endmodule
