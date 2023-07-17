@@ -15,6 +15,8 @@ module IF0 (
     input [31:0]pc_from_EX,
     input set_pc_from_WB,
     input [31:0]pc_from_WB,
+    input set_pc_from_IBAR,
+    input [31:0]pc_from_IBAR,
 
     //for BTB
     input [31:0]pred_pc,
@@ -24,19 +26,25 @@ module IF0 (
     //for ICache
     output rvalid,
     output [31:0] raddr,
-    output [31:0] p_addr.
-    output reg[31:0]cookie_in=114514,
+    output [31:0] p_addr,
+    output reg[31:0]cookie_in=114514
+
+
+    
 );
     reg  [31:0] pc=`PC_RESET;//指令集手册P68
     wire [31:0] pc_next;
     
     assign pc_next      =   pred_taken?pc+8:fetch_pc;
     assign fetch_pc     =   pc;
+    assign rvalid       =   1;
+    assign r_addr       =   pc;
+    assign p_addr       =   pc;//TODO
 
     always @(posedge clk or negedge rstn) begin
         if (~rstn) begin
             pc<=`PC_RESET;
-        end      
+        end
         else if(set_pc_from_WB)begin
             pc<=pc_from_WB;
         end
@@ -46,6 +54,9 @@ module IF0 (
         else if(set_pc_from_ID)begin
             pc<=pc_from_ID;
         end 
+        else if(set_pc_from_IBAR)begin
+            pc<=pc_from_IBAR;
+        end
         else if (if0_valid&&if0_ready&&!pc_stall) begin
             pc<=pc_next;
         end

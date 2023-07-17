@@ -16,7 +16,9 @@ begin
     if (~rstn)
         data_out <= 0;
     else if (ready)
-        data_out <= {data_out[WIDTH - 33:0], data_in};
+        data_out <= {data_in, data_out[WIDTH - 1:32]};
+    else
+        data_out <= data_out;
 end
 
 endmodule
@@ -33,7 +35,7 @@ module shift_register_n#(
     input ready
 );
 
-reg [WIDTH - 1 : 0] data_buffer;
+reg [WIDTH - 1 : 0] data_buffer = 0;
 
 always @ (posedge clk or negedge rstn)
 begin
@@ -42,9 +44,9 @@ begin
     else if (data_in_valid)
         data_buffer <= data_in;
     else if (ready)
-        data_buffer <= {data_buffer[WIDTH - 33:0], 32'b0};
+        data_buffer <= {32'b0, data_buffer[WIDTH - 1:32]};
 end
 
-assign data_out = data_buffer[WIDTH - 1 : WIDTH - 32];
+assign data_out = data_buffer[31:0];
 
 endmodule
