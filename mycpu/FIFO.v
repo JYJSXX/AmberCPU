@@ -15,6 +15,7 @@ module FIFO(
     input [31:0] if1_fifo_icache_badv,
     input [31:0] if1_fifo_icache_cookie_out,
     input [6 :0] if1_fifo_icache_exception,
+    input        if1_fifo_icache_excp_flag,
     input        if1_fifo_cacop_ready,
     input        if1_fifo_cacop_complete,
 
@@ -28,13 +29,15 @@ module FIFO(
 
     output reg [31:0] fifo_cookie_out,
     output reg [6 :0] fifo_exception, 
+    output reg        fifo_excp_flag,
+    output reg        fifo_ibar_signal,
     output reg        fifo_cacop_ready,
     output reg        fifo_cacop_complete,
 
     output fetch_buf_empty,
     output fetch_buf_full,
     output ibar_signal,
-    output ibar_pos
+    output ibar_pos//TODO pos actual meaning in pending...
     `ifdef FIFO_ID_DIFFTEST
 
     `endif 
@@ -48,7 +51,7 @@ module FIFO(
     wire stat_empty,stat_full;
     wire [63:0] inst_din,inst_dout;
     wire [63:0] pcbdv_din,pcbdv_dout;
-    wire [41:0] stat_din,stat_dout;//[40:9]cookie,[8:2]exception,[1:1]ready,[0:0]complete
+    wire [42:0] stat_din,stat_dout;//[41:10]cookie,[9:3]exception,[2:2]excp_flag,[1:1]ready,[0:0]complete
 
     assign empty                =   fetch_buf_empty;
     assign full                 =   fetch_buf_full;
@@ -57,6 +60,7 @@ module FIFO(
     assign inst_din             =   {inst1_i[31:0],inst0_i[31:0]};
     assign pcbdv_din            =   {if1_fifo_pc[31:0],if1_fifo_icache_badv[31:0]};
     assign stat_din             =   {if1_fifo_icache_cookie_out[31:0],if1_fifo_icache_exception[6:0],
+                                     if1_fifo_icache_excp_flag       ,ibar_signal,
                                      if1_fifo_cacop_ready            ,if1_fifo_cacop_complete};
 
     assign fifo_pcAdd=fifo_pc+4;
@@ -69,6 +73,8 @@ module FIFO(
             fifo_badv=if1_fifo_icache_badv;
             fifo_cookie_out=if1_fifo_icache_cookie_out;
             fifo_exception=if1_fifo_icache_exception;
+            fifo_excp_flag=if1_fifo_icache_excp_flag;
+            fifo_ibar_signal=ibar_signal;
             fifo_cacop_ready=if1_fifo_cacop_ready;
             fifo_cacop_complete=if1_fifo_cacop_complete;
         end else if(!empty)begin
@@ -76,8 +82,10 @@ module FIFO(
             inst1_o=inst_dout[63:32];
             fifo_pc=pcbdv_dout[63:32];
             fifo_badv=pcbdv_dout[31:0];
-            fifo_cookie_out=stat_dout[40:9];
-            fifo_exception=stat_dout[8:2];
+            fifo_cookie_out=stat_dout[42:11];
+            fifo_exception=stat_dout[10:4];
+            fifo_excp_flag=stat_dout[3:3];
+            fifo_ibar_signal=stat_dout[2:2];
             fifo_cacop_ready=stat_dout[1:1];
             fifo_cacop_complete=stat_dout[0:0];
         end else begin
@@ -87,6 +95,8 @@ module FIFO(
             fifo_badv=`PC_RESET;
             fifo_cookie_out=1919810;
             fifo_exception=0;
+            fifo_excp_flag=0;
+            fifo_ibar_signal=0;
             fifo_cacop_ready=0;
             fifo_cacop_complete=0;
         end
@@ -122,7 +132,7 @@ module FIFO(
     );
 
     fifo_generator#(
-        .DATA_WIDTH ( 41 ),
+        .DATA_WIDTH ( 42 ),
         .DEPTH      ( BUF_DEPTH )
     )co_statbuf(
         .clk        ( clk        ),

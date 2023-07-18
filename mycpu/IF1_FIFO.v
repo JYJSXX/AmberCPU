@@ -19,6 +19,7 @@ module IF1_FIFO(
     input [31:0]        if1_pc_out,
     input [31:0]        if1_badv,
     input [6:0]         if1_exception,
+    input               if1_excp_flag,
     input [31:0]        if1_cookie_out,
     input               if1_cacop_ready,
     input               if1_cacop_complete,
@@ -30,6 +31,7 @@ module IF1_FIFO(
     output reg[31:0]    if1_fifo_inst1,
     output reg[31:0]    if1_fifo_icache_badv,
     output reg[6:0]     if1_fifo_icache_exception,
+    output              if1_fifo_icache_excp_flag,
     output reg[31:0]    if1_fifo_icache_cookie_out,
     output reg          if1_fifo_cacop_ready,
     output reg          if1_fifo_cacop_complete

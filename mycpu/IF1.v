@@ -15,6 +15,7 @@ module IF1 (
     input [31:0] pc_out,
     input [31:0] badv,
     input [6:0] exception,
+    input       excp_flag,
     input [31:0] cookie_out,
     input cacop_ready,
     input cacop_complete,
@@ -23,6 +24,7 @@ module IF1 (
     output [31:0]if1_pc_out,
     output [31:0]if1_badv,
     output [6:0] if1_exception,
+    output       if1_excp_flag,//TODO :alert icache to pass this signal
     output [31:0]if1_cookie_out,
     output       if1_cacop_ready,
     output       if1_cacop_complete,
