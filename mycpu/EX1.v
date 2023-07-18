@@ -32,7 +32,7 @@ module EX1(
     output [31:0] alu_result1,
     output alu_result0_valid,
     output alu_result1_valid,
-
+    output ibar,
 
     //前递用到的信号
     //从ex1_ex2段间输入
@@ -104,6 +104,7 @@ module EX1(
     output div_ready
 
 );
+assign ibar = uop0[`INS_BAR];
 wire [3:0] cond0;
 wire [31:0] a_1;
 wire [31:0] b_1;

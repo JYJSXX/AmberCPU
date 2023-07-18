@@ -24,7 +24,7 @@ module dcache #(
     input                   op,                 // 0: read, 1: write
     input                   uncache,            // indicate whether the request is an uncache request
     input                   signed_ext,         // indicate whether the request is a signed extension request
-
+    output                  idle,               // indicate whether the cache is idle
     /* from AXI arbiter */
     // read
     output reg              d_rvalid,           // valid signal of read request to main memory
@@ -136,7 +136,7 @@ module dcache #(
     reg  [1:0]                  dirty_we;
     wire                        dirty_rdata;
     reg                         dirty_wdata;
-    wire                        dirty_info;
+    //wire                        dirty_info;
 
     // write back buffer
     reg     [BIT_NUM-1:0]       wbuf;
@@ -156,6 +156,22 @@ module dcache #(
     // // statistics
     // reg     [63:0]              total_time;
     // reg     [63:0]              total_hit;
+    /* op、 signed_ext、 is_atom、 llbit buffer */
+    reg op_buf, signed_ext_buf, is_atom_buf, llbit_buf;
+    always @(posedge clk) begin
+        if(!rstn) begin
+            op_buf <= 0;
+            signed_ext_buf <= 0;
+            is_atom_buf <= 0;
+            llbit_buf <= 0;
+        end
+        else if(req_buf_we) begin
+            op_buf <= op;
+            signed_ext_buf <= signed_ext;
+            is_atom_buf <= is_atom;
+            llbit_buf <= llbit;
+        end
+    end
 
     // cache operation
     reg tagv_clear;
@@ -189,7 +205,7 @@ module dcache #(
     assign address      = req_buf[31:0];
     assign wdata_pipe   = req_buf[63:32];
     assign wstrb_pipe   = cacop_en ? 4'b1111 : req_buf[67:64];
-    assign we_pipe      = |wstrb_pipe;  // if wstrb_pipe == 0, we_pipe = 0
+    assign we_pipe      = (op_buf == WRITE_OP) && (|wstrb_pipe);  // if wstrb_pipe == 0, we_pipe = 0
 
     /* return buffer : cat the return data */
     always @(posedge clk) begin
@@ -443,7 +459,9 @@ module dcache #(
         REFILL      = 4'd3,
         WAIT_WRITE  = 4'd4,
         CACOP       = 4'd5,
-        IBAR        = 4'd6;
+        UNCACHE     = 4'd6,     //处理uncache写
+        IBAR        = 4'd7,
+        CACOP_WB    = 4'd8;
     
     reg [2:0] uncache_rwsize;
     always @(*) begin
@@ -456,6 +474,7 @@ module dcache #(
     end
 
     reg [3:0] state, next_state;
+    assign idle = (state == IDLE);
     always @(posedge clk) begin
         if(!rstn) begin
             state <= IDLE;
@@ -479,7 +498,23 @@ module dcache #(
             end
         end
         LOOKUP: begin
-            if(cache_hit) begin
+            if(exception_temp != 0)
+                next_state = IDLE;
+            else if(uncache_buf) begin
+                if(op_buf == READ_OP)
+                    next_state = MISS;
+                else if(is_atom_buf && (op_buf == WRITE_OP) && !llbit_buf)
+                    next_state = WAIT_WRITE;
+                else 
+                    next_state = UNCACHE;
+            end
+            else if(is_atom_buf && (op_buf == WRITE_OP) && !llbit_buf) begin
+                next_state = WAIT_WRITE;
+            end
+            else if(cacop_en) begin
+                next_state = CACOP;
+            end
+            else if(cache_hit) begin
                 next_state = (rvalid || wvalid) ? LOOKUP : IDLE;
             end
             else begin
@@ -488,7 +523,10 @@ module dcache #(
         end
         MISS: begin
             if(d_rvalid && d_rready && d_rlast) begin
-                next_state = REFILL;
+                if(uncache_buf) 
+                    next_state = WAIT_WRITE;
+                else
+                    next_state = REFILL;
             end
             else begin
                 next_state = MISS;
@@ -505,11 +543,26 @@ module dcache #(
                 next_state = WAIT_WRITE;
             end
         end
-        CACOP: begin
+        CACOP: begin//! IBAR待完成
             if(exception_temp != 0) 
                 next_state = IDLE;
             else begin
-                
+                if(store_tag)
+                    next_state = WAIT_WRITE;
+                else if(index_invalid) begin
+                    if(dirty_rdata)
+                    next_state = CACOP_WB;
+                    else
+                    next_state = WAIT_WRITE;
+                end
+                else if(hit_invalid) begin
+                    if(cache_hit && dirty_rdata)
+                    next_state = CACOP_WB;
+                    else
+                    next_state = WAIT_WRITE;
+                end
+                else
+                    next_state = WAIT_WRITE;
             end
         end
         default: begin
@@ -538,6 +591,7 @@ module dcache #(
             req_buf_we = 1;
         end
         LOOKUP: begin
+            
             if(cache_hit) begin
                 mem_we[hit_way]         = {{(BYTE_NUM-4){1'b0}}, wstrb_pipe} << {address[BYTE_OFFSET_WIDTH-1:2], 2'b0};
                 req_buf_we              = (rvalid || wvalid);
@@ -600,7 +654,7 @@ module dcache #(
         case(wfsm_state)
         INIT: begin
             if(wfsm_en) begin
-                wfsm_next_state = dirty_info ? WRITE : FINISH;
+                wfsm_next_state = dirty_rdata ? WRITE : FINISH;
             end
             else begin
                 wfsm_next_state = INIT;
@@ -633,7 +687,7 @@ module dcache #(
         write_counter_reset = 0;
         write_counter_en    = 0;
         d_wvalid            = 0;
-        d_wlast             = 0;
+        // d_wlast             = 0;
         d_bready            = 0;
         case(wfsm_state)
         INIT: begin
@@ -641,7 +695,7 @@ module dcache #(
         end
         WRITE: begin
             d_wvalid            = 1;
-            d_wlast             = (write_counter == WORD_NUM-1);
+            // d_wlast             = (write_counter == WORD_NUM-1);
             write_counter_en    = d_wready;
             d_bready            = 1;
         end

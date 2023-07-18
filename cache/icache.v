@@ -17,6 +17,7 @@ module icache #(
     input [31:0]        p_addr,         // physical address from pipeline
     output [63:0]       rdata,          // read data to pipeline
     output [31:0]       pc_out,         // pc to pipeline
+    output              idle,           // idle signal to pipeline
     // for AXI arbiter
     output reg          i_rvalid,       // valid signal of read request to main memory
     input               i_rready,       // ready signal of read request from main memory
@@ -330,6 +331,7 @@ module icache #(
         //extra
         CACOP   = 3'b100;
     reg [2:0] state, next_state;
+    assign idle = (state == IDLE);
     // stage 1
     always @(posedge clk) begin
         if(!rstn) begin
@@ -350,9 +352,9 @@ module icache #(
             LOOKUP: begin
                 if((exception != 0) || ibar)      next_state = IDLE;
                 else if(uncache_buf)    next_state = MISS;
+                else if(cacop_en)       next_state = CACOP;
                 else if(cache_hit) begin
-                    if(cacop_en)        next_state = CACOP;
-                    else if(rvalid)     next_state = LOOKUP;
+                    if(rvalid)          next_state = LOOKUP;
                     else                next_state = IDLE;
                 end
                 else                    next_state = MISS;
@@ -447,7 +449,7 @@ module icache #(
                 tagv_we    = tagv_way_sel;
                 rready_temp     = 1;
             end
-            else if(hit_invalid) begin
+            else if(hit_invalid && cache_hit) begin
                 tagv_clear = 1;
                 tagv_we    = hit;
                 rready_temp     = 1;
