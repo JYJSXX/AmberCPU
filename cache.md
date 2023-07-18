@@ -1,4 +1,4 @@
-# Cache参数
+# Cache设计
 
 **Cache参数**
 
@@ -16,17 +16,41 @@
 
 5-0: offset（一行64字节 
 
+**AXI与主存通信**
+
+总512位
+
+接收：每次取32位，右移来取
+
+发送：右移来发
+
+**uncache指令**
+
+Icache：直接向AXI申请64位的数据
+
+Dcache：读就同Icache，写的话直接发（要发的数据放在末32位，同时发送写掩码）
+
 **CACOP指令**
 
-实现方式为将指定cache行的tag清零
+两种寻址，第一种按地址后两位，第二种按命中(如果不命中则)
+
+Icache：将指定cache行的tag清零
+
+Dcache：将指定行的tag清零的同时，如果是脏块还要写回
 
 **栅障指令**
 
 Icache：无效掉TagV表中的所有行
 
-待完成：
+Dcache：无效掉TagV表中的所有行，同时将所有脏行写回主存
 
-Dcache：无效掉TagV表中的所有行，同时将脏行写回主存
+**原子指令**
+
+就是简单的load和store（不过需要检查llbit）
+
+如果load时候把llbit设置为1
+
+如果store的时候llbit不为1就不执行
 
 # Icache接口
 
@@ -62,6 +86,7 @@ Dcache：无效掉TagV表中的所有行，同时将脏行写回主存
 - cookie_out(32)：缓存一级的附加信息
 - cacop_ready(1)：接受到cacop指令，开始执行操作
 - cacop_complete(1)：完成cacop指令
+- idle(1): icache是否处在idle状态
 
 **与AXI的交流**
 
@@ -99,8 +124,8 @@ Dcache：无效掉TagV表中的所有行，同时将脏行写回主存
 - tlb_exception (7): TLB异常信息码
 - cacop_en(1): cacop指令对dcache的操作（需要先判断cacop操作对象后直接传给dcache)
 - cacop_code(2)： cacop指令code[4:3]，操作码
-- is_atom (1): 原子指令load信号
-- llbit (1): 原子指令llbit
+- is_atom (1): 原子指令信号（LLW，SCW都要发）
+- llbit (1): 原子指令llbit信号
 
 输出端
 
@@ -113,6 +138,7 @@ Dcache：无效掉TagV表中的所有行，同时将脏行写回主存
 - cacop_complete(1)：完成cacop指令
 - llbit_set (1): 完成原子指令load，将llbit置为1
 - llbit_clear (1): 完成原子指令store，将llbit清零
+- idle(1): icache是否处在idle状态
 
 **与AXI交流**
 
@@ -155,6 +181,52 @@ output       [31:0] vaddr_diff,
 output       [31:0] paddr_diff,
 
 output       [31:0] data_diff
+
+# 状态机描述
+
+## ICache
+
+
+
+## DCache
+
+主状态机只负责读，写状态机负责写
+
+**IDLE**
+
+宕机
+
+**LOOKUP**
+
+查找是否命中，如果没命中启动写状态机（根据是否是脏块）
+
+**MISS**
+
+向主存读取块
+
+**REFILL**
+
+替换块
+
+**WAIT_WRITE**
+
+如果前面替换的是脏块，则要等待写状态机完成写入
+
+**CACOP**
+
+处理CACOP指令
+
+**UNCACHE**
+
+处理uncache写的情况（不需要替换块，单纯发送写的数据）
+
+**IBAR**
+
+写回所有脏块，完成后IDLE；
+
+**CACOP_WB**
+
+专门处理写回脏行
 
 # 优化方向
 
