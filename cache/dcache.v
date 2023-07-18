@@ -32,16 +32,16 @@ module dcache #(
     output [31:0]           d_raddr,            // read address to main memory
     input [511:0]           d_rdata,            // read data from main memory
     input                   d_rlast,            // indicate the last beat of read data from main memory
-    //output [2:0]            d_rsize,            // indicate the size of read data once, if d_rsize = n then read 2^n bytes once
+   // output [2:0]            d_rsize,            // indicate the size of read data once, if d_rsize = n then read 2^n bytes once
     output [7:0]            d_rlen,             // indicate the number of read data, if d_rlen = n then read n+1 times
     // write
     output reg              d_wvalid,           // valid signal of write request to main memory
     input                   d_wready,           // ready signal of write request from main memory
     output [31:0]           d_waddr,            // write address to main memory
-    output [31:0]           d_wdata,            // write data to main memory
+    output [511:0]          d_wdata,            // write data to main memory
     output [3:0]            d_wstrb,            // write mask of each write-back word to main memory
-    output reg              d_wlast,            // indicate the last beat of write data to main memory
-    // output [2:0]            d_wsize,            // indicate the size of write data once, if d_wsize = n then write 2^n bytes once
+   // output reg              d_wlast,            // indicate the last beat of write data to main memory
+   // output [2:0]            d_wsize,            // indicate the size of write data once, if d_wsize = n then write 2^n bytes once
     output [7:0]            d_wlen,             // indicate the number of write data, if d_wlen = n then write n+1 times
 
     // back
@@ -56,8 +56,8 @@ module dcache #(
     // cacop
     input             [1:0] cacop_code,
     input                   cacop_en,
-    output reg             cacop_complete,
-    output reg             cacop_ready,
+    output reg              cacop_complete,
+    output reg              cacop_ready,
 
     // atom load
     input                   is_atom,        // indicate whether the request is an atom load request
@@ -188,7 +188,7 @@ module dcache #(
     end
     assign address      = req_buf[31:0];
     assign wdata_pipe   = req_buf[63:32];
-    assign wstrb_pipe   = req_buf[67:64];
+    assign wstrb_pipe   = cacop_en ? 4'b1111 : req_buf[67:64];
     assign we_pipe      = |wstrb_pipe;  // if wstrb_pipe == 0, we_pipe = 0
 
     /* return buffer : cat the return data */
@@ -444,6 +444,16 @@ module dcache #(
         WAIT_WRITE  = 4'd4,
         CACOP       = 4'd5,
         IBAR        = 4'd6;
+    
+    reg [2:0] uncache_rwsize;
+    always @(*) begin
+        case(wstrb_pipe)
+        BYTE: uncache_rwsize = 3'd0;
+        HALF: uncache_rwsize = 3'd1;
+        WORD: uncache_rwsize = 3'd2;
+        default: uncache_rwsize = 3'd0;
+        endcase
+    end
 
     reg [3:0] state, next_state;
     always @(posedge clk) begin
@@ -457,7 +467,11 @@ module dcache #(
     always @(*) begin
         case(state)
         IDLE: begin
-            if(rvalid || wvalid) begin
+            if(exception != 0) 
+                next_state = IDLE;
+            else if(cacop_en) 
+                next_state = CACOP;
+            else if(rvalid || wvalid) begin
                 next_state = LOOKUP;
             end
             else begin
@@ -489,6 +503,13 @@ module dcache #(
             end
             else begin
                 next_state = WAIT_WRITE;
+            end
+        end
+        CACOP: begin
+            if(exception_temp != 0) 
+                next_state = IDLE;
+            else begin
+                
             end
         end
         default: begin
