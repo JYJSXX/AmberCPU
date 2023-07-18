@@ -26,7 +26,6 @@ module IF0 (
     //for ICache
     output rvalid,
     output [31:0] raddr,
-    output [31:0] p_addr,
     output reg[31:0]cookie_in=114514
 
 
@@ -38,8 +37,7 @@ module IF0 (
     assign pc_next      =   pred_taken?pc+8:fetch_pc;
     assign fetch_pc     =   pc;
     assign rvalid       =   1;
-    assign r_addr       =   pc;
-    assign p_addr       =   pc;//TODO
+    assign raddr       =   pc;
 
     always @(posedge clk or negedge rstn) begin
         if (~rstn) begin
