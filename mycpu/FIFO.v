@@ -12,9 +12,16 @@ module FIFO(
     input [31:0] inst0_i,
     input [31:0] inst1_i,
     input [31:0] if1_fifo_pc,
+    input [31:0] if1_fifo_icache_badv,
+    input [6 :0] if1_fifo_icache_exception,
+
+
     output reg[31:0] inst0_o,
     output reg[31:0] inst1_o,
     output reg[31:0] fifo_pc,//co pc with inst0_o
+    output reg[31:0] fifo_icache_badv,
+    output reg[6 :0] fifo_exception, //TODO to save fifo
+
     output fetch_buf_empty,
     output fetch_buf_full,
     output ibar_signal,
@@ -34,6 +41,7 @@ module FIFO(
     assign write_en             =   fifo_valid;
     assign pop_en               =   fifo_ready;
     assign inst_din             =   {inst1_i[31:0],inst0_i[31:0]};
+    assign pc_din               =   if1_fifo_pc;
 
     always @(*) begin
         if (empty&&write_en&&pop_en) begin//special case bypass
@@ -62,8 +70,8 @@ module FIFO(
         .din                        ( inst_din  ),
         .write_en                   ( write_en ),
         .dout                       ( inst_dout ),
-        .empty                      ( empty    ),
-        .full                       ( full     )
+        .full                       ( full     ),
+        .empty                      ( empty    )
     );
 
     fifo_generator#(
@@ -79,6 +87,21 @@ module FIFO(
         .full       ( full       ),
         .empty      ( empty      )
     );
+
+    fifo_generator#(
+        .DATA_WIDTH ( 8 ),
+        .DEPTH      ( 16 )
+    )co_exceptionbuf(//TODO to apt interface
+        .clk        ( clk        ),
+        .rstn       ( rstn       ),
+        .pop_en     ( pop_en     ),
+        .din        ( if1_fifo_icache_exception        ),
+        .write_en   ( write_en   ),
+        .dout       ( dout       ),
+        .full       ( full       ),
+        .empty      ( empty      )
+    );
+
 
 
     pre_decoder u_pre_decoder(

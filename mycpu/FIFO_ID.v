@@ -26,16 +26,16 @@ module FIFO_ID (
     `endif 
 );
 
-    assign id_valid=fifo_valid&!fifo_id_stall;
-    assign fifo_ready=id_ready&!fetch_buf_full;
+    assign id_valid=fifo_valid;//valid anytime because fifo provide INST_NOP if invalid
+    assign fifo_ready=id_ready;
 
 
     always @(posedge clk or negedge rstn) begin
-        if (~rstn|fifo_id_flush) begin
+        if (!rstn|fifo_id_flush|(~fifo_valid&&id_ready)) begin
             fifo_id_inst0   <=`INST_NOP;
             fifo_id_inst1   <=`INST_NOP;
             fifo_id_pc      <=`PC_RESET;
-        end else if(!fifo_id_stall&fifo_valid)begin
+        end else if(!fifo_id_stall&(fifo_valid&&id_ready))begin
             fifo_id_inst0   <=fifo_inst0;
             fifo_id_inst1   <=fifo_inst1;
             fifo_id_pc      <=fifo_pc;
