@@ -19,15 +19,19 @@ module IF0_IF1 (
     output reg[31:0]    if0_if1_pc 
 
 );
-    assign if0_ready= 1;
-    assign if1_valid= ~stall?0:1;
+    assign if0_ready= if1_ready;
+    assign if1_valid= if0_valid;
 
     always @(posedge clk or negedge rstn) begin
-        if((~rstn)||flush)begin
-            if0_if1_pc<=`zero;
+        if((~rstn)||flush||(!if0_valid&&if1_ready))begin
+            //clear stage-stage reg
+            if0_if1_pc<=`PC_RESET;
         end else begin
-            if (!stall) begin
+            if (!stall&&(if0_valid&&if1_ready)) begin
+                //update stage-stage reg
                 if0_if1_pc<=fetch_pc;
+            end else if (!if1_ready) begin
+                //hold stage-stage reg
             end
         end
     end

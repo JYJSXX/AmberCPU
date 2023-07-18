@@ -19,25 +19,25 @@ module IF1 (
     input cacop_ready,
     input cacop_complete,
 
-    output icache_rready,
-    output [31:0]icache_pc_out,
-    output [31:0]icache_badv,
-    output [6:0] icache_exception,
-    output [31:0]icache_cookie_out,
-    output if1_cacop_ready,
-    output if1_cacop_complete,
+    output if1_rready,
+    output [31:0]if1_pc_out,
+    output [31:0]if1_badv,
+    output [6:0] if1_exception,
+    output [31:0]if1_cookie_out,
+    output       if1_cacop_ready,
+    output       if1_cacop_complete,
     output [31:0] if1_inst0,
     output [31:0] if1_inst1
 
 );
     assign if1_fifo_pc = if0_if1_pc;
-    assign inst0 = rdata[31:0];
+    assign inst0 = if0_if1_pc[2]? `INST_NOP:rdata[31:0];//针对branch到奇数PC
     assign inst1 = rdata[63:32];
-    assign icache_ready = rready;
-    assign icache_pc_out = pc_out;
-    assign icache_badv  = badv;
-    assign icache_exception = exception;
-    assign icache_cookie_out = cookie_out;
+    assign if1_rready = rready;
+    assign if1_pc_out = pc_out;
+    assign if1_badv  = badv;
+    assign if1_exception = exception;
+    assign if1_cookie_out = cookie_out;
     assign if1_cacop_ready = cacop_ready;
     assign if1_cacop_complete = cacop_complete;
 endmodule
