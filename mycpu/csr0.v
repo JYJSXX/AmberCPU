@@ -10,9 +10,9 @@ module csr
 )
 (
     input clk, stable_clk,
-    input rstn,
+    input aresetn,
     //software query port (exe stage)
-    input software_query_en,
+    input software_en,
     input  [13:0] addr,
     output reg [31:0] rdata,//read first
     input  [31:0] wen,      //bit write enable
@@ -291,7 +291,7 @@ module csr
     //CSR update
     //CRMD
     always @(posedge clk)
-        if(~rstn) begin
+        if(~aresetn) begin
             crmd_plv <= 0;
             crmd_ie <= 0;
             crmd_da <= 1;
@@ -312,7 +312,7 @@ module csr
             end
             crmd_plv <= 0;
             crmd_ie <= 0;
-        end else if(software_query_en&&addr==`CSR_CRMD) begin
+        end else if(software_en&&addr==`CSR_CRMD) begin
             if(wen[0]) crmd_plv[0]  <= wdata[0];
             if(wen[1]) crmd_plv[1]  <= wdata[1];
             if(wen[2]) crmd_ie[2]   <= wdata[2];
@@ -329,13 +329,13 @@ module csr
     
     //PRMD
     always @(posedge clk)
-        if(~rstn) begin
+        if(~aresetn) begin
             prmd_pplv <= 0;
             prmd_pie <= 0;
         end else if(store_state) begin
             prmd_pplv <= crmd_plv;
             prmd_pie  <= crmd_ie;
-        end else if(software_query_en&&addr==`CSR_PRMD) begin
+        end else if(software_en&&addr==`CSR_PRMD) begin
             if(wen[0]) prmd_pplv[0]<=wdata[0];
             if(wen[1]) prmd_pplv[1]<=wdata[1];
             if(wen[2]) prmd_pie[2] <=wdata[2];
@@ -343,17 +343,17 @@ module csr
     
     //EUEN
     always @(posedge clk)
-        if(~rstn) begin
+        if(~aresetn) begin
             euen_fpe <= 0;
-        end else if(software_query_en&&addr==`CSR_EUEN) begin
+        end else if(software_en&&addr==`CSR_EUEN) begin
             if(wen[0]) euen_fpe[0]<=wdata[0];
         end
     
     //ECFG
     always @(posedge clk)
-        if(~rstn) begin
+        if(~aresetn) begin
             ecfg_lie <= 0;
-        end else if(software_query_en&&addr==`CSR_ECFG) begin
+        end else if(software_en&&addr==`CSR_ECFG) begin
             if(wen[0]) ecfg_lie[0]<=wdata[0];
             if(wen[1]) ecfg_lie[1]<=wdata[1];
             if(wen[2]) ecfg_lie[2]<=wdata[2];
@@ -371,25 +371,25 @@ module csr
     
     //ESTAT
     always @(posedge clk)
-        if(~rstn) begin
+        if(~aresetn) begin
             estat_is_0 <= 0;
             estat_ecode <= 0;
             estat_subecode <= 0;
         end else if(expcode_wen) begin
             estat_ecode <= expcode_in[5:0];
             estat_subecode <= expcode_in[5:0]==0 ? 0:{8'b0,expcode_in[6]};
-        end else if(software_query_en&&addr==`CSR_ESTAT) begin
+        end else if(software_en&&addr==`CSR_ESTAT) begin
             if(wen[0]) estat_is_0[0]<=wdata[0];
             if(wen[1]) estat_is_0[1]<=wdata[1];
         end
     
     //ERA
     always @(posedge clk)
-        if(~rstn) begin
+        if(~aresetn) begin
             csr_era <= 0;
         end else if(era_wen) begin
             csr_era <= era_in;
-        end else if(software_query_en&&addr==`CSR_ERA) begin
+        end else if(software_en&&addr==`CSR_ERA) begin
             if(wen[ 0]) csr_era[ 0]<=wdata[ 0];
             if(wen[ 1]) csr_era[ 1]<=wdata[ 1];
             if(wen[ 2]) csr_era[ 2]<=wdata[ 2];
@@ -426,11 +426,11 @@ module csr
 
     //BADV
     always @(posedge clk)
-        if(~rstn) begin
+        if(~aresetn) begin
             csr_badv <= 0;
         end else if(badv_wen) begin
             csr_badv <= badv_in;
-        end else if(software_query_en&&addr==`CSR_BADV) begin
+        end else if(software_en&&addr==`CSR_BADV) begin
             if(wen[ 0]) csr_badv[ 0]<=wdata[ 0];
             if(wen[ 1]) csr_badv[ 1]<=wdata[ 1];
             if(wen[ 2]) csr_badv[ 2]<=wdata[ 2];
@@ -467,9 +467,9 @@ module csr
 
     //EENTRY
     always @(posedge clk)
-        if(~rstn) begin
+        if(~aresetn) begin
             eentry_va <= 0;
-        end else if(software_query_en&&addr==`CSR_EENTRY) begin
+        end else if(software_en&&addr==`CSR_EENTRY) begin
             if(wen[ 6]) eentry_va[ 6]<=wdata[ 6];
             if(wen[ 7]) eentry_va[ 7]<=wdata[ 7];
             if(wen[ 8]) eentry_va[ 8]<=wdata[ 8];
@@ -500,9 +500,9 @@ module csr
     
     //TLBRENTRY
     always @(posedge clk)
-        if(~rstn) begin
+        if(~aresetn) begin
             tlbrentry_pa <= 0;
-        end else if(software_query_en&&addr==`CSR_TLBRENTRY) begin
+        end else if(software_en&&addr==`CSR_TLBRENTRY) begin
             if(wen[ 6]) tlbrentry_pa[ 6]<=wdata[ 6];
             if(wen[ 7]) tlbrentry_pa[ 7]<=wdata[ 7];
             if(wen[ 8]) tlbrentry_pa[ 8]<=wdata[ 8];
@@ -533,9 +533,9 @@ module csr
     
     //SAVE0~3
     always @(posedge clk)
-        if(~rstn) begin
+        if(~aresetn) begin
             csr_save0 <= 0;
-        end else if(software_query_en&&addr==`CSR_SAVE0) begin
+        end else if(software_en&&addr==`CSR_SAVE0) begin
             if(wen[ 0]) csr_save0[ 0]<=wdata[ 0];
             if(wen[ 1]) csr_save0[ 1]<=wdata[ 1];
             if(wen[ 2]) csr_save0[ 2]<=wdata[ 2];
@@ -571,9 +571,9 @@ module csr
         end
     
     always @(posedge clk)
-        if(~rstn) begin
+        if(~aresetn) begin
             csr_save1 <= 0;
-        end else if(software_query_en&&addr==`CSR_SAVE1) begin
+        end else if(software_en&&addr==`CSR_SAVE1) begin
             if(wen[ 0]) csr_save1[ 0]<=wdata[ 0];
             if(wen[ 1]) csr_save1[ 1]<=wdata[ 1];
             if(wen[ 2]) csr_save1[ 2]<=wdata[ 2];
@@ -609,9 +609,9 @@ module csr
         end
     
     always @(posedge clk)
-        if(~rstn) begin
+        if(~aresetn) begin
             csr_save2 <= 0;
-        end else if(software_query_en&&addr==`CSR_SAVE2) begin
+        end else if(software_en&&addr==`CSR_SAVE2) begin
             if(wen[ 0]) csr_save2[ 0]<=wdata[ 0];
             if(wen[ 1]) csr_save2[ 1]<=wdata[ 1];
             if(wen[ 2]) csr_save2[ 2]<=wdata[ 2];
@@ -647,9 +647,9 @@ module csr
         end
     
     always @(posedge clk)
-        if(~rstn) begin
+        if(~aresetn) begin
             csr_save3 <= 0;
-        end else if(software_query_en&&addr==`CSR_SAVE3) begin
+        end else if(software_en&&addr==`CSR_SAVE3) begin
             if(wen[ 0]) csr_save3[ 0]<=wdata[ 0];
             if(wen[ 1]) csr_save3[ 1]<=wdata[ 1];
             if(wen[ 2]) csr_save3[ 2]<=wdata[ 2];
@@ -686,7 +686,7 @@ module csr
 
     //LLBCTL
     always @(posedge clk)
-        if(~rstn) begin
+        if(~aresetn) begin
             llbctl_klo <= 0;
             llbctl_rollb <= 0;
         end else if(llbit_set) llbctl_rollb<=1;
@@ -694,19 +694,19 @@ module csr
         else if(llbit_clear_by_eret) begin 
             llbctl_rollb<=llbctl_klo;
             llbctl_klo<=0;
-        end else if(software_query_en&&addr==`CSR_LLBCTL) begin
+        end else if(software_en&&addr==`CSR_LLBCTL) begin
             if(wen[1]&&wdata[1]) llbctl_rollb<=0;
             if(wen[2]) llbctl_klo<=wdata[2];
         end
     
     //TIBIDX
     always @(posedge clk)
-        if(~rstn) begin
+        if(~aresetn) begin
             tlbidx_index<=0;
             tlbidx_ps<=0;
             tlbidx_ne<=0;
         end
-        else if(software_query_en&&addr==`CSR_TLBIDX) begin
+        else if(software_en&&addr==`CSR_TLBIDX) begin
             if( 0<TLBIDX_WIDTH&&wen[ 0]) tlbidx_index[ 0]<=wdata[ 0];
             if( 1<TLBIDX_WIDTH&&wen[ 1]) tlbidx_index[ 1]<=wdata[ 1];
             if( 2<TLBIDX_WIDTH&&wen[ 2]) tlbidx_index[ 2]<=wdata[ 2];
@@ -738,11 +738,11 @@ module csr
 
     //TLBEHI
     always @(posedge clk)
-        if(~rstn)
+        if(~aresetn)
             tlbehi_vppn<=0;
         else if(exp_vppn_we) begin
             tlbehi_vppn <= exp_vppn_in;
-        end else if(software_query_en&&addr==`CSR_TLBEHI) begin
+        end else if(software_en&&addr==`CSR_TLBEHI) begin
             if(wen[13]) tlbehi_vppn[13] <= wdata[13];
             if(wen[14]) tlbehi_vppn[14] <= wdata[14];
             if(wen[15]) tlbehi_vppn[15] <= wdata[15];
@@ -767,9 +767,9 @@ module csr
     
     //TLBELO0~1
     always @(posedge clk)
-        if(~rstn) begin
+        if(~aresetn) begin
             csr_tlbelo0 <= 0;
-        end else if(software_query_en&&addr==`CSR_TLBELO0) begin
+        end else if(software_en&&addr==`CSR_TLBELO0) begin
             if(wen[ 0]) csr_tlbelo0[ 0] <= wdata[ 0];
             if(wen[ 1]) csr_tlbelo0[ 1] <= wdata[ 1];
             if(wen[ 2]) csr_tlbelo0[ 2] <= wdata[ 2];
@@ -812,9 +812,9 @@ module csr
         end
     
     always @(posedge clk)
-        if(~rstn) begin
+        if(~aresetn) begin
             csr_tlbelo1 <= 0;
-        end else if(software_query_en&&addr==`CSR_TLBELO1) begin
+        end else if(software_en&&addr==`CSR_TLBELO1) begin
             if(wen[ 0]) csr_tlbelo1[ 0] <= wdata[ 0];
             if(wen[ 1]) csr_tlbelo1[ 1] <= wdata[ 1];
             if(wen[ 2]) csr_tlbelo1[ 2] <= wdata[ 2];
@@ -858,9 +858,9 @@ module csr
     
     //ASID
     always @(posedge clk)
-        if(~rstn)
+        if(~aresetn)
             asid_asid <= 0;
-        else if(software_query_en&&addr==`CSR_ASID) begin
+        else if(software_en&&addr==`CSR_ASID) begin
             if(wen[0]) asid_asid[0]<=wdata[0];
             if(wen[1]) asid_asid[1]<=wdata[1];
             if(wen[2]) asid_asid[2]<=wdata[2];
@@ -876,9 +876,9 @@ module csr
     
     //PGDL
     always @(posedge clk)
-        if(~rstn) begin
+        if(~aresetn) begin
             pgdl_base <= 0;
-        end else if(software_query_en&&addr==`CSR_PGDL) begin
+        end else if(software_en&&addr==`CSR_PGDL) begin
             if(wen[12]) pgdl_base[12] <= wdata[12];
             if(wen[13]) pgdl_base[13] <= wdata[13];
             if(wen[14]) pgdl_base[14] <= wdata[14];
@@ -903,9 +903,9 @@ module csr
     
     //PGDH
     always @(posedge clk)
-        if(~rstn) begin
+        if(~aresetn) begin
             pgdh_base <= 0;
-        end else if(software_query_en&&addr==`CSR_PGDH) begin
+        end else if(software_en&&addr==`CSR_PGDH) begin
             if(wen[12]) pgdh_base[12] <= wdata[12];
             if(wen[13]) pgdh_base[13] <= wdata[13];
             if(wen[14]) pgdh_base[14] <= wdata[14];
@@ -930,20 +930,20 @@ module csr
     
     //PGD
     always @(posedge clk)
-        if(~rstn)
+        if(~aresetn)
             csr_pgd <= 0;
         else if(pgd_base_wen)
             csr_pgd[`PGD_BASE] <= pgd_base_in[`PGD_BASE];
     
     //DMW0~1
     always @(posedge clk)
-        if(~rstn) begin
+        if(~aresetn) begin
             dmw0_plv0<=0;
             dmw0_plv3<=0;
             dmw0_mat<=0;
             dmw0_pseg<=0;
             dmw0_vseg<=0;
-        end else if(software_query_en&&addr==`CSR_DMW0) begin
+        end else if(software_en&&addr==`CSR_DMW0) begin
             if(wen[ 0]) dmw0_plv0<=wdata[ 0];
             if(wen[ 3]) dmw0_plv3<=wdata[ 3];
             if(wen[ 4]) dmw0_mat[ 0]<=wdata[ 4];
@@ -957,13 +957,13 @@ module csr
         end
     
     always @(posedge clk)
-        if(~rstn) begin
+        if(~aresetn) begin
             dmw1_plv0<=0;
             dmw1_plv3<=0;
             dmw1_mat<=0;
             dmw1_pseg<=0;
             dmw1_vseg<=0;
-        end else if(software_query_en&&addr==`CSR_DMW1) begin
+        end else if(software_en&&addr==`CSR_DMW1) begin
             if(wen[ 0]) dmw1_plv0<=wdata[ 0];
             if(wen[ 3]) dmw1_plv3<=wdata[ 3];
             if(wen[ 4]) dmw1_mat[ 0]<=wdata[ 4];
@@ -977,9 +977,9 @@ module csr
         end
     
     always @(posedge clk)
-        if(~rstn) begin
+        if(~aresetn) begin
             csr_tid <= 0;
-        end else if(software_query_en&&addr==`CSR_TID) begin
+        end else if(software_en&&addr==`CSR_TID) begin
             if(wen[ 0]) csr_tid[ 0]<=wdata[ 0];
             if(wen[ 1]) csr_tid[ 1]<=wdata[ 1];
             if(wen[ 2]) csr_tid[ 2]<=wdata[ 2];
@@ -1016,11 +1016,11 @@ module csr
 
     //TCFG
     always @(posedge clk)
-        if(~rstn) begin
+        if(~aresetn) begin
             tcfg_en <= 0;
             tcfg_initval <= 0;
             tcfg_peridic<=0;
-        end else if(software_query_en&&addr==`CSR_TCFG) begin
+        end else if(software_en&&addr==`CSR_TCFG) begin
             if(wen[ 0]) tcfg_en[ 0]     <=wdata[ 0];
             if(wen[ 1]) tcfg_peridic[ 1]<=wdata[ 1];
             if(wen[ 2]) tcfg_initval[ 2]<=wdata[ 2];
@@ -1057,15 +1057,15 @@ module csr
     
     reg just_set_timer;
     always @(posedge clk)
-        if(~rstn) just_set_timer<=0;
-        else if(software_query_en&&addr==`CSR_TCFG&&wen!=0)
+        if(~aresetn) just_set_timer<=0;
+        else if(software_en&&addr==`CSR_TCFG&&wen!=0)
             just_set_timer<=1;
         else just_set_timer<=0;
     
     //TVAL
     reg time_out;
     always @(posedge stable_clk)
-        if(~rstn) begin
+        if(~aresetn) begin
             csr_tval <= 0;
             time_out <= 0;
         end
@@ -1081,16 +1081,16 @@ module csr
     
     //TICLR
     always @(posedge stable_clk)
-        if(~rstn||software_query_en&&addr==`CSR_TICLR&&wen[`TICLR_CLR]&&wdata[`TICLR_CLR])
+        if(~aresetn||software_en&&addr==`CSR_TICLR&&wen[`TICLR_CLR]&&wdata[`TICLR_CLR])
             timer_int <= 0;
         else if(time_out)
             timer_int <= 1;
     
     //CTAG
     always @(posedge clk)
-        if(~rstn) begin
+        if(~aresetn) begin
             csr_ctag <= 0;
-        end else if(software_query_en&&addr==`CSR_CTAG) begin
+        end else if(software_en&&addr==`CSR_CTAG) begin
             if(wen[ 0]) csr_ctag[ 0]<=wdata[ 0];
             if(wen[ 1]) csr_ctag[ 1]<=wdata[ 1];
             if(wen[ 2]) csr_ctag[ 2]<=wdata[ 2];

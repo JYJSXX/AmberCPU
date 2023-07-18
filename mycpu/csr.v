@@ -1,13 +1,17 @@
 `include "../config.vh"
 `include "../csr.vh"
-module csr(
+module csr#(
+    TLBIDX_WIDTH = 4
+)
+(
     input clk,
+    input aclk,
     input aresetn,
 
     input software_en,
     input [13:0] addr,
-    output reg [31:0] rdata,
-    input [31:0] wen,
+    output [31:0] rdata,
+    input wen,
     input [31:0] wdata,
 
     output [31:0] crmd, //当前模式信息，包含privilege
@@ -20,11 +24,13 @@ module csr(
     output [31:0] dmw0,
     output [31:0] dmw1,
     output llbit,
-
+    output idle_over,
+    //TLB输出
+    //待定
     input exception, //进入例外
     input ertn, //例外返回
     input tlb_exception, //TLB例外,要回到直接地址映射模式
-    input [6:0] expcode, //例外代码 最高位是subexpcode
+    input [6:0] expcode_in, //例外代码 最高位是subexpcode
     input wen_expcode, //写入例外代码
     input [31:0] era_in, //例外返回地址
     input wen_era, //写入例外返回地址
@@ -35,7 +41,7 @@ module csr(
     input [18:0] tlbehi_vppn_in,
     input wen_tlbehi_vppn,
     input llbit_set,
-    input llbit_clear, //by other没有用，直接看ertn就行
+    //input llbit_clear, //by other没有用，直接看ertn就行
     input [31:0] tlbidx_in,
     input [31:0] wen_tlbidx, //每一位都有使能
     input [31:0] tlbehi_in,
@@ -45,16 +51,26 @@ module csr(
     input [31:0] tlbelo1_in,
     input [31:0] wen_tlbelo1,
     input [9:0] asid_asid_in,
-    input wen_asid_asid
+    input wen_asid_asid,
+    input [7:0] hardware_interrupt
+    // input tlb_index_we,
+    // input tlb_ps_we,
+    // input tlb_ne_we
 );
     wire [31:0] csr_crmd ;
     wire [31:0] csr_prmd ;
     wire [31:0] csr_euen ;
     wire [31:0] csr_ecfg ;
     wire [31:0] csr_estat ;
-    wire [31:0] csr_era ;
-    wire [31:0] csr_badv ;
+    reg [31:0] csr_era ;//////////////////
+    reg [31:0] csr_badv ;//////////////////
     wire [31:0] csr_eentry ;
+    wire [31:0] csr_cpuid ;
+    reg [31:0] csr_save0 ;  ////////
+    reg [31:0] csr_save1 ; ////////
+    reg [31:0] csr_save2 ; ////////
+    reg [31:0] csr_save3 ; ////////
+    wire [31:0] csr_llbctl ;
     wire [31:0] csr_tlbidx ;
     wire [31:0] csr_tlbehi ;
     wire [31:0] csr_tlbelo0 ;
@@ -63,20 +79,14 @@ module csr(
     wire [31:0] csr_pgdl ;
     wire [31:0] csr_pgdh ;
     wire [31:0] csr_pgd ;
-    wire [31:0] csr_cpuid ;
-    wire [31:0] csr_save0 ;
-    wire [31:0] csr_save1 ;
-    wire [31:0] csr_save2 ;
-    wire [31:0] csr_save3 ;
-    wire [31:0] csr_tid ;
-    wire [31:0] csr_tcfg ;
-    wire [31:0] csr_tval ;
-    wire [31:0] csr_tlclr ;
-    wire [31:0] csr_llbctl ;
     wire [31:0] csr_tlbrentry ;
-    wire [31:0] csr_ctag ;
     wire [31:0] csr_dmw0 ;
     wire [31:0] csr_dmw1 ;
+    reg [31:0] csr_tid ;
+    wire [31:0] csr_tcfg ;
+    reg [31:0] csr_tval ;
+    wire [31:0] csr_tlclr ;
+    reg [31:0] csr_ctag ;
 
 
 //CRMD
@@ -112,14 +122,14 @@ module csr(
     assign csr_ecfg[`ECFG_ZERO] = 0;
 
         //ESTAT
-    reg [`ESTAT_IS_SOFT] estat_is_SOFT;
-    reg [`ESTAT_IS_HARD] estat_is_HARD;
+    reg [`ESTAT_IS_SOFT] estat_is_soft;
+    reg [`ESTAT_IS_HARD] estat_is_hard;
     reg [`ESTAT_IS_TI] estat_is_ti;
     reg [`ESTAT_IS_IPI] estat_is_ipi;
     reg [`ESTAT_ECODE] estat_ecode;
     reg [`ESTAT_ESUBCODE] estat_subecode;
-    assign csr_estat[`ESTAT_IS_SOFT] = estat_is_SOFT; //软件中断位
-    assign csr_estat[`ESTAT_IS_HARD] = estat_is_HARD; //硬件中断位
+    assign csr_estat[`ESTAT_IS_SOFT] = estat_is_soft; //软件中断位
+    assign csr_estat[`ESTAT_IS_HARD] = estat_is_hard; //硬件中断位
     assign csr_estat[`ESTAT_ZERO_0] = 0;
     assign csr_estat[`ESTAT_IS_TI] = estat_is_ti; //计时器中断位
     assign csr_estat[`ESTAT_IS_IPI] = estat_is_ipi; //核间中断位
@@ -221,12 +231,12 @@ module csr(
     reg [`DMW0_PLV0] dmw0_plv0;
     reg [`DMW0_PLV3] dmw0_plv3;
     reg [`DMW0_MAT] dmw0_mat;
-    reg [`DMW0_PSEG] dmw0_g;
+    reg [`DMW0_PSEG] dmw0_pseg;
     reg [`DMW0_VSEG] dmw0_vseg;
     assign csr_dmw0[`DMW0_PLV0] = dmw0_plv0;
     assign csr_dmw0[`DMW0_PLV3] = dmw0_plv3;
     assign csr_dmw0[`DMW0_MAT] = dmw0_mat;
-    assign csr_dmw0[`DMW0_PSEG] = dmw0_g;
+    assign csr_dmw0[`DMW0_PSEG] = dmw0_pseg;
     assign csr_dmw0[`DMW0_VSEG] = dmw0_vseg;
     assign csr_dmw0[`DMW0_ZERO_0] = 0;
     assign csr_dmw0[`DMW0_ZERO_1] = 0;
@@ -236,12 +246,12 @@ module csr(
     reg [`DMW1_PLV0] dmw1_plv0;
     reg [`DMW1_PLV3] dmw1_plv3;
     reg [`DMW1_MAT] dmw1_mat;
-    reg [`DMW1_PSEG] dmw1_g;
+    reg [`DMW1_PSEG] dmw1_pseg;
     reg [`DMW1_VSEG] dmw1_vseg;
     assign csr_dmw1[`DMW1_PLV0] = dmw1_plv0;
     assign csr_dmw1[`DMW1_PLV3] = dmw1_plv3;
     assign csr_dmw1[`DMW1_MAT] = dmw1_mat;
-    assign csr_dmw1[`DMW1_PSEG] = dmw1_g;
+    assign csr_dmw1[`DMW1_PSEG] = dmw1_pseg;
     assign csr_dmw1[`DMW1_VSEG] = dmw1_vseg;
     assign csr_dmw1[`DMW1_ZERO_0] = 0;
     assign csr_dmw1[`DMW1_ZERO_1] = 0;
@@ -259,7 +269,370 @@ module csr(
     reg [`TICLR_CLR] tlclr_clr;
     assign csr_tlclr[`TICLR_CLR] = tlclr_clr;
     assign csr_tlclr[`TICLR_ZERO] = 0;
+assign cpu_interupt=crmd_ie&&(ecfg_lie&csr_estat)!=0; //全局中断允许且（局部中断使能位与例外状态位）不为0
+assign idle_over= csr_estat[12:0]; //各种中断，无论软件硬件，无论是否使能，只有有例外就结束idle(马哥这样实现的)
+wire pg_next;
+wire da_next;
+assign pg_next = wen?wdata[4]:crmd_pg;
+assign da_next = wen?wdata[3]:crmd_da;
+always @(posedge clk)
+        if(~aresetn) begin
+            crmd_plv <= 0;
+            crmd_ie <= 0;
+            crmd_da <= 1;
+            crmd_pg <= 0;
+            crmd_datf <= 0;
+            crmd_datm <= 0;
+        end else if(ertn) begin
+            crmd_plv <= prmd_pplv;
+            crmd_ie <= prmd_pie;
+            if(estat_ecode==6'h3F) begin //之前进入过TLB重新装填例外
+                crmd_da <= 0;
+                crmd_pg <= 1;
+            end
+        end else if(exception) begin
+            if(tlb_exception) begin //现在要进入TLB例外
+                crmd_da <= 1;
+                crmd_pg <= 0;
+            end
+            crmd_plv <= 0;
+            crmd_ie <= 0;
+        end else if(software_en&&addr==`CSR_CRMD) begin
+            if(wen) crmd_plv[`CRMD_PLV]  <= wdata[`CRMD_PLV];
+            if(wen) crmd_ie[`CRMD_IE]   <= wdata[`CRMD_IE];
+            if(wen) crmd_datf[`CRMD_DATF] <= wdata[`CRMD_DATF];
+            if(wen) crmd_datm[`CRMD_DATF] <= wdata[`CRMD_DATM];
+            //只在{pg,da}处在合法状态时更新
+            if(wen) begin
+                if(pg_next ^ da_next) begin
+                    {crmd_pg,crmd_da} <= {pg_next,da_next};
+                end
+            end
+        end
+//PRMD
+    always @(posedge clk)
+        if(~aresetn) begin
+            prmd_pplv <= 0;
+            prmd_pie <= 0;
+        end else if(exception) begin
+            prmd_pplv <= crmd_plv;
+            prmd_pie  <= crmd_ie;
+        end else if(software_en&&addr==`CSR_PRMD) begin
+            if(wen) prmd_pplv[`PRMD_PPLV]<=wdata[`PRMD_PPLV];
+            if(wen) prmd_pie[`PRMD_PIE] <=wdata[`PRMD_PIE];
+        end
+        //EUEN
+    always @(posedge clk)
+        if(~aresetn) begin
+            euen_fpe <= 0;
+        end else if(software_en&&addr==`CSR_EUEN) begin
+            if(wen) euen_fpe[0]<=wdata[0];
+        end
+
+         //ECFG
+    always @(posedge clk)
+        if(~aresetn) begin
+            ecfg_lie <= 0;
+        end else if(software_en&&addr==`CSR_ECFG) begin
+           if(wen) ecfg_lie[`ECFG_LIE]<=wdata[`ECFG_LIE];
+
+        end
+    
+   
+    //ESTAT
+    always @(posedge clk)
+        if(~aresetn) begin
+            estat_is_soft <= 0;
+            estat_ecode <= 0;
+            estat_subecode <= 0;
+        end else if(wen_expcode) begin
+            estat_ecode <= expcode_in[5:0];
+            estat_subecode <= expcode_in[5:0]==0 ? 0:{8'b0,expcode_in[6]};
+        end else if(software_en&&addr==`CSR_ESTAT) begin
+            if(wen) estat_is_soft[`ESTAT_IS_SOFT]<=wdata[`ESTAT_IS_SOFT];
+        end
+    always@(*) estat_is_hard[`ESTAT_IS_HARD] = hardware_interrupt;
+    //ERA
+    always @(posedge clk)
+        if(~aresetn) begin
+            csr_era <= 0;
+        end else if(wen_era) begin
+            csr_era <= era_in;
+        end else if(software_en&&addr==`CSR_ERA) begin
+            if(wen) csr_era[ 31:0]<=wdata[ 31:0];
+            
+        end
+
+    //BADV
+    always @(posedge clk)
+        if(~aresetn) begin
+            csr_badv <= 0;
+        end else if(wen_badv) begin
+            csr_badv <= badv_in;
+        end else if(software_en&&addr==`CSR_BADV) begin
+            if(wen) csr_badv[31:0]<=wdata[31:0];
+        end
+
+    //EENTRY
+    always @(posedge clk)
+        if(~aresetn) begin
+            eentry_va <= 0;
+        end else if(software_en&&addr==`CSR_EENTRY) begin
+            if(wen) eentry_va[`EENTRY_VA]<=wdata[`EENTRY_VA];
+        end
+
+    //CPUID
+    always @(*)
+        cpuid_coreid = 0;
+
+    //SAVE0~3
+    always @(posedge clk)
+        if(~aresetn) begin
+            csr_save0 <= 0;
+        end else if(software_en&&addr==`CSR_SAVE0) begin
+            if(wen) csr_save0[31:0]<=wdata[31:0];
+        end
+
+    always @(posedge clk)
+        if(~aresetn) begin
+            csr_save1 <= 0;
+        end else if(software_en&&addr==`CSR_SAVE1) begin
+            if(wen) csr_save1[31:0]<=wdata[31:0];
+        end
+
+    always @(posedge clk)
+        if(~aresetn) begin
+            csr_save2 <= 0;
+        end else if(software_en&&addr==`CSR_SAVE2) begin
+            if(wen) csr_save2[31:0]<=wdata[31:0];
+        end
+
+    always @(posedge clk)
+        if(~aresetn) begin
+            csr_save3 <= 0;
+        end else if(software_en&&addr==`CSR_SAVE3) begin
+            if(wen) csr_save3[31:0]<=wdata[31:0];
+        end
+
+//LLBCTL
+    always @(posedge clk)
+        if(~aresetn) begin
+            llbctl_klo <= 0;
+            llbctl_rollb <= 0;
+        end 
+        else if(llbit_set) llbctl_rollb<=1;
+        else if(ertn) begin 
+            llbctl_rollb<=llbctl_klo;
+            llbctl_klo<=0;
+        end else if(software_en&&addr==`CSR_LLBCTL) begin
+            if(wen&&wdata[1]) llbctl_rollb<=0;
+            if(wen) llbctl_klo<=wdata[2];
+        end
+    
+    //TLBRENTRY
+    always @(posedge clk)
+        if(~aresetn) begin
+            tlbrentry_pa <= 0;
+        end else if(software_en&&addr==`CSR_TLBRENTRY) begin
+            if(wen) tlbrentry_pa[`TLBRENTRY_PA]<=wdata[`TLBRENTRY_PA];
+        end
+
+    //TIBIDX
+    // always @(posedge clk)
+    //     if(~aresetn) begin
+    //         tlbidx_index<=0;
+    //         tlbidx_ps<=0;
+    //         tlbidx_ne<=0;
+    //     end
+    //     else if(software_en&&addr==`CSR_TLBIDX) begin
+    //         if( 0<TLBIDX_WIDTH&&wen) tlbidx_index[ 0]<=wdata[ 0];
+    //         if( 1<TLBIDX_WIDTH&&wen) tlbidx_index[ 1]<=wdata[ 1];
+    //         if( 2<TLBIDX_WIDTH&&wen) tlbidx_index[ 2]<=wdata[ 2];
+    //         if( 3<TLBIDX_WIDTH&&wen) tlbidx_index[ 3]<=wdata[ 3];
+    //         if( 4<TLBIDX_WIDTH&&wen) tlbidx_index[ 4]<=wdata[ 4];
+    //         if( 5<TLBIDX_WIDTH&&wen) tlbidx_index[ 5]<=wdata[ 5];
+    //         if( 6<TLBIDX_WIDTH&&wen) tlbidx_index[ 6]<=wdata[ 6];
+    //         if( 7<TLBIDX_WIDTH&&wen) tlbidx_index[ 7]<=wdata[ 7];
+    //         if( 8<TLBIDX_WIDTH&&wen) tlbidx_index[ 8]<=wdata[ 8];
+    //         if( 9<TLBIDX_WIDTH&&wen) tlbidx_index[ 9]<=wdata[ 9];
+    //         if(10<TLBIDX_WIDTH&&wen) tlbidx_index[10]<=wdata[10];
+    //         if(11<TLBIDX_WIDTH&&wen) tlbidx_index[11]<=wdata[11];
+    //         if(12<TLBIDX_WIDTH&&wen) tlbidx_index[12]<=wdata[12];
+    //         if(13<TLBIDX_WIDTH&&wen) tlbidx_index[13]<=wdata[13];
+    //         if(14<TLBIDX_WIDTH&&wen) tlbidx_index[14]<=wdata[14];
+    //         if(15<TLBIDX_WIDTH&&wen) tlbidx_index[15]<=wdata[15];
+    //         if(wen) tlbidx_ps[31:24]<=wdata[31:24];
+    //     end else begin
+    //         if(tlb_index_we) tlbidx_index <= {{16-TLBIDX_WIDTH{1'b0}},tlb_index_in};
+    //         if(tlb_ps_we) tlbidx_ps <= tlb_ps_in;
+    //         if(tlb_ne_we) tlbidx_ne <= tlb_ne_in;
+    //     end
 
 
+    //TLB再说
 
+
+    //ASID
+    always @(posedge clk)
+        if(~aresetn)
+            asid_asid <= 0;
+        else if(software_en&&addr==`CSR_ASID) begin
+            if(wen) asid_asid[`ASID_ASID]<=wdata[`ASID_ASID];
+        end else if(wen_asid_asid)
+            asid_asid <= asid_asid_in;
+
+        //PGDL
+    always @(posedge clk)
+        if(~aresetn) begin
+            pgdl_base <= 0;
+        end else if(software_en&&addr==`CSR_PGDL) begin
+            if(wen) pgdl_base[`PGDL_BASE] <= wdata[`PGDL_BASE];
+        end
+
+    //PGDH
+    always @(posedge clk)
+        if(~aresetn) begin
+            pgdh_base <= 0;
+        end else if(software_en&&addr==`CSR_PGDH) begin
+            if(wen) pgdh_base[`PGDH_BASE] <= wdata[`PGDH_BASE];
+        end
+
+    //PGD
+    always @(posedge clk)
+        if(~aresetn)
+            pgd_base <= 0;
+        else if(wen_pgd_base)
+            pgd_base[`PGD_BASE] <= pgd_base_in[`PGD_BASE];
+
+    //DMW0~1
+    always @(posedge clk)
+        if(~aresetn) begin
+            dmw0_plv0<=0;
+            dmw0_plv3<=0;
+            dmw0_mat<=0;
+            dmw0_pseg<=0;
+            dmw0_vseg<=0;
+        end else if(software_en&&addr==`CSR_DMW0) begin
+            if(wen) dmw0_plv0[`DMW0_PLV0]<=wdata[`DMW0_PLV0];
+            if(wen) dmw0_plv3[`DMW0_PLV3]<=wdata[`DMW0_PLV3];
+            if(wen) dmw0_mat[`DMW0_MAT]<=wdata[`DMW0_MAT];
+            if(wen) dmw0_pseg[`DMW0_PSEG]<=wdata[`DMW0_PSEG];
+            if(wen) dmw0_vseg[`DMW0_VSEG]<=wdata[`DMW0_VSEG];
+        end
+    
+    always@(posedge clk) 
+        if(~aresetn) begin
+            dmw1_plv0<=0;
+            dmw1_plv3<=0;
+            dmw1_mat<=0;
+            dmw1_pseg<=0;
+            dmw1_vseg<=0;
+        end else if(software_en&&addr==`CSR_DMW1) begin
+            if(wen) dmw1_plv0[`DMW1_PLV0]<=wdata[`DMW1_PLV0];
+            if(wen) dmw1_plv3[`DMW1_PLV3]<=wdata[`DMW1_PLV3];
+            if(wen) dmw1_mat[`DMW1_MAT]<=wdata[`DMW1_MAT];
+            if(wen) dmw1_pseg[`DMW1_PSEG]<=wdata[`DMW1_PSEG];
+            if(wen) dmw1_vseg[`DMW1_VSEG]<=wdata[`DMW1_VSEG];
+        end
+
+    //tid
+        always @(posedge clk)
+        if(~aresetn) begin
+            csr_tid <= 0;
+        end else if(software_en&&addr==`CSR_TID) begin
+            if(wen) csr_tid[31:0]<=wdata[31:0];
+        end
+    //TCFG
+    always @(posedge clk)
+        if(~aresetn) begin
+            tcfg_en <= 0;
+            tcfg_initval <= 0;
+            tcfg_periodic<=0;
+        end else if(software_en&&addr==`CSR_TCFG) begin
+            if(wen) tcfg_en[`TCFG_EN]<=wdata[`TCFG_EN];
+            if(wen) tcfg_periodic[`TCFG_PERIODIC]<=wdata[`TCFG_PERIODIC];
+            if(wen) tcfg_initval[`TCFG_INITVAL]<=wdata[`TCFG_INITVAL];
+        end
+
+    reg  set_timer;
+    always @(posedge clk)
+        if(~aresetn)  set_timer<=0;
+        else if(software_en&&addr==`CSR_TCFG&&wen!=0)
+             set_timer<=1;
+        else  set_timer<=0;
+
+    //TVAL
+    reg time_out;
+    always @(posedge aclk)
+        if(~aresetn) begin
+            csr_tval <= 0;
+            time_out <= 0;
+        end
+        //FIXME: 设置TCFG.InitVal后自动重置定时器，这在手册中未提及
+        else if(csr_tval==0|| set_timer) begin
+            time_out <= 0;
+            //计时器的初始值比标准大1，否则给定时器设置0无法触发中断
+            if(tcfg_periodic|| set_timer) csr_tval<={tcfg_initval[`TCFG_INITVAL],2'd1};
+        end else if(tcfg_en) begin
+            csr_tval<=csr_tval-1;
+            time_out<=csr_tval==1;
+        end
+
+    //TICLR
+    always @(posedge aclk)
+        if(~aresetn||software_en&&addr==`CSR_TICLR&&wen)
+            estat_is_ti <= 0;
+        else if(time_out)
+            estat_is_ti <= 1;
+
+            //CTAG
+    always @(posedge clk)
+        if(~aresetn) begin
+            csr_ctag <= 0;
+        end else if(software_en&&addr==`CSR_CTAG) begin
+            if(wen) csr_ctag[31:0]<=wdata[31:0];
+        end
+
+assign rdata[31:0] = {32{addr==`CSR_CRMD}} & csr_crmd |
+                    {32{addr==`CSR_PRMD}} & csr_prmd |
+                    {32{addr==`CSR_EUEN}} & csr_euen |
+                    {32{addr==`CSR_ECFG}} & csr_ecfg | 
+                    {32{addr==`CSR_ESTAT}} & csr_estat |
+                    {32{addr==`CSR_ERA}} & csr_era |
+                    {32{addr==`CSR_BADV}} & csr_badv |
+                    {32{addr==`CSR_EENTRY}} & csr_eentry |
+                    {32{addr==`CSR_CPUID}} & csr_cpuid |
+                    {32{addr==`CSR_SAVE0}} & csr_save0 |
+                    {32{addr==`CSR_SAVE1}} & csr_save1 |
+                    {32{addr==`CSR_SAVE2}} & csr_save2 |
+                    {32{addr==`CSR_SAVE3}} & csr_save3 |
+                    {32{addr==`CSR_LLBCTL}} & csr_llbctl |
+                    {32{addr==`CSR_TLBIDX}} & csr_tlbidx |
+                    {32{addr==`CSR_TLBEHI}} & csr_tlbehi |
+                    {32{addr==`CSR_TLBELO0}} & csr_tlbelo0 |
+                    {32{addr==`CSR_TLBELO1}} & csr_tlbelo1 |
+                    {32{addr==`CSR_ASID}} & csr_asid |
+                    {32{addr==`CSR_PGDL}} & csr_pgdl |
+                    {32{addr==`CSR_PGDH}} & csr_pgdh |
+                    {32{addr==`CSR_PGD}} & csr_pgd |
+                    {32{addr==`CSR_TLBRENTRY}} & csr_tlbrentry |
+                    {32{addr==`CSR_DMW0}} & csr_dmw0 |
+                    {32{addr==`CSR_DMW1}} & csr_dmw1 |
+                    {32{addr==`CSR_TID}} & csr_tid |
+                    {32{addr==`CSR_TCFG}} & csr_tcfg |
+                    {32{addr==`CSR_TVAL}} & csr_tval |
+                    {32{addr==`CSR_TICLR}} & csr_tlclr |
+                    {32{addr==`CSR_CTAG}} & csr_ctag;
+        assign crmd=csr_crmd;
+        assign estat=csr_estat;
+        assign era_out = csr_era;
+        assign eentry=csr_eentry;
+        assign tlbrentry=csr_tlbrentry;
+        assign pgdl=csr_pgdl;
+        assign pgdh=csr_pgdh;
+        assign dmw0=csr_dmw0;
+        assign dmw1=csr_dmw1;
+        //cpu_interupt已经在前面赋值了
+        assign llbit=csr_llbctl[0];
+        
 endmodule

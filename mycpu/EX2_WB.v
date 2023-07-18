@@ -38,6 +38,10 @@ module EX2_WB(
     input [31:0] dcache_data,
     input dcache_ready,
 
+    //csr 三条读写csr的指令都要写
+    input [31:0] csr_data_in,
+    input csr_ready,
+
     //debug port
     output reg [31:0] debug0_wb_pc,
     output  [ 3:0] debug0_wb_rf_wen,
@@ -73,6 +77,12 @@ assign cond1 = uop1[`UOP_COND];
                 ex2_wb_data_0_valid <= 1;
                 ex2_wb_rd0 <= ex_rd0;
                 ex2_wb_we0 <= 1;
+            end
+            else if(uop0[`INS_CSR]) begin
+                ex2_wb_data_0 <= csr_data_in;
+                ex2_wb_data_0_valid <= csr_ready;
+                ex2_wb_rd0 <= ex_rd0;
+                ex2_wb_we0 <= csr_ready;
             end
             else if(uop0[`INS_DIV]) begin
                 if(cond0[0]) begin

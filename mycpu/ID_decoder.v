@@ -24,7 +24,7 @@ module ID_decoder
     assign type_[`INS_BR] = inst[30]=='b1; //bne,beq,bge,bgeu,blt,bltu，还有两个浮点比较跳转，不管了
     wire is_b_or_bl = inst[30:27]=='b1010; //b或者bl
     wire is_jilr = inst[30:26]=='b10011; //jirl
-    assign type_[`INS_BAR] = inst[30:16]=='b011100001110010;  //ibar dbar
+    assign type_[`INS_BAR] = inst[30:15]=='b0111000011100101;  //ibar dbar不管了
     assign type_[`INS_MEM] = inst[30:28]=='b010; //lw,sw,lh,sh,lb,sb,lbu,sbu,lhu,shu
     wire is_preload = inst[30:22]=='b010101011; //preld
     assign type_[`INS_PRELOAD] = is_preload;
