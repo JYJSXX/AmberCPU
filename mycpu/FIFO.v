@@ -23,6 +23,7 @@ module FIFO(
     output reg [31:0] inst1_o,
 
     output reg [31:0] fifo_pc,//co pc with inst0_o 
+    output wire[31:0] fifo_pcAdd,
     output reg [31:0] fifo_badv,
 
     output reg [31:0] fifo_cookie_out,
@@ -57,6 +58,8 @@ module FIFO(
     assign pcbdv_din            =   {if1_fifo_pc[31:0],if1_fifo_icache_badv[31:0]};
     assign stat_din             =   {if1_fifo_icache_cookie_out[31:0],if1_fifo_icache_exception[6:0],
                                      if1_fifo_cacop_ready            ,if1_fifo_cacop_complete};
+
+    assign fifo_pcAdd=fifo_pc+4;
 
     always @(*) begin
         if (empty&&write_en&&pop_en) begin//special case bypass
