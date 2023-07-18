@@ -32,7 +32,7 @@ module dcache #(
     output [31:0]           d_raddr,            // read address to main memory
     input [511:0]           d_rdata,            // read data from main memory
     input                   d_rlast,            // indicate the last beat of read data from main memory
-    output [2:0]            d_rsize,            // indicate the size of read data once, if d_rsize = n then read 2^n bytes once
+    //output [2:0]            d_rsize,            // indicate the size of read data once, if d_rsize = n then read 2^n bytes once
     output [7:0]            d_rlen,             // indicate the number of read data, if d_rlen = n then read n+1 times
     // write
     output reg              d_wvalid,           // valid signal of write request to main memory
@@ -41,7 +41,7 @@ module dcache #(
     output [31:0]           d_wdata,            // write data to main memory
     output [3:0]            d_wstrb,            // write mask of each write-back word to main memory
     output reg              d_wlast,            // indicate the last beat of write data to main memory
-    output [2:0]            d_wsize,            // indicate the size of write data once, if d_wsize = n then write 2^n bytes once
+    // output [2:0]            d_wsize,            // indicate the size of write data once, if d_wsize = n then write 2^n bytes once
     output [7:0]            d_wlen,             // indicate the number of write data, if d_wlen = n then write n+1 times
 
     // back
@@ -130,9 +130,12 @@ module dcache #(
     reg  [INDEX_WIDTH-1:0]      lru; //0: way0, 1: way1
     wire [1:0]                  lru_sel;
     reg                         lru_we;
-    reg                         missbuf_we;
+    //reg                         missbuf_we;
 
     // dirty table
+    reg  [1:0]                  dirty_we;
+    wire                        dirty_rdata;
+    reg                         dirty_wdata;
     wire                        dirty_info;
 
     // write back buffer
@@ -150,9 +153,9 @@ module dcache #(
     reg     [3:0]               write_counter;
     reg                         write_counter_reset, write_counter_en;
 
-    // statistics
-    reg     [63:0]              total_time;
-    reg     [63:0]              total_hit;
+    // // statistics
+    // reg     [63:0]              total_time;
+    // reg     [63:0]              total_hit;
 
     // cache operation
     reg tagv_clear;
@@ -167,6 +170,11 @@ module dcache #(
     assign tagv_way_sel      = req_buf[0] ? 2 : 1;
     //assign tagv_index        = req_buf[INDEX_WIDTH + BYTE_OFFSET_WIDTH - 1: BYTE_OFFSET_WIDTH];
 
+    // exception
+    wire [6:0] exception_temp1, exception_normal;
+    reg [6:0] exception_temp, exception_buf;
+    reg exception_sel;
+    assign badv = (exception != 0) ? address : 0;
 
     /* request buffer : lock the read request addr */
     // [31:0] addr, [63:32] wdata [67:64] wstrb
@@ -181,7 +189,7 @@ module dcache #(
     assign address      = req_buf[31:0];
     assign wdata_pipe   = req_buf[63:32];
     assign wstrb_pipe   = req_buf[67:64];
-    assign we_pipe      = |wstrb_pipe;
+    assign we_pipe      = |wstrb_pipe;  // if wstrb_pipe == 0, we_pipe = 0
 
     /* return buffer : cat the return data */
     always @(posedge clk) begin
@@ -332,22 +340,30 @@ module dcache #(
     /* read control */
     // choose data from mem or return buffer 
     wire [BIT_NUM-1:0] o_rdata;
-    reg [63:0]        rdata_cache;
+    reg [31:0]        rdata_cache;
     assign o_rdata = data_from_mem ? mem_rdata[hit_way_valid] : ret_buf; 
     always @(*) begin
-        case(req_buf[5:3])
-        3'd0: rdata_cache = o_rdata[63:0];
-        3'd1: rdata_cache = o_rdata[127:64];
-        3'd2: rdata_cache = o_rdata[191:128];
-        3'd3: rdata_cache = o_rdata[255:192];
-        3'd4: rdata_cache = o_rdata[319:256];
-        3'd5: rdata_cache = o_rdata[383:320];
-        3'd6: rdata_cache = o_rdata[447:384];
-        3'd7: rdata_cache = o_rdata[511:448];
+        case(req_buf[5:2])
+        4'd0: rdata_cache = o_rdata[31:0];
+        4'd1: rdata_cache = o_rdata[63:32];
+        4'd2: rdata_cache = o_rdata[95:64];
+        4'd3: rdata_cache = o_rdata[127:96];
+        4'd4: rdata_cache = o_rdata[159:128];
+        4'd5: rdata_cache = o_rdata[191:160];
+        4'd6: rdata_cache = o_rdata[223:192];
+        4'd7: rdata_cache = o_rdata[255:224];
+        4'd8: rdata_cache = o_rdata[287:256];
+        4'd9: rdata_cache = o_rdata[319:288];
+        4'd10: rdata_cache = o_rdata[351:320];
+        4'd11: rdata_cache = o_rdata[383:352];
+        4'd12: rdata_cache = o_rdata[415:384];
+        4'd13: rdata_cache = o_rdata[447:416];
+        4'd14: rdata_cache = o_rdata[479:448];
+        4'd15: rdata_cache = o_rdata[511:480];
         endcase
     end
     // uncached read
-
+    assign rdata = uncache_buf ? ret_buf[511:448] : rdata_cache;
 
     /* LRU replace */
     reg way_visit;  // 0: way0, 1: way1
@@ -364,12 +380,16 @@ module dcache #(
 
     /* dirty table */
     // record the dirty information of each set
-        /* 
-        TODO:
-            1. Design a dirty table for the two way to record if the data in the set has been written
-            2. Design some signals in the main FSM to update the dirty table when cache_hit or refill
-    */
-    assign dirty_info = 1; // TODO
+    dirty_table diety_table(
+        .clk(clk),
+        .we(dirty_we),
+        .re(lru_sel),
+        .r_addr(w_index),
+        .w_addr(w_index),
+        .w_data(dirty_wdata),
+        .r_data(dirty_rdata)
+    );
+
 
     /* write buffer */
     always @(posedge clk) begin
@@ -377,7 +397,7 @@ module dcache #(
             wbuf <= 0;
         end
         else if(wbuf_we) begin
-            wbuf <= lru_sel ? mem_rdata[1] : mem_rdata[0];
+            wbuf <= lru_sel[1] ? mem_rdata[1] : mem_rdata[0];
         end
         else if(d_wvalid && d_wready) begin
             wbuf <= {32'b0, wbuf[BIT_NUM-1:32]};
@@ -385,35 +405,47 @@ module dcache #(
     end
 
     /* miss buffer */
-    // TODO: when mbuf_we is 1, write the writeback address to the miss buffer
+    reg dirty_mbuf;
     always @(posedge clk) begin
         if(!rstn) begin
             m_buf <= 0;
         end
         else if(mbuf_we) begin
-            m_buf <= 0; // TODO
+            m_buf <= {tag_rdata[tag_index][19:0], w_index, 6'b0};
+        end
+    end
+    always @(posedge clk) begin
+        if(!rstn) begin
+            dirty_mbuf <= 0;
+            exception_buf <= 0;
+        end
+        else if(mbuf_we) begin
+            dirty_mbuf <= dirty_rdata;
+            exception_buf <= exception_temp;
         end
     end
     
     /* memory visit settings*/
-    assign d_raddr  = {address[31:BYTE_OFFSET_WIDTH], {BYTE_OFFSET_WIDTH{1'b0}}};
-    assign d_rsize  = 3'h2;
-    assign d_rlen   = WORD_NUM - 1;
-    assign d_waddr  = m_buf;
-    assign d_wsize  = 3'h2;
+    assign d_raddr  = uncache_buf || cacop_en ? {paddr_buf[31:2], 2'b0} : {paddr_buf[31:6], 6'b0};
+//    assign d_rsize  = 3'h2;
+    // assign d_rlen   = WORD_NUM - 1;
+    assign d_waddr  = uncache_buf || cacop_en ? paddr_buf : m_buf;
+//    assign d_wsize  = 3'h2;
     assign d_wlen   = WORD_NUM - 1;
     assign d_wdata  = wbuf[31:0];
     assign d_wstrb  = 4'b1111;
 
     /* main FSM */
-    // TODO: No.2 TODO in LRU module and No.2 TODO in dirty table
     localparam 
-        IDLE        = 3'd0,
-        LOOKUP      = 3'd1,
-        MISS        = 3'd2,
-        REFILL      = 3'd3,
-        WAIT_WRITE  = 3'd4;
-    reg [2:0] state, next_state;
+        IDLE        = 4'd0,
+        LOOKUP      = 4'd1,
+        MISS        = 4'd2,
+        REFILL      = 4'd3,
+        WAIT_WRITE  = 4'd4,
+        CACOP       = 4'd5,
+        IBAR        = 4'd6;
+
+    reg [3:0] state, next_state;
     always @(posedge clk) begin
         if(!rstn) begin
             state <= IDLE;
@@ -501,8 +533,8 @@ module dcache #(
             d_rvalid = 1;
         end
         REFILL: begin
-            tagv_we[lru_sel]        = 1;
-            mem_we[lru_sel]         = -1;
+            tagv_we[lru_sel[1]]        = 1;
+            mem_we[lru_sel[1]]         = -1;
             wdata_from_pipe         = 0;
         end
         WAIT_WRITE: begin
@@ -598,15 +630,15 @@ module dcache #(
         endcase
     end
 
-    // statistics
-    always @(posedge clk) begin
-        if(!rstn) begin
-            total_time <= 0;
-            total_hit <= 0;
-        end
-        else if(state == LOOKUP) begin
-            total_hit <= total_hit + {63'b0, cache_hit};
-            total_time <= total_time + 1;
-        end
-    end
+    // // statistics
+    // always @(posedge clk) begin
+    //     if(!rstn) begin
+    //         total_time <= 0;
+    //         total_hit <= 0;
+    //     end
+    //     else if(state == LOOKUP) begin
+    //         total_hit <= total_hit + {63'b0, cache_hit};
+    //         total_time <= total_time + 1;
+    //     end
+    // end
 endmodule
