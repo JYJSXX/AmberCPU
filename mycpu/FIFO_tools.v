@@ -1,3 +1,4 @@
+`include "define.vh"
 module fifo_generator
   #(parameter DATA_WIDTH = 8,
     parameter DEPTH = 16)
@@ -40,8 +41,8 @@ module fifo_generator
   end
 
 
-  assign dout = mem[readPtr];
   assign full = (count == DEPTH);
   assign empty = (count == 0);
+  assign dout = empty?`INST_NOP:mem[readPtr];
 
 endmodule
