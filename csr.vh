@@ -49,16 +49,21 @@
 `define ECFG_LIE    12:0    //局部中断使能
 `define ECFG_ZERO   31:13
 //ESTAT
-`define ESTAT_IS_0  1:0     //中断状态位
-`define ESTAT_IS_1  12:2
-`define ESTAT_IS    12:0
-`define ESTAT_ZERO_0 15:13
+`define ESTAT_IS_SOFT  1:0     //中断状态位
+`define ESTAT_IS_HARD  9:2
+`define ESTAT_ZERO_0   10:10
+`define ESTAT_IS_TI  11:11  
+`define ESTAT_IS_IPI  12:12
+`define ESTAT_ZERO_1 15:13
 `define ESTAT_ECODE 21:16
 `define ESTAT_ESUBCODE 30:22
-`define ESTAT_ZERO_1 31:31
+`define ESTAT_ZERO_2 31:31
 //EENTRY
 `define EENTRY_ZERO 5:0
 `define EENTRY_VA   31:6
+//CPUID
+`define CPUID_COREID 8:0
+`define CPUID_ZERO   31:9
 //TLBRENTRY
 `define TLBRENTRY_ZERO 5:0
 `define TLBRENTRY_PA 31:6
@@ -90,20 +95,34 @@
 `define ASID_ASIDBITS 23:16
 `define ASID_ZERO_1   31:24
 //PGDL PGDH PGD
+`define PGDH_ZERO    11:0
+`define PGDH_BASE    31:12
+`define PGDL_ZERO    11:0
+`define PGDL_BASE    31:12
 `define PGD_ZERO    11:0
 `define PGD_BASE    31:12
 //DMW
-`define DMW_PLV0  0:0
-`define DMW_ZERO_0 2:1
-`define DMW_PLV3  3:3 
-`define DMW_MAT   5:4
-`define DMW_ZERO_1 24:6
-`define DMW_PSEG  27:25
-`define DMW_ZERO_2 28:28
-`define DMW_VSEG  31:29
+`define DMW0_PLV0  0:0
+`define DMW0_ZERO_0 2:1
+`define DMW0_PLV3  3:3 
+`define DMW0_MAT   5:4
+`define DMW0_ZERO_1 24:6
+`define DMW0_PSEG  27:25
+`define DMW0_ZERO_2 28:28
+`define DMW0_VSEG  31:29
+
+`define DMW1_PLV0  0:0
+`define DMW1_ZERO_0 2:1
+`define DMW1_PLV3  3:3 
+`define DMW1_MAT   5:4
+`define DMW1_ZERO_1 24:6
+`define DMW1_PSEG  27:25
+`define DMW1_ZERO_2 28:28
+`define DMW1_VSEG  31:29
 //TCFG
 `define TCFG_EN        0:0
 `define TCFG_PERIODIC  1:1
 `define TCFG_INITVAL   31:2
 //TICLR
 `define TICLR_CLR       0:0
+`define TICLR_ZERO      31:1
