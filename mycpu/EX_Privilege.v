@@ -32,7 +32,8 @@ module EX_Privilege(
     //IDLE
     input                               i_idle,         //i_cache 是否处于idle状态
     input                               d_idle,         //d_cache 是否处于idle状态
-    output  reg                         block_cache     //是否阻塞cache
+    output  reg                         block_cache,    //是否阻塞cache
+    output  reg                         block_clock     //是否阻塞时钟
     
 );
 
@@ -48,19 +49,21 @@ module EX_Privilege(
     assign cacop_vaddr = rj_data + imm_ext;
 
     localparam [4:0] 
-        PR_IDLE = 0,
+        PR_INIT = 0,
         PR_CSR = 1,
         PR_CACOP_I_CALL = 2,
         PR_CACOP_I_WAIT = 3,
         PR_CACOP_D_CALL = 4,
         PR_CACOP_D_WAIT = 5,
-        PR_ERTN = 6;
-    reg [4:0] PR_state = PR_IDLE, PR_next_state = PR_IDLE;
+        PR_ERTN = 6,
+        PR_IDLE_WAIT = 7,
+        PR_IDLE = 8;
+    reg [4:0] PR_state = PR_INIT, PR_next_state = PR_INIT;
 
     always @(posedge clk or negedge rstn)
     begin
         if(~rstn)
-            PR_state <= PR_IDLE;
+            PR_state <= PR_INIT;
         else
             PR_state <= next_state;
     end
@@ -69,7 +72,7 @@ module EX_Privilege(
     begin
         PR_next_state = PR_state;
         case(PR_state)
-            PR_IDLE:
+            PR_INIT:
             begin
                 if(en)
                 begin
@@ -81,11 +84,13 @@ module EX_Privilege(
                         PR_next_state = PR_CACOP_D_CALL;
                     else if (pr_type[`INS_ERTN])
                         PR_next_state = PR_ERTN;
+                    else if (pr_type[`INS_IDLE])
+                        PR_next_state = PR_IDLE_WAIT;
                 end
             end
             PR_CSR:
             begin
-                PR_next_state = PR_IDLE;
+                PR_next_state = PR_INIT;
             end
             PR_CACOP_I_CALL:
             begin
@@ -95,7 +100,7 @@ module EX_Privilege(
             PR_CACOP_I_WAIT:
             begin
                 if(cacop_i_done)
-                    PR_next_state = PR_IDLE;
+                    PR_next_state = PR_INIT;
             end
             PR_CACOP_D_CALL:
             begin
@@ -105,11 +110,20 @@ module EX_Privilege(
             PR_CACOP_D_WAIT:
             begin
                 if(cacop_d_done)
-                    PR_next_state = PR_IDLE;
+                    PR_next_state = PR_INIT;
             end
             PR_ERTN:
             begin
-                PR_next_state = PR_IDLE;
+                PR_next_state = PR_INIT;
+            end
+            PR_IDLE_WAIT:
+            begin
+                if(i_idle & d_idle)
+                    PR_next_state = PR_IDLE;
+            end
+            PR_IDLE:
+            begin
+                PR_next_state = PR_INIT;
             end
         endcase
     end
@@ -122,16 +136,19 @@ module EX_Privilege(
         csr_ren = 0;
         done = 0;
         ertn_en = 0;
+        block_cache = 0;
         case(PR_state)
-            PR_IDLE:
+            PR_INIT:
             begin
                 if(en & pr_type[`INS_CSR])
                 begin
                     csr_addr = csr_num;
                     csr_ren = 1;
                 end
-                if (en & pr_type[`INS_ERTN])
+                else if (en & pr_type[`INS_ERTN])
                     ertn_en = 1;
+                else if (en & pr_type[`INS_IDLE])
+                    block_cache = 1;
             end
             PR_CSR:
             begin
@@ -155,6 +172,17 @@ module EX_Privilege(
             begin
                 done = 1;
             end
+            PR_IDLE_WAIT:
+            begin
+                block_cache = 1
+            end
+            PR_IDLE:
+            begin
+                block_clock = 1;
+                block_cache = 1;
+                done = 1;
+            end
+            
         endcase
     end
 
@@ -168,7 +196,7 @@ module EX_Privilege(
         else
         begin
             case(PR_state)
-                PR_IDLE:
+                PR_INIT:
                 begin
                     cacop_i_en <= 0;
                     cacop_d_en <= 0;
