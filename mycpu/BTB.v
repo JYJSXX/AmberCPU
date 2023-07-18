@@ -11,13 +11,15 @@ module BTB #(
 ) (
     input               rstn,
     input               clk,
-    //00 not branch;01 unconditinonal branch,10 PC relative
+    //00 not branch;01 unconditinonal branch
+    //10 PC relative 11 indirect
     //from predecoder
     input   [1:0]       inst_btype,
+    input               inst_bpos,
 
     input   [31:0]      fetch_pc,
     output  [31:0]      pred_pc,
-    output  reg         pred_taken,
+    output              pred_taken,
 
     //below signal from the same stage
     input   [31:0]      fact_pc,
@@ -48,24 +50,32 @@ module BTB #(
     reg [1:0] HARD_STATE,NEXT_HARD_STATE;
     reg [1:0] TOP_STATE , NEXT_TOP_STATE;
     reg [1<<(PC_INDEX_WIDTH-1):0]   MASK;
-    reg [1:0]  SCORE;
-    reg taken;
+    reg [1<<(PC_INDEX_WIDTH-1):0]   BPOS;
+    reg [1:0]  SCORE=0;
+    reg taken=0;
 
     wire we;//TODO
-    wire [31:0] pred_pc_hang;
+    wire [31:0] _pred_pc;
     wire       hit;
     wire [PC_INDEX_WIDTH-1:0]       INDEX;
+    wire [PC_INDEX_WIDTH-1:0]  FACT_INDEX;
+    wire                       BPOS_MISS;
 
 
 
     assign we = fact_taken&&predict_add_fail;
-    assign INDEX=fetch_pc[PC_INDEX_WIDTH-2:3] ;
+    assign INDEX=fetch_pc[PC_INDEX_WIDTH+2:3];
+    assign FACT_INDEX=fact_pc[PC_INDEX_WIDTH+2:3];
     assign pred_valid=MASK[INDEX];
     assign pred_pc=pred_valid?_pred_pc:fetch_pc+8;
     assign hit = !predict_dir_fail;
+    assign flag=BPOS[(inst_bpos&inst_btype[0])<<FACT_INDEX];
+    assign BPOS_MISS=BPOS&&!(flag);
+    assign pred_taken=flag|taken;
+
     
     
-    DualPortRAM#(//write after read
+    DualPortRAM#(//write after read,for conditional branch(btype =10)
         .DATA_WIDTH  ( 32 ),
         .ADDR_WIDTH  ( PC_INDEX_WIDTH )
     )u_DualPortRAM(
@@ -113,6 +123,14 @@ module BTB #(
 
         end
     end
+    always @(posedge clk or negedge rstn) begin
+        if(!rstn||BPOS_MISS)begin
+            BPOS<=0;
+        end else begin
+            BPOS=BPOS|((inst_bpos&inst_btype[0])<<FACT_INDEX);
+        end
+    end
+    //pred_taken todo
 
     always @(*) begin
         case (EASY_STATE)
@@ -171,12 +189,5 @@ module BTB #(
                 taken=1;
         endcase
 
-        //00 not branch;01 unconditinonal branch,10 PC relative
-        case (inst_btype)
-            2'b00:pred_taken=0;
-            2'b01:pred_taken=1;
-            2'b10:pred_taken=taken;
-            default: pred_taken=taken;
-        endcase
     end
 endmodule
