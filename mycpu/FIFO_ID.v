@@ -5,7 +5,6 @@ module FIFO_ID (
 
     input fifo_id_flush,
     input [1:0]fifo_id_flush_cause, //flush cause reserved for judge
-    input fifo_id_stall,
 
     //hand shake signal
     input id_allowin,//from decoder stage.told id is ready
@@ -21,8 +20,8 @@ module FIFO_ID (
     input [31:0] fifo_badv,
     input [31:0] fifo_cookie_out,
     input [6:0]  fifo_exception,
-    input        fifo_excp_flag,
-    input        fifo_ibar_signal,
+    input [1:0]  fifo_excp_flag,
+    input [1:0]  fifo_ibar_flag,
     input        fifo_cacop_ready,
     input        fifo_cacop_complete,
 
@@ -36,8 +35,8 @@ module FIFO_ID (
     output reg[31:0] fifo_id_badv,
     output reg[31:0] fifo_id_cookie_out,
     output reg[6:0]  fifo_id_exception,
-    output reg       fifo_id_excp_flag,
-    output reg       fifo_id_ibar_signal,
+    output reg[1:0]  fifo_id_excp_flag,
+    output reg[1:0]  fifo_id_ibar_flag,
     output reg       fifo_id_cacop_ready,
     output reg       fifo_id_cacop_complete
     `ifdef FIFO_ID_DIFFTEST
@@ -50,28 +49,30 @@ module FIFO_ID (
     assign fifo_allowin=id_allowin;
 
     always @(posedge clk or negedge rstn) begin
-        if (!rstn||fifo_id_flush||(~fifo_readygo&&id_allowin)) begin
+        if (!rstn||fifo_id_flush||(~fifo_readygo&&id_allowin&&id_readygo)) begin
             fifo_id_inst0   <=`INST_NOP;
             fifo_id_inst1   <=`INST_NOP;
             fifo_id_pc      <=`PC_RESET;
             fifo_id_pcAdd   <=`PC_RESET+4;
+            fifo_id_pc_next <=`PC_RESET+8;
             fifo_id_badv    <=`PC_RESET;
             fifo_id_cookie_out<=1958;
             fifo_id_exception<=7'h00;
-            fifo_id_excp_flag<=0;
-            fifo_id_ibar_signal<=0;
+            fifo_id_excp_flag<=2'b00;
+            fifo_id_ibar_flag<=2'b00;
             fifo_id_cacop_ready<=0;
             fifo_id_cacop_complete<=0;
-        end else if(!fifo_id_stall&(fifo_readygo&&id_allowin))begin
+        end else if(fifo_readygo&&id_allowin)begin
             fifo_id_inst0   <=fifo_inst0;
             fifo_id_inst1   <=fifo_inst1;
             fifo_id_pc      <=fifo_pc;
             fifo_id_pcAdd   <=fifo_pcAdd;
+            fifo_id_pc_next <=fifo_pc_next;
             fifo_id_badv    <=fifo_id_badv;
             fifo_id_cookie_out<=fifo_cookie_out;
             fifo_id_exception<=fifo_exception;
             fifo_id_excp_flag<=fifo_excp_flag;
-            fifo_id_ibar_signal<=fifo_ibar_signal;
+            fifo_id_ibar_flag<=fifo_ibar_flag;
             fifo_id_cacop_ready<=fifo_cacop_ready;
             fifo_id_cacop_complete<=fifo_cacop_complete;
         end

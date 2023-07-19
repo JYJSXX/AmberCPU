@@ -10,7 +10,6 @@ module IF0_IF1 (
     input               if1_allowin,
     input               flush,
     input               flush_cause,
-    input               stall,
 
     input [31:0]        p_addr,
     input [31:0]        raddr,
@@ -22,15 +21,15 @@ module IF0_IF1 (
 
 );
     assign if0_allowin= if1_allowin;
-    assign if1_readygo= if0_readygo;
+    assign if1_readygo= 1;
 
     always @(posedge clk or negedge rstn) begin
-        if((~rstn)||flush||(!if0_readygo&&if1_allowin))begin
+        if((~rstn)||flush||(!if0_readygo&&if1_allowin&&if1_readygo))begin
             //clear stage-stage reg
             if0_if1_pc<=`PC_RESET;
             if0_if1_pc_next<=`PC_RESET+8;
         end else begin
-            if (!stall&&(if0_readygo&&if1_allowin)) begin
+            if (if0_readygo&&if1_allowin) begin
                 //update stage-stage reg
                 if0_if1_pc<=fetch_pc;
                 if0_if1_pc_next<=pc_next;

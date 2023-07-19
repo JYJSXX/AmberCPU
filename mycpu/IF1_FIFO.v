@@ -4,7 +4,6 @@ module IF1_FIFO(
     input clk,
     input rstn,
     input flush,
-    input stall,
     input flush_cause,
     
 
@@ -20,7 +19,7 @@ module IF1_FIFO(
     input [31:0]        if1_pc_next,
     input [31:0]        if1_badv,
     input [6:0]         if1_exception,
-    input               if1_excp_flag,
+    input [1:0]         if1_excp_flag,
     input [31:0]        if1_cookie_out,
     input               if1_cacop_ready,
     input               if1_cacop_complete,
@@ -28,9 +27,8 @@ module IF1_FIFO(
     input [31:0]        if1_inst1,
 
 
-    input               ibar_signal,//from pre-decoder
-    input               ibar_pos,//from pre-decoder
-    input               ibar_signal_from_ex,
+    input  [1:0]        ibar_flag,//from pre-decoder
+    input  [1:0]        ibar_flag_from_ex,
     input               icache_idle,
     input               dcache_idle,
 
@@ -72,8 +70,8 @@ module IF1_FIFO(
             stat<=IDLE;
             pc_after_ibar<=`PC_RESET;
         end else begin
-            if (ibar_signal) begin
-                pc_after_ibar<=ibar_pos?if1_pc+8:if1_pc+4;
+            if (ibar_flag) begin
+                pc_after_ibar<=ibar_flag[0]?if1_pc+4:if1_pc+8;
             end
             stat<=next_stat;
         end
@@ -81,8 +79,8 @@ module IF1_FIFO(
 
     always @(*) begin//FSM
         case (stat)
-            IDLE:next_stat=ibar_signal?WAIT_EX_IBAR:IDLE;
-            WAIT_EX_IBAR:next_stat=ibar_signal_from_ex?WAIT_CACHE_IDLE:WAIT_EX_IBAR;
+            IDLE:next_stat=ibar_flag?WAIT_EX_IBAR:IDLE;
+            WAIT_EX_IBAR:next_stat=ibar_flag_from_ex?WAIT_CACHE_IDLE:WAIT_EX_IBAR;
             WAIT_CACHE_IDLE:next_stat=cache_idle?WAIT_FETCH:WAIT_CACHE_IDLE;
             WAIT_FETCH:next_stat=pc_fetch_ok?IDLE:WAIT_FETCH;
             default: next_stat=IDLE;
@@ -90,7 +88,7 @@ module IF1_FIFO(
     end
 
     always @ (posedge clk or negedge rstn) begin
-        if (~rstn || flush||(!if1_readygo&&fifo_allowin)) begin
+        if (~rstn || flush||(!if1_readygo&&fifo_allowin&&fifo_readygo)||(stat!=IDLE)) begin
             //clear stage-stage reg
             if1_fifo_pc     <=  `PC_RESET;
             if1_fifo_pc_next<=  `PC_RESET+4;

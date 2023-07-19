@@ -39,7 +39,7 @@ module IF0 (
     assign pc_next      =   pred_taken?pred_pc:fetch_pc+8;
     assign fetch_pc     =   pc;
     assign rvalid       =   1;
-    assign raddr       =   pc;
+    assign raddr        =   pc;
 
     always @(posedge clk or negedge rstn) begin
         if (~rstn) begin
