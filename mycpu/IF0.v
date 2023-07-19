@@ -26,17 +26,17 @@ module IF0 (
     //for ICache
     output rvalid,
     output [31:0] raddr,
-    output reg[31:0]cookie_in=114514
+    output reg[31:0]cookie_in=114514,
 
     //other
-
+    output [31:0] pc_next//rready control logic TODO
 
     
 );
     reg  [31:0] pc=`PC_RESET;//指令集手册P68
-    wire [31:0] pc_next;
+    // wire [31:0] pc_next;
     
-    assign pc_next      =   pred_taken?pc+8:fetch_pc;
+    assign pc_next      =   pred_taken?pred_pc:fetch_pc+8;
     assign fetch_pc     =   pc;
     assign rvalid       =   1;
     assign raddr       =   pc;

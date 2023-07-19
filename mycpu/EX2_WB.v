@@ -1,4 +1,5 @@
 `include "define.vh"
+`include "../exception.vh"
 module EX2_WB(
     input clk,
     input aresetn,
@@ -53,9 +54,51 @@ module EX2_WB(
     output  [ 3:0] debug1_wb_rf_wen,
     output  [ 4:0] debug1_wb_rf_wnum,
     output  [31:0] debug1_wb_rf_wdata,
-    output reg [31:0] debug1_wb_inst
+    output reg [31:0] debug1_wb_inst,
 
+    //exception
+    input [6:0] ecode_in,
+    input exception_flag_in,
+    input [31:0] badv_in,
+    output reg[6:0] ecode_out,
+    output reg exception_flag_out,
+    output reg [31:0] badv_out,
+    output reg wen_badv,
+    output reg tlb_exception, //决定是否回到直接地址翻译
+    input [31:0] era_in,
+    output reg [31:0] era_out,
+    output reg wen_era,
+    output reg [18:0] vppn_out,
+    output reg wen_vppn
 );
+wire set_badv;
+assign set_badv = (ecode_in == `EXP_PIL) || (ecode_in == `EXP_PIS) 
+|| (ecode_in == `EXP_PIF) || (ecode_in == `EXP_PME) || (ecode_in == `EXP_PPI)
+ || (ecode_in == `EXP_ADEF)  || (ecode_in == `EXP_ALE) || (ecode_in == `EXP_TLBR);
+wire set_vppn;
+assign set_vppn = (ecode_in == `EXP_PIL) || (ecode_in == `EXP_PIS) 
+|| (ecode_in == `EXP_PIF) || (ecode_in == `EXP_PME) || (ecode_in == `EXP_PPI)
+ || (ecode_in == `EXP_TLBR);
+always@(posedge clk)begin
+    if(~aresetn)begin
+        ecode_out <= 0;
+        exception_flag_out <= 0;
+    end
+    else begin
+        exception_flag_out <= exception_flag_in;
+        ecode_out <= ecode_in;
+        badv_out <= badv_in;
+        wen_badv <= exception_flag_in && set_badv;
+        tlb_exception <= exception_flag_in && (ecode_in == `EXP_TLBR);
+        era_out <= era_in;
+        wen_era <= exception_flag_in;
+        vppn_out <= badv_in[18:0];
+        wen_vppn <= exception_flag_in && set_vppn;
+    end
+
+end
+
+
 wire [3:0] cond0;
 wire [3:0] cond1;
 assign cond0 = uop0[`UOP_COND];
