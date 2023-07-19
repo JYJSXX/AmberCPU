@@ -6,29 +6,29 @@ module regfile(
 	input aresetn,
 	
 	//写端口1
-	input                 we1,
-	input[4:0]    waddr1,
-	input[31:0]        wdata1,
+	input               we1,
+	input[4:0]    		waddr1,
+	input[31:0]     	wdata1,
 	
 	//写端口2
-	input                 we2,
-	input[4:0]    waddr2,
-	input[31:0]        wdata2,
+	input               we2,
+	input[4:0]   		waddr2,
+	input[31:0]        	wdata2,
 	
 	//读端口1
-	input[4:0]     raddr1,
+	input[4:0]     		raddr1,
 	output reg[31:0]    rdata1,
 	
 	//读端口2
-	input[4:0]     raddr2,
+	input[4:0]     		raddr2,
 	output reg[31:0]    rdata2,
 	
 	//读端口3
-	input wire[4:0]    raddr3,
+	input wire[4:0]   		raddr3,
 	output reg[31:0]        rdata3,
 	
 	//读端口4
-	input wire[4:0]    raddr4,
+	input wire[4:0]   		raddr4,
 	output reg[31:0]        rdata4
 	
 	//output wire[31:0] reg1 //存放BL指令的返回地址

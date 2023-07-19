@@ -38,7 +38,7 @@ valid_23和ready_21还与段间寄存器自身情况有关，这里**假设自�
 valid_23不能受ready_23控制
 伪代码表示：
 valid_23 = valid (valid表示自身情况,无阻塞的流水段逻辑恒为1,有阻塞的先0,有效时数据和valid同时为1) 
-ready_21 = ready_23 || ready (ready表示自身情况)
+ready_21 = ready_23 (ready表示自身情况)
 if(valid_12 && ready_23)
 	更新段间寄存器2
 if(~valid_12 && ready_23&&valid_23)
@@ -49,7 +49,9 @@ if(~ready_23)
 
 ## exception信号
 exception[6:0]存放{ESUBCODE,ECODE}(见clap exception.vh)
-excp_flag  存放1/0表示例外（异常）触发/未触发
+excp_flag[1:0] 00表示无异常，10表示上路异常，01表示下路异常，11表示上下路同时异常
 由于指令集改版，我们现在不能使用判断exception是否为0来使得更早触发的异常不被覆盖，因此添加了额外的
 标志位exception_flag来标志当前是否已经发生异常，若是则不能将更晚的异常覆盖进exception数组中
- bnmjh
+
+## ibar_signal & ibar_pos 信号
+ibar_siganl表示当前指令组（同时发射的两条）
