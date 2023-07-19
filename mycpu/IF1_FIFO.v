@@ -10,10 +10,10 @@ module IF1_FIFO(
 
     //hand shake signal
     input               fetch_buf_full,
-    input               if1_valid,
-    output              if1_ready,
-    input               fifo_ready,
-    output              fifo_valid,
+    input               if1_readygo,
+    output              if1_allowin,
+    input               fifo_allowin,
+    output              fifo_readygo,
 
     input               if1_rready,//icache rready makes reg update anytime
     input [31:0]        if1_pc,
@@ -58,8 +58,8 @@ module IF1_FIFO(
     reg[1:0]        next_stat;
     reg [31:0]      pc_after_ibar;
 
-    assign fifo_valid = if1_valid&if1_rready;
-    assign if1_ready  = fifo_ready;
+    assign fifo_readygo = if1_readygo&if1_rready;
+    assign if1_allowin  = fifo_allowin;
     assign cache_idle = icache_idle&dcache_idle;
     assign pc_fetch_ok= if1_pc==pc_after_ibar;
 
@@ -90,7 +90,7 @@ module IF1_FIFO(
     end
 
     always @ (posedge clk or negedge rstn) begin
-        if (~rstn || flush||(!if1_valid&&fifo_ready)) begin
+        if (~rstn || flush||(!if1_readygo&&fifo_allowin)) begin
             //clear stage-stage reg
             if1_fifo_pc     <=  `PC_RESET;
             if1_fifo_pc_next<=  `PC_RESET+4;
@@ -104,7 +104,7 @@ module IF1_FIFO(
             if1_fifo_cacop_ready    <=0;
             if1_fifo_cacop_complete <=0;
         end
-        else if (if1_rready||if1_valid&&fifo_ready) begin
+        else if (if1_rready||if1_readygo&&fifo_allowin) begin
             //update stage-stage reg
             if1_fifo_pc     <=  if1_pc;
             if1_fifo_pc_next<=  if1_pc_next;
@@ -119,7 +119,7 @@ module IF1_FIFO(
             if1_fifo_cacop_complete<=if1_cacop_complete;
 
         end 
-        else if(~fifo_ready)begin//TODO
+        else if(~fifo_allowin)begin//TODO
             //hold stage-stage reg
         end
     end
