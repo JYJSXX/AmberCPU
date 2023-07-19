@@ -55,6 +55,7 @@ module FIFO_ID (
             fifo_id_inst1   <=`INST_NOP;
             fifo_id_pc      <=`PC_RESET;
             fifo_id_pcAdd   <=`PC_RESET+4;
+            fifo_id_pc_next <=`PC_RESET+8;
             fifo_id_badv    <=`PC_RESET;
             fifo_id_cookie_out<=1958;
             fifo_id_exception<=7'h00;
@@ -67,6 +68,7 @@ module FIFO_ID (
             fifo_id_inst1   <=fifo_inst1;
             fifo_id_pc      <=fifo_pc;
             fifo_id_pcAdd   <=fifo_pcAdd;
+            fifo_id_pc_next <=fifo_pc_next;
             fifo_id_badv    <=fifo_id_badv;
             fifo_id_cookie_out<=fifo_cookie_out;
             fifo_id_exception<=fifo_exception;
