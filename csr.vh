@@ -87,8 +87,9 @@
 `define TLBELO_PLV    3:2
 `define TLBELO_MAT    5:4
 `define TLBELO_G      6:6
-`define TLBELO_ZERO   7:7
-`define TLBELO_PPN    31:8
+`define TLBELO_ZERO_0  7:7
+`define TLBELO_PPN    27:8
+`define TLBELO_ZERO_1 31:28
 //ASID
 `define ASID_ASID     9:0
 `define ASID_ZERO_0   15:10
