@@ -98,7 +98,7 @@ module icache #(
     reg tagv_clear;
     reg [1:0] cacop_code_buf;
     reg cacop_en_buf;
-    wire tagv_sel;
+    wire [1:0] tagv_way_sel;
     //wire [INDEX_WIDTH-1:0] tagv_index;
     wire store_tag, index_invalid, hit_invalid;
     assign store_tag     = (cacop_code_buf == 2'b00);
@@ -404,19 +404,23 @@ module icache #(
         IDLE: begin
             req_buf_we      = 1;
             lru_we          = 0;
-            cacop_ready     = 1;
+            if(cacop_en)
+                cacop_ready     = 1;
+            if(cacop_en_buf)
+                cacop_complete  = 1;
         end
         LOOKUP: begin
             if(exception == 0)begin
                 pbuf_we                 = 1;
                 lru_we                  = 0;
+                if(cacop_en)
+                    cacop_ready         = 1;
                 if(!cache_hit || uncache_buf) missbuf_we = 1;
                 else begin
                     rready_temp              = 1;
                     req_buf_we          = rvalid;
                     way_visit           = hit_way;
                     lru_we              = 1;
-                    cacop_ready         = 1;
                 end
             end
             else rready_temp = 1;
@@ -447,12 +451,12 @@ module icache #(
             else if(store_tag || index_invalid) begin
                 tagv_clear = 1;
                 tagv_we    = tagv_way_sel;
-                rready_temp     = 1;
+                //rready_temp     = 1;
             end
             else if(hit_invalid && cache_hit) begin
                 tagv_clear = 1;
                 tagv_we    = hit;
-                rready_temp     = 1;
+               // rready_temp     = 1;
             end
         end
         default:;
