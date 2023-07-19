@@ -27,6 +27,12 @@ module csr#(
     output idle_over,
     //TLB输出
     //待定
+    output PG,
+    output [2:0] DMW0_PSEG,
+    output [2:0] DMW1_PSEG,
+    output [2:0] DMW0_VSEG,
+    output [2:0] DMW1_VSEG,
+
     input exception, //进入例外
     input ertn, //例外返回
     input tlb_exception, //TLB例外,要回到直接地址映射模式
@@ -53,10 +59,12 @@ module csr#(
     input [9:0] asid_asid_in,
     input wen_asid_asid,
     input [7:0] hardware_interrupt
+
     // input tlb_index_we,
     // input tlb_ps_we,
     // input tlb_ne_we
 );
+
     wire [31:0] csr_crmd ;
     wire [31:0] csr_prmd ;
     wire [31:0] csr_euen ;
@@ -633,5 +641,10 @@ assign rdata[31:0] = {32{addr==`CSR_CRMD}} & csr_crmd |
         assign dmw1=csr_dmw1;
         //cpu_interupt已经在前面赋值了
         assign llbit=csr_llbctl[0];
+        assign DMW0_PSEG=csr_dmw0[`DMW0_PSEG];
+        assign DMW0_VSEG=csr_dmw0[`DMW0_VSEG];
+        assign DMW1_PSEG=csr_dmw1[`DMW1_PSEG];
+        assign DMW1_VSEG=csr_dmw1[`DMW1_VSEG];
+        assign PG=csr_crmd[4];
         
 endmodule

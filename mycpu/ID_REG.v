@@ -3,10 +3,10 @@
 module ID_REG(
     input aclk,
     input aresetn,
-    input           id_valid,
-    output  reg     id_ready,
-    input           reg_ready,
-    output  reg     reg_valid,
+    input           id_readygo,
+    output  reg     id_allowin,
+    input           reg_allowin,
+    output  reg     reg_readygo,
     input [31:0] fifo_id_inst0, //前一个段间寄存器的
     input [31:0] fifo_id_inst1,
     input [31:0] fifo_id_pc0,
@@ -61,12 +61,14 @@ module ID_REG(
 );
 //没考虑flush stall，之后再说
 always@(posedge aclk) begin
-    if(~aresetn) begin
+    if(~aresetn | (~id_readygo && reg_allowin && reg_readygo)) begin
         id_reg_pc0  <= 0;
         id_reg_pc1  <= 0;
         id_reg_inst0  <= 0;
         id_reg_inst1  <= 0;
-
+        id_reg_badv  <= 0;
+        id_reg_excp_flag  <= 0;
+        id_reg_exception  <= 0;
         id_reg_is_ALU_0  <= 0;
         id_reg_is_ALU_1  <= 0;
         id_reg_is_syscall_0  <= 0;
@@ -85,11 +87,14 @@ always@(posedge aclk) begin
         id_reg_rj1  <= 0;
         id_reg_rk0  <= 0;
         id_reg_rk1  <= 0;
-    end else begin
+    end else if(id_readygo && reg_allowin)begin
         id_reg_pc0  <= fifo_id_pc0;
         id_reg_pc1  <= fifo_id_pc1;
         id_reg_inst0  <= fifo_id_inst0;
         id_reg_inst1  <= fifo_id_inst1;
+        id_reg_badv  <= fifo_id_badv;
+        id_reg_excp_flag  <= fifo_id_excp_flag;
+        id_reg_exception  <= fifo_id_exception;
         id_reg_is_ALU_0  <= is_ALU_0;
         id_reg_is_ALU_1  <= is_ALU_1;
         id_reg_is_syscall_0  <= is_syscall_0;
@@ -110,18 +115,40 @@ always@(posedge aclk) begin
         id_reg_rk1  <= rk1;
     
     end
+    else if(~reg_allowin) begin
+        id_reg_pc0  <= id_reg_pc0;
+        id_reg_pc1  <= id_reg_pc1;
+        id_reg_inst0  <= id_reg_inst0;
+        id_reg_inst1  <= id_reg_inst1;
+        id_reg_badv  <= id_reg_badv;
+        id_reg_excp_flag  <= id_reg_excp_flag;
+        id_reg_exception  <= id_reg_exception;
+        id_reg_is_ALU_0  <= id_reg_is_ALU_0;
+        id_reg_is_ALU_1  <= id_reg_is_ALU_1;
+        id_reg_is_syscall_0  <= id_reg_is_syscall_0;
+        id_reg_is_syscall_1  <= id_reg_is_syscall_1;
+        id_reg_is_break_0  <= id_reg_is_break_0;
+        id_reg_is_break_1  <= id_reg_is_break_1;
+        id_reg_is_priviledged_0  <= id_reg_is_priviledged_0;
+        id_reg_is_priviledged_1  <= id_reg_is_priviledged_1;
+        id_reg_uop0  <= id_reg_uop0;
+        id_reg_uop1  <= id_reg_uop1;
+        id_reg_imm0  <= id_reg_imm0;
+        id_reg_imm1  <= id_reg_imm1;
+        id_reg_rd0  <= id_reg_rd0;
+        id_reg_rd1  <= id_reg_rd1;
+        id_reg_rj0  <= id_reg_rj0;
+        id_reg_rj1  <= id_reg_rj1;
+        id_reg_rk0  <= id_reg_rk0;
+        id_reg_rk1  <= id_reg_rk1;
+
+    end
 
 end
 always @(*) begin//combinational logic for hand shake
-    id_ready=1;
-    if(id_valid)begin
-        id_ready=0;
-    end
+    id_allowin=reg_allowin;
 end
 always @(*) begin//combinational logic for hand shake
-    reg_valid=0;
-    if(id_ready && reg_ready)begin
-        reg_valid=1;
-    end
+    reg_readygo=1;
 end
 endmodule
