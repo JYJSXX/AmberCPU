@@ -4,10 +4,11 @@ module  REG_EX1(
     input   clk,
     input   aresetn,
     input   flush,
-    input   reg_valid,
-    output  reg reg_ready,
-    input   ex_ready,
-    output  reg ex_valid,
+    input   forward_stall,
+    input   reg_readygo,
+    output  reg reg_allowin,
+    input   ex_allowin,
+    output  reg ex_readygo,
     input   [31:0] id_reg_pc0,
     input   [31:0] id_reg_pc1,
     input   [31:0] id_reg_inst0,
@@ -90,7 +91,7 @@ regfile regfile1( //内部自带写优先
     .rdata4(rk1_data)
 );
 always@(posedge clk)begin
-    if(~aresetn | flush | (~reg_valid & ex_ready) ) begin
+    if(~aresetn | flush | (~reg_readygo & ex_allowin) ) begin
         reg_ex_pc0 <= 0;
         reg_ex_pc1 <= 0;
         reg_ex_inst0 <= 0;
@@ -119,7 +120,7 @@ always@(posedge clk)begin
         reg_ex_rd1 <= 0;
 
     end
-    else if(reg_valid&&ex_ready)begin
+    else if(reg_readygo&&ex_allowin)begin
         reg_ex_pc0 <= id_reg_pc0;
         reg_ex_pc1 <= id_reg_pc1;
         reg_ex_inst0 <= id_reg_inst0;
@@ -183,12 +184,7 @@ always@(posedge clk)begin
 
 end
 always@(*)begin
-    reg_ready=0;
-
-    if(reg_valid)begin
-        reg_ready=1;
-    end
-    ex_valid=reg_valid;
-     //没啥停顿的，前面能流就跟着流就行吧,但是后面ex1段给不给ready就不好说了
+    ex_readygo = ~forward_stall; 
+    reg_allowin=ex_allowin;
 end
 endmodule

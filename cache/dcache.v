@@ -14,7 +14,7 @@ module dcache #(
     // read
     input                   rvalid,             // valid signal of read request from pipeline
     output reg              rready,             // ready signal of read request to pipeline
-    output [31:0]           rdata,              // read data to pipeline
+    output reg [31:0]       rdata,              // read data to pipeline
     //write
     input                   wvalid,             // valid signal of write request from pipeline
     output reg              wready,             // ready signal of write request to pipeline
@@ -44,9 +44,9 @@ module dcache #(
    // output [2:0]            d_wsize,            // indicate the size of write data once, if d_wsize = n then write 2^n bytes once
     output reg [7:0]        d_wlen,             // indicate the number of write data, if d_wlen = n then write n+1 times
 
-    // back
-    input                   d_bvalid,           // valid signal of write back request from main memory
-    output reg              d_bready,           // ready signal of write back request to main memory
+    // // back
+    // input                   d_bvalid,           // valid signal of write back request from main memory
+    // output reg              d_bready,           // ready signal of write back request to main memory
 
     // exception
     output            [6:0] exception,
@@ -151,13 +151,6 @@ module dcache #(
     // communication between write fsm and main fsm
     reg                         wfsm_en, wfsm_reset, wrt_finish;
 
-    // // a counter for write back
-    // reg     [3:0]               write_counter;
-    // reg                         write_counter_reset, write_counter_en;
-
-    // // statistics
-    // reg     [63:0]              total_time;
-    // reg     [63:0]              total_hit;
     /* op、 signed_ext、 is_atom、 llbit buffer */
     reg op_buf, signed_ext_buf, is_atom_buf, llbit_buf;
     always @(posedge clk) begin
@@ -189,10 +182,30 @@ module dcache #(
     //assign tagv_index        = req_buf[INDEX_WIDTH + BYTE_OFFSET_WIDTH - 1: BYTE_OFFSET_WIDTH];
 
     // exception
-    wire [6:0] exception_temp1, exception_normal;
-    reg [6:0] exception_temp, exception_buf;
+    wire [6:0] exception_cache, exception_temp, exception_obuf;
+    reg [6:0] exception_temp1, exception_buf;
     reg exception_sel;
     assign badv = (exception != 0) ? address : 0;
+
+    /* exception */
+    always @(*) begin
+        case(wstrb_pipe)
+        HALF: if(address[0] == 1) exception_temp1 = `EXP_ALE;
+        WORD: if(address[1:0] != 0) exception_temp1 = `EXP_ALE;
+        default: exception_temp1 = 0;
+        endcase
+    end
+    assign exception_cache = ({7{!(op_buf && !llbit_buf && is_atom_buf)}} | {7{~cacop_en_buf}}) & exception_temp1;
+    assign exception_temp  = {7{!((cacop_en_buf && hit_invalid) || (op_buf && is_atom_buf && !llbit_buf))}} 
+                            & (tlb_exception == `EXP_ADEM ? tlb_exception : (exception_cache == 0 ? tlb_exception : exception_cache));
+    assign exception_obuf = {7{((rready || wready) || cacop_en_buf)}} & (exception_sel ? exception_buf : exception_temp);
+    reg  [6:0] exception_old;
+    wire [6:0] exception_new;
+    assign exception_new = exception_obuf;
+    always @(posedge clk) 
+        if(~rstn) exception_old <= 0;
+        else exception_old <= exception_new;
+    assign exception = ~exception_old & exception_new;
 
     /* request buffer : lock the read request addr */
     // [31:0] addr, [63:32] wdata [67:64] wstrb
@@ -362,16 +375,16 @@ module dcache #(
     assign o_rdata = data_from_mem ? mem_rdata[hit_way_valid] : ret_buf; 
     always @(*) begin
         case(req_buf[5:2])
-        4'd0: rdata_cache = o_rdata[31:0];
-        4'd1: rdata_cache = o_rdata[63:32];
-        4'd2: rdata_cache = o_rdata[95:64];
-        4'd3: rdata_cache = o_rdata[127:96];
-        4'd4: rdata_cache = o_rdata[159:128];
-        4'd5: rdata_cache = o_rdata[191:160];
-        4'd6: rdata_cache = o_rdata[223:192];
-        4'd7: rdata_cache = o_rdata[255:224];
-        4'd8: rdata_cache = o_rdata[287:256];
-        4'd9: rdata_cache = o_rdata[319:288];
+        4'd0:  rdata_cache = o_rdata[31:0];
+        4'd1:  rdata_cache = o_rdata[63:32];
+        4'd2:  rdata_cache = o_rdata[95:64];
+        4'd3:  rdata_cache = o_rdata[127:96];
+        4'd4:  rdata_cache = o_rdata[159:128];
+        4'd5:  rdata_cache = o_rdata[191:160];
+        4'd6:  rdata_cache = o_rdata[223:192];
+        4'd7:  rdata_cache = o_rdata[255:224];
+        4'd8:  rdata_cache = o_rdata[287:256];
+        4'd9:  rdata_cache = o_rdata[319:288];
         4'd10: rdata_cache = o_rdata[351:320];
         4'd11: rdata_cache = o_rdata[383:352];
         4'd12: rdata_cache = o_rdata[415:384];
@@ -381,7 +394,34 @@ module dcache #(
         endcase
     end
     // uncached read
-    assign rdata = uncache_buf ? ret_buf[511:448] : rdata_cache;
+    wire [31:0] rdata_temp;
+    assign rdata_temp = uncache_buf ? ret_buf[511:448] : rdata_cache;
+    // 根据掩码和符号位拓展，给出最终的读数据
+    always @(*) begin
+        case(wstrb_pipe)
+        BYTE: begin
+            case(req_buf[1:0])
+            2'b00: rdata = {{24{rdata_temp[7]&signed_ext_buf}}, rdata_temp[7:0]};
+            2'b01: rdata = {{24{rdata_temp[15]&signed_ext_buf}}, rdata_temp[15:8]};
+            2'b10: rdata = {{24{rdata_temp[23]&signed_ext_buf}}, rdata_temp[23:16]};
+            2'b11: rdata = {{24{rdata_temp[31]&signed_ext_buf}}, rdata_temp[31:24]};
+            default: rdata = 0;
+            endcase
+        end
+        HALF: begin
+            case(req_buf[1:0])
+            2'b00: rdata = {{16{rdata_temp[15]&signed_ext_buf}}, rdata_temp[15:0]};
+            2'b10: rdata = {{16{rdata_temp[31]&signed_ext_buf}}, rdata_temp[31:16]};
+            default: rdata = 0;
+            endcase
+        end
+        WORD: begin
+            rdata = rdata_temp;
+        end
+        default: rdata = 0;
+        endcase
+    end
+
 
     /* LRU replace */
     reg way_visit;  // 0: way0, 1: way1
@@ -445,13 +485,8 @@ module dcache #(
     
     /* memory visit settings*/
     assign d_raddr  = uncache_buf ? paddr_buf : {paddr_buf[31:6], 6'b0};
-//    assign d_rsize  = 3'h2;
-    // assign d_rlen   = WORD_NUM - 1;
     assign d_waddr  = uncache_buf ? paddr_buf : m_buf;
-//    assign d_wsize  = 3'h2;
-    // assign d_wlen   = WORD_NUM - 1;
     assign d_wdata  = wbuf[31:0];
-    // assign d_wstrb  = 4'b1111;
 
     /* main FSM */
     localparam 
@@ -547,54 +582,14 @@ module dcache #(
             end
         end
         CACOP: begin//! IBAR待完成
-            if((exception != 0) || ibar)     
+            if((exception_temp != 0) || ibar)     
                 next_state = IDLE;
             else                    
                 next_state = WAIT_WRITE;
-            // else begin
-            //     if(store_tag)
-            //         next_state = WAIT_WRITE;
-            //     else if(index_invalid) begin
-            //         if(dirty_rdata)
-            //         next_state = CACOP_WB;
-            //         else
-            //         next_state = WAIT_WRITE;
-            //     end
-            //     else if(hit_invalid) begin
-            //         if(cache_hit && dirty_rdata)
-            //         next_state = CACOP_WB;
-            //         else
-            //         next_state = WAIT_WRITE;
-            //     end
-            //     else
-            //         next_state = WAIT_WRITE;
-            // end
         end
         default: begin
             next_state = IDLE;
         end
-        // CACOP_WB: begin
-        //     if(wrt_finish) begin
-        //         if(cacop_en)
-        //             next_state = CACOP;
-        //         else
-        //             next_state = (rvalid || wvalid) ? LOOKUP : IDLE;
-        //     end
-        //     else begin
-        //         next_state = CACOP_WB;
-        //     end
-        // end
-        // UNCACHE: begin
-        //     if(wrt_finish) begin
-        //         if(cacop_en)
-        //             next_state = CACOP;
-        //         else
-        //             next_state = (rvalid || wvalid) ? LOOKUP : IDLE;
-        //     end
-        //     else begin
-        //         next_state = UNCACHE;
-        //     end
-        // end
         endcase
     end
     always @(*) begin
@@ -634,7 +629,7 @@ module dcache #(
                 cacop_complete  = 1;
         end
         LOOKUP: begin
-            if(exception == 0) begin
+            if(exception_temp == 0) begin
                 pbuf_we = 1;
                 lru_we  = 0;
                 if(cacop_en)
@@ -707,7 +702,7 @@ module dcache #(
                 cacop_complete  = 1;
         end
         CACOP: begin
-            if(exception != 0) cacop_complete = 1;
+            if(exception_temp != 0) cacop_complete = 1;
             else if(store_tag || index_invalid) begin
                 tagv_clear = 1;
                 tagv_we    = tagv_way_sel;
@@ -740,18 +735,6 @@ module dcache #(
         WRITE   = 3'd1,
         FINISH  = 3'd2;
     reg [2:0] wfsm_state, wfsm_next_state;
-    /* counter of write back */
-    // always @(posedge clk) begin
-    //     if(!rstn) begin
-    //         write_counter <= 0;
-    //     end
-    //     else if(write_counter_reset) begin
-    //         write_counter <= 0;
-    //     end
-    //     else if(write_counter_en) begin
-    //         write_counter <= write_counter == WORD_NUM-1 ? WORD_NUM-1 : write_counter + 1;
-    //     end
-    // end
     /* stage 1 */
     always @(posedge clk) begin
         if(!rstn) begin
@@ -773,7 +756,7 @@ module dcache #(
             end
         end
         WRITE: begin
-            if(d_bvalid && d_bready) begin
+            if(d_wvalid && d_wready) begin
                 wfsm_next_state = FINISH;
             end
             else begin
@@ -796,20 +779,12 @@ module dcache #(
     /* stage 2: output */
     always @(*) begin
         wrt_finish          = 0;
-        // write_counter_reset = 0;
-        // write_counter_en    = 0;
         d_wvalid            = 0;
-        // d_wlast             = 0;
-        d_bready            = 0;
         case(wfsm_state)
         INIT: begin
-            //write_counter_reset = 1;
         end
         WRITE: begin
             d_wvalid            = 1;
-            // d_wlast             = (write_counter == WORD_NUM-1);
-            // write_counter_en    = d_wready;
-            d_bready            = 1;
         end
         FINISH: begin
             wrt_finish = 1;
@@ -817,15 +792,4 @@ module dcache #(
         endcase
     end
 
-    // // statistics
-    // always @(posedge clk) begin
-    //     if(!rstn) begin
-    //         total_time <= 0;
-    //         total_hit <= 0;
-    //     end
-    //     else if(state == LOOKUP) begin
-    //         total_hit <= total_hit + {63'b0, cache_hit};
-    //         total_time <= total_time + 1;
-    //     end
-    // end
 endmodule

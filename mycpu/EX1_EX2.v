@@ -4,10 +4,10 @@ module EX1_EX2(
     input   aresetn,
     input   flush_in,
     output  flush_out,
-    input   ex1_valid,
-    output  reg ex1_ready,
-    input   ex2_ready,
-    output  reg ex2_valid,
+    input   ex1_readygo,
+    output  reg ex1_allowin,
+    input   ex2_allowin,
+    output  reg ex2_readygo,
     input   forward_stall,
 
 
@@ -79,7 +79,7 @@ module EX1_EX2(
 
 );
 always@(posedge clk) begin
-    if(~aresetn | (~ex1_valid & ex2_ready)) begin
+    if(~aresetn | (~ex1_readygo & ex2_allowin & ex2_readygo)) begin
         ex1_ex2_pc0<=0;
         ex1_ex2_pc1<=0;
         ex1_ex2_inst0<=0;
@@ -109,7 +109,7 @@ always@(posedge clk) begin
         ex1_ex2_mul_stage1_res_lh<=0;
         ex1_ex2_mul_stage1_res_ll<=0;
         ex1_ex2_mul_compensate<=0;
-    end else if(ex1_valid&&ex2_ready)begin
+    end else if(ex1_readygo&&ex2_allowin)begin
         ex1_ex2_pc0<=reg_ex1_pc0;
         ex1_ex2_pc1<=reg_ex1_pc1;
         ex1_ex2_inst0<=reg_ex1_inst0;
@@ -141,7 +141,7 @@ always@(posedge clk) begin
         ex1_ex2_mul_compensate<=mul_compensate;
     end
     else begin
-        //~ex2_ready,寄存器保持不变
+        //~ex2_allowin,寄存器保持不变
         ex1_ex2_pc0<=ex1_ex2_pc0;
         ex1_ex2_pc1<=ex1_ex2_pc1;
         ex1_ex2_inst0<=ex1_ex2_inst0;
@@ -175,11 +175,8 @@ always@(posedge clk) begin
     end
 end
 always@(*)begin
-    ex1_ready=0;
-    if(ex1_valid & ~forward_stall)begin
-        ex1_ready=1;
-    end
-    ex2_valid = ex1_valid & ~forward_stall; //由于forward_stall停顿
+    ex1_allowin=ex2_allowin;
+    ex2_readygo =  1; //由于forward_stall停顿
 end
 
 endmodule

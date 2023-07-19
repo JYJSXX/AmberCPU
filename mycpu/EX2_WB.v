@@ -6,7 +6,7 @@ module EX2_WB(
     input flush_in,
     output flush_out,
     //input ex2_valid, 这个信号不要了，由下面一堆valid/div_ready/dcache_ready来代替
-    output reg ex2_ready,
+    output reg ex2_allowin,
     input [31:0] pc0,
     input [31:0] pc1,
     input [31:0] ex1_ex2_inst0,
@@ -189,9 +189,9 @@ assign cond1 = uop1[`UOP_COND];
 
     end
 always@(*) begin
-    ex2_ready=0;
+    ex2_allowin=0;
     if((ex2_wb_data_0_valid | dcache_ready | div_ready) && ex2_wb_data_1_valid) begin
-        ex2_ready=1;
+        ex2_allowin=1;
     end
 end
 

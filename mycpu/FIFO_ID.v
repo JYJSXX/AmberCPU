@@ -7,10 +7,10 @@ module FIFO_ID (
     input [1:0]fifo_id_flush_cause, //flush cause reserved for judge
 
     //hand shake signal
-    input id_ready,//from decoder stage.told id is ready
-    output  id_valid,//to decoder stage,tell id I'm valid
-    output  fifo_ready,//to fifo stage,tell fifo I'm ready
-    input fifo_valid,//from fifo stage,told fifo is valid
+    input id_allowin,//from decoder stage.told id is ready
+    output  id_readygo,//to decoder stage,tell id I'm valid
+    output  fifo_allowin,//to fifo stage,tell fifo I'm ready
+    input fifo_readygo,//from fifo stage,told fifo is valid
 
     input [31:0] fifo_inst0,
     input [31:0] fifo_inst1,
@@ -45,11 +45,11 @@ module FIFO_ID (
 );
     
 
-    assign id_valid=1;//valid anytime because fifo provide INST_NOP if invalid
-    assign fifo_ready=id_ready||!fetch_buf_empty;
+    assign id_readygo=fifo_readygo;//valid anytime because fifo provide INST_NOP if invalid
+    assign fifo_allowin=id_allowin;
 
     always @(posedge clk or negedge rstn) begin
-        if (!rstn||fifo_id_flush||(~fifo_valid&&id_ready&&id_valid)) begin
+        if (!rstn||fifo_id_flush||(~fifo_readygo&&id_allowin&&id_readygo)) begin
             fifo_id_inst0   <=`INST_NOP;
             fifo_id_inst1   <=`INST_NOP;
             fifo_id_pc      <=`PC_RESET;
@@ -62,7 +62,7 @@ module FIFO_ID (
             fifo_id_ibar_flag<=2'b00;
             fifo_id_cacop_ready<=0;
             fifo_id_cacop_complete<=0;
-        end else if(fifo_valid&&id_ready)begin
+        end else if(fifo_readygo&&id_allowin)begin
             fifo_id_inst0   <=fifo_inst0;
             fifo_id_inst1   <=fifo_inst1;
             fifo_id_pc      <=fifo_pc;
