@@ -151,13 +151,6 @@ module dcache #(
     // communication between write fsm and main fsm
     reg                         wfsm_en, wfsm_reset, wrt_finish;
 
-    // // a counter for write back
-    // reg     [3:0]               write_counter;
-    // reg                         write_counter_reset, write_counter_en;
-
-    // // statistics
-    // reg     [63:0]              total_time;
-    // reg     [63:0]              total_hit;
     /* op、 signed_ext、 is_atom、 llbit buffer */
     reg op_buf, signed_ext_buf, is_atom_buf, llbit_buf;
     always @(posedge clk) begin
@@ -551,50 +544,10 @@ module dcache #(
                 next_state = IDLE;
             else                    
                 next_state = WAIT_WRITE;
-            // else begin
-            //     if(store_tag)
-            //         next_state = WAIT_WRITE;
-            //     else if(index_invalid) begin
-            //         if(dirty_rdata)
-            //         next_state = CACOP_WB;
-            //         else
-            //         next_state = WAIT_WRITE;
-            //     end
-            //     else if(hit_invalid) begin
-            //         if(cache_hit && dirty_rdata)
-            //         next_state = CACOP_WB;
-            //         else
-            //         next_state = WAIT_WRITE;
-            //     end
-            //     else
-            //         next_state = WAIT_WRITE;
-            // end
         end
         default: begin
             next_state = IDLE;
         end
-        // CACOP_WB: begin
-        //     if(wrt_finish) begin
-        //         if(cacop_en)
-        //             next_state = CACOP;
-        //         else
-        //             next_state = (rvalid || wvalid) ? LOOKUP : IDLE;
-        //     end
-        //     else begin
-        //         next_state = CACOP_WB;
-        //     end
-        // end
-        // UNCACHE: begin
-        //     if(wrt_finish) begin
-        //         if(cacop_en)
-        //             next_state = CACOP;
-        //         else
-        //             next_state = (rvalid || wvalid) ? LOOKUP : IDLE;
-        //     end
-        //     else begin
-        //         next_state = UNCACHE;
-        //     end
-        // end
         endcase
     end
     always @(*) begin
@@ -740,18 +693,6 @@ module dcache #(
         WRITE   = 3'd1,
         FINISH  = 3'd2;
     reg [2:0] wfsm_state, wfsm_next_state;
-    /* counter of write back */
-    // always @(posedge clk) begin
-    //     if(!rstn) begin
-    //         write_counter <= 0;
-    //     end
-    //     else if(write_counter_reset) begin
-    //         write_counter <= 0;
-    //     end
-    //     else if(write_counter_en) begin
-    //         write_counter <= write_counter == WORD_NUM-1 ? WORD_NUM-1 : write_counter + 1;
-    //     end
-    // end
     /* stage 1 */
     always @(posedge clk) begin
         if(!rstn) begin
@@ -817,15 +758,4 @@ module dcache #(
         endcase
     end
 
-    // // statistics
-    // always @(posedge clk) begin
-    //     if(!rstn) begin
-    //         total_time <= 0;
-    //         total_hit <= 0;
-    //     end
-    //     else if(state == LOOKUP) begin
-    //         total_hit <= total_hit + {63'b0, cache_hit};
-    //         total_time <= total_time + 1;
-    //     end
-    // end
 endmodule
