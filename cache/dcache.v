@@ -182,10 +182,30 @@ module dcache #(
     //assign tagv_index        = req_buf[INDEX_WIDTH + BYTE_OFFSET_WIDTH - 1: BYTE_OFFSET_WIDTH];
 
     // exception
-    wire [6:0] exception_temp1, exception_normal;
-    reg [6:0] exception_temp, exception_buf;
+    wire [6:0] exception_cache, exception_temp, exception_obuf;
+    reg [6:0] exception_temp1, exception_buf;
     reg exception_sel;
     assign badv = (exception != 0) ? address : 0;
+
+    /* exception */
+    always @(*) begin
+        case(wstrb_pipe)
+        HALF: if(address[0] == 1) exception_temp1 = `EXP_ALE;
+        WORD: if(address[1:0] != 0) exception_temp1 = `EXP_ALE;
+        default: exception_temp1 = 0;
+        endcase
+    end
+    assign exception_cache = ({7{!(op_buf && !llbit_buf && is_atom_buf)}} | {7{~cacop_en_buf}}) & exception_temp1;
+    assign exception_temp  = {7{!((cacop_en_buf && hit_invalid) || (op_buf && is_atom_buf && !llbit_buf))}} 
+                            & (tlb_exception == `EXP_ADEM ? tlb_exception : (exception_cache == 0 ? tlb_exception : exception_cache));
+    assign exception_obuf = {7{((rready || wready) || cacop_en_buf)}} & (exception_sel ? exception_buf : exception_temp);
+    reg  [6:0] exception_old;
+    wire [6:0] exception_new;
+    assign exception_new = exception_obuf;
+    always @(posedge clk) 
+        if(~rstn) exception_old <= 0;
+        else exception_old <= exception_new;
+    assign exception = ~exception_old & exception_new;
 
     /* request buffer : lock the read request addr */
     // [31:0] addr, [63:32] wdata [67:64] wstrb
@@ -562,7 +582,7 @@ module dcache #(
             end
         end
         CACOP: begin//! IBAR待完成
-            if((exception != 0) || ibar)     
+            if((exception_temp != 0) || ibar)     
                 next_state = IDLE;
             else                    
                 next_state = WAIT_WRITE;
@@ -609,7 +629,7 @@ module dcache #(
                 cacop_complete  = 1;
         end
         LOOKUP: begin
-            if(exception == 0) begin
+            if(exception_temp == 0) begin
                 pbuf_we = 1;
                 lru_we  = 0;
                 if(cacop_en)
@@ -682,7 +702,7 @@ module dcache #(
                 cacop_complete  = 1;
         end
         CACOP: begin
-            if(exception != 0) cacop_complete = 1;
+            if(exception_temp != 0) cacop_complete = 1;
             else if(store_tag || index_invalid) begin
                 tagv_clear = 1;
                 tagv_we    = tagv_way_sel;
