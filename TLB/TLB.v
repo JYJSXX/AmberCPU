@@ -3,8 +3,8 @@ module TLB(
     input [9:0]                 CSR_ASID,
     input [18:0]                CSR_VPPN,
 
-    input [`TLB_VPPN_LEN:0]     VA_I,
-    input [`TLB_VPPN_LEN:0]     VA_D,
+    input [`TLB_VPPN_LEN : 0]     VA_I,
+    input [`TLB_VPPN_LEN : 0]     VA_D,
     input                       PG,
     input [2:0]                 DMW0_VSEG,
     input [2:0]                 DMW1_VSEG,
