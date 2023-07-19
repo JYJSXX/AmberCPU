@@ -16,7 +16,7 @@ module FIFO_ID (
     input [31:0] fifo_inst0,
     input [31:0] fifo_inst1,
     input [31:0] fifo_pc,
-    input [31:0] fetch_pc,
+    input [31:0] fifo_pc_next,
     input [31:0] fifo_pcAdd,
     input [31:0] fifo_badv,
     input [31:0] fifo_cookie_out,
@@ -32,6 +32,7 @@ module FIFO_ID (
     output reg[31:0] fifo_id_inst1,
     output reg[31:0] fifo_id_pc,
     output reg[31:0] fifo_id_pcAdd,
+    output reg[31:0] fifo_id_pc_next,
     output reg[31:0] fifo_id_badv,
     output reg[31:0] fifo_id_cookie_out,
     output reg[6:0]  fifo_id_exception,
@@ -43,27 +44,36 @@ module FIFO_ID (
 
     `endif 
 );
-    localparam      IDLE            =   2'b00,
-                    WAIT_EX_IBAR    =   2'b01,
-                    WAIT_CACHE_IDLE =   2'b11,
-                    WAIT_FETCH      =   2'b10;
-    reg[1:0]        stat=0;
-    wire[1:0]       next_stat;
+    
 
     assign id_valid=fifo_valid;//valid anytime because fifo provide INST_NOP if invalid
     assign fifo_ready=id_ready;
 
-    //TODO add FSM for 1.detect ibar 2.detect ex's ibar signal 3.detect icache&dcache idle
-    //IDLE->WAIT_EX_IBAR->WAIT_CACHE_IDLE->WAIT_FETCH->IDLE
     always @(posedge clk or negedge rstn) begin
-        if (!rstn||fifo_id_flush||(~fifo_valid&&id_ready)||(stat!=IDLE)) begin
+        if (!rstn||fifo_id_flush||(~fifo_valid&&id_ready)) begin
             fifo_id_inst0   <=`INST_NOP;
             fifo_id_inst1   <=`INST_NOP;
             fifo_id_pc      <=`PC_RESET;
+            fifo_id_pcAdd   <=`PC_RESET+4;
+            fifo_id_badv    <=`PC_RESET;
+            fifo_id_cookie_out<=1958;
+            fifo_id_exception<=7'h00;
+            fifo_id_excp_flag<=0;
+            fifo_id_ibar_signal<=0;
+            fifo_id_cacop_ready<=0;
+            fifo_id_cacop_complete<=0;
         end else if(!fifo_id_stall&(fifo_valid&&id_ready))begin
             fifo_id_inst0   <=fifo_inst0;
             fifo_id_inst1   <=fifo_inst1;
             fifo_id_pc      <=fifo_pc;
+            fifo_id_pcAdd   <=fifo_pcAdd;
+            fifo_id_badv    <=fifo_id_badv;
+            fifo_id_cookie_out<=fifo_cookie_out;
+            fifo_id_exception<=fifo_exception;
+            fifo_id_excp_flag<=fifo_excp_flag;
+            fifo_id_ibar_signal<=fifo_ibar_signal;
+            fifo_id_cacop_ready<=fifo_cacop_ready;
+            fifo_id_cacop_complete<=fifo_cacop_complete;
         end
     end
 endmodule
