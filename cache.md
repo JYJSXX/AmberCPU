@@ -32,7 +32,11 @@ Dcache：读就同Icache，写的话直接发（要发的数据放在末32位，
 
 **CACOP指令**
 
-两种寻址，第一种按地址后两位，第二种按命中(如果不命中则)
+三条指令两种寻址，前两条按地址后两位，第三条按命中(如果不命中则不做任何操作)
+
+第一条指令对ICache和Dcache操作相同，只清指定行的tag
+
+第二三条指令：
 
 Icache：将指定cache行的tag清零
 
@@ -121,6 +125,7 @@ Dcache：无效掉TagV表中的所有行，同时将所有脏行写回主存
 - op (1)：操作类型，0表示读操作，1表示写操作。
 - uncache (1)：指示请求是否为非缓存请求。
 - signed_ext (1): 是否要存储符号位扩展的数据（1就扩展）
+- forward_exception (7): 
 - tlb_exception (7): TLB异常信息码
 - cacop_en(1): cacop指令对dcache的操作（需要先判断cacop操作对象后直接传给dcache)
 - cacop_code(2)： cacop指令code[4:3]，操作码
