@@ -7,11 +7,14 @@ module ID_REG(
     output  reg     id_ready,
     input           reg_ready,
     output  reg     reg_valid,
-    input [31:0] inst0,
-    input [31:0] inst1,
-    input [31:0] pc0,
-    input [31:0] pc1,
-    input is_ALU_0,
+    input [31:0] fifo_id_inst0, //前一个段间寄存器的
+    input [31:0] fifo_id_inst1,
+    input [31:0] fifo_id_pc0,
+    input [31:0] fifo_id_pc1,
+    input [31:0] fifo_id_badv,
+    input fifo_id_excp_flag,
+    input [6:0] fifo_id_exception,
+    input is_ALU_0, //id段内生成的
     input is_ALU_1,
     input is_syscall_0,
     input is_syscall_1,
@@ -34,6 +37,9 @@ module ID_REG(
     output reg [31:0] id_reg_pc1,
     output reg [31:0] id_reg_inst0,
     output reg [31:0] id_reg_inst1,
+    output reg [31:0] id_reg_badv,
+    output reg id_reg_excp_flag,
+    output reg [6:0] id_reg_exception,
     output reg id_reg_is_ALU_0 ,
     output reg id_reg_is_ALU_1 ,
     output reg id_reg_is_syscall_0 ,
@@ -60,6 +66,7 @@ always@(posedge aclk) begin
         id_reg_pc1  <= 0;
         id_reg_inst0  <= 0;
         id_reg_inst1  <= 0;
+
         id_reg_is_ALU_0  <= 0;
         id_reg_is_ALU_1  <= 0;
         id_reg_is_syscall_0  <= 0;
@@ -79,10 +86,10 @@ always@(posedge aclk) begin
         id_reg_rk0  <= 0;
         id_reg_rk1  <= 0;
     end else begin
-        id_reg_pc0  <= pc0;
-        id_reg_pc1  <= pc1;
-        id_reg_inst0  <= inst0;
-        id_reg_inst1  <= inst1;
+        id_reg_pc0  <= fifo_id_pc0;
+        id_reg_pc1  <= fifo_id_pc1;
+        id_reg_inst0  <= fifo_id_inst0;
+        id_reg_inst1  <= fifo_id_inst1;
         id_reg_is_ALU_0  <= is_ALU_0;
         id_reg_is_ALU_1  <= is_ALU_1;
         id_reg_is_syscall_0  <= is_syscall_0;

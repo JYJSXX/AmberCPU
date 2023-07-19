@@ -36,8 +36,8 @@ module csr#(
     input wen_era, //写入例外返回地址
     input [31:0] badv_in, //例外地址
     input wen_badv, //写入例外地址
-    input [`PGD_BASE] pgd_base_in, //页表基址
-    input wen_pgd_base, //写入页表基址
+    // input [`PGD_BASE] pgd_base_in, //页表基址
+    // input wen_pgd_base, //写入页表基址
     input [18:0] tlbehi_vppn_in,
     input wen_tlbehi_vppn,
     input llbit_set,
@@ -183,8 +183,9 @@ module csr#(
     assign csr_tlbelo0[`TLBELO_PLV] = tlbelo0_plv;
     assign csr_tlbelo0[`TLBELO_MAT] = tlbelo0_mat;
     assign csr_tlbelo0[`TLBELO_G] = tlbelo0_g;
-    assign csr_tlbelo0[`TLBELO_ZERO] = 0;
+    assign csr_tlbelo0[`TLBELO_ZERO_0] = 0;
     assign csr_tlbelo0[`TLBELO_PPN] = tlbelo0_ppn;
+    assign csr_tlbelo0[`TLBELO_ZERO_1] = 0;
 
     //TLBELO1
     reg [`TLBELO_V] tlbelo1_v;
@@ -198,8 +199,9 @@ module csr#(
     assign csr_tlbelo1[`TLBELO_PLV] = tlbelo1_plv;
     assign csr_tlbelo1[`TLBELO_MAT] = tlbelo1_mat;
     assign csr_tlbelo1[`TLBELO_G] = tlbelo1_g;
-    assign csr_tlbelo1[`TLBELO_ZERO] = 0;
+    assign csr_tlbelo1[`TLBELO_ZERO_0] = 0;
     assign csr_tlbelo1[`TLBELO_PPN] = tlbelo1_ppn;
+    assign csr_tlbelo1[`TLBELO_ZERO_1] = 0;
 
     //ASID
     reg [`ASID_ASID] asid_asid;
@@ -497,12 +499,8 @@ always @(posedge clk)
             if(wen) pgdh_base[`PGDH_BASE] <= wdata[`PGDH_BASE];
         end
 
-    //PGD
-    always @(posedge clk)
-        if(~aresetn)
-            pgd_base <= 0;
-        else if(wen_pgd_base)
-            pgd_base[`PGD_BASE] <= pgd_base_in[`PGD_BASE];
+    //PGD只读
+        
 
     //DMW0~1
     always @(posedge clk)
@@ -614,7 +612,8 @@ assign rdata[31:0] = {32{addr==`CSR_CRMD}} & csr_crmd |
                     {32{addr==`CSR_ASID}} & csr_asid |
                     {32{addr==`CSR_PGDL}} & csr_pgdl |
                     {32{addr==`CSR_PGDH}} & csr_pgdh |
-                    {32{addr==`CSR_PGD}} & csr_pgd |
+                    {32{addr==`CSR_PGD && csr_badv[31]}} & csr_pgdh |
+                    {32{addr==`CSR_PGD && ~csr_badv[31]}} & csr_pgdl |
                     {32{addr==`CSR_TLBRENTRY}} & csr_tlbrentry |
                     {32{addr==`CSR_DMW0}} & csr_dmw0 |
                     {32{addr==`CSR_DMW1}} & csr_dmw1 |
