@@ -44,9 +44,9 @@ module dcache #(
    // output [2:0]            d_wsize,            // indicate the size of write data once, if d_wsize = n then write 2^n bytes once
     output reg [7:0]        d_wlen,             // indicate the number of write data, if d_wlen = n then write n+1 times
 
-    // back
-    input                   d_bvalid,           // valid signal of write back request from main memory
-    output reg              d_bready,           // ready signal of write back request to main memory
+    // // back
+    // input                   d_bvalid,           // valid signal of write back request from main memory
+    // output reg              d_bready,           // ready signal of write back request to main memory
 
     // exception
     output            [6:0] exception,
@@ -714,7 +714,7 @@ module dcache #(
             end
         end
         WRITE: begin
-            if(d_bvalid && d_bready) begin
+            if(d_wvalid && d_wready) begin
                 wfsm_next_state = FINISH;
             end
             else begin
@@ -737,20 +737,12 @@ module dcache #(
     /* stage 2: output */
     always @(*) begin
         wrt_finish          = 0;
-        // write_counter_reset = 0;
-        // write_counter_en    = 0;
         d_wvalid            = 0;
-        // d_wlast             = 0;
-        d_bready            = 0;
         case(wfsm_state)
         INIT: begin
-            //write_counter_reset = 1;
         end
         WRITE: begin
             d_wvalid            = 1;
-            // d_wlast             = (write_counter == WORD_NUM-1);
-            // write_counter_en    = d_wready;
-            d_bready            = 1;
         end
         FINISH: begin
             wrt_finish = 1;

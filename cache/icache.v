@@ -90,10 +90,6 @@ module icache #(
     reg                         rready_temp;
     assign rready = rready_temp & flush_valid;
 
-    // // statistics 统计信息
-    // reg     [63:0]              total_time;
-    // reg     [63:0]              total_hit;
-
     // cache operation
     reg tagv_clear;
     reg [1:0] cacop_code_buf;
@@ -462,16 +458,5 @@ module icache #(
         default:;
         endcase
     end
-    // // 统计信息更新
-    // always @(posedge clk) begin
-    //     if(!rstn) begin
-    //         total_time <= 0;
-    //         total_hit <= 0;
-    //     end
-    //     else if(state == LOOKUP) begin
-    //         total_hit <= total_hit + {63'b0, cache_hit};
-    //         total_time <= total_time + 1;
-    //     end
-    // end
 
 endmodule
