@@ -29,7 +29,8 @@ module EX1_FORWARD(
         ex1_rj_data_o=ex1_rj_data;
         ex1_rk_data_o=ex1_rk_data;
         forward_stall=0;
-        if(ex1_rj==ex1_ex2_rd1 ) begin
+        if(ex1_rj!=0)begin
+        if(ex1_rj==ex1_ex2_rd1) begin
             if(ex1_ex2_data_1_valid) begin
                 forward_stall=0;
                 ex1_rj_data_o=ex1_ex2_data_1;
@@ -60,7 +61,9 @@ module EX1_FORWARD(
                 forward_stall=1;
             end
         end 
+        end
 
+        if(ex1_rk!=0)begin
         if(ex1_rk==ex1_ex2_rd1 ) begin
             if(ex1_ex2_data_1_valid) begin
                 forward_stall=0;
@@ -91,6 +94,7 @@ module EX1_FORWARD(
             end else begin
                 forward_stall=1;
             end
+        end
         end
 
     end

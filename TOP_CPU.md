@@ -34,10 +34,10 @@ graph LR
 
 ```
 valid_23和ready_21由流水段传入段间寄存器的组合信号，由段间寄存器产生
-valid_23和ready_21还与段间寄存器自身情况有关，这里**假设自身准备好**，如果自身没准备好，对外valid_23和ready_21均为0
+valid_23和ready_21还与段间寄存器自身情况有关，这里假设自身准备好，如果自身没准备好，对外valid_23和ready_21均为0
 valid_23不能受ready_23控制
 伪代码表示：
-valid_23 = valid_12 && valid (valid表示自身情况) 
+valid_23 =valid (valid表示自身情况) 
 ready_21 = ready_23 || ready (ready表示自身情况)
 if(valid_12 && ready_23)
 	更新段间寄存器2
