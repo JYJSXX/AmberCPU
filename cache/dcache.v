@@ -14,7 +14,7 @@ module dcache #(
     // read
     input                   rvalid,             // valid signal of read request from pipeline
     output reg              rready,             // ready signal of read request to pipeline
-    output [31:0]           rdata,              // read data to pipeline
+    output reg [31:0]       rdata,              // read data to pipeline
     //write
     input                   wvalid,             // valid signal of write request from pipeline
     output reg              wready,             // ready signal of write request to pipeline
@@ -355,16 +355,16 @@ module dcache #(
     assign o_rdata = data_from_mem ? mem_rdata[hit_way_valid] : ret_buf; 
     always @(*) begin
         case(req_buf[5:2])
-        4'd0: rdata_cache = o_rdata[31:0];
-        4'd1: rdata_cache = o_rdata[63:32];
-        4'd2: rdata_cache = o_rdata[95:64];
-        4'd3: rdata_cache = o_rdata[127:96];
-        4'd4: rdata_cache = o_rdata[159:128];
-        4'd5: rdata_cache = o_rdata[191:160];
-        4'd6: rdata_cache = o_rdata[223:192];
-        4'd7: rdata_cache = o_rdata[255:224];
-        4'd8: rdata_cache = o_rdata[287:256];
-        4'd9: rdata_cache = o_rdata[319:288];
+        4'd0:  rdata_cache = o_rdata[31:0];
+        4'd1:  rdata_cache = o_rdata[63:32];
+        4'd2:  rdata_cache = o_rdata[95:64];
+        4'd3:  rdata_cache = o_rdata[127:96];
+        4'd4:  rdata_cache = o_rdata[159:128];
+        4'd5:  rdata_cache = o_rdata[191:160];
+        4'd6:  rdata_cache = o_rdata[223:192];
+        4'd7:  rdata_cache = o_rdata[255:224];
+        4'd8:  rdata_cache = o_rdata[287:256];
+        4'd9:  rdata_cache = o_rdata[319:288];
         4'd10: rdata_cache = o_rdata[351:320];
         4'd11: rdata_cache = o_rdata[383:352];
         4'd12: rdata_cache = o_rdata[415:384];
@@ -374,7 +374,34 @@ module dcache #(
         endcase
     end
     // uncached read
-    assign rdata = uncache_buf ? ret_buf[511:448] : rdata_cache;
+    wire [31:0] rdata_temp;
+    assign rdata_temp = uncache_buf ? ret_buf[511:448] : rdata_cache;
+    // 根据掩码和符号位拓展，给出最终的读数据
+    always @(*) begin
+        case(wstrb_pipe)
+        BYTE: begin
+            case(req_buf[1:0])
+            2'b00: rdata = {{24{rdata_temp[7]&signed_ext_buf}}, rdata_temp[7:0]};
+            2'b01: rdata = {{24{rdata_temp[15]&signed_ext_buf}}, rdata_temp[15:8]};
+            2'b10: rdata = {{24{rdata_temp[23]&signed_ext_buf}}, rdata_temp[23:16]};
+            2'b11: rdata = {{24{rdata_temp[31]&signed_ext_buf}}, rdata_temp[31:24]};
+            default: rdata = 0;
+            endcase
+        end
+        HALF: begin
+            case(req_buf[1:0])
+            2'b00: rdata = {{16{rdata_temp[15]&signed_ext_buf}}, rdata_temp[15:0]};
+            2'b10: rdata = {{16{rdata_temp[31]&signed_ext_buf}}, rdata_temp[31:16]};
+            default: rdata = 0;
+            endcase
+        end
+        WORD: begin
+            rdata = rdata_temp;
+        end
+        default: rdata = 0;
+        endcase
+    end
+
 
     /* LRU replace */
     reg way_visit;  // 0: way0, 1: way1
@@ -438,13 +465,8 @@ module dcache #(
     
     /* memory visit settings*/
     assign d_raddr  = uncache_buf ? paddr_buf : {paddr_buf[31:6], 6'b0};
-//    assign d_rsize  = 3'h2;
-    // assign d_rlen   = WORD_NUM - 1;
     assign d_waddr  = uncache_buf ? paddr_buf : m_buf;
-//    assign d_wsize  = 3'h2;
-    // assign d_wlen   = WORD_NUM - 1;
     assign d_wdata  = wbuf[31:0];
-    // assign d_wstrb  = 4'b1111;
 
     /* main FSM */
     localparam 

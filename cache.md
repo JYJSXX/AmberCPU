@@ -121,11 +121,11 @@ Dcache：无效掉TagV表中的所有行，同时将所有脏行写回主存
 - rvalid (1)：来自流水线的读请求的有效信号。
 - wvalid (1)：来自流水线的写请求的有效信号。
 - wdata (32)：来自流水线的写数据。
-- wstrb (4)：每个写回字（word）的写掩码，如果请求是读请求，则wstrb为4'b0。BYTE是0001，HALF是0011，WORD是1111（这里有个问题，如果是uncache读的话还是要传入read的类型的，因为uncache访问比较严格不能越界）
+- wstrb (4)：读写类型，4'b0001代表读BYTE，4'b0011代表读HALF，4'b1111代表读WORD
 - op (1)：操作类型，0表示读操作，1表示写操作。
 - uncache (1)：指示请求是否为非缓存请求。
 - signed_ext (1): 是否要存储符号位扩展的数据（1就扩展）
-- forward_exception (7): 
+- forward_exception (7): 之前流水线发来的异常
 - tlb_exception (7): TLB异常信息码
 - cacop_en(1): cacop指令对dcache的操作（需要先判断cacop操作对象后直接传给dcache)
 - cacop_code(2)： cacop指令code[4:3]，操作码
