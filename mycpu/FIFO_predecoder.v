@@ -1,42 +1,59 @@
 module pre_decoder (
-    input clk,
-    input rstn,
-    input fifo_valid,
-    input fifo_ready,
-
-    input [31:0]        fifo_inst0,
-    input [31:0]        fifo_inst1,
+    input [31:0]        if1_fifo_inst0,
+    input [31:0]        if1_fifo_inst1,
     input [31:0]        if1_fifo_pc,
 
-    //signal for ibar
-    output   [1:0]      ibar_flag,//0:inst 0 is ibar,1:inst 1 is ibar
-    output   [31:0]     pc_from_ibar, 
-    output   [1:0]      inst_btype,
+    //signal for priv/ibar/csr inst
+    output   [1 :0]      priv_flag,
+    output   [1 :0]      ibar_flag,
+    output   [1 :0]      csr_flag,
+    output   [1 :0]      tlb_flag,
+    output   [1 :0]      inst_btype
     //两条指令中有一条跳转就是跳转，有一条无条件就是无条件
     //00 normal, 01 ibar,10 unconditional branch,10 PC relative, 11 indirect
-    output              inst_bpos//last branch pos,0 means maybe skip
 );
     // 0 0 1 1 1
-    reg     ibar_tmp0=0 ;
-    reg     ibar_tmp1=0;
+    // reg     ibar_tmp0=0 ;
+    // reg     ibar_tmp1=0;
 
-    wire    ibar_0,ibar_1;
     wire    inst0_btype,inst1_btype;
     wire    inst0_unconditional,inst1_unconditional;
     wire    inst0_pcrelative,inst1_pcrelative;
     wire    inst0_indirect,inst1_indirect;
+    wire    inst0_ibar,inst1_ibar;
+    wire    inst0_csr,inst1_csr;
+    wire    inst0_tlb,inst1_tlb;
 
-    assign  ibar_0=(fifo_inst0[31:27]==5'b00111)&&fifo_inst0[15];
-    assign  ibar_1=(fifo_inst1[31:27]==5'b00111)&&fifo_inst1[15];
-    assign  ibar_flag={ibar_1,ibar_0};
+    assign  inst0_ibar=(if1_fifo_inst0[31:27]==5'b00111)&&if1_fifo_inst0[15];
+    assign  inst1_ibar=(if1_fifo_inst1[31:27]==5'b00111)&&if1_fifo_inst1[15];
+    assign  ibar_flag={inst1_ibar,inst0_ibar};
 
-    assign  pc_from_ibar = if1_fifo_pc;
-    assign  inst0_unconditional=(fifo_inst0[31:27]==5'b01010)||(fifo_inst0[31:27]==5'b01001);
-    assign  inst1_unconditional=(fifo_inst1[31:27]==5'b01010)||(fifo_inst1[31:27]==5'b01001);
-    assign  inst0_pcrelative   =(fifo_inst0[31:27]==5'b01011)||(fifo_inst0[31:28]==4'b0110 );
-    assign  inst1_pcrelative   =(fifo_inst1[31:27]==5'b01011)||(fifo_inst1[31:28]==4'b0110 );
-    assign  inst0_indirect     =(fifo_inst0[31:27]==6'b010011);
-    assign  inst1_indirect     =(fifo_inst1[31:27]==6'b010011);
+    assign  inst0_csr={if1_fifo_inst0[31:24]==8'b00000100&&if1_fifo_inst0[9:5]};
+    assign  inst1_csr={if1_fifo_inst1[31:24]==8'b00000100&&if1_fifo_inst1[9:5]};
+    assign  csr_flag ={inst1_csr,inst0_csr};
+
+    assign  inst0_tlb={
+        (if1_fifo_inst0==       32'b0000011_0010010000_01100_00000_00000)||
+        (if1_fifo_inst0==       32'b0000011_0010010000_01101_00000_00000)||
+        (if1_fifo_inst0[31:15]==17'b0000011_0010010011)
+    };
+    assign  inst1_tlb={
+        (if1_fifo_inst1==       32'b0000011_0010010000_01100_00000_00000)||
+        (if1_fifo_inst1==       32'b0000011_0010010000_01101_00000_00000)||
+        (if1_fifo_inst1[31:15]==17'b0000011_0010010011)
+    };
+    assign  tlb_flag={inst1_tlb,inst0_tlb};
+
+    assign  priv_flag=ibar_flag|csr_flag|tlb_flag;
+
+
+    assign  pc_from_priv= if1_fifo_pc;
+    assign  inst0_unconditional=(if1_fifo_inst0[31:27]==5'b01010)||(if1_fifo_inst0[31:27]==5'b01001);
+    assign  inst1_unconditional=(if1_fifo_inst1[31:27]==5'b01010)||(if1_fifo_inst1[31:27]==5'b01001);
+    assign  inst0_pcrelative   =(if1_fifo_inst0[31:27]==5'b01011)||(if1_fifo_inst0[31:28]==4'b0110 );
+    assign  inst1_pcrelative   =(if1_fifo_inst1[31:27]==5'b01011)||(if1_fifo_inst1[31:28]==4'b0110 );
+    assign  inst0_indirect     =(if1_fifo_inst0[31:27]==6'b010011);
+    assign  inst1_indirect     =(if1_fifo_inst1[31:27]==6'b010011);
     assign  inst0_btype        =inst0_unconditional ?   2'b01:
                                 inst0_pcrelative    ?   2'b10:
                                 inst0_indirect      ?   2'b11:
