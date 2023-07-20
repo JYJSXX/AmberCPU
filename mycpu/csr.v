@@ -1,8 +1,6 @@
 `include "../config.vh"
 `include "../csr.vh"
-module csr#(
-    TLBIDX_WIDTH = 4
-)
+module csr
 (
     input clk,
     input aclk,
@@ -48,16 +46,14 @@ module csr#(
     input wen_tlbehi_vppn,
     input llbit_set,
     //input llbit_clear, //by other没有用，直接看ertn就行
-    input [31:0] tlbidx_in,
-    input [31:0] wen_tlbidx, //每一位都有使能
-    input [31:0] tlbehi_in,
-    input [31:0] wen_tlbehi,
-    input [31:0] tlbelo0_in,
-    input [31:0] wen_tlbelo0,
-    input [31:0] tlbelo1_in,
-    input [31:0] wen_tlbelo1,
-    input [9:0] asid_asid_in,
-    input wen_asid_asid,
+    input tlbsrch_ready, //已经判断完是否命中
+    input tlbsrch_hit, //TLBSRCH是否命中
+    input [4:0] tlb_index_in, //TLB命中的索引   
+    input [`TLBIDX_WIDTH-1 :0] tlbidx_index_in,
+
+    input tlbrd_ready,
+    input tlbrd_hit,
+    
     input [7:0] hardware_interrupt
 
     // input tlb_index_we,
@@ -448,36 +444,28 @@ always @(posedge clk)
         end
 
     //TIBIDX
-    // always @(posedge clk)
-    //     if(~aresetn) begin
-    //         tlbidx_index<=0;
-    //         tlbidx_ps<=0;
-    //         tlbidx_ne<=0;
-    //     end
-    //     else if(software_en&&addr==`CSR_TLBIDX) begin
-    //         if( 0<TLBIDX_WIDTH&&wen) tlbidx_index[ 0]<=wdata[ 0];
-    //         if( 1<TLBIDX_WIDTH&&wen) tlbidx_index[ 1]<=wdata[ 1];
-    //         if( 2<TLBIDX_WIDTH&&wen) tlbidx_index[ 2]<=wdata[ 2];
-    //         if( 3<TLBIDX_WIDTH&&wen) tlbidx_index[ 3]<=wdata[ 3];
-    //         if( 4<TLBIDX_WIDTH&&wen) tlbidx_index[ 4]<=wdata[ 4];
-    //         if( 5<TLBIDX_WIDTH&&wen) tlbidx_index[ 5]<=wdata[ 5];
-    //         if( 6<TLBIDX_WIDTH&&wen) tlbidx_index[ 6]<=wdata[ 6];
-    //         if( 7<TLBIDX_WIDTH&&wen) tlbidx_index[ 7]<=wdata[ 7];
-    //         if( 8<TLBIDX_WIDTH&&wen) tlbidx_index[ 8]<=wdata[ 8];
-    //         if( 9<TLBIDX_WIDTH&&wen) tlbidx_index[ 9]<=wdata[ 9];
-    //         if(10<TLBIDX_WIDTH&&wen) tlbidx_index[10]<=wdata[10];
-    //         if(11<TLBIDX_WIDTH&&wen) tlbidx_index[11]<=wdata[11];
-    //         if(12<TLBIDX_WIDTH&&wen) tlbidx_index[12]<=wdata[12];
-    //         if(13<TLBIDX_WIDTH&&wen) tlbidx_index[13]<=wdata[13];
-    //         if(14<TLBIDX_WIDTH&&wen) tlbidx_index[14]<=wdata[14];
-    //         if(15<TLBIDX_WIDTH&&wen) tlbidx_index[15]<=wdata[15];
-    //         if(wen) tlbidx_ps[31:24]<=wdata[31:24];
-    //     end else begin
-    //         if(tlb_index_we) tlbidx_index <= {{16-TLBIDX_WIDTH{1'b0}},tlb_index_in};
-    //         if(tlb_ps_we) tlbidx_ps <= tlb_ps_in;
-    //         if(tlb_ne_we) tlbidx_ne <= tlb_ne_in;
-    //     end
+    always @(posedge clk)
+        if(~aresetn) begin
+            tlbidx_index<=0;
+            tlbidx_ps<=0;
+            tlbidx_ne<=0;
+        end
+        else if(software_en&&addr==`CSR_TLBIDX) begin
+            if(wen) tlbidx_index[4:0]<=wdata[4:0];
+            if(wen) tlbidx_ps[31:24]<=wdata[31:24];
+        end 
+        else begin
+            if(tlbsrch_ready) begin
+                if(tlbsrch_hit) begin
+                    tlbidx_index[4:0]<=tlb_index_in;
+                end
+                else begin
+                    tlbidx_ne<=1;
+                end
+            end 
+        end
 
+    //
 
     //TLB再说
 
