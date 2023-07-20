@@ -4,8 +4,8 @@ module IF0 (
     input rstn,
 
     //for hand shake with pipeline
-    input if0_valid,
-    input if0_ready,  
+    input if0_readygo,
+    input if0_allowin,  
     input pc_stall,
 
     //for pc update
@@ -15,8 +15,8 @@ module IF0 (
     input [31:0]pc_from_EX,
     input set_pc_from_WB,
     input [31:0]pc_from_WB,
-    input set_pc_from_IBAR,
-    input [31:0]pc_from_IBAR,
+    input set_pc_from_PRIV,//from if1_fifo
+    input [31:0]pc_from_PRIV,
 
     //for BTB
     input [31:0]pred_pc,
@@ -38,7 +38,7 @@ module IF0 (
     
     assign pc_next      =   pred_taken?pred_pc:fetch_pc+8;
     assign fetch_pc     =   pc;
-    assign rvalid       =   1;
+    assign rvalid       =   if0_allowin;
     assign raddr        =   pc;
 
     always @(posedge clk or negedge rstn) begin
@@ -54,10 +54,10 @@ module IF0 (
         else if(set_pc_from_ID)begin
             pc<=pc_from_ID;
         end 
-        else if(set_pc_from_IBAR)begin
-            pc<=pc_from_IBAR;
+        else if(set_pc_from_PRIV)begin
+            pc<=pc_from_PRIV;
         end
-        else if (if0_valid&&if0_ready&&!pc_stall) begin
+        else if (if0_readygo&&if0_allowin) begin
             pc<=pc_next;
         end
     end

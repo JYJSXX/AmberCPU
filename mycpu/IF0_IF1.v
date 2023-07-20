@@ -10,6 +10,7 @@ module IF0_IF1 (
     input               if1_allowin,
     input               flush,
     input               flush_cause,
+    input               rready,
 
     input [31:0]        p_addr,
     input [31:0]        raddr,
@@ -21,7 +22,7 @@ module IF0_IF1 (
 
 );
     assign if0_allowin= if1_allowin;
-    assign if1_readygo= 1;
+    assign if1_readygo= rready;
 
     always @(posedge clk or negedge rstn) begin
         if((~rstn)||flush||(!if0_readygo&&if1_allowin&&if1_readygo))begin

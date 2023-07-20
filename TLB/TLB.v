@@ -11,13 +11,14 @@ module TLB(
     input [31:0]                CSR_DMW0,
     input [31:0]                CSR_DMW1,
 
-    input                       ren_i,//读使能
-    input                       ren_d,
+    input                       stall_i,//读使能
+    input                       stall_d,
     input [`TLB_VPPN_LEN : 0]   VA_I,
     input [`TLB_VPPN_LEN : 0]   VA_D,
     output [`TLB_PPN_LEN - 1:0] PA_I,
     output [`TLB_PPN_LEN - 1:0] PA_D,
-    output                      is_cached
+    output                      is_cached_I,
+    output                      is_cached_D
 
 );
 
@@ -109,22 +110,22 @@ reg     [0:0]                   rd_TLB_D_2_reg      [`TLB_NUM - 1:0];
 reg     [1:0]                   rd_TLB_MAT_2_reg    [`TLB_NUM - 1:0];
 reg     [1:0]                   rd_TLB_PLV_2_reg    [`TLB_NUM - 1:0];
 reg     [`TLB_PPN_LEN - 1:0]    rd_TLB_PPN_2_reg    [`TLB_NUM - 1:0];
-reg                             ren_i_reg                           ;
-reg                             ren_d_reg                           ;
-reg                             CSR_PG_reg                          ;
-reg                             CSR_CRMD_reg                        ;    
-reg                             CSR_DMW0_reg                        ;    
-reg                             CSR_DMW1_reg                        ;
+reg                             stall_i_reg                           ;
+reg                             stall_d_reg                           ;
+// reg                             CSR_PG_reg                          ;
+// reg                             CSR_CRMD_reg                        ;    
+// reg                             CSR_DMW0_reg                        ;    
+// reg                             CSR_DMW1_reg                        ;
 reg     [`TLB_VPPN_LEN : 0]     VA_D_reg                            ;
 reg     [`TLB_VPPN_LEN : 0]     VA_I_reg                            ;
 
 initial begin
-    ren_i_reg = 0;
-    ren_d_reg = 0;
-    CSR_PG_reg = 0;
-    CSR_CRMD_reg = 0;
-    CSR_DMW0_reg = 0;
-    CSR_DMW1_reg = 0;
+    stall_i_reg = 0;
+    stall_d_reg = 0;
+    // CSR_PG_reg = 0;
+    // CSR_CRMD_reg = 0;
+    // CSR_DMW0_reg = 0;
+    // CSR_DMW1_reg = 0;
     VA_I_reg = 0;
     VA_D_reg = 0;
     for (j = 0; j < `TLB_NUM; j = j + 1)begin
@@ -152,24 +153,24 @@ end
 
 always @(posedge clk or negedge rstn) begin
     if (~rstn)begin
-        ren_i_reg <= 0;
-        ren_d_reg <= 0;
-        CSR_PG_reg <= 0;
-        CSR_CRMD_reg <= 0;
-        CSR_DMW0_reg <= 0;
-        CSR_DMW1_reg <= 0;
+        stall_i_reg <= 0;
+        stall_d_reg <= 0;
+        // CSR_PG_reg <= 0;
+        // CSR_CRMD_reg <= 0;
+        // CSR_DMW0_reg <= 0;
+        // CSR_DMW1_reg <= 0;
         VA_I_reg <= 0;
         VA_D_reg <= 0;
         for(j = 0; j < `TLB_NUM; j = j + 1)begin
-            TLB_I_HIT_4K_OUT[j] <= 0;
-            TLB_D_HIT_4K_OUT[j] <= 0;
-            TLB_I_HIT_4M_OUT[j] <= 0;
-            TLB_D_HIT_4M_OUT[j] <= 0;
             TLB_PS_EQUAL_4K[j]  <= 0;
-            TLB_D_VA_12_ODD[j]  <= 0;
+            TLB_I_HIT_4K_OUT[j] <= 0;
+            TLB_I_HIT_4M_OUT[j] <= 0;
             TLB_I_VA_12_ODD[j]  <= 0;
-            TLB_D_VA_21_ODD[j]  <= 0;
             TLB_I_VA_21_ODD[j]  <= 0;
+            TLB_D_HIT_4K_OUT[j] <= 0;
+            TLB_D_HIT_4M_OUT[j] <= 0;
+            TLB_D_VA_12_ODD[j]  <= 0;
+            TLB_D_VA_21_ODD[j]  <= 0;
             rd_TLB_V_1_reg[j]   <= 0;
             rd_TLB_D_1_reg[j]   <= 0;
             rd_TLB_MAT_1_reg[j] <= 0;
@@ -183,24 +184,41 @@ always @(posedge clk or negedge rstn) begin
         end
     end
     else begin
-        ren_i_reg <= ren_i;
-        ren_d_reg <= ren_d;
-        CSR_PG_reg <= CSR_PG;
-        CSR_CRMD_reg <= CSR_CRMD;
-        CSR_DMW0_reg <= CSR_DMW0;
-        CSR_DMW1_reg <= CSR_DMW1;
+        stall_i_reg <= stall_i;
+        stall_d_reg <= stall_d;
+        // CSR_PG_reg <= CSR_PG;
+        // CSR_CRMD_reg <= CSR_CRMD;
+        // CSR_DMW0_reg <= CSR_DMW0;
+        // CSR_DMW1_reg <= CSR_DMW1;
+
         VA_I_reg <= VA_I;
         VA_D_reg <= VA_D;
         for(j = 0; j < `TLB_NUM; j = j + 1)begin
-            TLB_I_HIT_4K_OUT[j] <= TLB_I_HIT_4K_IN[j];
-            TLB_D_HIT_4K_OUT[j] <= TLB_D_HIT_4K_IN[j];
-            TLB_I_HIT_4M_OUT[j] <= TLB_I_HIT_4M_IN[j];
-            TLB_D_HIT_4M_OUT[j] <= TLB_D_HIT_4M_IN[j];
+            if(~stall_i) begin
+                TLB_I_HIT_4K_OUT[j] <= TLB_I_HIT_4K_IN[j];
+                TLB_I_HIT_4M_OUT[j] <= TLB_I_HIT_4M_IN[j];
+                TLB_I_VA_12_ODD[j]  <= VA_I[12];
+                TLB_I_VA_21_ODD[j]  <= VA_I[21];
+            end
+            else begin
+                TLB_I_HIT_4K_OUT[j] <= TLB_I_HIT_4K_OUT[j];
+                TLB_I_HIT_4M_OUT[j] <= TLB_I_HIT_4M_OUT[j];
+                TLB_I_VA_12_ODD[j]  <= TLB_I_VA_12_ODD[j];
+                TLB_I_VA_21_ODD[j]  <= TLB_I_VA_21_ODD[j];
+            end
+            if(~stall_d) begin
+                TLB_D_HIT_4K_OUT[j] <= TLB_D_HIT_4K_IN[j];
+                TLB_D_HIT_4M_OUT[j] <= TLB_D_HIT_4M_IN[j];
+                TLB_D_VA_12_ODD[j]  <= VA_D[12];
+                TLB_D_VA_21_ODD[j]  <= VA_D[21];
+            end
+            else begin
+                TLB_D_HIT_4K_OUT[j] <= TLB_D_HIT_4K_OUT[j];
+                TLB_D_HIT_4M_OUT[j] <= TLB_D_HIT_4M_OUT[j];
+                TLB_D_VA_12_ODD[j]  <= TLB_D_VA_12_ODD[j];
+                TLB_D_VA_21_ODD[j]  <= TLB_D_VA_21_ODD[j];
+            end
             TLB_PS_EQUAL_4K[j]  <= (rd_TLB_PS[j] == 12);
-            TLB_D_VA_12_ODD[j]  <= VA_D[12];
-            TLB_I_VA_12_ODD[j]  <= VA_I[12];
-            TLB_D_VA_21_ODD[j]  <= VA_D[21];
-            TLB_I_VA_21_ODD[j]  <= VA_I[21];
             rd_TLB_V_1_reg[j]   <= rd_TLB_V_1[j];
             rd_TLB_D_1_reg[j]   <= rd_TLB_D_1[j];
             rd_TLB_MAT_1_reg[j] <= rd_TLB_MAT_1[j];
@@ -304,12 +322,12 @@ reg [`TLB_NUM - 1:0]    TLB_D_D_TRANS_reg = 0;
 reg [`TLB_NUM - 1:0]    TLB_D_MAT_TRANS_reg = 0;
 reg [`TLB_NUM - 1:0]    TLB_D_PLV_TRANS_reg = 0;
 reg [`TLB_NUM - 1:0]    TLB_D_PPN_TRANS_reg [`TLB_PPN_LEN - 1:0];
-reg                     ren_i_reg2 = 0;
-reg                     ren_d_reg2 = 0;
-reg                     CSR_PG_reg2 = 0;
-reg                     CSR_CRMD_reg2 = 0;
-reg                     CSR_DMW0_reg2 = 0;
-reg                     CSR_DMW1_reg2 = 0;
+reg                     stall_i_reg2 = 0;
+reg                     stall_d_reg2 = 0;
+// reg                     CSR_PG_reg2 = 0;
+// reg                     CSR_CRMD_reg2 = 0;
+// reg                     CSR_DMW0_reg2 = 0;
+// reg                     CSR_DMW1_reg2 = 0;
 reg [`TLB_VPPN_LEN : 0] VA_I_reg2 = 0;
 reg [`TLB_VPPN_LEN : 0] VA_D_reg2 = 0;
 
@@ -330,12 +348,12 @@ always @(posedge clk or negedge rstn)begin
         TLB_D_D_TRANS_reg <= 0;
         TLB_D_MAT_TRANS_reg <= 0;
         TLB_D_PLV_TRANS_reg <= 0;
-        ren_i_reg2 <= 0;
-        ren_d_reg2 <= 0;
-        CSR_PG_reg2 <= 0;
-        CSR_CRMD_reg2 <= 0;
-        CSR_DMW0_reg2 <= 0;
-        CSR_DMW1_reg2 <= 0;
+        stall_i_reg2 <= 0;
+        stall_d_reg2 <= 0;
+        // CSR_PG_reg2 <= 0;
+        // CSR_CRMD_reg2 <= 0;
+        // CSR_DMW0_reg2 <= 0;
+        // CSR_DMW1_reg2 <= 0;
         VA_I_reg2 <= 0;
         VA_D_reg2 <= 0;
         for(j = 0; j < `TLB_PPN_LEN; j = j + 1)begin
@@ -344,25 +362,45 @@ always @(posedge clk or negedge rstn)begin
         end
     end
     else begin
-        TLB_I_V_TRANS_reg <= TLB_I_V_TRANS;
-        TLB_I_D_TRANS_reg <= TLB_I_D_TRANS;
-        TLB_I_MAT_TRANS_reg <= TLB_I_MAT_TRANS;
-        TLB_I_PLV_TRANS_reg <= TLB_I_PLV_TRANS;
-        TLB_D_V_TRANS_reg <= TLB_D_V_TRANS;
-        TLB_D_D_TRANS_reg <= TLB_D_D_TRANS;
-        TLB_D_MAT_TRANS_reg <= TLB_D_MAT_TRANS;
-        TLB_D_PLV_TRANS_reg <= TLB_D_PLV_TRANS;
-        ren_i_reg2 <= ren_i_reg;
-        ren_d_reg2 <= ren_d_reg;
-        CSR_PG_reg2 <= CSR_PG_reg;
-        CSR_CRMD_reg2 <= CSR_CRMD_reg;
-        CSR_DMW0_reg2 <= CSR_DMW0_reg;
-        CSR_DMW1_reg2 <= CSR_DMW1_reg;
-        VA_I_reg2 <= VA_I_reg;
-        VA_D_reg2 <= VA_D_reg;
+        if(~stall_i) begin
+            TLB_I_V_TRANS_reg <= TLB_I_V_TRANS;
+            TLB_I_D_TRANS_reg <= TLB_I_D_TRANS;
+            TLB_I_MAT_TRANS_reg <= TLB_I_MAT_TRANS;
+            TLB_I_PLV_TRANS_reg <= TLB_I_PLV_TRANS;
+            VA_I_reg2 <= VA_I_reg;
+        end
+        else begin
+            TLB_I_V_TRANS_reg <= TLB_I_V_TRANS_reg;
+            TLB_I_D_TRANS_reg <= TLB_I_D_TRANS_reg;
+            TLB_I_MAT_TRANS_reg <= TLB_I_MAT_TRANS_reg;
+            TLB_I_PLV_TRANS_reg <= TLB_I_PLV_TRANS_reg
+            VA_I_reg2 <= VA_I_reg2
+        end
+        if (~stall_d)begin
+            TLB_D_V_TRANS_reg <= TLB_D_V_TRANS;
+            TLB_D_D_TRANS_reg <= TLB_D_D_TRANS;
+            TLB_D_MAT_TRANS_reg <= TLB_D_MAT_TRANS;
+            TLB_D_PLV_TRANS_reg <= TLB_D_PLV_TRANS;
+            VA_D_reg2 <= VA_D_reg;
+        end
+        else begin
+            TLB_D_V_TRANS_reg <= TLB_D_V_TRANS_reg;
+            TLB_D_D_TRANS_reg <= TLB_D_D_TRANS_reg;
+            TLB_D_MAT_TRANS_reg <= TLB_D_MAT_TRANS_reg;
+            TLB_D_PLV_TRANS_reg <= TLB_D_PLV_TRANS_reg;
+            VA_D_reg2 <= VA_D_reg2;
+        end
+        stall_i_reg2 <= stall_i_reg;
+        stall_d_reg2 <= stall_d_reg;
+        // CSR_PG_reg2 <= CSR_PG_reg;
+        // CSR_CRMD_reg2 <= CSR_CRMD_reg;
+        // CSR_DMW0_reg2 <= CSR_DMW0_reg;
+        // CSR_DMW1_reg2 <= CSR_DMW1_reg;
         for(j = 0; j < `TLB_PPN_LEN; j = j + 1)begin
-            TLB_I_PPN_TRANS_reg[j] <= TLB_I_PPN_TRANS[j];
-            TLB_D_PPN_TRANS_reg[j] <= TLB_D_PPN_TRANS[j];
+            if(~stall_i) TLB_I_PPN_TRANS_reg[j] <= TLB_I_PPN_TRANS[j];
+            else TLB_I_PPN_TRANS_reg[j] <= TLB_I_PPN_TRANS_reg[j];
+            if(~stall_d) TLB_D_PPN_TRANS_reg[j] <= TLB_D_PPN_TRANS[j];
+            TLB_D_PPN_TRANS_reg[j] <= TLB_D_PPN_TRANS_reg[j];
         end
     end
 end
@@ -404,11 +442,18 @@ generate
     end
 endgenerate
 
-wire        DMW0_JUDGE_I = VA_I_reg2[`DMW0_VSEG] == CSR_DMW0_reg2[`DMW0_VSEG];
-wire [31:0] DMW0_PPN_I = {CSR_DMW0_reg2[`DMW0_PSEG], TLB_I_PPN_FINAL[28:0]};
-wire        DNW1_JUDGE_I = VA_I_reg2[`DMW1_VSEG] == CSR_DMW1_reg2[`DMW0_VSEG];
+wire        DMW0_JUDGE_I = VA_I_reg2[`DMW0_VSEG] == CSR_DMW0[`DMW0_VSEG];
+wire [31:0] DMW0_PPN_I = {CSR_DMW0[`DMW0_PSEG], VA_I_reg2[28:0]};
+wire        DMW1_JUDGE_I = VA_I_reg2[`DMW1_VSEG] == CSR_DMW1[`DMW0_VSEG];
+wire [31:0] DMW1_PPN_I = {CSR_DMW1[`DMW1_PSEG], VA_I_reg2[28:0]};
+wire        DMW0_JUDGE_D = VA_D_reg2[`DMW0_VSEG] == CSR_DMW0[`DMW0_VSEG];
+wire [31:0] DMW0_PPN_D = {CSR_DMW0[`DMW0_PSEG], VA_D_reg2[28:0]};
+wire        DMW1_JUDGE_D = VA_D_reg2[`DMW1_VSEG] == CSR_DMW1[`DMW0_VSEG];
+wire [31:0] DMW1_PPN_D = {CSR_DMW1[`DMW1_PSEG], VA_D_reg2[28:0]};
 
-
-assign PA_I = CSR_PG_reg2 ? () : VA_I_reg2
+assign PA_I = CSR_PG_reg2 ? (DMW0_JUDGE_I ? DMW0_PPN_I : (DMW1_JUDGE_I ? DMW1_PPN_I : TLB_I_PPN_FINAL)) : VA_I_reg2;
+assign PA_D = CSR_PG_reg2 ? (DMW0_JUDGE_D ? DMW0_PPN_D : (DMW1_JUDGE_D ? DMW1_PPN_D : TLB_D_PPN_FINAL)) : VA_D_reg2;
+assign is_cached_I = CSR_PG_reg2 ? (DMW0_JUDGE_I ? CSR_DMW0[4] : (DMW1_JUDGE_I ? CSR_DMW1[4] : TLB_I_MAT_FINAL)) : CSR_CRMD[5];
+assign is_cached_D = CSR_PG_reg2 ? (DMW0_JUDGE_D ? CSR_DMW0[4] : (DMW1_JUDGE_D ? CSR_DMW1[4] : TLB_D_MAT_FINAL)) : CSR_CRMD[7];
 
 endmodule
