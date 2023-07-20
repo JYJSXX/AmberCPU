@@ -4,13 +4,12 @@ module IF0_IF1 (
     input               rstn,
 
     //hand shake
-    input               if0_valid,
-    output              if0_ready,
-    output              if1_valid,
-    input               if1_ready,
+    input               if0_readygo,
+    output              if0_allowin,
+    output              if1_readygo,
+    input               if1_allowin,
     input               flush,
     input               flush_cause,
-    input               stall,
 
     input [31:0]        p_addr,
     input [31:0]        raddr,
@@ -21,20 +20,20 @@ module IF0_IF1 (
     output reg[31:0]    if0_if1_pc_next
 
 );
-    assign if0_ready= if1_ready;
-    assign if1_valid= if0_valid;
+    assign if0_allowin= if1_allowin;
+    assign if1_readygo= 1;
 
     always @(posedge clk or negedge rstn) begin
-        if((~rstn)||flush||(!if0_valid&&if1_ready))begin
+        if((~rstn)||flush||(!if0_readygo&&if1_allowin&&if1_readygo))begin
             //clear stage-stage reg
             if0_if1_pc<=`PC_RESET;
             if0_if1_pc_next<=`PC_RESET+8;
         end else begin
-            if (!stall&&(if0_valid&&if1_ready)) begin
+            if (if0_readygo&&if1_allowin) begin
                 //update stage-stage reg
                 if0_if1_pc<=fetch_pc;
                 if0_if1_pc_next<=pc_next;
-            end else if (!if1_ready) begin
+            end else if (!if1_allowin) begin
                 //hold stage-stage reg
             end
         end

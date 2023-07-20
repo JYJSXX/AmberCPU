@@ -125,6 +125,7 @@ Dcache：无效掉TagV表中的所有行，同时将所有脏行写回主存
 - op (1)：操作类型，0表示读操作，1表示写操作。
 - uncache (1)：指示请求是否为非缓存请求。
 - signed_ext (1): 是否要存储符号位扩展的数据（1就扩展）
+- exception_flag (1): 标识是否有上级更优先的异常
 - forward_exception (7): 之前流水线发来的异常
 - tlb_exception (7): TLB异常信息码
 - cacop_en(1): cacop指令对dcache的操作（需要先判断cacop操作对象后直接传给dcache)
