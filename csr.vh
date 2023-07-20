@@ -73,8 +73,8 @@
 `define LLBCTL_KLO    2:2
 `define LLBCTL_ZERO   31:3
 //TLBIDX
-`define TLBIDX_INDEX 15:0
-`define TLBIDX_ZERO_0 23:16
+`define TLBIDX_INDEX 4:0
+`define TLBIDX_ZERO_0 23:5
 `define TLBIDX_PS   29:24
 `define TLBIDX_ZERO_1 30:30
 `define TLBIDX_NE   31:31
@@ -127,3 +127,5 @@
 //TICLR
 `define TICLR_CLR       0:0
 `define TICLR_ZERO      31:1
+
+`define TLBIDX_WIDTH    5
