@@ -1,24 +1,41 @@
 `include "TLB.vh"
 `include "../csr.vh"
 module TLB(
-    input                       clk,
-    input                       rstn,
+    input                               clk,
+    input                               rstn,
 
-    input [9:0]                 CSR_ASID,
-    input [18:0]                CSR_VPPN,
-    input                       CSR_PG,
-    input [31:0]                CSR_CRMD,
-    input [31:0]                CSR_DMW0,
-    input [31:0]                CSR_DMW1,
+    input       [9:0]                   CSR_ASID,
+    input       [18:0]                  CSR_VPPN,
+    input                               CSR_PG,
+    input       [31:0]                  CSR_CRMD,
+    input       [31:0]                  CSR_DMW0,
+    input       [31:0]                  CSR_DMW1,
+    input       [31:0]                  CSR_TLBEHI, 
 
-    input                       stall_i,//读使能
-    input                       stall_d,
-    input [`TLB_VPPN_LEN : 0]   VA_I,
-    input [`TLB_VPPN_LEN : 0]   VA_D,
-    output [`TLB_PPN_LEN - 1:0] PA_I,
-    output [`TLB_PPN_LEN - 1:0] PA_D,
-    output                      is_cached_I,
-    output                      is_cached_D
+    input                               stall_i,//读使能
+    input                               stall_d,
+    input       [`TLB_VPPN_LEN : 0]     VA_I,
+    input       [`TLB_VPPN_LEN : 0]     VA_D,
+    output      [`TLB_PPN_LEN - 1:0]    PA_I,
+    output      [`TLB_PPN_LEN - 1:0]    PA_D,
+    output                              is_cached_I,
+    output                              is_cached_D,
+
+    //Priv      
+    input                               TLBSRCH_valid,
+    output                              TLBSRCH_ready,
+    output reg                          TLBSRCH_hit,
+    output reg  [4:0]                   TLBSRCH_INDEX,
+
+    input                               TLBRD_INDEX,
+    input                               TLBRD_valid,
+    output                              TLBRD_ready,
+    output reg                          TLBRD_hit,
+    output reg  [`TLB_CPRLEN - 1:0]     TLB_CPR,
+    output reg  [`TLB_TRANSLEN - 1:0]   TLB_TRANS_1,
+    output reg  [`TLB_TRANSLEN - 1:0]   TLB_TRANS_2,
+
+
 
 );
 
@@ -79,6 +96,7 @@ wire [0:0] TLB_D_HIT_4K_IN [`TLB_NUM - 1:0];
 wire [0:0] TLB_I_HIT_4M_IN [`TLB_NUM - 1:0];
 wire [0:0] TLB_D_HIT_4M_IN [`TLB_NUM - 1:0];
 
+
 generate
     for(i = 0; i < `TLB_NUM; i = i + 1)begin
         assign TLB_I_HIT_4K_IN[i] = rd_TLB_E[i] & (rd_TLB_G[i] | (rd_TLB_ASID[i] == CSR_ASID)) & (rd_TLB_VPPN[i] == VA_I[`TLB_VPPN_LEN:1]);
@@ -113,8 +131,8 @@ reg     [`TLB_PPN_LEN - 1:0]    rd_TLB_PPN_2_reg    [`TLB_NUM - 1:0];
 reg                             stall_i_reg                           ;
 reg                             stall_d_reg                           ;
 // reg                             CSR_PG_reg                          ;
-// reg                             CSR_CRMD_reg                        ;    
-// reg                             CSR_DMW0_reg                        ;    
+// reg                             CSR_CRMD_reg                        ;
+// reg                             CSR_DMW0_reg                        ;
 // reg                             CSR_DMW1_reg                        ;
 reg     [`TLB_VPPN_LEN : 0]     VA_D_reg                            ;
 reg     [`TLB_VPPN_LEN : 0]     VA_I_reg                            ;
@@ -122,6 +140,7 @@ reg     [`TLB_VPPN_LEN : 0]     VA_I_reg                            ;
 initial begin
     stall_i_reg = 0;
     stall_d_reg = 0;
+    CSR_TLBSRCH_HIT_reg = 0;
     // CSR_PG_reg = 0;
     // CSR_CRMD_reg = 0;
     // CSR_DMW0_reg = 0;
@@ -455,5 +474,83 @@ assign PA_I = CSR_PG_reg2 ? (DMW0_JUDGE_I ? DMW0_PPN_I : (DMW1_JUDGE_I ? DMW1_PP
 assign PA_D = CSR_PG_reg2 ? (DMW0_JUDGE_D ? DMW0_PPN_D : (DMW1_JUDGE_D ? DMW1_PPN_D : TLB_D_PPN_FINAL)) : VA_D_reg2;
 assign is_cached_I = CSR_PG_reg2 ? (DMW0_JUDGE_I ? CSR_DMW0[4] : (DMW1_JUDGE_I ? CSR_DMW1[4] : TLB_I_MAT_FINAL)) : CSR_CRMD[5];
 assign is_cached_D = CSR_PG_reg2 ? (DMW0_JUDGE_D ? CSR_DMW0[4] : (DMW1_JUDGE_D ? CSR_DMW1[4] : TLB_D_MAT_FINAL)) : CSR_CRMD[7];
+
+//TLB SEARCH PART
+
+wire [`TLB_NUM - 1:0] CSR_TLBSRCH;
+
+generate 
+    for(i = 0; i < `TLB_NUM; i = i + 1)begin
+        assign CSR_TLBSRCH_HIT[i] = rd_TLB_E[i] & (rd_TLB_G[i] | (rd_TLB_ASID[i] == CSR_ASID)) & (rd_TLB_VPPN[i] == CSR_VPPN[`TLBEHI_VPPN]);
+    end
+endgenerate
+
+reg [`TLB_NUM - 1:0] CSR_TLBSRCH_HIT_reg = 0;
+reg                  CSR_TLBSRCH_VALID_reg = 0;
+
+always @(posedge clk or negedge rstn)begin
+    if(~rstn)begin
+        CSR_TLBSRCH_HIT_reg <= 0;
+        CSR_TLBSRCH_VALID_reg <= 0;
+    end
+    else if (TLBSRCH_valid) begin
+        CSR_TLBSRCH_HIT_reg <= CSR_TLBSRCH_HIT;
+        CSR_TLBSRCH_VALID_reg <= 1;
+    end
+    else begin
+        CSR_TLBSRCH_HIT_reg <= 0;
+        CSR_TLBSRCH_VALID_reg <= 0;
+    end
+end
+
+wire [5:0]  CSR_TLBSRCH_INDEX_tmp, CSR_TLBSRCH_INDEX;
+wire        CSR_TLBSRCH_HIT;
+
+clog2 cl2(
+    .in(CSR_TLBSRCH_HIT_reg),
+    .out(CSR_TLBSRCH_INDEX_tmp)
+);
+
+assign CSR_TLBSRCH_INDEX = |CSR_TLBSRCH_HIT_reg ? CSR_TLBSRCH_INDEX_tmp - 1 : 0;
+assign CSR_TLBSRCH_HIT = |CSR_TLBSRCH_HIT_reg;
+
+always @(posedge clk or negedge rstn)begin
+    if(~rstn)begin
+        TLBSRCH_INDEX <= 0;
+        TLBSRCH_HIT <= 0;
+        TLBSRCH_ready <= 0;
+    end
+    else begin
+        TLBSRCH_INDEX <= CSR_TLBSRCH_INDEX[4:0];
+        TLBSRCH_HIT <= CSR_TLBSRCH_HIT;
+        if(CSR_TLBSRCH_VALID_reg & TLBSRCH_ready) TLBSRCH_ready <= 0;
+        else if (CSR_TLBSRCH_VALID_reg) TLBSRCH_ready <= 1;
+        else TLBSRCH_ready <= 0;
+    end
+end
+
+//TLB READ PART
+
+always @(posedge clk or negedge rstn)begin
+    if(~rstn)begin
+        TLBRD_hit <= 0;
+        TLB_CPR <= 0;
+        TLB_TRANS_1 <= 0;
+        TLB_TRANS_2 <= 0;
+        TLBRD_ready <= 0;
+    end
+    else if (TLBRD_valid) begin
+        TLBRD_hit <= rd_TLB_E[TLBRD_INDEX];
+        TLB_CPR <= tlb_cpr[TLBRD_INDEX];
+        TLB_TRANS_1 <= tlb_trans_1[TLBRD_INDEX];
+        TLB_TRANS_2 <= tlb_trans_2[TLBRD_INDEX];
+        if (TLBRD_ready) TLBRD_ready <= 0;
+        else TLBRD_ready <= 1;
+    end
+end
+
+//TLB WRITE PART
+
+
 
 endmodule
