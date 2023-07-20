@@ -1,4 +1,5 @@
 `include "TLB.vh"
+`include "../csr.vh"
 module TLB(
     input                       clk,
     input                       rstn,
@@ -113,7 +114,9 @@ reg                             ren_d_reg                           ;
 reg                             CSR_PG_reg                          ;
 reg                             CSR_CRMD_reg                        ;    
 reg                             CSR_DMW0_reg                        ;    
-reg                             CSR_DMW1_reg                        ;    
+reg                             CSR_DMW1_reg                        ;
+reg     [`TLB_VPPN_LEN : 0]     VA_D_reg                            ;
+reg     [`TLB_VPPN_LEN : 0]     VA_I_reg                            ;
 
 initial begin
     ren_i_reg = 0;
@@ -122,6 +125,8 @@ initial begin
     CSR_CRMD_reg = 0;
     CSR_DMW0_reg = 0;
     CSR_DMW1_reg = 0;
+    VA_I_reg = 0;
+    VA_D_reg = 0;
     for (j = 0; j < `TLB_NUM; j = j + 1)begin
         TLB_I_HIT_4K_OUT[j] = 0;
         TLB_D_HIT_4K_OUT[j] = 0;
@@ -153,6 +158,8 @@ always @(posedge clk or negedge rstn) begin
         CSR_CRMD_reg <= 0;
         CSR_DMW0_reg <= 0;
         CSR_DMW1_reg <= 0;
+        VA_I_reg <= 0;
+        VA_D_reg <= 0;
         for(j = 0; j < `TLB_NUM; j = j + 1)begin
             TLB_I_HIT_4K_OUT[j] <= 0;
             TLB_D_HIT_4K_OUT[j] <= 0;
@@ -182,6 +189,8 @@ always @(posedge clk or negedge rstn) begin
         CSR_CRMD_reg <= CSR_CRMD;
         CSR_DMW0_reg <= CSR_DMW0;
         CSR_DMW1_reg <= CSR_DMW1;
+        VA_I_reg <= VA_I;
+        VA_D_reg <= VA_D;
         for(j = 0; j < `TLB_NUM; j = j + 1)begin
             TLB_I_HIT_4K_OUT[j] <= TLB_I_HIT_4K_IN[j];
             TLB_D_HIT_4K_OUT[j] <= TLB_D_HIT_4K_IN[j];
@@ -301,6 +310,8 @@ reg                     CSR_PG_reg2 = 0;
 reg                     CSR_CRMD_reg2 = 0;
 reg                     CSR_DMW0_reg2 = 0;
 reg                     CSR_DMW1_reg2 = 0;
+reg [`TLB_VPPN_LEN : 0] VA_I_reg2 = 0;
+reg [`TLB_VPPN_LEN : 0] VA_D_reg2 = 0;
 
 initial begin
     for(j = 0; j < `TLB_PPN_LEN; j = j + 1)begin
@@ -325,6 +336,8 @@ always @(posedge clk or negedge rstn)begin
         CSR_CRMD_reg2 <= 0;
         CSR_DMW0_reg2 <= 0;
         CSR_DMW1_reg2 <= 0;
+        VA_I_reg2 <= 0;
+        VA_D_reg2 <= 0;
         for(j = 0; j < `TLB_PPN_LEN; j = j + 1)begin
             TLB_I_PPN_TRANS_reg[j] <= 0;
             TLB_D_PPN_TRANS_reg[j] <= 0;
@@ -345,6 +358,8 @@ always @(posedge clk or negedge rstn)begin
         CSR_CRMD_reg2 <= CSR_CRMD_reg;
         CSR_DMW0_reg2 <= CSR_DMW0_reg;
         CSR_DMW1_reg2 <= CSR_DMW1_reg;
+        VA_I_reg2 <= VA_I_reg;
+        VA_D_reg2 <= VA_D_reg;
         for(j = 0; j < `TLB_PPN_LEN; j = j + 1)begin
             TLB_I_PPN_TRANS_reg[j] <= TLB_I_PPN_TRANS[j];
             TLB_D_PPN_TRANS_reg[j] <= TLB_D_PPN_TRANS[j];
@@ -389,6 +404,11 @@ generate
     end
 endgenerate
 
+wire        DMW0_JUDGE_I = VA_I_reg2[`DMW0_VSEG] == CSR_DMW0_reg2[`DMW0_VSEG];
+wire [31:0] DMW0_PPN_I = {CSR_DMW0_reg2[`DMW0_PSEG], TLB_I_PPN_FINAL[28:0]};
+wire        DNW1_JUDGE_I = VA_I_reg2[`DMW1_VSEG] == CSR_DMW1_reg2[`DMW0_VSEG];
 
+
+assign PA_I = CSR_PG_reg2 ? () : VA_I_reg2
 
 endmodule
