@@ -4,9 +4,10 @@
 /* verilator lint_off DECLFILENAME */
 module TLB_exp_handler(
     input s0_found,
-    input s0_en,
-    input [1:0] s0_mem_type,
+    input s0_en, //是不是需要过TLB（需要取指且PG=1，马哥代码exe段可以用，但是暂时不管了）
+    input [1:0] s0_mem_type, //0:load 1:store 2:fetch
     input s0_dmw_hit,
+    //s0_dmw_hit0 = ((dmw0_plv0 && (s0_plv == 0)) || (dmw0_plv3 && (s0_plv == 2'd3))) && (dmw0_vseg == s0_vaddr[31:29]);
     input found_v0,
     input found_d0,
     input [1:0] s0_plv,
@@ -16,7 +17,7 @@ module TLB_exp_handler(
     input [31:0] s0_vaddr,
 
     input s1_found,
-    input s1_en,
+    input s1_en, 
     input [1:0] s1_mem_type,
     input s1_dmw_hit,
     input found_v1,
