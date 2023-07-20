@@ -46,7 +46,7 @@ module FIFO_ID (
     
 
     assign id_readygo=fifo_readygo;//valid anytime because fifo provide INST_NOP if invalid
-    assign fifo_allowin=id_allowin;
+    assign fifo_allowin=id_allowin||!fetch_buf_full;
 
     always @(posedge clk or negedge rstn) begin
         if (!rstn||fifo_id_flush||(~fifo_readygo&&id_allowin&&id_readygo)) begin

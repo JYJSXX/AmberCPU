@@ -21,6 +21,15 @@ EX段划了两段，~~目的是使相关的指令可以同时运行~~
 ## FIFO:
 fetch_buf,co_pcbuf用于缓存ICache的取指结果和PC，co_pcbuf采用与fetch_buf完全相同的控制逻辑，但是内容是对应的pc(仅储存偶数位PC/上半执行单元部分的PC)
 
+同时接受到两条PRIV指令（CSRWR/CSRXCHG/TLB[:3]/IBAR）或者PRIV+OTHER时将下路替换NOP，下一次在IF1根据PC[2]再将上路替换NOP，这样只需要一位的FLAG
+
+## predecoder
+1. 预判branch类型，提供给btb用作掩码
+2. 判断IBAR/CSR/TLB[:3]，提供给IF1_FIFO进入状态机
+```mermaid
+graph LR
+IDLE-->WAIT_EX_IBAR-->WAIT_CACHE_IDLE-->WAIT_FETCH-->IDLE
+```
 ## 段间寄存器valid-ready握手协议//TODO 逻辑不完善
 ```mermaid
 graph LR
