@@ -5,16 +5,18 @@ module TLB(
 
     input [9:0]                 CSR_ASID,
     input [18:0]                CSR_VPPN,
+    input                       CSR_PG,
+    input [31:0]                CSR_CRMD,
+    input [31:0]                CSR_DMW0,
+    input [31:0]                CSR_DMW1,
 
-    input [`TLB_VPPN_LEN : 0]     VA_I,
-    input [`TLB_VPPN_LEN : 0]     VA_D,
-    input                       PG,
-    input [2:0]                 DMW0_VSEG,
-    input [2:0]                 DMW1_VSEG,
-    input [2:0]                 DMW0_PSEG,
-    input [2:0]                 DMW1_PSEG,
+    input                       ren_i,//读使能
+    input                       ren_d,
+    input [`TLB_VPPN_LEN : 0]   VA_I,
+    input [`TLB_VPPN_LEN : 0]   VA_D,
     output [`TLB_PPN_LEN - 1:0] PA_I,
-    output [`TLB_PPN_LEN - 1:0] PA_D
+    output [`TLB_PPN_LEN - 1:0] PA_D,
+    output                      is_cached
 
 );
 
@@ -106,10 +108,52 @@ reg     [0:0]                   rd_TLB_D_2_reg      [`TLB_NUM - 1:0];
 reg     [1:0]                   rd_TLB_MAT_2_reg    [`TLB_NUM - 1:0];
 reg     [1:0]                   rd_TLB_PLV_2_reg    [`TLB_NUM - 1:0];
 reg     [`TLB_PPN_LEN - 1:0]    rd_TLB_PPN_2_reg    [`TLB_NUM - 1:0];
+reg                             ren_i_reg                           ;
+reg                             ren_d_reg                           ;
+reg                             CSR_PG_reg                          ;
+reg                             CSR_CRMD_reg                        ;    
+reg                             CSR_DMW0_reg                        ;    
+reg                             CSR_DMW1_reg                        ;    
+
+initial begin
+    ren_i_reg = 0;
+    ren_d_reg = 0;
+    CSR_PG_reg = 0;
+    CSR_CRMD_reg = 0;
+    CSR_DMW0_reg = 0;
+    CSR_DMW1_reg = 0;
+    for (j = 0; j < `TLB_NUM; j = j + 1)begin
+        TLB_I_HIT_4K_OUT[j] = 0;
+        TLB_D_HIT_4K_OUT[j] = 0;
+        TLB_I_HIT_4M_OUT[j] = 0;
+        TLB_D_HIT_4M_OUT[j] = 0;
+        TLB_PS_EQUAL_4K[j]  = 0;
+        TLB_D_VA_12_ODD[j]  = 0;
+        TLB_I_VA_12_ODD[j]  = 0;
+        TLB_D_VA_21_ODD[j]  = 0;
+        TLB_I_VA_21_ODD[j]  = 0;
+        rd_TLB_V_1_reg[j]   = 0;
+        rd_TLB_D_1_reg[j]   = 0;
+        rd_TLB_MAT_1_reg[j] = 0;
+        rd_TLB_PLV_1_reg[j] = 0;
+        rd_TLB_PPN_1_reg[j] = 0;
+        rd_TLB_V_2_reg[j]   = 0;
+        rd_TLB_D_2_reg[j]   = 0;
+        rd_TLB_MAT_2_reg[j] = 0;
+        rd_TLB_PLV_2_reg[j] = 0;
+        rd_TLB_PPN_2_reg[j] = 0;
+    end
+end
 
 always @(posedge clk or negedge rstn) begin
-    for(j = 0; j < `TLB_NUM; j = j + 1)begin
-        if (~rstn)begin
+    if (~rstn)begin
+        ren_i_reg <= 0;
+        ren_d_reg <= 0;
+        CSR_PG_reg <= 0;
+        CSR_CRMD_reg <= 0;
+        CSR_DMW0_reg <= 0;
+        CSR_DMW1_reg <= 0;
+        for(j = 0; j < `TLB_NUM; j = j + 1)begin
             TLB_I_HIT_4K_OUT[j] <= 0;
             TLB_D_HIT_4K_OUT[j] <= 0;
             TLB_I_HIT_4M_OUT[j] <= 0;
@@ -130,7 +174,15 @@ always @(posedge clk or negedge rstn) begin
             rd_TLB_PLV_2_reg[j] <= 0;
             rd_TLB_PPN_2_reg[j] <= 0;
         end
-        else begin
+    end
+    else begin
+        ren_i_reg <= ren_i;
+        ren_d_reg <= ren_d;
+        CSR_PG_reg <= CSR_PG;
+        CSR_CRMD_reg <= CSR_CRMD;
+        CSR_DMW0_reg <= CSR_DMW0;
+        CSR_DMW1_reg <= CSR_DMW1;
+        for(j = 0; j < `TLB_NUM; j = j + 1)begin
             TLB_I_HIT_4K_OUT[j] <= TLB_I_HIT_4K_IN[j];
             TLB_D_HIT_4K_OUT[j] <= TLB_D_HIT_4K_IN[j];
             TLB_I_HIT_4M_OUT[j] <= TLB_I_HIT_4M_IN[j];
@@ -190,33 +242,153 @@ wire    [`TLB_PPN_LEN - 1:0]    TLB_D_PPN      [`TLB_NUM - 1:0];
 generate
     for (i = 0; i < `TLB_NUM; i = i + 1)begin
         
-        assign TLB_I_V[i]      =   {TLB_I_HIT[i]} & TLB_I_ODD[i] ? rd_TLB_V_2_reg[i] : rd_TLB_V_1_reg[i];
-        assign TLB_I_D[i]      =   {TLB_I_HIT[i]} & TLB_I_ODD[i] ? rd_TLB_D_2_reg[i] : rd_TLB_V_1_reg[i];
-        assign TLB_I_MAT[i]    =   {TLB_I_HIT[i]} & TLB_I_ODD[i] ? rd_TLB_MAT_2_reg[i][0] : rd_TLB_V_1_reg[i];
-        assign TLB_I_PLV[i]    =   {TLB_I_HIT[i]} & TLB_I_ODD[i] ? rd_TLB_PLV_2_reg[i][0] : rd_TLB_V_1_reg[i];
-        assign TLB_I_PPN[i]    =   {(`TLB_PPN_LEN - 1){TLB_I_HIT[i]}} & TLB_I_ODD[i] ? rd_TLB_PPN_2_reg[i] : rd_TLB_V_1_reg[i];
+        assign TLB_I_V[i]      =   {TLB_I_HIT[i]} & (TLB_I_ODD[i] ? rd_TLB_V_2_reg[i] : rd_TLB_V_1_reg[i]);
+        assign TLB_I_D[i]      =   {TLB_I_HIT[i]} & (TLB_I_ODD[i] ? rd_TLB_D_2_reg[i] : rd_TLB_V_1_reg[i]);
+        assign TLB_I_MAT[i]    =   {TLB_I_HIT[i]} & (TLB_I_ODD[i] ? rd_TLB_MAT_2_reg[i][0] : rd_TLB_V_1_reg[i]);
+        assign TLB_I_PLV[i]    =   {TLB_I_HIT[i]} & (TLB_I_ODD[i] ? rd_TLB_PLV_2_reg[i][0] : rd_TLB_V_1_reg[i]);
+        assign TLB_I_PPN[i]    =   {(`TLB_PPN_LEN - 1){TLB_I_HIT[i] & TLB_D_V[i]}} & (TLB_I_ODD[i] ? rd_TLB_PPN_2_reg[i] : rd_TLB_V_1_reg[i]);
 
-        assign TLB_D_V[i]      =   {TLB_D_HIT[i]} & TLB_D_ODD[i] ? rd_TLB_V_2_reg[i] : rd_TLB_V_1_reg[i];
-        assign TLB_D_D[i]      =   {TLB_D_HIT[i]} & TLB_D_ODD[i] ? rd_TLB_D_2_reg[i] : rd_TLB_V_1_reg[i];
-        assign TLB_D_MAT[i]    =   {TLB_D_HIT[i]} & TLB_D_ODD[i] ? rd_TLB_MAT_2_reg[i][0] : rd_TLB_V_1_reg[i];
-        assign TLB_D_PLV[i]    =   {TLB_D_HIT[i]} & TLB_D_ODD[i] ? rd_TLB_PLV_2_reg[i][0] : rd_TLB_V_1_reg[i];
-        assign TLB_D_PPN[i]    =   {(`TLB_PPN_LEN - 1){TLB_D_HIT[i]}} & TLB_D_ODD[i] ? rd_TLB_PPN_2_reg[i] : rd_TLB_V_1_reg[i];
+        assign TLB_D_V[i]      =   {TLB_D_HIT[i]} & (TLB_D_ODD[i] ? rd_TLB_V_2_reg[i] : rd_TLB_V_1_reg[i]);
+        assign TLB_D_D[i]      =   {TLB_D_HIT[i]} & (TLB_D_ODD[i] ? rd_TLB_D_2_reg[i] : rd_TLB_V_1_reg[i]);
+        assign TLB_D_MAT[i]    =   {TLB_D_HIT[i]} & (TLB_D_ODD[i] ? rd_TLB_MAT_2_reg[i][0] : rd_TLB_V_1_reg[i]);
+        assign TLB_D_PLV[i]    =   {TLB_D_HIT[i]} & (TLB_D_ODD[i] ? rd_TLB_PLV_2_reg[i][0] : rd_TLB_V_1_reg[i]);
+        assign TLB_D_PPN[i]    =   {(`TLB_PPN_LEN - 1){TLB_D_HIT[i] & TLB_D_V[i]}} & (TLB_D_ODD[i] ? rd_TLB_PPN_2_reg[i] : rd_TLB_V_1_reg[i]);
     end
 endgenerate
 
+wire [`TLB_NUM - 1:0]   TLB_I_V_TRANS;
+wire [`TLB_NUM - 1:0]   TLB_I_D_TRANS;
+wire [`TLB_NUM - 1:0]   TLB_I_MAT_TRANS;
+wire [`TLB_NUM - 1:0]   TLB_I_PLV_TRANS;
 wire [`TLB_NUM - 1:0]   TLB_I_PPN_TRANS [`TLB_PPN_LEN - 1:0];
+wire [`TLB_NUM - 1:0]   TLB_D_V_TRANS;
+wire [`TLB_NUM - 1:0]   TLB_D_D_TRANS;
+wire [`TLB_NUM - 1:0]   TLB_D_MAT_TRANS;
+wire [`TLB_NUM - 1:0]   TLB_D_PLV_TRANS;
 wire [`TLB_NUM - 1:0]   TLB_D_PPN_TRANS [`TLB_PPN_LEN - 1:0];
 
 genvar k;
 
 generate
     for (i = 0; i < `TLB_NUM; i = i + 1)begin
+        assign TLB_I_V_TRANS[i] = TLB_I_V[i];
+        assign TLB_I_D_TRANS[i] = TLB_I_D[i];
+        assign TLB_I_MAT_TRANS[i] = TLB_I_MAT[i];
+        assign TLB_I_PLV_TRANS[i] = TLB_I_PLV[i];
+        assign TLB_D_V_TRANS[i] = TLB_D_V[i];
+        assign TLB_D_D_TRANS[i] = TLB_D_D[i];
+        assign TLB_D_MAT_TRANS[i] = TLB_D_MAT[i];
+        assign TLB_D_PLV_TRANS[i] = TLB_D_PLV[i];
         for (k = 0; k < `TLB_PPN_LEN; k = k + 1)begin
             assign TLB_I_PPN_TRANS[k][i] = TLB_I_PPN[i][k];
             assign TLB_D_PPN_TRANS[k][i] = TLB_D_PPN[i][k];
         end
     end
 endgenerate
+reg [`TLB_NUM - 1:0]    TLB_I_V_TRANS_reg = 0;
+reg [`TLB_NUM - 1:0]    TLB_I_D_TRANS_reg = 0;
+reg [`TLB_NUM - 1:0]    TLB_I_MAT_TRANS_reg = 0;
+reg [`TLB_NUM - 1:0]    TLB_I_PLV_TRANS_reg = 0;
+reg [`TLB_NUM - 1:0]    TLB_I_PPN_TRANS_reg [`TLB_PPN_LEN - 1:0];
+reg [`TLB_NUM - 1:0]    TLB_D_V_TRANS_reg = 0;
+reg [`TLB_NUM - 1:0]    TLB_D_D_TRANS_reg = 0;
+reg [`TLB_NUM - 1:0]    TLB_D_MAT_TRANS_reg = 0;
+reg [`TLB_NUM - 1:0]    TLB_D_PLV_TRANS_reg = 0;
+reg [`TLB_NUM - 1:0]    TLB_D_PPN_TRANS_reg [`TLB_PPN_LEN - 1:0];
+reg                     ren_i_reg2 = 0;
+reg                     ren_d_reg2 = 0;
+reg                     CSR_PG_reg2 = 0;
+reg                     CSR_CRMD_reg2 = 0;
+reg                     CSR_DMW0_reg2 = 0;
+reg                     CSR_DMW1_reg2 = 0;
+
+initial begin
+    for(j = 0; j < `TLB_PPN_LEN; j = j + 1)begin
+        TLB_I_PPN_TRANS_reg[j] = 0;
+        TLB_D_PPN_TRANS_reg[j] = 0;
+    end
+end
+
+always @(posedge clk or negedge rstn)begin
+    if (~rstn)begin
+        TLB_I_V_TRANS_reg <= 0;
+        TLB_I_D_TRANS_reg <= 0;
+        TLB_I_MAT_TRANS_reg <= 0;
+        TLB_I_PLV_TRANS_reg <= 0;
+        TLB_D_V_TRANS_reg <= 0;
+        TLB_D_D_TRANS_reg <= 0;
+        TLB_D_MAT_TRANS_reg <= 0;
+        TLB_D_PLV_TRANS_reg <= 0;
+        ren_i_reg2 <= 0;
+        ren_d_reg2 <= 0;
+        CSR_PG_reg2 <= 0;
+        CSR_CRMD_reg2 <= 0;
+        CSR_DMW0_reg2 <= 0;
+        CSR_DMW1_reg2 <= 0;
+        for(j = 0; j < `TLB_PPN_LEN; j = j + 1)begin
+            TLB_I_PPN_TRANS_reg[j] <= 0;
+            TLB_D_PPN_TRANS_reg[j] <= 0;
+        end
+    end
+    else begin
+        TLB_I_V_TRANS_reg <= TLB_I_V_TRANS;
+        TLB_I_D_TRANS_reg <= TLB_I_D_TRANS;
+        TLB_I_MAT_TRANS_reg <= TLB_I_MAT_TRANS;
+        TLB_I_PLV_TRANS_reg <= TLB_I_PLV_TRANS;
+        TLB_D_V_TRANS_reg <= TLB_D_V_TRANS;
+        TLB_D_D_TRANS_reg <= TLB_D_D_TRANS;
+        TLB_D_MAT_TRANS_reg <= TLB_D_MAT_TRANS;
+        TLB_D_PLV_TRANS_reg <= TLB_D_PLV_TRANS;
+        ren_i_reg2 <= ren_i_reg;
+        ren_d_reg2 <= ren_d_reg;
+        CSR_PG_reg2 <= CSR_PG_reg;
+        CSR_CRMD_reg2 <= CSR_CRMD_reg;
+        CSR_DMW0_reg2 <= CSR_DMW0_reg;
+        CSR_DMW1_reg2 <= CSR_DMW1_reg;
+        for(j = 0; j < `TLB_PPN_LEN; j = j + 1)begin
+            TLB_I_PPN_TRANS_reg[j] <= TLB_I_PPN_TRANS[j];
+            TLB_D_PPN_TRANS_reg[j] <= TLB_D_PPN_TRANS[j];
+        end
+    end
+end
+
+wire [0:0] TLB_I_PPN_TRANS_FINAL [`TLB_PPN_LEN - 1:0];
+wire [0:0] TLB_D_PPN_TRANS_FINAL [`TLB_PPN_LEN - 1:0];
+
+generate 
+    for(i = 0; i < `TLB_PPN_LEN; i = i + 1)begin
+        assign TLB_I_PPN_TRANS_FINAL[i] = |TLB_I_PPN_TRANS[i];
+        assign TLB_D_PPN_TRANS_FINAL[i] = |TLB_D_PPN_TRANS[i];
+    end
+endgenerate
+
+wire [`TLB_NUM - 1:0]       TLB_I_V_FINAL;
+wire [`TLB_NUM - 1:0]       TLB_I_D_FINAL;
+wire [`TLB_NUM - 1:0]       TLB_I_MAT_FINAL;
+wire [`TLB_NUM - 1:0]       TLB_I_PLV_FINAL;
+wire [`TLB_PPN_LEN - 1:0]   TLB_I_PPN_FINAL;
+wire [`TLB_NUM - 1:0]       TLB_D_V_FINAL;
+wire [`TLB_NUM - 1:0]       TLB_D_D_FINAL;
+wire [`TLB_NUM - 1:0]       TLB_D_MAT_FINAL;
+wire [`TLB_NUM - 1:0]       TLB_D_PLV_FINAL;
+wire [`TLB_PPN_LEN - 1:0]   TLB_D_PPN_FINAL;
+
+assign TLB_I_V_FINAL    =   TLB_I_V_TRANS_reg;
+assign TLB_I_D_FINAL    =   TLB_I_D_TRANS_reg;
+assign TLB_I_MAT_FINAL  =   TLB_I_MAT_TRANS_reg;
+assign TLB_I_PLV_FINAL  =   TLB_I_PLV_TRANS_reg;
+assign TLB_D_V_FINAL    =   TLB_D_V_TRANS_reg;
+assign TLB_D_D_FINAL    =   TLB_D_D_TRANS_reg;
+assign TLB_D_MAT_FINAL  =   TLB_D_MAT_TRANS_reg;
+assign TLB_D_PLV_FINAL  =   TLB_D_PLV_TRANS_reg;
+
+generate
+    for (i = 0; i < `TLB_PPN_LEN; i = i + 1)begin
+        assign TLB_I_PPN_FINAL[i] = TLB_I_PPN_TRANS_FINAL[i];
+        assign TLB_D_PPN_FINAL[i] = TLB_D_PPN_TRANS_FINAL[i];
+    end
+endgenerate
+
 
 
 endmodule
