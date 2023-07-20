@@ -6,7 +6,7 @@ module EX_Privilege(
     input           [31:0]              inst,
 
     input                               en,             //使能信号 valid信号
-    input           [31:0]              rd_data,        //R[rd]
+    input           [31:0]              rk_data,        //R[rk]
     input           [31:0]              rj_data,        //R[rj]
     input           [31:0]              ins,            //指令
     input           [`WIDTH_UOP - 1 : 0] pr_type,        //指令类型
@@ -18,7 +18,7 @@ module EX_Privilege(
     output  reg                         csr_wen,        //csr 写使能
     output  reg                         csr_ren,        //csr 读使能
     input           [31:0]              csr_rdata,      //csr 读数据
-    output  reg     [31:0]              csr_rdata_reg,  //csr -> rj 写数据
+    output  reg     [31:0]              csr_rdata_reg,  //csr -> rd 写数据
     //CACOP
     output          [1:0]               cacop_ins_type, //cacop 指令类型
     output          [31:0]              cacop_vaddr,    //cacop 虚拟地址
@@ -38,9 +38,18 @@ module EX_Privilege(
 
     //TLB
     input                               tlbsrch_ready,  //tlb告诉exe已经查完了
-    output                              tlbsrch,        //exe告诉tlb按值查找得到索引
+    output   reg                        tlbsrch_valid,        //exe告诉tlb按值查找得到索引
     input                               tlbrd_ready,    //tlb告诉exe已经读完了
-    output                              tlbrd,          //exe告诉tlb按索引读取
+    output   reg                        tlbrd_valid,          //exe告诉tlb按索引读取
+    input                               tlbwr_ready,    //tlb告诉exe已经写完了
+    output   reg                        tlbwr_valid,          //exe告诉tlb写入
+    input                               tlbfill_ready,  //tlb告诉exe已经填完了
+    output   reg                        tlbfill_valid,        //exe告诉tlb写入
+    input                               invtlb_ready,   //tlb告诉exe已经写完了
+    output   reg                        invtlb_valid,         //exe告诉tlb写入
+    output           [2:0]              invtlb_op,
+    output           [31:0]             invtlb_asid,
+    output           [31:0]             invtlb_va
     
 );
     wire [1:0] pri_tlb_type;
@@ -168,11 +177,26 @@ module EX_Privilege(
                     PR_next_state = PR_TLBRD;
             end
             PR_TLBWR:
-                PR_next_state = PR_INIT;
+            begin
+                if(tlbwr_ready)
+                    PR_next_state = PR_INIT;
+                else
+                    PR_next_state = PR_TLBWR;
+            end
             PR_TLBFILL:
-                PR_next_state = PR_INIT;
+            begin
+                if(tlbfill_ready)
+                    PR_next_state = PR_INIT;
+                else
+                    PR_next_state = PR_TLBFILL;
+            end
             PR_TLBINV:
-                PR_next_state = PR_INIT;
+            begin
+                if(invtlb_ready)
+                    PR_next_state = PR_INIT;
+                else
+                    PR_next_state = PR_TLBINV;
+            end
 
         endcase
     end
@@ -186,6 +210,12 @@ module EX_Privilege(
         done = 0;
         ertn_en = 0;
         block_cache = 0;
+        block_clock = 0;
+        tlbsrch_valid = 0;
+        tlbrd_valid = 0;
+        tlbwr_valid = 0;
+        tlbfill_valid = 0;
+        invtlb_valid = 0;
         case(PR_state)
             PR_INIT:
             begin
@@ -199,22 +229,20 @@ module EX_Privilege(
                 else if (en & pr_type[`INS_IDLE])
                     block_cache = 1;
                 else if(en && pr_type[`INS_TLB] && pri_tlb_type == 2'b10)
-                    PR_next_state = PR_TLBSRCH;
+                    tlbsrch_valid = 1;
                 else if(en && pr_type[`INS_TLB] && pri_tlb_type == 2'b11)
-                    PR_next_state = PR_TLBRD;
+                    tlbrd_valid = 1;
                 else if(en && pr_type[`INS_TLB] && pri_tlb_type == 2'b00)
-                    PR_next_state = PR_TLBWR;
+                    tlbwr_valid = 1;
                 else if(en && pr_type[`INS_TLB] && pri_tlb_type == 2'b01)
-                    PR_next_state = PR_TLBFILL;
+                    tlbfill_valid = 1;
                 else if(en && pr_type[`INS_TLB] && invtlb)
-                    PR_next_state = PR_TLBINV;
-                else
-                    PR_next_state = PR_INIT;
+                    invtlb_valid = 1;
             end
             PR_CSR:
             begin
                 csr_addr = csr_num;
-                csr_wdata = isxchg ? ((~rj_data & csr_rdata_reg) | (rj_data & rd_data)) : rd_data;
+                csr_wdata = isxchg ? ((~rj_data & csr_rdata_reg) | (rj_data & rk_data)) : rk_data;
                 csr_wen = |rj;
                 csr_ren = 1;
                 done = 1;
