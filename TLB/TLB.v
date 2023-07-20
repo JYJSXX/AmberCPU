@@ -86,11 +86,26 @@ endgenerate
 
 // reg:HIT UNHIT_EXCEPRION
 
-reg [0:0]   TLB_I_HIT_4K_OUT [`TLB_NUM - 1:0];
-reg [0:0]   TLB_D_HIT_4K_OUT [`TLB_NUM - 1:0];
-reg [0:0]   TLB_I_HIT_4M_OUT [`TLB_NUM - 1:0];
-reg [0:0]   TLB_D_HIT_4M_OUT [`TLB_NUM - 1:0];
-reg [0:0]   TLB_PS_EQUAL_4K  [`TLB_NUM - 1:0];
+reg     [0:0]                   TLB_I_HIT_4K_OUT    [`TLB_NUM - 1:0];
+reg     [0:0]                   TLB_D_HIT_4K_OUT    [`TLB_NUM - 1:0];
+reg     [0:0]                   TLB_I_HIT_4M_OUT    [`TLB_NUM - 1:0];
+reg     [0:0]                   TLB_D_HIT_4M_OUT    [`TLB_NUM - 1:0];
+reg     [0:0]                   TLB_PS_EQUAL_4K     [`TLB_NUM - 1:0];
+reg     [0:0]                   TLB_D_VA_12_ODD     [`TLB_NUM - 1:0];
+reg     [0:0]                   TLB_I_VA_12_ODD     [`TLB_NUM - 1:0];
+reg     [0:0]                   TLB_D_VA_21_ODD     [`TLB_NUM - 1:0];
+reg     [0:0]                   TLB_I_VA_21_ODD     [`TLB_NUM - 1:0];
+
+reg     [0:0]                   rd_TLB_V_1_reg      [`TLB_NUM - 1:0];
+reg     [0:0]                   rd_TLB_D_1_reg      [`TLB_NUM - 1:0];
+reg     [1:0]                   rd_TLB_MAT_1_reg    [`TLB_NUM - 1:0];
+reg     [1:0]                   rd_TLB_PLV_1_reg    [`TLB_NUM - 1:0];
+reg     [`TLB_PPN_LEN - 1:0]    rd_TLB_PPN_1_reg    [`TLB_NUM - 1:0];
+reg     [0:0]                   rd_TLB_V_2_reg      [`TLB_NUM - 1:0];
+reg     [0:0]                   rd_TLB_D_2_reg      [`TLB_NUM - 1:0];
+reg     [1:0]                   rd_TLB_MAT_2_reg    [`TLB_NUM - 1:0];
+reg     [1:0]                   rd_TLB_PLV_2_reg    [`TLB_NUM - 1:0];
+reg     [`TLB_PPN_LEN - 1:0]    rd_TLB_PPN_2_reg    [`TLB_NUM - 1:0];
 
 always @(posedge clk or negedge rstn) begin
     for(j = 0; j < `TLB_NUM; j = j + 1)begin
@@ -100,6 +115,20 @@ always @(posedge clk or negedge rstn) begin
             TLB_I_HIT_4M_OUT[j] <= 0;
             TLB_D_HIT_4M_OUT[j] <= 0;
             TLB_PS_EQUAL_4K[j]  <= 0;
+            TLB_D_VA_12_ODD[j]  <= 0;
+            TLB_I_VA_12_ODD[j]  <= 0;
+            TLB_D_VA_21_ODD[j]  <= 0;
+            TLB_I_VA_21_ODD[j]  <= 0;
+            rd_TLB_V_1_reg[j]   <= 0;
+            rd_TLB_D_1_reg[j]   <= 0;
+            rd_TLB_MAT_1_reg[j] <= 0;
+            rd_TLB_PLV_1_reg[j] <= 0;
+            rd_TLB_PPN_1_reg[j] <= 0;
+            rd_TLB_V_2_reg[j]   <= 0;
+            rd_TLB_D_2_reg[j]   <= 0;
+            rd_TLB_MAT_2_reg[j] <= 0;
+            rd_TLB_PLV_2_reg[j] <= 0;
+            rd_TLB_PPN_2_reg[j] <= 0;
         end
         else begin
             TLB_I_HIT_4K_OUT[j] <= TLB_I_HIT_4K_IN[j];
@@ -107,13 +136,27 @@ always @(posedge clk or negedge rstn) begin
             TLB_I_HIT_4M_OUT[j] <= TLB_I_HIT_4M_IN[j];
             TLB_D_HIT_4M_OUT[j] <= TLB_D_HIT_4M_IN[j];
             TLB_PS_EQUAL_4K[j]  <= (rd_TLB_PS[j] == 12);
+            TLB_D_VA_12_ODD[j]  <= VA_D[12];
+            TLB_I_VA_12_ODD[j]  <= VA_I[12];
+            TLB_D_VA_21_ODD[j]  <= VA_D[21];
+            TLB_I_VA_21_ODD[j]  <= VA_I[21];
+            rd_TLB_V_1_reg[j]   <= rd_TLB_V_1;
+            rd_TLB_D_1_reg[j]   <= rd_TLB_D_1;
+            rd_TLB_MAT_1_reg[j] <= rd_TLB_MAT_1;
+            rd_TLB_PLV_1_reg[j] <= rd_TLB_PLV_1;
+            rd_TLB_PPN_1_reg[j] <= rd_TLB_PPN_1;
+            rd_TLB_V_2_reg[j]   <= rd_TLB_V_2;
+            rd_TLB_D_2_reg[j]   <= rd_TLB_D_2;
+            rd_TLB_MAT_2_reg[j] <= rd_TLB_MAT_2;
+            rd_TLB_PLV_2_reg[j] <= rd_TLB_PLV_2;
+            rd_TLB_PPN_2_reg[j] <= rd_TLB_PPN_2;
         end
     end
 end
 
 //下面这两个wire型变量可用于检测例外
-wire [0:0] TLB_I_HIT [`TLB_NUM - 1:0];
-wire [0:0] TLB_D_HIT [`TLB_NUM - 1:0];
+wire [`TLB_NUM - 1:0] TLB_I_HIT;
+wire [`TLB_NUM - 1:0] TLB_D_HIT;
 
 generate
     for(i = 0; i < `TLB_NUM; i = i + 1)begin
@@ -122,6 +165,87 @@ generate
     end
 endgenerate
 
+wire [`TLB_NUM - 1:0] TLB_I_ODD;
+wire [`TLB_NUM - 1:0] TLB_D_ODD;
 
+
+generate
+    for(i = 0; i < `TLB_NUM; i = i + 1)begin
+        assign TLB_I_ODD[i] = TLB_PS_EQUAL_4K[i] ? TLB_I_VA_12_ODD[i] : TLB_I_VA_21_ODD[i];
+        assign TLB_D_ODD[i] = TLB_PS_EQUAL_4K[i] ? TLB_D_VA_12_ODD[i] : TLB_D_VA_21_ODD[i];
+    end
+endgenerate
+
+wire    [0:0]                   TLB_I_V        [`TLB_NUM - 1:0];
+wire    [0:0]                   TLB_I_D        [`TLB_NUM - 1:0];
+wire    [1:0]                   TLB_I_MAT      [`TLB_NUM - 1:0];
+wire    [1:0]                   TLB_I_PLV      [`TLB_NUM - 1:0];
+wire    [`TLB_PPN_LEN - 1:0]    TLB_I_PPN      [`TLB_NUM - 1:0];
+wire    [0:0]                   TLB_D_V        [`TLB_NUM - 1:0];
+wire    [0:0]                   TLB_D_D        [`TLB_NUM - 1:0];
+wire    [1:0]                   TLB_D_MAT      [`TLB_NUM - 1:0];
+wire    [1:0]                   TLB_D_PLV      [`TLB_NUM - 1:0];
+wire    [`TLB_PPN_LEN - 1:0]    TLB_D_PPN      [`TLB_NUM - 1:0];
+
+generate
+    for (i = 0; i < `TLB_NUM; i = i + 1)begin
+        if (~TLB_I_HIT[i])begin
+            TLB_I_V[i]      =   0;
+            TLB_I_D[i]      =   0;
+            TLB_I_MAT[i]    =   0;
+            TLB_I_PLV[i]    =   0;
+            TLB_I_PPN[i]    =   0;
+        end
+        else if (TLB_I_ODD[i])begin
+            TLB_I_V[i]      =   rd_TLB_V_2_reg;
+            TLB_I_D[i]      =   rd_TLB_D_2_reg;
+            TLB_I_MAT[i]    =   rd_TLB_MAT_2_reg;
+            TLB_I_PLV[i]    =   rd_TLB_PLV_2_reg;
+            TLB_I_PPN[i]    =   rd_TLB_PPN_2_reg;
+        end
+        else begin
+            TLB_I_V[i]      =   rd_TLB_V_1_reg;
+            TLB_I_D[i]      =   rd_TLB_D_1_reg;
+            TLB_I_MAT[i]    =   rd_TLB_MAT_1_reg;
+            TLB_I_PLV[i]    =   rd_TLB_PLV_1_reg;
+            TLB_I_PPN[i]    =   rd_TLB_PPN_1_reg;
+        end
+        if (~TLB_D_HIT[i])begin
+            TLB_D_V[i]      =   0;
+            TLB_D_D[i]      =   0;
+            TLB_D_MAT[i]    =   0;
+            TLB_D_PLV[i]    =   0;
+            TLB_D_PPN[i]    =   0;
+        end
+        else if (TLB_D_ODD[i])begin
+            TLB_D_V[i]      =   rd_TLB_V_2_reg;
+            TLB_D_D[i]      =   rd_TLB_D_2_reg;
+            TLB_D_MAT[i]    =   rd_TLB_MAT_2_reg;
+            TLB_D_PLV[i]    =   rd_TLB_PLV_2_reg;
+            TLB_D_PPN[i]    =   rd_TLB_PPN_2_reg;
+        end
+        else begin
+            TLB_D_V[i]      =   rd_TLB_V_1_reg;
+            TLB_D_D[i]      =   rd_TLB_D_1_reg;
+            TLB_D_MAT[i]    =   rd_TLB_MAT_1_reg;
+            TLB_D_PLV[i]    =   rd_TLB_PLV_1_reg;
+            TLB_D_PPN[i]    =   rd_TLB_PPN_1_reg;
+        end
+    end
+endgenerate
+
+wire [`TLB_NUM - 1:0]   TLB_I_PPN_TRANS [`TLB_PPN_LEN - 1:0];
+wire [`TLB_NUM - 1:0]   TLB_D_PPN_TRANS [`TLB_PPN_LEN - 1:0];
+
+genvar k;
+
+generate
+    for (i = 0; i < `TLB_NUM; i = i + 1)begin
+        for (k = 0; k < `TLB_PPN_LEN; k = k + 1)begin
+            TLB_I_PPN_TRANS[k][i] = TLB_I_PPN[i][k];
+            TLB_D_PPN_TRANS[k][i] = TLB_D_PPN[i][k];
+        end
+    end
+endgenerate
 
 endmodule
