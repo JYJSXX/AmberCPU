@@ -178,59 +178,29 @@ endgenerate
 
 wire    [0:0]                   TLB_I_V        [`TLB_NUM - 1:0];
 wire    [0:0]                   TLB_I_D        [`TLB_NUM - 1:0];
-wire    [1:0]                   TLB_I_MAT      [`TLB_NUM - 1:0];
-wire    [1:0]                   TLB_I_PLV      [`TLB_NUM - 1:0];
+wire    [0:0]                   TLB_I_MAT      [`TLB_NUM - 1:0];
+wire    [0:0]                   TLB_I_PLV      [`TLB_NUM - 1:0];
 wire    [`TLB_PPN_LEN - 1:0]    TLB_I_PPN      [`TLB_NUM - 1:0];
 wire    [0:0]                   TLB_D_V        [`TLB_NUM - 1:0];
 wire    [0:0]                   TLB_D_D        [`TLB_NUM - 1:0];
-wire    [1:0]                   TLB_D_MAT      [`TLB_NUM - 1:0];
-wire    [1:0]                   TLB_D_PLV      [`TLB_NUM - 1:0];
+wire    [0:0]                   TLB_D_MAT      [`TLB_NUM - 1:0];
+wire    [0:0]                   TLB_D_PLV      [`TLB_NUM - 1:0];
 wire    [`TLB_PPN_LEN - 1:0]    TLB_D_PPN      [`TLB_NUM - 1:0];
 
 generate
     for (i = 0; i < `TLB_NUM; i = i + 1)begin
-        if (~TLB_I_HIT[i])begin
-            assign TLB_I_V[i]      =   0;
-            assign TLB_I_D[i]      =   0;
-            assign TLB_I_MAT[i]    =   0;
-            assign TLB_I_PLV[i]    =   0;
-            assign TLB_I_PPN[i]    =   0;
-        end
-        else if (TLB_I_ODD[i])begin
-            assign TLB_I_V[i]      =   rd_TLB_V_2_reg;
-            assign TLB_I_D[i]      =   rd_TLB_D_2_reg;
-            assign TLB_I_MAT[i]    =   rd_TLB_MAT_2_reg;
-            assign TLB_I_PLV[i]    =   rd_TLB_PLV_2_reg;
-            assign TLB_I_PPN[i]    =   rd_TLB_PPN_2_reg;
-        end
-        else begin
-            assign TLB_I_V[i]      =   rd_TLB_V_1_reg;
-            assign TLB_I_D[i]      =   rd_TLB_D_1_reg;
-            assign TLB_I_MAT[i]    =   rd_TLB_MAT_1_reg;
-            assign TLB_I_PLV[i]    =   rd_TLB_PLV_1_reg;
-            assign TLB_I_PPN[i]    =   rd_TLB_PPN_1_reg;
-        end
-        if (~TLB_D_HIT[i])begin
-            assign TLB_D_V[i]      =   0;
-            assign TLB_D_D[i]      =   0;
-            assign TLB_D_MAT[i]    =   0;
-            assign TLB_D_PLV[i]    =   0;
-            assign TLB_D_PPN[i]    =   0;
-        end
-        else if (TLB_D_ODD[i])begin
-            assign TLB_D_V[i]      =   rd_TLB_V_2_reg;
-            assign TLB_D_D[i]      =   rd_TLB_D_2_reg;
-            assign TLB_D_MAT[i]    =   rd_TLB_MAT_2_reg;
-            assign TLB_D_PLV[i]    =   rd_TLB_PLV_2_reg;
-            assign TLB_D_PPN[i]    =   rd_TLB_PPN_2_reg;
-        end
-        else begin
-            assign TLB_D_V[i]      =   rd_TLB_V_1_reg;
-            assign TLB_D_D[i]      =   rd_TLB_D_1_reg;
-            assign TLB_D_MAT[i]    =   rd_TLB_MAT_1_reg;
-            assign TLB_D_PLV[i]    =   rd_TLB_PLV_1_reg;
-            assign TLB_D_PPN[i]    =   rd_TLB_PPN_1_reg;
-        end
+        
+        assign TLB_I_V[i]      =   {TLB_I_HIT[i]} & TLB_I_ODD[i] ? rd_TLB_V_2_reg[i] : rd_TLB_V_1_reg[i];
+        assign TLB_I_D[i]      =   {TLB_I_HIT[i]} & TLB_I_ODD[i] ? rd_TLB_D_2_reg[i] : rd_TLB_V_1_reg[i];
+        assign TLB_I_MAT[i]    =   {TLB_I_HIT[i]} & TLB_I_ODD[i] ? rd_TLB_MAT_2_reg[i][0] : rd_TLB_V_1_reg[i];
+        assign TLB_I_PLV[i]    =   {TLB_I_HIT[i]} & TLB_I_ODD[i] ? rd_TLB_PLV_2_reg[i][0] : rd_TLB_V_1_reg[i];
+        assign TLB_I_PPN[i]    =   {(`TLB_PPN_LEN - 1){TLB_I_HIT[i]}} & TLB_I_ODD[i] ? rd_TLB_PPN_2_reg[i] : rd_TLB_V_1_reg[i];
+
+        assign TLB_D_V[i]      =   {TLB_D_HIT[i]} & TLB_D_ODD[i] ? rd_TLB_V_2_reg[i] : rd_TLB_V_1_reg[i];
+        assign TLB_D_D[i]      =   {TLB_D_HIT[i]} & TLB_D_ODD[i] ? rd_TLB_D_2_reg[i] : rd_TLB_V_1_reg[i];
+        assign TLB_D_MAT[i]    =   {TLB_D_HIT[i]} & TLB_D_ODD[i] ? rd_TLB_MAT_2_reg[i][0] : rd_TLB_V_1_reg[i];
+        assign TLB_D_PLV[i]    =   {TLB_D_HIT[i]} & TLB_D_ODD[i] ? rd_TLB_PLV_2_reg[i][0] : rd_TLB_V_1_reg[i];
+        assign TLB_D_PPN[i]    =   {(`TLB_PPN_LEN - 1){TLB_D_HIT[i]}} & TLB_D_ODD[i] ? rd_TLB_PPN_2_reg[i] : rd_TLB_V_1_reg[i];
     end
 endgenerate
 
@@ -247,5 +217,6 @@ generate
         end
     end
 endgenerate
+
 
 endmodule
