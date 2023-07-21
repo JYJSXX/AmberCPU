@@ -677,7 +677,9 @@ module core_top(
     //分支预测
     wire predict_to_branch; //分支预测的信号
     wire [31:0] pc0_predict;
-    
+
+
+    //TODO predice logic
     wire predict_dir_fail; //分支预测跳不跳失败的信号
     wire predict_addr_fail; //分支预测往哪跳失败的信号
     wire fact_taken; //实际跳不跳
