@@ -41,9 +41,6 @@ module FIFO(
 
     output fetch_buf_empty,
     output fetch_buf_full
-    `ifdef FIFO_ID_DIFFTEST
-
-    `endif 
 );
     localparam BUF_DEPTH = 8;
     //if1_fifo_x->x_din->x_dout->fifo_x
