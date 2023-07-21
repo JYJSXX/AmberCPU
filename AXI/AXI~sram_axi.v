@@ -115,6 +115,8 @@ begin
             if(r_valid & r_ready & r_last)
                 r_next_state = R_IDLE;
         end
+    default:
+        r_next_state = R_IDLE;
     endcase
 end
 
@@ -191,6 +193,7 @@ begin
                 d_rready = 1'b1;
             end
         end
+        
     endcase
 end
 
