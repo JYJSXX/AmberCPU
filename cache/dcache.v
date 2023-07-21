@@ -151,6 +151,19 @@ module dcache #(
     // communication between write fsm and main fsm
     reg                         wfsm_en, wfsm_reset, wrt_finish;
 
+    // ibar
+    reg                         ibar_ready;
+    wire   [31:0]               dirty_addr[0:1];
+    wire                        ibar_valid;
+    wire                        ibar_complete;
+    reg                         dirty_way;
+    reg                         hit2_flag;
+    wire [5:0] dirty_index;
+    wire way0, way1;
+
+    assign dirty_addr[0] = {tag_rdata[dirty_index][19:0], dirty_index, 6'b0};
+    assign dirty_addr[1] = {tag_rdata[dirty_index][19:0], dirty_index, 6'b0};
+
     /* op、 signed_ext、 is_atom、 llbit buffer */
     reg op_buf, signed_ext_buf, is_atom_buf, llbit_buf;
     always @(posedge clk) begin
@@ -189,6 +202,7 @@ module dcache #(
 
     /* exception */
     always @(*) begin
+        exception_temp1 = 0;
         case(wstrb_pipe)
         HALF: if(address[0] == 1) exception_temp1 = `EXP_ALE;
         WORD: if(address[1:0] != 0) exception_temp1 = `EXP_ALE;
@@ -196,8 +210,8 @@ module dcache #(
         endcase
     end
     assign exception_cache = ({7{!(op_buf && !llbit_buf && is_atom_buf)}} | {7{~cacop_en_buf}}) & exception_temp1;
-    assign exception_temp  = {7{!((cacop_en_buf && hit_invalid) || (op_buf && is_atom_buf && !llbit_buf))}} 
-                            & (tlb_exception == `EXP_ADEM ? tlb_exception : (exception_cache == 0 ? tlb_exception : exception_cache));
+    assign exception_temp  = exception_flag ? forward_exception : ({7{!((cacop_en_buf && hit_invalid) || (op_buf && is_atom_buf && !llbit_buf))}} 
+                            & (tlb_exception == `EXP_ADEM ? tlb_exception : (exception_cache == 0 ? tlb_exception : exception_cache)));
     assign exception_obuf = {7{((rready || wready) || cacop_en_buf)}} & (exception_sel ? exception_buf : exception_temp);
     reg  [6:0] exception_old;
     wire [6:0] exception_new;
@@ -228,7 +242,7 @@ module dcache #(
             ret_buf <= 0;
         end
         else if(d_rvalid && d_rready) begin
-            ret_buf <= {d_rdata, ret_buf[BIT_NUM-1:32]};
+            ret_buf <= d_rdata;
         end
     end
 
@@ -282,7 +296,7 @@ module dcache #(
     `endif
 
     /* 2-way data memory */
-    assign r_index = addr[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
+    assign r_index = (way0 || way1) ? dirty_index :addr[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
     assign w_index = address[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
 
     BRAM_bytewrite #(
@@ -329,7 +343,7 @@ module dcache #(
       .waddr    (tag_index),
       .din      (tag_in),
       .we       (tagv_we[0]),
-      .ibar     (ibar),
+      .ibar     (ibar_complete),
       .dout     (tag_rdata[0])
     );
     BRAM_tagv #(
@@ -341,7 +355,7 @@ module dcache #(
       .waddr    (tag_index),
       .din      (tag_in),
       .we       (tagv_we[1]),
-      .ibar     (ibar),
+      .ibar     (ibar_complete),
       .dout     (tag_rdata[1])
     );
 
@@ -438,24 +452,46 @@ module dcache #(
 
     /* dirty table */
     // record the dirty information of each set
+    // reg dirty_hit2;
+    // always @(posedge clk) begin
+    //     if(way0 && way1)
+    //         dirty_hit2 <= 1;
+    //     else if (way0 || way1)
+    //         dirty_hit2 <= 0;
+    //     else
+    //         dirty_hit2 <= dirty_hit2;
+    // end
+    wire dirty_hit2;
+    assign dirty_hit2 = way0 && way1;
     dirty_table diety_table(
         .clk(clk),
+        .rstn(rstn),
         .we(dirty_we),
         .re(lru_sel),
         .r_addr(w_index),
         .w_addr(w_index),
         .w_data(dirty_wdata),
-        .r_data(dirty_rdata)
+        .r_data(dirty_rdata),
+        .ibar(ibar),
+        .ibar_ready(ibar_ready),
+        .ibar_valid(ibar_valid),
+        .ibar_complete(ibar_complete),
+        // .dirty_signal(dirty_signal),
+        .dirty_addr(dirty_index),
+        .way0(way0),
+        .way1(way1)
     );
 
 
     /* write buffer */
-    always @(*) begin
+    always @(posedge clk) begin
         if(!rstn) begin
             wbuf <= 0;
         end
         else if(wbuf_we) begin
-            if(uncache_buf)     // 要写入的数据来自于uncache
+            if(ibar_valid)          // 要写入的数据来自于ibar
+                wbuf <= mem_rdata[dirty_way];
+            else if(uncache_buf)     // 要写入的数据来自于uncache
                 wbuf <= {{(BIT_NUM-32){1'b0}}, wdata_pipe};
             else
                 wbuf <= lru_sel[1] ? mem_rdata[1] : mem_rdata[0];
@@ -485,8 +521,8 @@ module dcache #(
     
     /* memory visit settings*/
     assign d_raddr  = uncache_buf ? paddr_buf : {paddr_buf[31:6], 6'b0};
-    assign d_waddr  = uncache_buf ? paddr_buf : m_buf;
-    assign d_wdata  = wbuf[31:0];
+    assign d_waddr  = ibar_valid ? dirty_addr[dirty_way] : uncache_buf ? paddr_buf : m_buf;
+    assign d_wdata  = wbuf;
 
     /* main FSM */
     localparam 
@@ -496,9 +532,9 @@ module dcache #(
         REFILL      = 4'd3,
         WAIT_WRITE  = 4'd4,
         CACOP       = 4'd5,
-        UNCACHE     = 4'd6,     //处理uncache写
-        IBAR        = 4'd7,
-        CACOP_WB    = 4'd8;
+        IBAR        = 4'd6,     //处理uncache写
+        IBAR_EXTRA  = 4'd7,
+        IBAR_WAIT   = 4'd8;
     
     reg [2:0] uncache_rwsize;
     always @(*) begin
@@ -511,7 +547,7 @@ module dcache #(
     end
 
     reg [3:0] state, next_state;
-    assign idle = (state == IDLE);
+    assign idle = (state == IDLE) && !ibar;
     always @(posedge clk) begin
         if(!rstn) begin
             state <= IDLE;
@@ -525,6 +561,8 @@ module dcache #(
         IDLE: begin
             if(exception != 0) 
                 next_state = IDLE;
+            else if(ibar)
+                next_state = IBAR;
             else if(cacop_en) 
                 next_state = CACOP;
             else if(rvalid || wvalid) begin
@@ -537,6 +575,8 @@ module dcache #(
         LOOKUP: begin
             if(exception_temp != 0)
                 next_state = IDLE;
+            else if(ibar)
+                next_state = IBAR;
             else if(uncache_buf) begin
                 if(op_buf == READ_OP)
                     next_state = MISS;
@@ -572,7 +612,9 @@ module dcache #(
         end
         WAIT_WRITE: begin
             if(wrt_finish) begin
-                if(cacop_en)
+                if(ibar)
+                    next_state = IBAR;
+                else if(cacop_en)
                     next_state = CACOP;
                 else
                     next_state = (rvalid || wvalid) ? LOOKUP : IDLE;
@@ -581,21 +623,59 @@ module dcache #(
                 next_state = WAIT_WRITE;
             end
         end
-        CACOP: begin//! IBAR待完成
-            if((exception_temp != 0) || ibar)     
+        CACOP: begin
+            if(ibar)
+                next_state = IBAR;
+            else if(exception_temp != 0)  
                 next_state = IDLE;
             else                    
                 next_state = WAIT_WRITE;
+        end
+        IBAR: begin
+            if(ibar_complete)
+                next_state = IDLE;
+            else if(ibar_valid)
+                next_state = IBAR_WAIT;
+            else
+                next_state = IBAR;
+        end
+        IBAR_EXTRA: begin
+                next_state = IBAR_WAIT;
+        end
+        IBAR_WAIT: begin
+            if(wrt_finish) begin
+                if(ibar_complete)
+                    next_state = IDLE;
+                else if(hit2_flag)
+                    next_state = IBAR_EXTRA;
+                else
+                    next_state = IBAR;
+            end
+            else begin
+                next_state = IBAR_WAIT;
+            end
         end
         default: begin
             next_state = IDLE;
         end
         endcase
     end
+
+    // hit2_flag 更新，第二次写入时，hit2_flag = 0；
+    always @(posedge clk) begin
+        if (state == IBAR)
+            hit2_flag <= dirty_hit2;
+        else if (state == IBAR_EXTRA)
+            hit2_flag <= 0;
+        else
+            hit2_flag <= hit2_flag;
+    end
+
     always @(*) begin
         // default assignments
         req_buf_we           = 0;
         wbuf_we              = 0;
+        pbuf_we              = 0;
         mbuf_we              = 0;
         d_rvalid             = 0;
         wfsm_en              = 0;
@@ -619,6 +699,10 @@ module dcache #(
         dirty_we             = 0;
         dirty_wdata          = 0;
         d_wstrb              = 4'b1111;
+        ibar_ready           = 0;
+        dirty_way            = 0;
+        llbit_set            = 0;
+        llbit_clear          = 0;
         case(state)
         IDLE: begin
             req_buf_we = 1;
@@ -726,6 +810,21 @@ module dcache #(
                 end
             end
         end
+        IBAR: begin
+            ibar_ready = 1;
+            if(ibar_valid) begin
+                dirty_way = way0 ? 0 : 1;   //优先处理way0
+                wbuf_we = 1;
+                wfsm_en = 1;
+            end
+        end
+        IBAR_EXTRA: begin
+            dirty_way = 1;  //如果双路都有脏数据，再处理way1
+            wbuf_we = 1;
+            wfsm_en = 1;
+        end
+        IBAR_WAIT: 
+            wfsm_reset      = 1;
         endcase
     end
 

@@ -33,6 +33,7 @@ module sram_axi(
     output  reg                 w_valid,        //写有效
     input                       w_ready,        //写准备好
     output          [3:0]       w_last,         //写使能
+    output          [3:0]       w_strb,         //字节写通位
 
     //b channel 
     input                       b_valid,        //写响应有效
@@ -61,7 +62,7 @@ module sram_axi(
     output  reg                 d_wready,       //数据cache写准备好
     input           [7:0]       d_wlen          //数据cache写长度
     // input           [2:0]       d_wsize         //数据cache写大小
-    // input           [3:0]       d_wstrb,     //数据cache写使能
+    input           [3:0]       d_wstrb,     //数据cache写使能
     // input                       d_wlast      //数据cache写结束
 
 );
@@ -262,6 +263,7 @@ begin
 end
 
 assign w_last = (w_count == d_wlen);
+assign w_strb = d_wstrb;
 
 always @(*)
 begin
