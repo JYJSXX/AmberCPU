@@ -7,7 +7,6 @@ module clog2(
 );
 
 wire r_0, r_1, r_2, r_3, r_4;
-assign in_1 = in + 1;
 
 assign r_4 = |in[31:16];
 wire [15:0] in16 = r_4 ? in[31:16] : in[15:0];
@@ -19,5 +18,6 @@ assign r_1 = |in4[3:2];
 wire [1:0] in2 = r_1 ? in4[3:2] : in4[1:0];
 assign r_0 = in2[1];
 
+assign out = {1'b0, r_4, r_3, r_2, r_1, r_0} + 1;
 
 endmodule

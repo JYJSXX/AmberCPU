@@ -1,8 +1,7 @@
 `include "../config.vh"
 `include "../csr.vh"
-module csr#(
-    TLBIDX_WIDTH = 4
-)
+`include "../TLB/TLB.vh"
+module csr
 (
     input clk,
     input aclk,
@@ -32,6 +31,12 @@ module csr#(
     output [2:0] DMW1_PSEG,
     output [2:0] DMW0_VSEG,
     output [2:0] DMW1_VSEG,
+    output [31:0] ASID,
+    output [31:0] TLBEHI,
+    
+    output     [`TLB_CPRLEN - 1:0]     tlb_cpr_out,    
+    output     [`TLB_TRANSLEN - 1:0]   tlb_trans_1_out,
+    output     [`TLB_TRANSLEN - 1:0]   tlb_trans_2_out,
 
     input exception, //进入例外
     input ertn, //例外返回
@@ -44,20 +49,20 @@ module csr#(
     input wen_badv, //写入例外地址
     // input [`PGD_BASE] pgd_base_in, //页表基址
     // input wen_pgd_base, //写入页表基址
-    input [18:0] tlbehi_vppn_in,
-    input wen_tlbehi_vppn,
+    //input [18:0] tlbehi_vppn_in,
+    //input wen_tlbehi_vppn,
     input llbit_set,
     //input llbit_clear, //by other没有用，直接看ertn就行
-    input [31:0] tlbidx_in,
-    input [31:0] wen_tlbidx, //每一位都有使能
-    input [31:0] tlbehi_in,
-    input [31:0] wen_tlbehi,
-    input [31:0] tlbelo0_in,
-    input [31:0] wen_tlbelo0,
-    input [31:0] tlbelo1_in,
-    input [31:0] wen_tlbelo1,
-    input [9:0] asid_asid_in,
-    input wen_asid_asid,
+    input tlbsrch_ready, //已经判断完是否命中
+    input tlbsrch_hit, //TLBSRCH是否命中
+    input [4:0] tlb_index_in, //TLB命中的索引   
+    input [`TLBIDX_WIDTH-1 :0] tlbidx_index_in,
+
+    input tlbrd_ready,
+    input tlbrd_hit,
+    input     [`TLB_CPRLEN - 1:0]     tlbrd_cpr,    
+    input     [`TLB_TRANSLEN - 1:0]   tlbrd_trans_1,
+    input     [`TLB_TRANSLEN - 1:0]   tlbrd_trans_2,
     input [7:0] hardware_interrupt
 
     // input tlb_index_we,
@@ -446,40 +451,189 @@ always @(posedge clk)
         end else if(software_en&&addr==`CSR_TLBRENTRY) begin
             if(wen) tlbrentry_pa[`TLBRENTRY_PA]<=wdata[`TLBRENTRY_PA];
         end
+    wire vppn_in;
+    wire ps_in;
+    wire g_in;
+    wire asid_in;
+    wire e_in;
+    wire ppn0_in;
+    wire plv0_in;
+    wire mat0_in;
+    wire d0_in;
+    wire v0_in;
+    wire ppn1_in;
+    wire plv1_in;
+    wire mat1_in;
+    wire d1_in;
+    wire v1_in;
 
+    assign vppn_in=tlbrd_cpr[`TLB_VPPN];
+    assign ps_in=tlbrd_cpr[`TLB_PS];
+    assign g_in=tlbrd_cpr[`TLB_G];
+    assign asid_in=tlbrd_cpr[`TLB_ASID];
+    assign e_in=tlbrd_cpr[`TLB_E];
+
+    assign ppn0_in=tlbrd_trans_1[`TLB_PPN];
+    assign plv0_in=tlbrd_trans_1[`TLB_PLV];
+    assign mat0_in=tlbrd_trans_1[`TLB_MAT];
+    assign d0_in=tlbrd_trans_1[`TLB_D];
+    assign v0_in=tlbrd_trans_1[`TLB_V];
+
+    assign ppn1_in=tlbrd_trans_2[`TLB_PPN];
+    assign plv1_in=tlbrd_trans_2[`TLB_PLV];
+    assign mat1_in=tlbrd_trans_2[`TLB_MAT];
+    assign d1_in=tlbrd_trans_2[`TLB_D];
+    assign v1_in=tlbrd_trans_2[`TLB_V];
+
+    assign tlb_cpr_out[`TLB_VPPN] = tlbehi_vppn;
+    assign tlb_cpr_out[`TLB_PS] = tlbidx_ps;
+    assign tlb_cpr_out[`TLB_G] = tlbelo0_g;
+    assign tlb_cpr_out[`TLB_ASID] = asid_asid;
+    assign tlb_cpr_out[`TLB_E] = tlbelo0_v;
+
+    assign tlb_trans_1_out[`TLB_PPN] = tlbelo0_ppn;
+    assign tlb_trans_1_out[`TLB_PLV] = tlbelo0_plv;
+    assign tlb_trans_1_out[`TLB_MAT] = tlbelo0_mat;
+    assign tlb_trans_1_out[`TLB_D] = tlbelo0_d;
+    assign tlb_trans_1_out[`TLB_V] = tlbelo0_v;
+
+    assign tlb_trans_2_out[`TLB_PPN] = tlbelo1_ppn;
+    assign tlb_trans_2_out[`TLB_PLV] = tlbelo1_plv;
+    assign tlb_trans_2_out[`TLB_MAT] = tlbelo1_mat;
+    assign tlb_trans_2_out[`TLB_D] = tlbelo1_d;
+    assign tlb_trans_2_out[`TLB_V] = tlbelo1_v;
     //TIBIDX
-    // always @(posedge clk)
-    //     if(~aresetn) begin
-    //         tlbidx_index<=0;
-    //         tlbidx_ps<=0;
-    //         tlbidx_ne<=0;
-    //     end
-    //     else if(software_en&&addr==`CSR_TLBIDX) begin
-    //         if( 0<TLBIDX_WIDTH&&wen) tlbidx_index[ 0]<=wdata[ 0];
-    //         if( 1<TLBIDX_WIDTH&&wen) tlbidx_index[ 1]<=wdata[ 1];
-    //         if( 2<TLBIDX_WIDTH&&wen) tlbidx_index[ 2]<=wdata[ 2];
-    //         if( 3<TLBIDX_WIDTH&&wen) tlbidx_index[ 3]<=wdata[ 3];
-    //         if( 4<TLBIDX_WIDTH&&wen) tlbidx_index[ 4]<=wdata[ 4];
-    //         if( 5<TLBIDX_WIDTH&&wen) tlbidx_index[ 5]<=wdata[ 5];
-    //         if( 6<TLBIDX_WIDTH&&wen) tlbidx_index[ 6]<=wdata[ 6];
-    //         if( 7<TLBIDX_WIDTH&&wen) tlbidx_index[ 7]<=wdata[ 7];
-    //         if( 8<TLBIDX_WIDTH&&wen) tlbidx_index[ 8]<=wdata[ 8];
-    //         if( 9<TLBIDX_WIDTH&&wen) tlbidx_index[ 9]<=wdata[ 9];
-    //         if(10<TLBIDX_WIDTH&&wen) tlbidx_index[10]<=wdata[10];
-    //         if(11<TLBIDX_WIDTH&&wen) tlbidx_index[11]<=wdata[11];
-    //         if(12<TLBIDX_WIDTH&&wen) tlbidx_index[12]<=wdata[12];
-    //         if(13<TLBIDX_WIDTH&&wen) tlbidx_index[13]<=wdata[13];
-    //         if(14<TLBIDX_WIDTH&&wen) tlbidx_index[14]<=wdata[14];
-    //         if(15<TLBIDX_WIDTH&&wen) tlbidx_index[15]<=wdata[15];
-    //         if(wen) tlbidx_ps[31:24]<=wdata[31:24];
-    //     end else begin
-    //         if(tlb_index_we) tlbidx_index <= {{16-TLBIDX_WIDTH{1'b0}},tlb_index_in};
-    //         if(tlb_ps_we) tlbidx_ps <= tlb_ps_in;
-    //         if(tlb_ne_we) tlbidx_ne <= tlb_ne_in;
-    //     end
+    always @(posedge clk)
+        if(~aresetn) begin
+            tlbidx_index<=0;
+            tlbidx_ps<=0;
+            tlbidx_ne<=0;
+        end
+        else if(software_en&&addr==`CSR_TLBIDX) begin
+            if(wen) tlbidx_index[4:0]<=wdata[4:0];
+            if(wen) tlbidx_ps[31:24]<=wdata[31:24];
+        end 
+        else begin
+            if(tlbsrch_ready) begin
+                if(tlbsrch_hit) begin
+                    tlbidx_index[4:0]<=tlb_index_in;
+                    tlbidx_ne<=0;
+                end
+                else begin
+                    tlbidx_ne<=1;
+                end
+            end 
+            else if(tlbrd_ready)
+                if(tlbrd_hit) begin
+                    tlbidx_index[`TLBIDX_PS]<=ps_in;
+                    tlbidx_ne<=0;
+                end
+                else begin
+                    tlbidx_index[`TLBIDX_PS]<=0;
+                    tlbidx_index[`TLBIDX_NE]<=1;
+                end
+        end
 
 
-    //TLB再说
+    //TLBEHI
+    always@(posedge clk)begin
+        if(~aresetn)
+            tlbehi_vppn<=0;
+        else if(software_en&&addr==`CSR_TLBEHI) begin
+            if(wen) tlbehi_vppn[`TLBEHI_VPPN]<=wdata[`TLBEHI_VPPN];
+        end else if(tlbrd_ready) begin
+            if(tlbrd_hit) begin
+                tlbehi_vppn<=vppn_in;
+            end
+            else begin
+                tlbehi_vppn<=0;
+            end
+        end
+    end
+
+    //TLBELO0
+    always@(posedge clk) begin
+        if(~aresetn)begin
+            tlbelo0_d<=0;
+            tlbelo0_g<=0;
+            tlbelo0_mat<=0;
+            tlbelo0_plv<=0;
+            tlbelo0_ppn<=0;
+            tlbelo0_v<=0;
+
+        end
+        else if(software_en&& addr==`CSR_TLBELO0) begin
+            if(wen) begin
+                tlbelo0_d[`TLBELO_D]<=wdata[`TLBELO_D];
+                tlbelo0_g[`TLBELO_G]<=wdata[`TLBELO_G];
+                tlbelo0_mat[`TLBELO_MAT]<=wdata[`TLBELO_MAT];
+                tlbelo0_plv[`TLBELO_PLV]<=wdata[`TLBELO_PLV];
+                tlbelo0_ppn[`TLBELO_PPN]<=wdata[`TLBELO_PPN];
+                tlbelo0_v[`TLBELO_V]<=wdata[`TLBELO_V];
+            
+            end
+
+        end
+        else if(tlbrd_ready)begin
+            if(tlbrd_hit) begin
+                tlbelo0_d<=d0_in;
+                tlbelo0_g<=g_in;
+                tlbelo0_mat<=mat0_in;
+                tlbelo0_plv<=plv0_in;
+                tlbelo0_ppn<=ppn0_in;
+                tlbelo0_v<=v0_in;
+            end
+            else begin
+                tlbelo0_d<=0;
+                tlbelo0_g<=0;
+                tlbelo0_mat<=0;
+                tlbelo0_plv<=0;
+                tlbelo0_ppn<=0;
+                tlbelo0_v<=0;
+            
+            end
+        end
+    end
+
+    //TLBELO1
+    always@(posedge clk) begin
+        if(~aresetn) begin
+            tlbelo1_d<=0;
+            tlbelo1_g<=0;
+            tlbelo1_mat<=0;
+            tlbelo1_plv<=0;
+            tlbelo1_ppn<=0;
+            tlbelo1_v<=0;
+        end
+        else if(software_en&&addr==`CSR_TLBELO1) begin
+            if(wen) begin
+                tlbelo1_d[`TLBELO_D]<=wdata[`TLBELO_D];
+                tlbelo1_g[`TLBELO_G]<=wdata[`TLBELO_G];
+                tlbelo1_mat[`TLBELO_MAT]<=wdata[`TLBELO_MAT];
+                tlbelo1_plv[`TLBELO_PLV]<=wdata[`TLBELO_PLV];
+                tlbelo1_ppn[`TLBELO_PPN]<=wdata[`TLBELO_PPN];
+                tlbelo1_v[`TLBELO_V]<=wdata[`TLBELO_V];
+            end
+        end
+        else if(tlbrd_ready)begin
+            if(tlbrd_hit) begin
+                tlbelo1_d<=d1_in;
+                tlbelo1_g<=g_in;
+                tlbelo1_mat<=mat1_in;
+                tlbelo1_plv<=plv1_in;
+                tlbelo1_ppn<=ppn1_in;
+                tlbelo1_v<=v1_in;
+            end
+            else begin
+                tlbelo1_d<=0;
+                tlbelo1_g<=0;
+                tlbelo1_mat<=0;
+                tlbelo1_plv<=0;
+                tlbelo1_ppn<=0;
+                tlbelo1_v<=0;
+            end
+        end
+    end
 
 
     //ASID
@@ -488,8 +642,15 @@ always @(posedge clk)
             asid_asid <= 0;
         else if(software_en&&addr==`CSR_ASID) begin
             if(wen) asid_asid[`ASID_ASID]<=wdata[`ASID_ASID];
-        end else if(wen_asid_asid)
-            asid_asid <= asid_asid_in;
+        end
+         else if(tlbrd_ready) begin
+            if(tlbrd_hit) begin
+                asid_asid<=asid_in;
+            end
+            else begin
+                asid_asid<=0;
+            end
+         end
 
         //PGDL
     always @(posedge clk)
@@ -646,5 +807,7 @@ assign rdata[31:0] = {32{addr==`CSR_CRMD}} & csr_crmd |
         assign DMW1_PSEG=csr_dmw1[`DMW1_PSEG];
         assign DMW1_VSEG=csr_dmw1[`DMW1_VSEG];
         assign PG=csr_crmd[4];
+        assign ASID=csr_asid;
+        assign TLBEHI=csr_tlbehi;
         
 endmodule

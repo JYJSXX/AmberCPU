@@ -3,13 +3,14 @@
 module EX_Privilege(
     input                               clk,
     input                               rstn,
+    input           [31:0]              inst,
 
     input                               en,             //使能信号 valid信号
-    input           [31:0]              rd_data,        //R[rd]
+    input           [31:0]              rk_data,        //R[rk]
     input           [31:0]              rj_data,        //R[rj]
     input           [31:0]              ins,            //指令
-    input           [WIDTH_UOP - 1 : 0] pr_type,        //指令类型
-    output                              done,           //特权指令握手ready信号
+    input           [`WIDTH_UOP - 1 : 0] pr_type,        //指令类型
+    output   reg                        done,           //特权指令握手ready信号
 
     //CSR
     output  reg     [31:0]              csr_addr,       //csr 读写地址
@@ -17,26 +18,44 @@ module EX_Privilege(
     output  reg                         csr_wen,        //csr 写使能
     output  reg                         csr_ren,        //csr 读使能
     input           [31:0]              csr_rdata,      //csr 读数据
-    output  reg     [31:0]              csr_rdata_reg,  //csr -> rj 写数据
+    output  reg     [31:0]              csr_rdata_reg,  //csr -> rd 写数据
     //CACOP
-    output  reg     [1:0]               cacop_ins_type, //cacop 指令类型
+    output          [1:0]               cacop_ins_type, //cacop 指令类型
     output          [31:0]              cacop_vaddr,    //cacop 虚拟地址
     output  reg                         cacop_i_en,     //cacop icache使能
     output  reg                         cacop_d_en,     //cacop dcache使能
     input                               cacop_i_ready,  //cacop icache ar通道握手
     input                               cacop_d_ready,  //cacop dcache ar通道握手
     input                               cacop_i_done,   //cacop icache r通道握手
-    input                               cacop_d_done    //cacop dcache r通道握手
+    input                               cacop_d_done,    //cacop dcache r通道握手
     //ERTN
     output  reg                         ertn_en,        //ertn使能
     //IDLE
     input                               i_idle,         //i_cache 是否处于idle状态
     input                               d_idle,         //d_cache 是否处于idle状态
     output  reg                         block_cache,    //是否阻塞cache
-    output  reg                         block_clock     //是否阻塞时钟
+    output  reg                         block_clock,     //是否阻塞时钟
+
+    //TLB
+    input                               tlbsrch_ready,  //tlb告诉exe已经查完了
+    output   reg                        tlbsrch_valid,        //exe告诉tlb按值查找得到索引
+    input                               tlbrd_ready,    //tlb告诉exe已经读完了
+    output   reg                        tlbrd_valid,          //exe告诉tlb按索引读取
+    input                               tlbwr_ready,    //tlb告诉exe已经写完了
+    output   reg                        tlbwr_valid,          //exe告诉tlb写入
+    input                               tlbfill_ready,  //tlb告诉exe已经填完了
+    output   reg                        tlbfill_valid,        //exe告诉tlb写入
+    input                               invtlb_ready,   //tlb告诉exe已经写完了
+    output   reg                        invtlb_valid,         //exe告诉tlb写入
+    output           [2:0]              invtlb_op,
+    output           [31:0]             invtlb_asid,
+    output           [31:0]             invtlb_va
     
 );
-
+    wire [1:0] pri_tlb_type;
+    wire invtlb;
+    assign pri_tlb_type=inst[11:10]; //10 TLBSRCH  11 TLBRD  00 TLBWR  01 TLBFILL
+    assign invtlb=inst[16];
     wire    [13:0]      csr_num = ins[23:10];
     wire    [4:0]       rj = ins[9:5];
     wire                isxchg = |rj[4:1];
@@ -44,7 +63,7 @@ module EX_Privilege(
     assign cacop_ins_type = ins[4:3];
     wire is_icache = cacop_ins_type == pr_type[`INS_CACHE] & (ins[2:0] == 3'b000);
     wire is_dcache = cacop_ins_type == pr_type[`INS_CACHE] & (ins[2:0] == 3'b001);
-    wire [11:0] imm = ins[21:10]
+    wire [11:0] imm = ins[21:10];
     wire [31:0] imm_ext = {{20{imm[11]}}, imm};
     assign cacop_vaddr = rj_data + imm_ext;
 
@@ -57,7 +76,13 @@ module EX_Privilege(
         PR_CACOP_D_WAIT = 5,
         PR_ERTN = 6,
         PR_IDLE_WAIT = 7,
-        PR_IDLE = 8;
+        PR_IDLE = 8,
+        PR_TLBSRCH = 9,
+        PR_TLBRD = 10,
+        PR_TLBWR = 11,
+        PR_TLBFILL = 12,
+        PR_TLBINV = 13;
+
     reg [4:0] PR_state = PR_INIT, PR_next_state = PR_INIT;
 
     always @(posedge clk or negedge rstn)
@@ -65,7 +90,7 @@ module EX_Privilege(
         if(~rstn)
             PR_state <= PR_INIT;
         else
-            PR_state <= next_state;
+            PR_state <= PR_next_state;
     end
 
     always @(*)
@@ -86,6 +111,18 @@ module EX_Privilege(
                         PR_next_state = PR_ERTN;
                     else if (pr_type[`INS_IDLE])
                         PR_next_state = PR_IDLE_WAIT;
+                    else if(pr_type[`INS_TLB] && pri_tlb_type == 2'b10)
+                        PR_next_state = PR_TLBSRCH;
+                    else if(pr_type[`INS_TLB] && pri_tlb_type == 2'b11)
+                        PR_next_state = PR_TLBRD;
+                    else if(pr_type[`INS_TLB] && pri_tlb_type == 2'b00)
+                        PR_next_state = PR_TLBWR;
+                    else if(pr_type[`INS_TLB] && pri_tlb_type == 2'b01)
+                        PR_next_state = PR_TLBFILL;
+                    else if(pr_type[`INS_TLB] && invtlb)
+                        PR_next_state = PR_TLBINV;
+                    else
+                        PR_next_state = PR_INIT;
                 end
             end
             PR_CSR:
@@ -125,6 +162,42 @@ module EX_Privilege(
             begin
                 PR_next_state = PR_INIT;
             end
+            PR_TLBSRCH:
+            begin
+                if(tlbsrch_ready)
+                    PR_next_state = PR_INIT;
+                else
+                    PR_next_state = PR_TLBSRCH;
+            end
+            PR_TLBRD:
+            begin
+                if(tlbrd_ready)
+                    PR_next_state = PR_INIT;
+                else
+                    PR_next_state = PR_TLBRD;
+            end
+            PR_TLBWR:
+            begin
+                if(tlbwr_ready)
+                    PR_next_state = PR_INIT;
+                else
+                    PR_next_state = PR_TLBWR;
+            end
+            PR_TLBFILL:
+            begin
+                if(tlbfill_ready)
+                    PR_next_state = PR_INIT;
+                else
+                    PR_next_state = PR_TLBFILL;
+            end
+            PR_TLBINV:
+            begin
+                if(invtlb_ready)
+                    PR_next_state = PR_INIT;
+                else
+                    PR_next_state = PR_TLBINV;
+            end
+
         endcase
     end
 
@@ -137,6 +210,12 @@ module EX_Privilege(
         done = 0;
         ertn_en = 0;
         block_cache = 0;
+        block_clock = 0;
+        tlbsrch_valid = 0;
+        tlbrd_valid = 0;
+        tlbwr_valid = 0;
+        tlbfill_valid = 0;
+        invtlb_valid = 0;
         case(PR_state)
             PR_INIT:
             begin
@@ -149,11 +228,21 @@ module EX_Privilege(
                     ertn_en = 1;
                 else if (en & pr_type[`INS_IDLE])
                     block_cache = 1;
+                else if(en && pr_type[`INS_TLB] && pri_tlb_type == 2'b10)
+                    tlbsrch_valid = 1;
+                else if(en && pr_type[`INS_TLB] && pri_tlb_type == 2'b11)
+                    tlbrd_valid = 1;
+                else if(en && pr_type[`INS_TLB] && pri_tlb_type == 2'b00)
+                    tlbwr_valid = 1;
+                else if(en && pr_type[`INS_TLB] && pri_tlb_type == 2'b01)
+                    tlbfill_valid = 1;
+                else if(en && pr_type[`INS_TLB] && invtlb)
+                    invtlb_valid = 1;
             end
             PR_CSR:
             begin
                 csr_addr = csr_num;
-                csr_wdata = isxchg ? ((~rj_data & csr_rdata_reg) | (rj_data & rd_data)) : rd_data;
+                csr_wdata = isxchg ? ((~rj_data & csr_rdata_reg) | (rj_data & rk_data)) : rk_data;
                 csr_wen = |rj;
                 csr_ren = 1;
                 done = 1;
@@ -174,7 +263,7 @@ module EX_Privilege(
             end
             PR_IDLE_WAIT:
             begin
-                block_cache = 1
+                block_cache = 1;
             end
             PR_IDLE:
             begin
@@ -182,6 +271,16 @@ module EX_Privilege(
                 block_cache = 1;
                 done = 1;
             end
+            PR_TLBSRCH:
+                done=1;
+            PR_TLBRD:
+                done=1;
+            PR_TLBWR:
+                done=1;
+            PR_TLBFILL:
+                done=1;
+            PR_TLBINV:
+                done=1;
             
         endcase
     end
