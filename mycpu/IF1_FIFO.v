@@ -34,7 +34,7 @@ module IF1_FIFO(
     input  [1:0]        priv_flag,
     output [31:0]       pc_from_PRIV,
     output              set_pc_from_PRIV,
-    output              flush_from_if1_fifo,
+    output reg          flush_from_if1_fifo,
     input               icache_idle,
     input               dcache_idle,
     input               csr_done,
@@ -46,7 +46,7 @@ module IF1_FIFO(
     output reg[31:0]    if1_fifo_inst1,
     output reg[31:0]    if1_fifo_icache_badv,
     output reg[6:0]     if1_fifo_icache_exception,
-    output reg          if1_fifo_icache_excp_flag,
+    output reg[1:0]     if1_fifo_icache_excp_flag,
     output reg[31:0]    if1_fifo_icache_cookie_out,
     output reg          if1_fifo_cacop_ready,
     output reg          if1_fifo_cacop_complete
@@ -115,6 +115,7 @@ module IF1_FIFO(
     end
 
     always @(*) begin//FSM
+        flush_from_if1_fifo=0;
         case (stat)
             IDLE:begin
                 next_stat=  ibar_flag?  WAIT_EX_IBAR:
@@ -123,13 +124,16 @@ module IF1_FIFO(
                             IDLE;
             end
             WAIT_EX_IBAR:begin
-                next_stat=  ibar_flag_from_ex?WAIT_CACHE_IDLE:WAIT_EX_IBAR;            
+                next_stat=  ibar_flag_from_ex?WAIT_CACHE_IDLE:WAIT_EX_IBAR;  
+                flush_from_if1_fifo=1;
             end
             WAIT_EX_CSR:begin
                 next_stat=  csr_flag_from_ex ?WAIT_CSR_OK    :WAIT_EX_CSR;
+                flush_from_if1_fifo=1;
             end
             WAIT_TLB_TLB:begin
-                next_stat=  tlb_flag_from_tlb?WAIT_TLB_OK    :WAIT_TLB_TLB;//   TODO for short clk
+                next_stat=  tlb_flag_from_tlb?WAIT_TLB_OK    :WAIT_TLB_TLB;
+                flush_from_if1_fifo=1;
             end
             WAIT_CACHE_IDLE:begin
                 next_stat=  cache_idle?WAIT_FETCH            :WAIT_CACHE_IDLE;

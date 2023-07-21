@@ -21,9 +21,7 @@ module FIFO_ID (
     input [31:0] fifo_cookie_out,
     input [6:0]  fifo_exception,
     input [1:0]  fifo_excp_flag,
-    input [1:0]  fifo_ibar_flag,
-    input        fifo_cacop_ready,
-    input        fifo_cacop_complete,
+    input [1:0]  fifo_priv_flag,
 
     input fetch_buf_empty,
     input fetch_buf_full,
@@ -36,9 +34,7 @@ module FIFO_ID (
     output reg[31:0] fifo_id_cookie_out,
     output reg[6:0]  fifo_id_exception,
     output reg[1:0]  fifo_id_excp_flag,
-    output reg[1:0]  fifo_id_ibar_flag,
-    output reg       fifo_id_cacop_ready,
-    output reg       fifo_id_cacop_complete
+    output reg[1:0]  fifo_id_priv_flag
     `ifdef FIFO_ID_DIFFTEST
 
     `endif 
@@ -59,9 +55,7 @@ module FIFO_ID (
             fifo_id_cookie_out<=1958;
             fifo_id_exception<=7'h00;
             fifo_id_excp_flag<=2'b00;
-            fifo_id_ibar_flag<=2'b00;
-            fifo_id_cacop_ready<=0;
-            fifo_id_cacop_complete<=0;
+            fifo_id_priv_flag<=2'b00;
         end else if(fifo_readygo&&id_allowin)begin
             fifo_id_inst0   <=fifo_inst0;
             fifo_id_inst1   <=fifo_inst1;
@@ -72,9 +66,7 @@ module FIFO_ID (
             fifo_id_cookie_out<=fifo_cookie_out;
             fifo_id_exception<=fifo_exception;
             fifo_id_excp_flag<=fifo_excp_flag;
-            fifo_id_ibar_flag<=fifo_ibar_flag;
-            fifo_id_cacop_ready<=fifo_cacop_ready;
-            fifo_id_cacop_complete<=fifo_cacop_complete;
+            fifo_id_priv_flag<=fifo_priv_flag;
         end
     end
 endmodule
