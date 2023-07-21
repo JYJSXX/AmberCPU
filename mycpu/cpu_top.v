@@ -1081,7 +1081,7 @@ module core_top(
         .WORD_OFFSET_WIDTH                 ( 4 )
     )u_dcache(
         .clk                               ( clk                               ),
-        .rstn                              ( aresetn                              ),
+        .rstn                              ( rstn                              ),
         ./* from pipeline */   addr        ( /* from pipeline */   addr        ),
         .p_addr                            ( p_addr                            ),
         .rvalid                            ( rvalid                            ),
@@ -1095,6 +1095,7 @@ module core_top(
         .uncache                           ( uncache                           ),
         .signed_ext                        ( signed_ext                        ),
         .idle                              ( idle                              ),
+        .flush                             ( flush                             ),
         ./* from AXI arbiter */   d_rvalid ( /* from AXI arbiter */   d_rvalid ),
         .d_rready                          ( d_rready                          ),
         .d_raddr                           ( d_raddr                           ),
@@ -1120,6 +1121,7 @@ module core_top(
         .llbit                             ( llbit                             ),
         .llbit_clear                       ( llbit_clear                       )
     );
+
 
 
 
