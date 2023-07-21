@@ -574,6 +574,48 @@ always @(posedge clk or negedge rstn)begin
     end
 end
 
+//TLB INVALIDATE PART
 
+always @(posedge clk or negedge rstn)begin
+    if (~rstn)begin
+        TLBINV_ready <= 0;
+    end
+    else if (TLBINV_valid) begin
+        if (TLBINV_ready) TLBINV_ready <= 0;
+        else TLBINV_ready <= 1;
+        case(TLBINVLD_OP)
+            5'h00, 5'h01: begin
+                for (j = 0; j < `TLB_NUM; j = j + 1)begin
+                    tlb_cpr[j][`TLB_E] <= 0;
+                end
+            end
+            5'h02: begin
+                for (j = 0; j < `TLB_NUM; j = j + 1)begin
+                    if (rd_TLB_G[j]) tlb_cpr[j][`TLB_E] <= 0;
+                end
+            end
+            5'h03: begin
+                for (j = 0; j < `TLB_NUM; j = j + 1)begin
+                    if (~rd_TLB_G[j]) tlb_cpr[j][`TLB_E] <= 0;
+                end
+            end
+            5'h04: begin
+                for (j = 0; j < `TLB_NUM; j = j + 1)begin
+                    if (~rd_TLB_G[j] & (rd_TLB_ASID[j] == TLBINVLD_ASID)) tlb_cpr[j][`TLB_E] <= 0;
+                end
+            end
+            5'h05: begin
+                for (j = 0; j < `TLB_NUM; j = j + 1)begin
+                    if (~rd_TLB_G[j] & (rd_TLB_ASID[j] == TLBINVLD_ASID) & (rd_TLB_VPPN == TLBINVLD_VA)) tlb_cpr[j][`TLB_E] <= 0;
+                end
+            end
+            5'h06: begin
+                for (j = 0; j < `TLB_NUM; j = j + 1)begin
+                    if ((rd_TLB_G[j] | (rd_TLB_ASID[j] != TLBINVLD_ASID)) & (rd_TLB_VPPN == TLBINVLD_VA)) tlb_cpr[j][`TLB_E] <= 0;
+                end
+            end
+        endcase
+    end
+end
 
 endmodule
