@@ -61,9 +61,10 @@ module core_top(
     output debug1_valid
 );
 
-
+    assign {arlock, arcache, arprot, awlock, awcache, awprot} = 0;
+    assign {awid, wid} = 8'hff;
     wire clk;
-    assign clk=aclk; //idle的时钟没写，暂时用clk代替
+    assign clk=aclk; //TODO:idle的时钟没写，暂时用clk代替
 
 
 
@@ -1153,36 +1154,54 @@ module core_top(
     );
 
 
-    axi2dpram u_axi2dpram(
-        .aclk     ( aclk     ),
-        .aresetn  ( aresetn  ),
-        .aw_id    ( aw_id    ),
-        .aw_addr  ( aw_addr  ),
-        .aw_len   ( aw_len   ),
-        .aw_size  ( aw_size  ),
-        .aw_valid ( aw_valid ),
-        .aw_ready ( aw_ready ),
-        .w_data   ( w_data   ),
-        .w_strb   ( w_strb   ),
-        .w_last   ( w_last   ),
-        .w_valid  ( w_valid  ),
-        .w_ready  ( w_ready  ),
-        .b_id     ( b_id     ),
-        .b_valid  ( b_valid  ),
-        .b_ready  ( b_ready  ),
-        .ar_id    ( ar_id    ),
-        .ar_addr  ( ar_addr  ),
-        .ar_len   ( ar_len   ),
-        .arsize   ( arsize   ),
-        .ar_valid ( ar_valid ),
-        .ar_ready ( ar_ready ),
-        .r_id     ( r_id     ),
-        .r_data   ( r_data   ),
-        .r_last   ( r_last   ),
-        .r_valid  ( r_valid  ),
-        .r_ready  ( r_ready  )
-    );
+    
+    sram_axi SRAM2AXI(
+        .aclk           (aclk),           //时钟信号
+        .aresetn        (aresetn),        //复位信号
+        .ar_id          (arid),          //读ID 0 for instruction, 1 for data
+        .ar_addr        (araddr),        //读地址
+        .ar_len         (arlen),         //读长度 默认为0xf
+        .ar_size        (arsize),        //读大小即粒度 num of bytes = 2^size 默认为2
+        .ar_burst       (arburst),       //读突发类型 默认为1 increamental
+        .ar_valid       (arvalid),       //读有效
+        .ar_ready       (arready),       //读准备好
+        .r_id           (rid),           //读数据对应读地址ID
+        .r_data         (rdata),         //读数据
+        .r_last         (rlast),         //读数据结束
+        .r_valid        (rvalid),        //读数据有效
+        .r_ready        (rready),        //读数据准备好
+        .aw_addr        (awaddr),        //写地址
+        .aw_size        (awsize),        //写大小
+        .aw_len         (awlen),         //写长度
+        .aw_burst       (awburst),       //写突发类型
+        .aw_valid       (awvalid),       //写有效
+        .aw_ready       (awready),       //写准备好
+        .w_data         (wdata),         //写数据
+        .w_valid        (wvalid),        //写有效
+        .w_ready        (wready),        //写准备好
+        .w_last         (wlast),         //写使能
+        .w_strb         (wstrb),         //字节写通位
+        .b_valid        (bvalid),        //写响应有效
+        .b_ready        (bready),        //写响应准备好
+        .i_raddr        (i_raddr),        //指令cache读地址
+        .i_rdata        (i_rdata),        //指令cache读数据
+        .i_rvalid       (i_rvalid),       //指令cache读有效
+        .i_rready       (i_rready),       //指令cache读准备好
+        .i_rlen         (i_rlen),         //指令cache读长度
+        .d_raddr        (d_raddr),        //数据cache读地址
+        .d_rdata        (d_rdata),        //数据cache读数据
+        .d_rvalid       (d_rvalid),       //数据cache读有效
+        .d_rready       (d_rready),       //数据cache读准备好
+        .d_rlen         (d_rlen),         //数据cache读长度
+        .d_waddr        (d_waddr),        //数据cache写地址
+        .d_wdata        (d_wdata),        //数据cache写数据
+        .d_wvalid       (d_wvalid),       //数据cache写有效
+        .d_wready       (d_wready),       //数据cache写准备好
+        .d_wlen         (d_wlen),         //数据cache写长度
+        .d_wstrb        (d_wstrb)         //数据cache写使能
 
+);
+    
 
     HazardUnit u_HazardUnit(
         .flush_from_wb     ( flush_from_wb     ),
