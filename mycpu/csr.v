@@ -315,7 +315,7 @@ always @(posedge clk)
             if(wen) crmd_plv[`CRMD_PLV]  <= wdata[`CRMD_PLV];
             if(wen) crmd_ie[`CRMD_IE]   <= wdata[`CRMD_IE];
             if(wen) crmd_datf[`CRMD_DATF] <= wdata[`CRMD_DATF];
-            if(wen) crmd_datm[`CRMD_DATF] <= wdata[`CRMD_DATM];
+            if(wen) crmd_datm[`CRMD_DATM] <= wdata[`CRMD_DATM];
             //只在{pg,da}处在合法状态时更新
             if(wen) begin
                 if(pg_next ^ da_next) begin
@@ -510,7 +510,8 @@ always @(posedge clk)
         end
         else if(software_en&&addr==`CSR_TLBIDX) begin
             if(wen) tlbidx_index[4:0]<=wdata[4:0];
-            if(wen) tlbidx_ps[31:24]<=wdata[31:24];
+            if(wen) tlbidx_ps[`TLBIDX_PS]<=wdata[`TLBIDX_PS];
+            if(wen) tlbidx_ne[`TLBIDX_NE]<=wdata[`TLBIDX_NE];
         end 
         else begin
             if(tlbsrch_ready) begin
@@ -524,12 +525,12 @@ always @(posedge clk)
             end 
             else if(tlbrd_ready)
                 if(tlbrd_hit) begin
-                    tlbidx_index[`TLBIDX_PS]<=ps_in;
+                    tlbidx_ps[`TLBIDX_PS]<=ps_in;
                     tlbidx_ne<=0;
                 end
                 else begin
-                    tlbidx_index[`TLBIDX_PS]<=0;
-                    tlbidx_index[`TLBIDX_NE]<=1;
+                    tlbidx_ps[`TLBIDX_PS]<=0;
+                    tlbidx_ne[`TLBIDX_NE]<=1;
                 end
         end
 

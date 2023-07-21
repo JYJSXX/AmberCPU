@@ -119,7 +119,7 @@ module ID_decoder
    
 
 //判断是否是特权指令
-assign uop[`UOP_PRIVILEDGED] = type_[`INS_CACHE] | type_[`INS_TLB] | type_[`INS_CSR] | type_[`INS_ERTN] | type_[`INS_IDLE] | type_[`INS_BAR];
+//assign uop[`UOP_PRIVILEDGED] = type_[`INS_CACHE] | type_[`INS_TLB] | type_[`INS_CSR] | type_[`INS_ERTN] | type_[`INS_IDLE] | type_[`INS_BAR];
     //Hit类的CACOP指令可以在用户态下执行,当成普通的访存处理
     assign is_priviledged = type_[`INS_CACHE]&&inst[4:3]!=2 || type_[`INS_TLB] || type_[`INS_CSR] || type_[`INS_ERTN] || type_[`INS_IDLE];
     

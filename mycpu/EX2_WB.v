@@ -4,7 +4,7 @@ module EX2_WB(
     input clk,
     input aresetn,
     input flush_in,
-    output flush_out,
+    output flush_out_all,
     //input ex2_valid, 这个信号不要了，由下面一堆valid/div_ready/dcache_ready来代替
     output reg ex2_allowin,
     input [31:0] pc0,
@@ -74,6 +74,7 @@ module EX2_WB(
     output reg [18:0] vppn_out,
     output reg wen_vppn
 );
+assign flush_out_all = exception_flag_out;
 wire csr_crmd_ie;
 assign csr_crmd_ie = csr_crmd[2];
 wire [12:0] csr_estat_is;
@@ -112,7 +113,7 @@ wire [3:0] cond0;
 wire [3:0] cond1;
 assign cond0 = uop0[`UOP_COND];
 assign cond1 = uop1[`UOP_COND];
-    always@(posedge clk)begin
+    always@(posedge clk or negedge aresetn)begin
         if(~aresetn)begin
             ex2_wb_data_0 <= 0;
             ex2_wb_data_1 <= 0;

@@ -64,3 +64,6 @@ excp_flag[1:0] 00表示无异常，10表示上路异常，01表示下路异常�
 
 ## ibar_signal & ibar_pos 信号
 ibar_siganl表示当前指令组（同时发射的两条）
+
+## 什么时候flush(由谁发出，发给谁)
+1.WB段如果exception为1，给全流水线发送flush

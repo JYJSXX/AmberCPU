@@ -293,6 +293,7 @@ module EX_Privilege(
         begin
             cacop_i_en <= 0;
             cacop_d_en <= 0;
+            csr_rdata_reg <= 0;
         end
         else
         begin
