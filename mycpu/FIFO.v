@@ -3,6 +3,7 @@
 module FIFO(
     input clk,
     input rstn,
+    input flush,
 
     //hand shake signal,stage DO NOT GEN SIGNAL!!!
     //stage read signal,write info to stage-stage regs
@@ -133,7 +134,7 @@ module FIFO(
         .DEPTH      (   BUF_DEPTH  )  
     )fetch_buf(
         .clk                        ( clk      ),
-        .rstn                       ( rstn     ),
+        .rstn                       ( rstn|flush     ),
         .pop_en                     ( pop_en  ),
         .din                        ( inst_din  ),
         .write_en                   ( write_en ),
@@ -147,7 +148,7 @@ module FIFO(
         .DEPTH      ( BUF_DEPTH ) 
     )co_pcbdvbuf(
         .clk        ( clk        ),
-        .rstn       ( rstn       ),
+        .rstn       ( rstn|flush       ),
         .pop_en     ( pop_en     ),
         .din        ( pcbdv_din        ),
         .write_en   ( write_en   ),
@@ -161,7 +162,7 @@ module FIFO(
         .DEPTH      ( BUF_DEPTH )
     )co_statbuf(
         .clk        ( clk        ),
-        .rstn       ( rstn       ),
+        .rstn       ( rstn |flush      ),
         .pop_en     ( pop_en     ),
         .din        ( stat_din       ),
         .write_en   ( write_en   ),
