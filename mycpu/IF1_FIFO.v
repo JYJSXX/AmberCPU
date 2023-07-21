@@ -10,9 +10,9 @@ module IF1_FIFO(
     //hand shake signal
     input               fetch_buf_full,
     input               if1_readygo,
-    output              if1_allowin,
+    output  wire        if1_allowin,
     input               fifo_allowin,
-    output              fifo_readygo,
+    output  wire        fifo_readygo,
 
     input               if1_rready,//icache rready makes reg update anytime
     input [31:0]        if1_pc,
@@ -65,9 +65,9 @@ module IF1_FIFO(
     wire pc_fetch_ok;
     wire idle;
 
-    reg[2:0]        stat=0;
-    reg             tmp =0;//for last rready but fifo full
-    reg[2:0]        next_stat;
+    reg[2:0]        stat;
+    reg             tmp;//for last rready but fifo full
+    reg [2:0]       next_stat;
     reg [31:0]      pc_after_priv;
     reg             if1_fifo_valid;
             
@@ -88,7 +88,7 @@ module IF1_FIFO(
                                 (
                                     (stat==IDLE)||(stat==WAIT_FETCH)
                                 )&&
-                                !tmp;
+                                tmp!=0;
     assign idle         = stat==IDLE;
     assign cache_idle = icache_idle&dcache_idle;
     assign pc_fetch_ok= if1_pc==pc_after_priv;
@@ -99,14 +99,17 @@ module IF1_FIFO(
     //TODO add FSM for 1.detect ibar 2.detect ex's ibar signal 3.detect icache&dcache idle
     
 
-    always @(posedge clk or negedge rstn) begin
+    always @(posedge clk) begin
         if (!rstn||flush) begin//TODO:FSM logic & valid_ready logic
             stat<=IDLE;
             pc_after_priv<=`PC_RESET;
             if1_fifo_valid<=0;
         end else begin
-            if (priv_flag) begin
-                pc_after_priv<=priv_flag[0]?if1_pc+4:if1_pc+8;
+            if (priv_flag[0]) begin
+                pc_after_priv<=if1_pc+4;
+            end 
+            else if(priv_flag[1])begin
+                pc_after_priv<=if1_pc+8;
             end
             stat<=next_stat;
             if1_fifo_valid<=if1_rready;
@@ -150,10 +153,11 @@ module IF1_FIFO(
         endcase
     end
 
-    always @ (posedge clk or negedge rstn) begin
+    always @ (posedge clk) begin
         if (~rstn || flush||(!if1_readygo&&fifo_allowin&&fifo_readygo)||(!idle)) begin
             //clear stage-stage reg
             if1_fifo_pc     <=  `PC_RESET;
+
             if1_fifo_pc_next<=  `PC_RESET+4;
             if1_fifo_inst0  <=  `INST_NOP;
             if1_fifo_inst1  <=  `INST_NOP; 

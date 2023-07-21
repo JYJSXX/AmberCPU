@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 `include "define.vh"
 module IF0_IF1 (
     input               clk,
@@ -24,7 +25,7 @@ module IF0_IF1 (
     assign if0_allowin= if1_allowin;
     assign if1_readygo= rready;
 
-    always @(posedge clk or negedge rstn) begin
+    always @(posedge clk) begin
         if((~rstn)||flush||(!if0_readygo&&if1_allowin&&if1_readygo))begin
             //clear stage-stage reg
             if0_if1_pc<=`PC_RESET;
