@@ -13,6 +13,9 @@ module  REG_EX1(
     input   [31:0] id_reg_pc1,
     input   [31:0] id_reg_inst0,
     input   [31:0] id_reg_inst1,
+    input   [6:0] id_reg_exception,
+    input   id_reg_excp_flag,
+    input   [31:0] id_reg_badv,
     input   id_reg_is_ALU_0,
     input   id_reg_is_ALU_1,
     input   id_reg_is_syscall_0,
@@ -42,6 +45,9 @@ module  REG_EX1(
     output  reg [31:0] reg_ex_pc1,
     output  reg [31:0] reg_ex_inst0,
     output  reg [31:0] reg_ex_inst1,
+    output  reg reg_ex_excp_flag,
+    output  reg [6:0] reg_ex_exception,
+    output  reg [31:0] reg_ex_badv,
     output  reg reg_ex_is_ALU_0,
     output  reg reg_ex_is_ALU_1,
     output  reg reg_ex_is_syscall_0,
@@ -96,6 +102,9 @@ always@(posedge clk)begin
         reg_ex_pc1 <= 0;
         reg_ex_inst0 <= 0;
         reg_ex_inst1 <= 0;
+        reg_ex_excp_flag <= 0;
+        reg_ex_exception <= 0;
+        reg_ex_badv <= 0;
         reg_ex_is_ALU_0 <= 0;
         reg_ex_is_ALU_1 <= 0;
         reg_ex_is_syscall_0 <= 0;
@@ -125,6 +134,9 @@ always@(posedge clk)begin
         reg_ex_pc1 <= id_reg_pc1;
         reg_ex_inst0 <= id_reg_inst0;
         reg_ex_inst1 <= id_reg_inst1;
+        reg_ex_excp_flag <= id_reg_excp_flag;
+        reg_ex_exception <= id_reg_exception;
+        reg_ex_badv <= id_reg_badv;
         reg_ex_is_ALU_0 <= id_reg_is_ALU_0;
         reg_ex_is_ALU_1 <= id_reg_is_ALU_1;
         reg_ex_is_syscall_0 <= id_reg_is_syscall_0;
@@ -155,6 +167,9 @@ always@(posedge clk)begin
         reg_ex_pc1 <= reg_ex_pc1;
         reg_ex_inst0 <= reg_ex_inst0;
         reg_ex_inst1 <= reg_ex_inst1;
+        reg_ex_excp_flag <= reg_ex_excp_flag;
+        reg_ex_exception <= reg_ex_exception;
+        reg_ex_badv <= reg_ex_badv;
         reg_ex_is_ALU_0 <= reg_ex_is_ALU_0;
         reg_ex_is_ALU_1 <= reg_ex_is_ALU_1;
         reg_ex_is_syscall_0 <= reg_ex_is_syscall_0;

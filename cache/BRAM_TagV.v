@@ -1,5 +1,5 @@
 module BRAM_tagv #(
-    parameter DATA_WIDTH = 512,
+    parameter DATA_WIDTH = 21,
               ADDR_WIDTH = 6
 )(
     input                   clk,   // Clock
@@ -18,12 +18,12 @@ module BRAM_tagv #(
             ram[i] = 0;
         end
     end
-    always @(posedge clk or posedge ibar) begin
+    always @(posedge clk) begin
         addr_r <= raddr == waddr ? waddr : raddr;
         if(we) ram[waddr] <= din;
         if(ibar) // 无效化
             for (i = 0; i < (1 << ADDR_WIDTH); i = i + 1) begin
-                ram[i] = 0;
+                ram[i] <= 0;
             end
     end
     assign dout = ram[addr_r]; 
