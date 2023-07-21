@@ -75,13 +75,6 @@ module core_top(
     wire flush_from_fifo;
     wire flush_from_if1;
 
-    wire flush_from_wb;    
-    wire flush_from_ex2;   
-    wire flush_from_ex1;   
-    wire flush_from_reg;   
-    wire flush_from_id;    
-    wire flush_from_fifo;  
-    wire flush_from_if1;   
     wire flush_to_ex2_wb;  
     wire flush_to_ex1_ex2; 
     wire flush_to_reg_ex1; 
@@ -94,19 +87,7 @@ module core_top(
     wire flush_to_tlb;     
     wire flush_to_icache ; 
     wire flush_to_dcache ; 
-    wire flush_to_btb ;        wire flush_to_ex2_wb;
-    wire flush_to_ex1_ex2;
-    wire flush_to_reg_ex1;
-    wire flush_to_id_reg;
-    wire flush_to_fifo_id;
-    wire flush_to_fifo;
-    wire flush_to_if1_fifo;
-    wire flush_to_if1;
-    wire flush_to_if0;
-    wire flush_to_tlb;
-    wire flush_to_icache;
-    wire flush_to_dcache;
-    wire flush_to_btb;
+    wire flush_to_btb ;       
 
 
 
