@@ -16,8 +16,8 @@ assign mul_stage1_res_lh = mul_src1[15:0] * mul_src2[31:16];
 assign mul_stage1_res_ll = mul_src1[15:0] * mul_src2[15:0];
 
 wire [31:0] compensate1, compensate2;
-assign compensate1 = mul_src1[31] ? (-mul_src1) : 0;
-assign compensate2 = mul_src2[31] ? (-mul_src2) : 0;
+assign compensate1 = mul_src1[31] ? (-mul_src2) : 0;
+assign compensate2 = mul_src2[31] ? (-mul_src1) : 0;
 assign mul_compensate = sign ? compensate1 + compensate2 : 32'b0;
 
 endmodule
@@ -30,8 +30,7 @@ module Mul_Stage_2(
     input  [31:0]  mul_compensate,
     output [63:0]  mul_stage2_res
 );
-    wire [31:0] mul_stage1_res_mid = mul_stage1_res_hl + mul_stage1_res_lh;
-    wire mul_stage1_res_mid_sign = mul_stage1_res_hl[31] & mul_stage1_res_lh[31];
-    assign mul_stage2_res = {mul_stage1_res_hh, mul_stage1_res_ll} + {15'b0,mul_stage1_res_mid_sign, 16'b0} + {mul_compensate, 32'b0};
+    wire [32:0] mul_stage1_res_mid = mul_stage1_res_hl + mul_stage1_res_lh;
+    assign mul_stage2_res = {mul_stage1_res_hh, mul_stage1_res_ll} + {15'b0, mul_stage1_res_mid, 16'b0} + {mul_compensate, 32'b0};
 
 endmodule

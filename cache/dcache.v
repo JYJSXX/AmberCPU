@@ -25,6 +25,7 @@ module dcache #(
     input                   uncache,            // indicate whether the request is an uncache request
     input                   signed_ext,         // indicate whether the request is a signed extension request
     output                  idle,               // indicate whether the cache is idle
+    input                   flush,              // indicate whether the cache is flush
     /* from AXI arbiter */
     // read
     output reg              d_rvalid,           // valid signal of read request to main memory
