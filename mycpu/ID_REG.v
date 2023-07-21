@@ -7,13 +7,16 @@ module ID_REG(
     output  reg     id_allowin,
     input           reg_allowin,
     output  reg     reg_readygo,
+    
     input [31:0] fifo_id_inst0, //前一个段间寄存器的
     input [31:0] fifo_id_inst1,
     input [31:0] fifo_id_pc0,
     input [31:0] fifo_id_pc1,
     input [31:0] fifo_id_badv,
-    input fifo_id_excp_flag,
-    input [6:0] fifo_id_exception,
+    input [1:0]  fifo_id_excp_flag,
+    input [6:0]  fifo_id_exception,
+    input [1:0]  fifo_id_priv_flag,
+
     input is_ALU_0, //id段内生成的
     input is_ALU_1,
     input is_syscall_0,
@@ -33,32 +36,58 @@ module ID_REG(
     input [4:0] rk0,
     input [4:0] rk1,
 
-    output reg [31:0] id_reg_pc0,
-    output reg [31:0] id_reg_pc1,
-    output reg [31:0] id_reg_inst0,
-    output reg [31:0] id_reg_inst1,
-    output reg [31:0] id_reg_badv,
-    output reg id_reg_excp_flag,
-    output reg [6:0] id_reg_exception,
-    output reg id_reg_is_ALU_0 ,
-    output reg id_reg_is_ALU_1 ,
-    output reg id_reg_is_syscall_0 ,
-    output reg id_reg_is_syscall_1 ,
-    output reg id_reg_is_break_0 ,
-    output reg id_reg_is_break_1 ,
-    output reg id_reg_is_priviledged_0 ,
-    output reg id_reg_is_priviledged_1 ,
-    output reg [`WIDTH_UOP-1:0] id_reg_uop0 ,
-    output reg [`WIDTH_UOP-1:0] id_reg_uop1 ,
-    output reg [31:0] id_reg_imm0 ,
-    output reg [31:0] id_reg_imm1 ,
-    output reg [4:0] id_reg_rd0 ,
-    output reg [4:0] id_reg_rd1 ,
-    output reg [4:0] id_reg_rj0 ,
-    output reg [4:0] id_reg_rj1 ,
-    output reg [4:0] id_reg_rk0 ,
-    output reg [4:0] id_reg_rk1 
+    output  [31:0] iq_pc0,
+    output  [31:0] iq_pc1,
+    output  [31:0] iq_inst0,
+    output  [31:0] iq_inst1,
+    output  [31:0] iq_badv,
+    output  [1 :0] iq_excp_flag,
+    output  [6:0]  iq_exception,
+    output  iq_is_ALU_0 ,
+    output  iq_is_ALU_1 ,
+    output  iq_is_syscall_0 ,
+    output  iq_is_syscall_1 ,
+    output  iq_is_break_0 ,
+    output  iq_is_break_1 ,
+    output  iq_is_priviledged_0 ,
+    output  iq_is_priviledged_1 ,
+    output  [`WIDTH_UOP-1:0] iq_uop0 ,
+    output  [`WIDTH_UOP-1:0] iq_uop1 ,
+    output  [31:0] iq_imm0 ,
+    output  [31:0] iq_imm1 ,
+    output  [4:0]  iq_rd0 ,
+    output  [4:0]  iq_rd1 ,
+    output  [4:0]  iq_rj0 ,
+    output  [4:0]  iq_rj1 ,
+    output  [4:0]  iq_rk0 ,
+    output  [4:0]  iq_rk1 
+
 );
+    reg [31:0] id_reg_pc0;
+    reg [31:0] id_reg_pc1;
+    reg [31:0] id_reg_inst0;
+    reg [31:0] id_reg_inst1;
+    reg [31:0] id_reg_badv;
+    reg [1 :0] id_reg_excp_flag;
+    reg [6:0] id_reg_exception;
+    reg id_reg_is_ALU_0 ;
+    reg id_reg_is_ALU_1 ;
+    reg id_reg_is_syscall_0 ;
+    reg id_reg_is_syscall_1 ;
+    reg id_reg_is_break_0 ;
+    reg id_reg_is_break_1 ;
+    reg id_reg_is_priviledged_0 ;
+    reg id_reg_is_priviledged_1 ;
+    reg [`WIDTH_UOP-1:0] id_reg_uop0 ;
+    reg [`WIDTH_UOP-1:0] id_reg_uop1 ;
+    reg [31:0] id_reg_imm0 ;
+    reg [31:0] id_reg_imm1 ;
+    reg [4:0] id_reg_rd0 ;
+    reg [4:0] id_reg_rd1 ;
+    reg [4:0] id_reg_rj0 ;
+    reg [4:0] id_reg_rj1 ;
+    reg [4:0] id_reg_rk0 ;
+    reg [4:0] id_reg_rk1 ;
 //没考虑flush stall，之后再说
 always@(posedge aclk) begin
     if(~aresetn | (~id_readygo && reg_allowin && reg_readygo)) begin
@@ -145,10 +174,65 @@ always@(posedge aclk) begin
     end
 
 end
-always @(*) begin//combinational logic for hand shake
-    id_allowin=reg_allowin;
-end
-always @(*) begin//combinational logic for hand shake
-    reg_readygo=1;
-end
+IQ u_IQ(
+    .clk                      ( clk                      ),
+    .rstn                     ( rstn                     ),
+    .fifo_id_priv_flag        ( fifo_id_priv_flag        ),
+    .iq_stat                  ( iq_stat                  ),
+    .id_allowin               ( id_allowin               ),
+    .reg_readygo              ( reg_readygo              ),
+    .id_readygo               ( id_readygo               ),
+    .reg_allowin              ( reg_allowin              ),
+    .id_reg_pc0               ( id_reg_pc0               ),
+    .id_reg_pc1               ( id_reg_pc1               ),
+    .id_reg_inst0             ( id_reg_inst0             ),
+    .id_reg_inst1             ( id_reg_inst1             ),
+    .id_reg_badv              ( id_reg_badv              ),
+    .id_reg_excp_flag         ( id_reg_excp_flag         ),
+    .id_reg_exception         ( id_reg_exception         ),
+    .id_reg_is_ALU_0          ( id_reg_is_ALU_0          ),
+    .id_reg_is_ALU_1          ( id_reg_is_ALU_1          ),
+    .id_reg_is_syscall_0      ( id_reg_is_syscall_0      ),
+    .id_reg_is_syscall_1      ( id_reg_is_syscall_1      ),
+    .id_reg_is_break_0        ( id_reg_is_break_0        ),
+    .id_reg_is_break_1        ( id_reg_is_break_1        ),
+    .id_reg_is_priviledged_0  ( id_reg_is_priviledged_0  ),
+    .id_reg_is_priviledged_1  ( id_reg_is_priviledged_1  ),
+    .id_reg_uop0              ( id_reg_uop0              ),
+    .id_reg_uop1              ( id_reg_uop1              ),
+    .id_reg_imm0              ( id_reg_imm0              ),
+    .id_reg_imm1              ( id_reg_imm1              ),
+    .id_reg_rd0               ( id_reg_rd0               ),
+    .id_reg_rd1               ( id_reg_rd1               ),
+    .id_reg_rj0               ( id_reg_rj0               ),
+    .id_reg_rj1               ( id_reg_rj1               ),
+    .id_reg_rk0               ( id_reg_rk0               ),
+    .id_reg_rk1               ( id_reg_rk1               ),
+    .iq_pc0                   ( iq_pc0                   ),
+    .iq_pc1                   ( iq_pc1                   ),
+    .iq_inst0                 ( iq_inst0                 ),
+    .iq_inst1                 ( iq_inst1                 ),
+    .iq_badv                  ( iq_badv                  ),
+    .iq_excp_flag             ( iq_excp_flag             ),
+    .iq_exception             ( iq_exception             ),
+    .iq_is_ALU_0              ( iq_is_ALU_0              ),
+    .iq_is_ALU_1              ( iq_is_ALU_1              ),
+    .iq_is_syscall_0          ( iq_is_syscall_0          ),
+    .iq_is_syscall_1          ( iq_is_syscall_1          ),
+    .iq_is_break_0            ( iq_is_break_0            ),
+    .iq_is_break_1            ( iq_is_break_1            ),
+    .iq_is_priviledged_0      ( iq_is_priviledged_0      ),
+    .iq_is_priviledged_1      ( iq_is_priviledged_1      ),
+    .iq_uop0                  ( iq_uop0                  ),
+    .iq_uop1                  ( iq_uop1                  ),
+    .iq_imm0                  ( iq_imm0                  ),
+    .iq_imm1                  ( iq_imm1                  ),
+    .iq_rd0                   ( iq_rd0                   ),
+    .iq_rd1                   ( iq_rd1                   ),
+    .iq_rj0                   ( iq_rj0                   ),
+    .iq_rj1                   ( iq_rj1                   ),
+    .iq_rk0                   ( iq_rk0                   ),
+    .iq_rk1                   ( iq_rk1                   )
+);
+
 endmodule
