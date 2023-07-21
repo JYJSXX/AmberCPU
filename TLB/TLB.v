@@ -10,12 +10,13 @@ module TLB(
     input       [31:0]                  CSR_CRMD,
     input       [31:0]                  CSR_DMW0,
     input       [31:0]                  CSR_DMW1,
-    input       [31:0]                  CSR_TLBEHI, 
+    input       [31:0]                  CSR_TLBEHI,
+    input       [31:0]                  CSR_TLBIDX,
 
     input                               stall_i,//读使能
     input                               stall_d,
-    input       [`TLB_VPPN_LEN : 0]     VA_I,
-    input       [`TLB_VPPN_LEN : 0]     VA_D,
+    input       [`TLB_VPPN_LEN - 1 : 0] VA_I,
+    input       [`TLB_VPPN_LEN - 1 : 0] VA_D,
     output      [`TLB_PPN_LEN - 1:0]    PA_I,
     output      [`TLB_PPN_LEN - 1:0]    PA_D,
     output                              is_cached_I,
@@ -35,8 +36,17 @@ module TLB(
     output reg  [`TLB_TRANSLEN - 1:0]   TLB_TRANS_1,
     output reg  [`TLB_TRANSLEN - 1:0]   TLB_TRANS_2,
 
+    input                               TLBWR_valid,
+    output reg                          TLBWR_ready,
+    input       [`TLB_CPRLEN - 1:0]     TLB_CPR_w,
+    input       [`TLB_TRANSLEN - 1:0]   TLB_TRANS_1_w,
+    input       [`TLB_TRANSLEN - 1:0]   TLB_TRANS_2_w,
 
-
+    input                               TLBINVLD_valid,
+    output                              TLBINVLD_ready,
+    input       [4:0]                   TLBINVLD_OP,
+    input       [9:0]                   TLBINVLD_ASID,
+    input       [`TLB_VPPN_LEN - 1:0]   TLBINVLD_VA
 );
 
 reg     [`TLB_CPRLEN - 1:0]     tlb_cpr         [`TLB_NUM - 1:0];       //TLB比较部分
@@ -134,8 +144,8 @@ reg                             stall_d_reg                           ;
 // reg                             CSR_CRMD_reg                        ;
 // reg                             CSR_DMW0_reg                        ;
 // reg                             CSR_DMW1_reg                        ;
-reg     [`TLB_VPPN_LEN : 0]     VA_D_reg                            ;
-reg     [`TLB_VPPN_LEN : 0]     VA_I_reg                            ;
+reg     [`TLB_VPPN_LEN - 1 : 0] VA_D_reg                            ;
+reg     [`TLB_VPPN_LEN - 1 : 0] VA_I_reg                            ;
 
 initial begin
     stall_i_reg = 0;
@@ -347,8 +357,8 @@ reg                     stall_d_reg2 = 0;
 // reg                     CSR_CRMD_reg2 = 0;
 // reg                     CSR_DMW0_reg2 = 0;
 // reg                     CSR_DMW1_reg2 = 0;
-reg [`TLB_VPPN_LEN : 0] VA_I_reg2 = 0;
-reg [`TLB_VPPN_LEN : 0] VA_D_reg2 = 0;
+reg [`TLB_VPPN_LEN - 1 : 0] VA_I_reg2 = 0;
+reg [`TLB_VPPN_LEN - 1 : 0] VA_D_reg2 = 0;
 
 initial begin
     for(j = 0; j < `TLB_PPN_LEN; j = j + 1)begin
@@ -550,6 +560,19 @@ always @(posedge clk or negedge rstn)begin
 end
 
 //TLB WRITE PART
+
+always @(posedge clk or negedge rstn)begin
+    if (~rstn)begin
+        TLBWR_ready <= 0;
+    end
+    else if (TLBWR_valid) begin
+        if (TLBWR_ready) TLBWR_ready <= 0;
+        else TLBWR_ready <= 1;
+        tlb_cpr[CSR_TLBIDX[TLBIDX_INDEX]] <= TLB_CPR_w;
+        tlb_trans_1[CSR_TLBIDX[TLBIDX_INDEX]] <= TLB_TRANS_1_w;
+        TLB_TRANS_2[CSR_TLBIDX[TLBIDX_INDEX]] <= TLB_TRANS_2_w;
+    end
+end
 
 
 
