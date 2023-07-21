@@ -2,6 +2,7 @@
 `include"../exception.vh"
 module EX1(
     input   clk,
+    input   aclk,
     input   aresetn,
     input   flush,
     input   [31:0] pc0,
@@ -28,8 +29,8 @@ module EX1(
     input   [4:0] ex_rj1,
     input   [4:0] ex_rk0,
     input   [4:0] ex_rk1,
-    input   [4:0] ex_rd0,
-    input   [4:0] ex_rd1,
+    // input   [4:0] ex_rd0,
+    // input   [4:0] ex_rd1,
 
     output [31:0] alu_result0,
     output [31:0] alu_result1,
@@ -56,8 +57,8 @@ module EX1(
     //csr
     input [31:0] tid, //读时钟id的指令RDCNTID用到
 
-    //读时钟的指令RDCNTV(L/H)要用到，从cpu_top接进来
-    input [63:0] stable_counter,
+    //读时钟的指令RDCNTV(L/H)要用到，开始从cpu_top接进来,现在放在模块内了
+    //input [63:0] stable_counter,
 
     //分支预测
     input predict_to_branch, //分支预测的信号
@@ -113,7 +114,7 @@ module EX1(
     output [31:0] csr_wdata,
     output csr_wen,
     output csr_ren,
-    output [31:0] csr_rdata,
+    input [31:0] csr_rdata,
     //给wb段
     output [31:0] csr_rd_data,
     //CACOP
@@ -121,10 +122,10 @@ module EX1(
     output [31:0] cacop_vaddr,
     output cacop_i_en,
     output cacop_d_en,
-    output cacop_i_ready,
-    output cacop_d_ready,
-    output cacop_i_done,
-    output cacop_d_done,
+    input cacop_i_ready,
+    input cacop_d_ready,
+    input cacop_i_done,
+    input cacop_d_done,
     //ERTN
     output ertn_en,
     //idle
@@ -143,9 +144,9 @@ module EX1(
     output tlbfill_valid,
     input invtlb_ready,
     output invtlb_valid,
-    output [2:0] invtlb_op,
+    output [4:0] invtlb_op,
     output [31:0] invtlb_asid,
-    output [31:0] invtlb_va,
+    output [18:0] invtlb_va,
 
     //exception
     input  plv, //从csr_crmd[0]
@@ -159,6 +160,11 @@ module EX1(
 
 
 );
+    reg [63:0] stable_counter;
+    always @(posedge aclk)
+        if(~aresetn) stable_counter<=0;
+        else stable_counter <= stable_counter+1;
+        
 always@(*)begin
     if(excp_flag_in) begin
         exception_out = exception_in;
@@ -296,10 +302,9 @@ EX_BRANCH ex_branch(
     .fact_pc(fact_pc),
     .fact_tpc(fact_tpc)
 );
-EXE_Privilege exe_privilige(
+EX_Privilege ex_privilige(
     .clk(clk),
     .rstn(aresetn),
-    .inst(inst0),
     .en(is_priviledged_0 && ~plv),           
     .rk_data(rk0_data_o),      
     .rj_data(rj0_data_o),      
@@ -310,7 +315,7 @@ EXE_Privilege exe_privilige(
     .csr_wdata(csr_wdata),
     .csr_wen(csr_wen),
     .csr_ren(csr_ren),
-    .csr_rdata(csr_rd_data),  
+    .csr_rdata(csr_rdata),  
     .csr_rdata_reg(csr_rd_data),
     .cacop_ins_type(cacop_ins_type),
     .cacop_vaddr(cacop_vaddr),  

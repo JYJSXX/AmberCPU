@@ -3,12 +3,12 @@ module EX1_EX2(
     input   clk,
     input   aresetn,
     input   flush_in,
-    output  flush_out,
+    //output  flush_out,
     input   ex1_readygo,
     output  reg ex1_allowin,
     input   ex2_allowin,
     output  reg ex2_readygo,
-    input   forward_stall,
+    //input   forward_stall,
 
 
     input   [31:0] reg_ex1_pc0,//这些信号直接从REG_EX1中接入
@@ -88,7 +88,7 @@ module EX1_EX2(
 
 );
 always@(posedge clk) begin
-    if(~aresetn | (~ex1_readygo & ex2_allowin & ex2_readygo)) begin
+    if(~aresetn | (~ex1_readygo & ex2_allowin & ex2_readygo) | flush_in) begin
         ex1_ex2_pc0<=0;
         ex1_ex2_pc1<=0;
         ex1_ex2_inst0<=0;

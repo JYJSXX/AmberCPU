@@ -35,9 +35,6 @@ module FIFO_ID (
     output reg[6:0]  fifo_id_exception,
     output reg[1:0]  fifo_id_excp_flag,
     output reg[1:0]  fifo_id_priv_flag
-    `ifdef FIFO_ID_DIFFTEST
-
-    `endif 
 );
     
 

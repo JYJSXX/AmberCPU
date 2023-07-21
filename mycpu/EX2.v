@@ -15,9 +15,7 @@ module EX2(
 
 
     output [31:0] rd0_data,
-    output [31:0] rd1_data,
-    output rd0_data_valid,
-    output rd1_data_valid
+    output [31:0] rd1_data
 
 
 );
@@ -26,7 +24,7 @@ wire [3:0] cond1;
 assign cond0 = uop0[`UOP_COND];
 assign cond1 = uop1[`UOP_COND];
 wire [63:0] mul_result;
-Mul_Stage_2(
+Mul_Stage_2 mul_stage_2(
     .mul_stage1_res_hh(mul_stage1_res_hh),
     .mul_stage1_res_hl(mul_stage1_res_hl),
     .mul_stage1_res_lh(mul_stage1_res_lh),
