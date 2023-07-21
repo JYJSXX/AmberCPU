@@ -55,8 +55,7 @@ module csr
     //input llbit_clear, //by other没有用，直接看ertn就行
     input tlbsrch_ready, //已经判断完是否命中
     input tlbsrch_hit, //TLBSRCH是否命中
-    input [4:0] tlb_index_in, //TLB命中的索引   
-    input [`TLBIDX_WIDTH-1 :0] tlbidx_index_in,
+    input [5:0] tlb_index_in, //TLB命中的索引   最高位是hit，后面不要了
 
     input tlbrd_ready,
     input tlbrd_hit,
@@ -489,7 +488,7 @@ always @(posedge clk)
     assign tlb_cpr_out[`TLB_PS] = tlbidx_ps;
     assign tlb_cpr_out[`TLB_G] = tlbelo0_g;
     assign tlb_cpr_out[`TLB_ASID] = asid_asid;
-    assign tlb_cpr_out[`TLB_E] = tlbelo0_v;
+    assign tlb_cpr_out[`TLB_E] = (estat_ecode==6'h3F)?1:~tlbidx_ne;
 
     assign tlb_trans_1_out[`TLB_PPN] = tlbelo0_ppn;
     assign tlb_trans_1_out[`TLB_PLV] = tlbelo0_plv;
@@ -516,7 +515,7 @@ always @(posedge clk)
         else begin
             if(tlbsrch_ready) begin
                 if(tlbsrch_hit) begin
-                    tlbidx_index[4:0]<=tlb_index_in;
+                    tlbidx_index[4:0]<=tlb_index_in[4:0];
                     tlbidx_ne<=0;
                 end
                 else begin

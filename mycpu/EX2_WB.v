@@ -57,7 +57,10 @@ module EX2_WB(
     output reg [31:0] debug1_wb_inst,
 
     //exception
-    input [6:0] ecode_in,
+    input [31:0] csr_estat, //从csr
+    input [31:0] csr_crmd,
+    
+    input [6:0] ecode_in,//从前一级流水
     input exception_flag_in,
     input [31:0] badv_in,
     output reg[6:0] ecode_out,
@@ -71,6 +74,12 @@ module EX2_WB(
     output reg [18:0] vppn_out,
     output reg wen_vppn
 );
+wire csr_crmd_ie;
+assign csr_crmd_ie = csr_crmd[2];
+wire [12:0] csr_estat_is;
+assign csr_estat_is = csr_estat[12:0];
+wire interrupt_flag;
+assign interrupt_flag = csr_crmd_ie && (&csr_estat_is);
 wire set_badv;
 assign set_badv = (ecode_in == `EXP_PIL) || (ecode_in == `EXP_PIS) 
 || (ecode_in == `EXP_PIF) || (ecode_in == `EXP_PME) || (ecode_in == `EXP_PPI)
@@ -85,7 +94,7 @@ always@(posedge clk)begin
         exception_flag_out <= 0;
     end
     else begin
-        exception_flag_out <= exception_flag_in;
+        exception_flag_out <= exception_flag_in | interrupt_flag;
         ecode_out <= ecode_in;
         badv_out <= badv_in;
         wen_badv <= exception_flag_in && set_badv;
@@ -153,6 +162,8 @@ assign cond1 = uop1[`UOP_COND];
                 ex2_wb_rd0 <= 0;
                 ex2_wb_we0 <= 0;
             end
+
+
             if(ex2_result1_valid)begin
                 ex2_wb_data_1 <= ex2_result1;
                 ex2_wb_data_1_valid <= 1;
@@ -190,7 +201,7 @@ assign cond1 = uop1[`UOP_COND];
     end
 always@(*) begin
     ex2_allowin=0;
-    if((ex2_wb_data_0_valid | dcache_ready | div_ready) && ex2_wb_data_1_valid) begin
+    if((ex2_wb_data_0_valid | dcache_ready | div_ready | csr_ready) && ex2_wb_data_1_valid) begin
         ex2_allowin=1;
     end
 end

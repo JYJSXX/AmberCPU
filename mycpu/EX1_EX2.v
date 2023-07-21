@@ -15,14 +15,14 @@ module EX1_EX2(
     input   [31:0] reg_ex1_pc1,
     input   [31:0] reg_ex1_inst0,
     input   [31:0] reg_ex1_inst1,
-    input   reg_ex1_is_ALU_0,
-    input   reg_ex1_is_ALU_1,
-    input   reg_ex1_is_syscall_0,
-    input   reg_ex1_is_syscall_1,
-    input   reg_ex1_is_break_0,
-    input   reg_ex1_is_break_1,
-    input   reg_ex1_is_priviledged_0,
-    input   reg_ex1_is_priviledged_1,
+    // input   reg_ex1_is_ALU_0,
+    // input   reg_ex1_is_ALU_1,
+    // input   reg_ex1_is_syscall_0,
+    // input   reg_ex1_is_syscall_1,
+    // input   reg_ex1_is_break_0,
+    // input   reg_ex1_is_break_1,
+    // input   reg_ex1_is_priviledged_0,
+    // input   reg_ex1_is_priviledged_1,
     input   [`WIDTH_UOP-1:0] reg_ex1_uop0,
     input   [`WIDTH_UOP-1:0] reg_ex1_uop1,
     input   [31:0] reg_ex1_imm0,
@@ -38,17 +38,18 @@ module EX1_EX2(
     input   [31:0] mul_stage1_res_lh,
     input   [31:0] mul_stage1_res_ll,
     input   [31:0] mul_compensate,
+    
 
     output  reg [31:0] ex1_ex2_pc0,
     output  reg [31:0] ex1_ex2_pc1,
     output  reg [31:0] ex1_ex2_inst0,
     output  reg [31:0] ex1_ex2_inst1,
-    output  reg ex1_ex2_is_syscall_0,
-    output  reg ex1_ex2_is_syscall_1,
-    output  reg ex1_ex2_is_break_0,
-    output  reg ex1_ex2_is_break_1,
-    output  reg ex1_ex2_is_priviledged_0,
-    output  reg ex1_ex2_is_priviledged_1,
+    // output  reg ex1_ex2_is_syscall_0,
+    // output  reg ex1_ex2_is_syscall_1,
+    // output  reg ex1_ex2_is_break_0,
+    // output  reg ex1_ex2_is_break_1,
+    // output  reg ex1_ex2_is_priviledged_0,
+    // output  reg ex1_ex2_is_priviledged_1,
     output  reg [`WIDTH_UOP-1:0] ex1_ex2_uop0,
     output  reg [`WIDTH_UOP-1:0] ex1_ex2_uop1,
     output  reg [31:0] ex1_ex2_imm0,
@@ -74,8 +75,16 @@ module EX1_EX2(
     output reg ex1_ex2_data_0_valid,
     output reg ex1_ex2_data_1_valid,
 
-    input dcache_ready,
-    input div_ready
+    //从ex1接入 exception相关
+    input   [31:0] badv_in,
+    input   excp_flag_in,
+    input   [6:0] exception_in,
+    output  reg [31:0] ex1_ex2_badv,
+    output  reg ex1_ex2_excp_flag,
+    output  reg [6:0] ex1_ex2_exception
+
+    // input dcache_ready,
+    // input div_ready
 
 );
 always@(posedge clk) begin
@@ -83,13 +92,16 @@ always@(posedge clk) begin
         ex1_ex2_pc0<=0;
         ex1_ex2_pc1<=0;
         ex1_ex2_inst0<=0;
-        ex1_ex2_inst1<=0;
-        ex1_ex2_is_syscall_0<=0;
-        ex1_ex2_is_syscall_1<=0;
-        ex1_ex2_is_break_0<=0;
-        ex1_ex2_is_break_1<=0;
-        ex1_ex2_is_priviledged_0<=0;
-        ex1_ex2_is_priviledged_1<=0;
+        // ex1_ex2_inst1<=0;
+        // ex1_ex2_is_syscall_0<=0;
+        // ex1_ex2_is_syscall_1<=0;
+        // ex1_ex2_is_break_0<=0;
+        // ex1_ex2_is_break_1<=0;
+        // ex1_ex2_is_priviledged_0<=0;
+        // ex1_ex2_is_priviledged_1<=0;
+        ex1_ex2_badv<=0;
+        ex1_ex2_excp_flag<=0;
+        ex1_ex2_exception<=0;
         ex1_ex2_uop0<=0;
         ex1_ex2_uop1<=0;
         ex1_ex2_imm0<=0;
@@ -114,12 +126,16 @@ always@(posedge clk) begin
         ex1_ex2_pc1<=reg_ex1_pc1;
         ex1_ex2_inst0<=reg_ex1_inst0;
         ex1_ex2_inst1<=reg_ex1_inst1;
-        ex1_ex2_is_syscall_0<=reg_ex1_is_syscall_0;
-        ex1_ex2_is_syscall_1<=reg_ex1_is_syscall_1;
-        ex1_ex2_is_break_0<=reg_ex1_is_break_0;
-        ex1_ex2_is_break_1<=reg_ex1_is_break_1;
-        ex1_ex2_is_priviledged_0<=reg_ex1_is_priviledged_0;
-        ex1_ex2_is_priviledged_1<=reg_ex1_is_priviledged_1;
+        // ex1_ex2_is_syscall_0<=reg_ex1_is_syscall_0;
+        // ex1_ex2_is_syscall_1<=reg_ex1_is_syscall_1;
+        // ex1_ex2_is_break_0<=reg_ex1_is_break_0;
+        // ex1_ex2_is_break_1<=reg_ex1_is_break_1;
+        // ex1_ex2_is_priviledged_0<=reg_ex1_is_priviledged_0;
+        // ex1_ex2_is_priviledged_1<=reg_ex1_is_priviledged_1;
+        ex1_ex2_badv<=badv_in;
+        ex1_ex2_exception<=exception_in;
+        ex1_ex2_excp_flag<=excp_flag_in;
+
         ex1_ex2_uop0<=reg_ex1_uop0;
         ex1_ex2_uop1<=reg_ex1_uop1;
         ex1_ex2_imm0<=reg_ex1_imm0;
@@ -146,12 +162,15 @@ always@(posedge clk) begin
         ex1_ex2_pc1<=ex1_ex2_pc1;
         ex1_ex2_inst0<=ex1_ex2_inst0;
         ex1_ex2_inst1<=ex1_ex2_inst1;
-        ex1_ex2_is_syscall_0<=ex1_ex2_is_syscall_0;
-        ex1_ex2_is_syscall_1<=ex1_ex2_is_syscall_1;
-        ex1_ex2_is_break_0<=ex1_ex2_is_break_0;
-        ex1_ex2_is_break_1<=ex1_ex2_is_break_1;
-        ex1_ex2_is_priviledged_0<=ex1_ex2_is_priviledged_0;
-        ex1_ex2_is_priviledged_1<=ex1_ex2_is_priviledged_1;
+        // ex1_ex2_is_syscall_0<=ex1_ex2_is_syscall_0;
+        // ex1_ex2_is_syscall_1<=ex1_ex2_is_syscall_1;
+        // ex1_ex2_is_break_0<=ex1_ex2_is_break_0;
+        // ex1_ex2_is_break_1<=ex1_ex2_is_break_1;
+        // ex1_ex2_is_priviledged_0<=ex1_ex2_is_priviledged_0;
+        // ex1_ex2_is_priviledged_1<=ex1_ex2_is_priviledged_1;
+        ex1_ex2_badv<=ex1_ex2_badv;
+        ex1_ex2_exception<=ex1_ex2_exception;
+        ex1_ex2_excp_flag<=ex1_ex2_excp_flag;
         ex1_ex2_uop0<=ex1_ex2_uop0;
         ex1_ex2_uop1<=ex1_ex2_uop1;
         ex1_ex2_imm0<=ex1_ex2_imm0;
