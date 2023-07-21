@@ -202,6 +202,7 @@ module dcache #(
 
     /* exception */
     always @(*) begin
+        exception_temp1 = 0;
         case(wstrb_pipe)
         HALF: if(address[0] == 1) exception_temp1 = `EXP_ALE;
         WORD: if(address[1:0] != 0) exception_temp1 = `EXP_ALE;
@@ -241,7 +242,7 @@ module dcache #(
             ret_buf <= 0;
         end
         else if(d_rvalid && d_rready) begin
-            ret_buf <= {d_rdata, ret_buf[BIT_NUM-1:32]};
+            ret_buf <= d_rdata;
         end
     end
 
@@ -475,7 +476,7 @@ module dcache #(
         .ibar_ready(ibar_ready),
         .ibar_valid(ibar_valid),
         .ibar_complete(ibar_complete),
-        .dirty_signal(dirty_signal),
+        // .dirty_signal(dirty_signal),
         .dirty_addr(dirty_index),
         .way0(way0),
         .way1(way1)
@@ -483,7 +484,7 @@ module dcache #(
 
 
     /* write buffer */
-    always @(*) begin
+    always @(posedge clk) begin
         if(!rstn) begin
             wbuf <= 0;
         end
@@ -521,7 +522,7 @@ module dcache #(
     /* memory visit settings*/
     assign d_raddr  = uncache_buf ? paddr_buf : {paddr_buf[31:6], 6'b0};
     assign d_waddr  = ibar_valid ? dirty_addr[dirty_way] : uncache_buf ? paddr_buf : m_buf;
-    assign d_wdata  = wbuf[31:0];
+    assign d_wdata  = wbuf;
 
     /* main FSM */
     localparam 
@@ -546,7 +547,7 @@ module dcache #(
     end
 
     reg [3:0] state, next_state;
-    assign idle = (state == IDLE);
+    assign idle = (state == IDLE) && !ibar;
     always @(posedge clk) begin
         if(!rstn) begin
             state <= IDLE;
@@ -639,14 +640,13 @@ module dcache #(
                 next_state = IBAR;
         end
         IBAR_EXTRA: begin
-            if(ibar_complete)
-                next_state = IDLE;
-            else
                 next_state = IBAR_WAIT;
         end
         IBAR_WAIT: begin
             if(wrt_finish) begin
-                if(hit2_flag)
+                if(ibar_complete)
+                    next_state = IDLE;
+                else if(hit2_flag)
                     next_state = IBAR_EXTRA;
                 else
                     next_state = IBAR;
@@ -670,11 +670,12 @@ module dcache #(
         else
             hit2_flag <= hit2_flag;
     end
-    
+
     always @(*) begin
         // default assignments
         req_buf_we           = 0;
         wbuf_we              = 0;
+        pbuf_we              = 0;
         mbuf_we              = 0;
         d_rvalid             = 0;
         wfsm_en              = 0;
@@ -700,6 +701,8 @@ module dcache #(
         d_wstrb              = 4'b1111;
         ibar_ready           = 0;
         dirty_way            = 0;
+        llbit_set            = 0;
+        llbit_clear          = 0;
         case(state)
         IDLE: begin
             req_buf_we = 1;
