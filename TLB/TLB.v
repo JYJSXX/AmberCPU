@@ -24,13 +24,13 @@ module TLB(
 
     //Priv      
     input                               TLBSRCH_valid,
-    output                              TLBSRCH_ready,
+    output reg                          TLBSRCH_ready,
     output reg                          TLBSRCH_hit,
     output reg  [4:0]                   TLBSRCH_INDEX,
 
     input                               TLBRD_INDEX,
     input                               TLBRD_valid,
-    output                              TLBRD_ready,
+    output reg                          TLBRD_ready,
     output reg                          TLBRD_hit,
     output reg  [`TLB_CPRLEN - 1:0]     TLB_CPR,
     output reg  [`TLB_TRANSLEN - 1:0]   TLB_TRANS_1,
@@ -43,7 +43,7 @@ module TLB(
     input       [`TLB_TRANSLEN - 1:0]   TLB_TRANS_2_w,
 
     input                               TLBINVLD_valid,
-    output                              TLBINVLD_ready,
+    output reg                          TLBINVLD_ready,
     input       [4:0]                   TLBINVLD_OP,
     input       [9:0]                   TLBINVLD_ASID,
     input       [`TLB_VPPN_LEN - 1:0]   TLBINVLD_VA
@@ -146,11 +146,11 @@ reg                             stall_d_reg                           ;
 // reg                             CSR_DMW1_reg                        ;
 reg     [`TLB_VPPN_LEN - 1 : 0] VA_D_reg                            ;
 reg     [`TLB_VPPN_LEN - 1 : 0] VA_I_reg                            ;
+  
 
 initial begin
     stall_i_reg = 0;
     stall_d_reg = 0;
-    CSR_TLBSRCH_HIT_reg = 0;
     // CSR_PG_reg = 0;
     // CSR_CRMD_reg = 0;
     // CSR_DMW0_reg = 0;
@@ -402,8 +402,8 @@ always @(posedge clk or negedge rstn)begin
             TLB_I_V_TRANS_reg <= TLB_I_V_TRANS_reg;
             TLB_I_D_TRANS_reg <= TLB_I_D_TRANS_reg;
             TLB_I_MAT_TRANS_reg <= TLB_I_MAT_TRANS_reg;
-            TLB_I_PLV_TRANS_reg <= TLB_I_PLV_TRANS_reg
-            VA_I_reg2 <= VA_I_reg2
+            TLB_I_PLV_TRANS_reg <= TLB_I_PLV_TRANS_reg;
+            VA_I_reg2 <= VA_I_reg2;
         end
         if (~stall_d)begin
             TLB_D_V_TRANS_reg <= TLB_D_V_TRANS;
@@ -480,10 +480,10 @@ wire [31:0] DMW0_PPN_D = {CSR_DMW0[`DMW0_PSEG], VA_D_reg2[28:0]};
 wire        DMW1_JUDGE_D = VA_D_reg2[`DMW1_VSEG] == CSR_DMW1[`DMW0_VSEG];
 wire [31:0] DMW1_PPN_D = {CSR_DMW1[`DMW1_PSEG], VA_D_reg2[28:0]};
 
-assign PA_I = CSR_PG_reg2 ? (DMW0_JUDGE_I ? DMW0_PPN_I : (DMW1_JUDGE_I ? DMW1_PPN_I : TLB_I_PPN_FINAL)) : VA_I_reg2;
-assign PA_D = CSR_PG_reg2 ? (DMW0_JUDGE_D ? DMW0_PPN_D : (DMW1_JUDGE_D ? DMW1_PPN_D : TLB_D_PPN_FINAL)) : VA_D_reg2;
-assign is_cached_I = CSR_PG_reg2 ? (DMW0_JUDGE_I ? CSR_DMW0[4] : (DMW1_JUDGE_I ? CSR_DMW1[4] : TLB_I_MAT_FINAL)) : CSR_CRMD[5];
-assign is_cached_D = CSR_PG_reg2 ? (DMW0_JUDGE_D ? CSR_DMW0[4] : (DMW1_JUDGE_D ? CSR_DMW1[4] : TLB_D_MAT_FINAL)) : CSR_CRMD[7];
+assign PA_I = CSR_PG ? (DMW0_JUDGE_I ? DMW0_PPN_I : (DMW1_JUDGE_I ? DMW1_PPN_I : TLB_I_PPN_FINAL)) : VA_I_reg2;
+assign PA_D = CSR_PG ? (DMW0_JUDGE_D ? DMW0_PPN_D : (DMW1_JUDGE_D ? DMW1_PPN_D : TLB_D_PPN_FINAL)) : VA_D_reg2;
+assign is_cached_I = CSR_PG ? (DMW0_JUDGE_I ? CSR_DMW0[4] : (DMW1_JUDGE_I ? CSR_DMW1[4] : TLB_I_MAT_FINAL)) : CSR_CRMD[5];
+assign is_cached_D = CSR_PG ? (DMW0_JUDGE_D ? CSR_DMW0[4] : (DMW1_JUDGE_D ? CSR_DMW1[4] : TLB_D_MAT_FINAL)) : CSR_CRMD[7];
 
 //TLB SEARCH PART
 
@@ -491,7 +491,7 @@ wire [`TLB_NUM - 1:0] CSR_TLBSRCH;
 
 generate 
     for(i = 0; i < `TLB_NUM; i = i + 1)begin
-        assign CSR_TLBSRCH_HIT[i] = rd_TLB_E[i] & (rd_TLB_G[i] | (rd_TLB_ASID[i] == CSR_ASID)) & (rd_TLB_VPPN[i] == CSR_VPPN[`TLBEHI_VPPN]);
+        assign CSR_TLBSRCH[i] = rd_TLB_E[i] & (rd_TLB_G[i] | (rd_TLB_ASID[i] == CSR_ASID)) & (rd_TLB_VPPN[i] == CSR_VPPN[`TLBEHI_VPPN]);
     end
 endgenerate
 
@@ -504,7 +504,7 @@ always @(posedge clk or negedge rstn)begin
         CSR_TLBSRCH_VALID_reg <= 0;
     end
     else if (TLBSRCH_valid) begin
-        CSR_TLBSRCH_HIT_reg <= CSR_TLBSRCH_HIT;
+        CSR_TLBSRCH_HIT_reg <= CSR_TLBSRCH;
         CSR_TLBSRCH_VALID_reg <= 1;
     end
     else begin
@@ -527,12 +527,12 @@ assign CSR_TLBSRCH_HIT = |CSR_TLBSRCH_HIT_reg;
 always @(posedge clk or negedge rstn)begin
     if(~rstn)begin
         TLBSRCH_INDEX <= 0;
-        TLBSRCH_HIT <= 0;
+        TLBSRCH_hit <= 0;
         TLBSRCH_ready <= 0;
     end
     else begin
         TLBSRCH_INDEX <= CSR_TLBSRCH_INDEX[4:0];
-        TLBSRCH_HIT <= CSR_TLBSRCH_HIT;
+        TLBSRCH_hit <= CSR_TLBSRCH_HIT;
         if(CSR_TLBSRCH_VALID_reg & TLBSRCH_ready) TLBSRCH_ready <= 0;
         else if (CSR_TLBSRCH_VALID_reg) TLBSRCH_ready <= 1;
         else TLBSRCH_ready <= 0;
@@ -568,9 +568,9 @@ always @(posedge clk or negedge rstn)begin
     else if (TLBWR_valid) begin
         if (TLBWR_ready) TLBWR_ready <= 0;
         else TLBWR_ready <= 1;
-        tlb_cpr[CSR_TLBIDX[TLBIDX_INDEX]] <= TLB_CPR_w;
-        tlb_trans_1[CSR_TLBIDX[TLBIDX_INDEX]] <= TLB_TRANS_1_w;
-        TLB_TRANS_2[CSR_TLBIDX[TLBIDX_INDEX]] <= TLB_TRANS_2_w;
+        tlb_cpr[CSR_TLBIDX[`TLBIDX_INDEX]] <= TLB_CPR_w;
+        tlb_trans_1[CSR_TLBIDX[`TLBIDX_INDEX]] <= TLB_TRANS_1_w;
+        TLB_TRANS_2[CSR_TLBIDX[`TLBIDX_INDEX]] <= TLB_TRANS_2_w;
     end
 end
 
@@ -578,11 +578,11 @@ end
 
 always @(posedge clk or negedge rstn)begin
     if (~rstn)begin
-        TLBINV_ready <= 0;
+        TLBINVLD_ready <= 0;
     end
-    else if (TLBINV_valid) begin
-        if (TLBINV_ready) TLBINV_ready <= 0;
-        else TLBINV_ready <= 1;
+    else if (TLBINVLD_valid) begin
+        if (TLBINVLD_ready) TLBINVLD_ready <= 0;
+        else TLBINVLD_ready <= 1;
         case(TLBINVLD_OP)
             5'h00, 5'h01: begin
                 for (j = 0; j < `TLB_NUM; j = j + 1)begin
@@ -606,12 +606,12 @@ always @(posedge clk or negedge rstn)begin
             end
             5'h05: begin
                 for (j = 0; j < `TLB_NUM; j = j + 1)begin
-                    if (~rd_TLB_G[j] & (rd_TLB_ASID[j] == TLBINVLD_ASID) & (rd_TLB_VPPN == TLBINVLD_VA)) tlb_cpr[j][`TLB_E] <= 0;
+                    if (~rd_TLB_G[j] & (rd_TLB_ASID[j] == TLBINVLD_ASID) & (rd_TLB_VPPN[j] == TLBINVLD_VA)) tlb_cpr[j][`TLB_E] <= 0;
                 end
             end
             5'h06: begin
                 for (j = 0; j < `TLB_NUM; j = j + 1)begin
-                    if ((rd_TLB_G[j] | (rd_TLB_ASID[j] != TLBINVLD_ASID)) & (rd_TLB_VPPN == TLBINVLD_VA)) tlb_cpr[j][`TLB_E] <= 0;
+                    if ((rd_TLB_G[j] | (rd_TLB_ASID[j] != TLBINVLD_ASID)) & (rd_TLB_VPPN[j] == TLBINVLD_VA)) tlb_cpr[j][`TLB_E] <= 0;
                 end
             end
         endcase

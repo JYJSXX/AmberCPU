@@ -1,10 +1,13 @@
 `include "define.vh"
+`include"../exception.vh"
 module EX1(
     input   clk,
     input   aresetn,
     input   flush,
     input   [31:0] pc0,
     input   [31:0] pc1,
+    input   [31:0] inst0,
+    input   [31:0] inst1,
     input   is_ALU_0,
     input   is_ALU_1,
     input   is_syscall_0,
@@ -101,9 +104,90 @@ module EX1(
     output [31:0] quotient,
     output [31:0] remainder,
     output stall_divider,
-    output div_ready
+    output div_ready,
+
+    //下面都是特权指令的
+    output privilege_ready,
+    //给csr
+    output [31:0] csr_addr,
+    output [31:0] csr_wdata,
+    output csr_wen,
+    output csr_ren,
+    output [31:0] csr_rdata,
+    //给wb段
+    output [31:0] csr_rd_data,
+    //CACOP
+    output [1:0] cacop_ins_type,
+    output [31:0] cacop_vaddr,
+    output cacop_i_en,
+    output cacop_d_en,
+    output cacop_i_ready,
+    output cacop_d_ready,
+    output cacop_i_done,
+    output cacop_d_done,
+    //ERTN
+    output ertn_en,
+    //idle
+    input i_idle,
+    input d_idle,
+    output block_cache,
+    output block_clock,
+    //TLB
+    input tlbsrch_ready,
+    output tlbsrch_valid,
+    input tlbrd_ready,
+    output tlbrd_valid,
+    input tlbwr_ready,
+    output tlbwr_valid,
+    input tlbfill_ready,
+    output tlbfill_valid,
+    input invtlb_ready,
+    output invtlb_valid,
+    output [2:0] invtlb_op,
+    output [31:0] invtlb_asid,
+    output [31:0] invtlb_va,
+
+    //exception
+    input  plv, //从csr_crmd[0]
+    input excp_flag_in,
+    input [6:0] exception_in,
+    input [31:0] badv_in,
+    output reg [31:0] badv_out,
+    output reg excp_flag_out,
+    output reg [6:0] exception_out
+
+
 
 );
+always@(*)begin
+    if(excp_flag_in) begin
+        exception_out = exception_in;
+        excp_flag_out = excp_flag_in;
+        badv_out = badv_in;
+    end
+    else begin
+        if(is_syscall_0) begin
+            exception_out = `EXP_SYS;
+            excp_flag_out = 1;
+            badv_out = pc0;
+        end
+        else if(is_break_0) begin
+            exception_out = `EXP_BRK;
+            excp_flag_out = 1;
+            badv_out = pc0;
+        end
+        else if(is_priviledged_0 && plv) begin
+            exception_out = `EXP_IPE;
+            excp_flag_out = 1;
+            badv_out = pc0;
+        end
+        else begin
+            exception_out = 0;
+            excp_flag_out = 0;
+            badv_out = 0;
+        end
+    end
+end
 assign ibar = uop0[`INS_BAR];
 wire [3:0] cond0;
 wire [31:0] a_1;
@@ -121,6 +205,12 @@ assign alu_result0_valid = is_ALU_0 || uop0[`INS_BR];
 assign alu_result1_valid = is_ALU_1 || uop1[`INS_BR]; //beq之类的就向r0写，应该也没什么问题
 assign alu_result0 = uop0[`INS_BR]? pc_add_4:y_1;
 assign alu_result1 = y_2; //跳转指令单发，只在0号，1号alu不发射跳转
+wire [31:0] rj0_data_o;
+wire [31:0] rk0_data_o;
+wire [31:0] rk1_data_o;
+wire [31:0] rj1_data_o;
+wire forward_stall1;
+wire forward_stall2;
 EX1_FORWARD ex1_forward1(
     .ex1_rj(ex_rj0),
     .ex1_rk(ex_rk0),
@@ -136,11 +226,11 @@ EX1_FORWARD ex1_forward1(
     .ex2_wb_data_1(ex2_wb_data_1),
     .ex2_wb_rd0(ex2_wb_rd0),
     .ex2_wb_rd1(ex2_wb_rd1),
-    .ex1_rj_data(ex_rj0_data),
-    .ex1_rk_data(ex_rk0_data),
+    .ex1_rj_data(rj0_data),
+    .ex1_rk_data(rk0_data),
     .ex1_rj_data_o(rj0_data_o),
     .ex1_rk_data_o(rk0_data_o),
-    .forward_stall(forward_stall)
+    .forward_stall(forward_stall1)
 );
 
 assign a_1 = uop0[`UOP_SRC1] == `CTRL_SRC1_RF ? rj0_data_o : 
@@ -172,10 +262,11 @@ EX1_FORWARD ex1_forward2(
     .ex2_wb_data_1(ex2_wb_data_1),
     .ex2_wb_rd0(ex2_wb_rd0),
     .ex2_wb_rd1(ex2_wb_rd1),
-    .ex1_rj_data(ex_rj0_data),
-    .ex1_rk_data(ex_rk0_data),
+    .ex1_rj_data(rj1_data),
+    .ex1_rk_data(rk1_data),
     .ex1_rj_data_o(rj1_data_o),
-    .ex1_rk_data_o(rk1_data_o)
+    .ex1_rk_data_o(rk1_data_o),
+    .forward_stall(forward_stall2)
 
 );
 assign a_2 = uop1[`UOP_SRC1] == `CTRL_SRC1_RF ? rj1_data_o : 
@@ -205,6 +296,49 @@ EX_BRANCH ex_branch(
     .fact_pc(fact_pc),
     .fact_tpc(fact_tpc)
 );
+EXE_Privilege exe_privilige(
+    .clk(clk),
+    .rstn(aresetn),
+    .inst(inst0),
+    .en(is_priviledged_0 && ~plv),           
+    .rk_data(rk0_data_o),      
+    .rj_data(rj0_data_o),      
+    .ins(inst0),          
+    . pr_type(uop0),     
+    .done(privilege_ready),         
+    .csr_addr(csr_addr),     
+    .csr_wdata(csr_wdata),
+    .csr_wen(csr_wen),
+    .csr_ren(csr_ren),
+    .csr_rdata(csr_rd_data),  
+    .csr_rdata_reg(csr_rd_data),
+    .cacop_ins_type(cacop_ins_type),
+    .cacop_vaddr(cacop_vaddr),  
+    .cacop_i_en(cacop_i_en),
+    .cacop_d_en(cacop_d_en),
+    .cacop_i_ready(cacop_i_ready),
+    .cacop_d_ready(cacop_d_ready),
+    .cacop_i_done(cacop_i_done),
+    .cacop_d_done(cacop_d_done),
+    .ertn_en(ertn_en),
+    .i_idle(i_idle),
+    .d_idle(d_idle),
+    .block_cache(block_cache),
+    .block_clock(block_clock),
+    .tlbsrch_ready(tlbsrch_ready),
+    .tlbsrch_valid(tlbsrch_valid),
+    .tlbrd_ready(tlbrd_ready),
+    .tlbrd_valid(tlbrd_valid),
+    .tlbwr_ready(tlbwr_ready),
+    .tlbwr_valid(tlbwr_valid),
+    .tlbfill_ready(tlbfill_ready),
+    .tlbfill_valid(tlbfill_valid),
+    .invtlb_ready(invtlb_ready),
+    .invtlb_valid(invtlb_valid),
+    .invtlb_op(invtlb_op),
+    .invtlb_asid(invtlb_asid),
+    .invtlb_va(invtlb_va)
+);
 
 Mul_Stage_1 mul_1(
     .mul_src1(rj0_data_o),
@@ -221,9 +355,12 @@ divider divider1(
     .rstn(aresetn),
     .dividend(rj0_data_o),
     .divisor(rk0_data_o),
+    .en(uop0[`INS_DIV]),
+    .flush_exception(flush),
+    .sign(uop0[`UOP_SIGN]),
     .quotient(quotient),
     .remainder(remainder),
-    .stall(stall_divider),
+    .stall_divider(stall_divider),
     .ready(div_ready)
 );
 assign is_atom_dcache = uop0[`UOP_MEM_ATM];
@@ -233,4 +370,5 @@ assign op_dcache=cond0[2];
 assign write_type_dcache=(cond0[1:0]==0)?4'b0001:(cond0[1:0]==1)?4'b0011:4'b1111;
 assign addr_dcache = rj0_data_o+imm0;
 assign w_data_dcache = rk0_data_o;
+assign forward_stall = forward_stall1 | forward_stall2;
 endmodule

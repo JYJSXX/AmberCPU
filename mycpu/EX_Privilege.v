@@ -3,7 +3,6 @@
 module EX_Privilege(
     input                               clk,
     input                               rstn,
-    input           [31:0]              inst,
 
     input                               en,             //使能信号 valid信号
     input           [31:0]              rk_data,        //R[rk]
@@ -47,15 +46,18 @@ module EX_Privilege(
     output   reg                        tlbfill_valid,        //exe告诉tlb写入
     input                               invtlb_ready,   //tlb告诉exe已经写完了
     output   reg                        invtlb_valid,         //exe告诉tlb写入
-    output           [2:0]              invtlb_op,
+    output           [4:0]              invtlb_op,
     output           [31:0]             invtlb_asid,
-    output           [31:0]             invtlb_va
+    output           [18:0]             invtlb_va
     
 );
+    assign invtlb_op = ins[4:0];
+    assign invtlb_asid = rj_data;
+    assign invtlb_va = rk_data[31:13];
     wire [1:0] pri_tlb_type;
     wire invtlb;
-    assign pri_tlb_type=inst[11:10]; //10 TLBSRCH  11 TLBRD  00 TLBWR  01 TLBFILL
-    assign invtlb=inst[16];
+    assign pri_tlb_type=ins[11:10]; //10 TLBSRCH  11 TLBRD  00 TLBWR  01 TLBFILL
+    assign invtlb=ins[16];
     wire    [13:0]      csr_num = ins[23:10];
     wire    [4:0]       rj = ins[9:5];
     wire                isxchg = |rj[4:1];
