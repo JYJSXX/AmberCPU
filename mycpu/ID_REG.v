@@ -178,7 +178,6 @@ IQ u_IQ(
     .clk                      ( clk                      ),
     .rstn                     ( rstn                     ),
     .fifo_id_priv_flag        ( fifo_id_priv_flag        ),
-    .iq_stat                  ( iq_stat                  ),
     .id_allowin               ( id_allowin               ),
     .reg_readygo              ( reg_readygo              ),
     .id_readygo               ( id_readygo               ),

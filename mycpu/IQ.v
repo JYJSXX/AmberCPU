@@ -9,7 +9,6 @@ module IQ (
     input rstn,
 
     input [1:0] fifo_id_priv_flag,
-    output reg [2:0] iq_stat,
     output id_allowin,
     output reg_readygo,
     input  id_readygo,
@@ -75,7 +74,7 @@ module IQ (
     reg      single_en    = 0;
 
     assign reg_readygo    = 1;
-    assign fifo_allowin   =(!single_en||(mod&&single_en))&reg_allowin;
+    assign id_allowin   =(!single_en||(mod&&single_en))&reg_allowin;
 
     always @(*) begin//logic for single_en
         if (id_reg_is_ALU_0&&id_reg_is_ALU_1&&(

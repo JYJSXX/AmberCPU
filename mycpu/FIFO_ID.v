@@ -44,7 +44,7 @@ module FIFO_ID (
     assign id_readygo=fifo_readygo;//valid anytime because fifo provide INST_NOP if invalid
     assign fifo_allowin=id_allowin||!fetch_buf_full;
 
-    always @(posedge clk or negedge rstn) begin
+    always @(posedge clk) begin
         if (!rstn||fifo_id_flush||(~fifo_readygo&&id_allowin&&id_readygo)) begin
             fifo_id_inst0   <=`INST_NOP;
             fifo_id_inst1   <=`INST_NOP;
@@ -62,7 +62,7 @@ module FIFO_ID (
             fifo_id_pc      <=fifo_pc;
             fifo_id_pcAdd   <=fifo_pcAdd;
             fifo_id_pc_next <=fifo_pc_next;
-            fifo_id_badv    <=fifo_id_badv;
+            fifo_id_badv    <=fifo_badv;
             fifo_id_cookie_out<=fifo_cookie_out;
             fifo_id_exception<=fifo_exception;
             fifo_id_excp_flag<=fifo_excp_flag;

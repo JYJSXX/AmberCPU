@@ -117,7 +117,8 @@ module divider(
             digit_dividend_reg <= 0;
             digit_divisor_reg <= 0;
             dividend_reg <= 0;
-            divisor_reg <= 0;
+            dividend_sign <= 0;
+            divisor_sign <= 0;
             quotient <= 0;
             remainder <= 0;
             shift <= 0;
@@ -128,7 +129,8 @@ module divider(
             digit_dividend_reg <= 0;
             digit_divisor_reg <= 0;
             dividend_reg <= 0;
-            divisor_reg <= 0;
+            dividend_sign <= 0;
+            divisor_sign <= 0;
             quotient <= 0;
             remainder <= 0;
             shift <= 0;
