@@ -6,7 +6,7 @@ module IF0 (
     //for hand shake with pipeline
     input if0_readygo,
     input if0_allowin,  
-    input pc_stall,
+    input flush,
 
     //for pc update
     input set_pc_from_ID,

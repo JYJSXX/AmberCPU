@@ -13,8 +13,6 @@ module IF0_IF1 (
     input               flush_cause,
     input               rready,
 
-    input [31:0]        p_addr,
-    input [31:0]        raddr,
     input [31:0]        fetch_pc,
     input [31:0]        pc_next,
 

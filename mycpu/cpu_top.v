@@ -62,12 +62,44 @@ module core_top(
 );
 
 
+    wire clk;
+    assign clk=aclk; //idle的时钟没写，暂时用clk代替
+
+
+
+
+
+    //for hand shake with pipeline
+    wire if0_readygo;
+    wire if0_allowin; 
+
+    //for pc update
+    wire set_pc_from_ID;
+    wire [31:0]pc_from_ID;
+    wire set_pc_from_EX;
+    wire [31:0]pc_from_EX;
+    wire set_pc_from_WB;
+    wire [31:0]pc_from_WB;
+    wire set_pc_from_PRIV;//from if1_fifo
+    wire [31:0]pc_from_PRIV;
+
+    //for BTB
+    wire [31:0]pred_pc;
+    wire pred_taken;
+    wire  [31:0] fetch_pc;
+    //for Icache
+    wire  icache_rvalid;
+    wire  [31:0] icache_raddr;
+    wire  [31:0]cookie_in=114514;
+
+    
+    wire  [31:0] pc_next;//rready control logic TODO
     IF0 u_IF0(
         .clk                 ( clk                 ),
-        .rstn                ( rstn                ),
+        .rstn                ( aresetn                ),
         .if0_readygo         ( if0_readygo         ),
         .if0_allowin         ( if0_allowin         ),
-        .pc_stall            ( pc_stall            ),
+        .flush               ( flush_to_if0        ),
         .set_pc_from_ID      ( set_pc_from_ID      ),
         .pc_from_ID          ( pc_from_ID          ),
         .set_pc_from_EX      ( set_pc_from_EX      ),
@@ -79,24 +111,32 @@ module core_top(
         .pred_pc             ( pred_pc             ),
         .pred_taken          ( pred_taken          ),
         .fetch_pc            ( fetch_pc            ),
-        .rvalid              ( rvalid              ),
-        .raddr               ( raddr               ),
-        .regcookie_in=114514 ( regcookie_in=114514 ),
+        .rvalid              ( icache_rvalid       ),
+        .raddr               ( icache_raddr               ),
+        .regcookie_in        ( 114514 ),
         .pc_next             ( pc_next             )
     );
 
+    //hand shake
+
+    wire               if1_readygo;
+    wire               if1_allowin;
+    wire               flush_to_if0_if1;
+    wire               flush_cause;
+    wire               icache_rready;
+
+    wire  [31:0]       if0_if1_pc;
+    wire [31:0]        if0_if1_pc_next;
+
     IF0_IF1 u_IF0_IF1(
         .clk         ( clk         ),
-        .rstn        ( rstn        ),
+        .rstn        ( aresetn        ),
         .if0_readygo ( if0_readygo ),
         .if0_allowin ( if0_allowin ),
         .if1_readygo ( if1_readygo ),
         .if1_allowin ( if1_allowin ),
-        .flush       ( flush       ),
+        .flush       ( flush_to_if0_if1      ),
         .flush_cause ( flush_cause ),
-        .rready      ( rready      ),
-        .p_addr      ( p_addr      ),
-        .raddr       ( raddr       ),
         .fetch_pc    ( fetch_pc    ),
         .pc_next     ( pc_next     ),
         .if0_if1_pc  ( if0_if1_pc  ),
@@ -104,21 +144,41 @@ module core_top(
     );
 
     
+    //hand shake
+    wire if1_valid;
+    wire if1_ready ;     
+    wire [31:0] if1_fifo_pc;
+    wire [31:0] icache_badv;
+    wire [6:0] icache_exception;
+    wire [1:0] icache_excp_flag;
+    wire [31:0] cookie_out;
+    wire cacop_ready;
+    wire cacop_complete;
 
+    wire if1_rready;
+    wire [31:0]if1_pc;
+    wire [31:0]if1_pc_next;
+    wire [31:0]if1_badv;
+    wire [6:0] if1_exception;
+    wire [1:0] if1_excp_flag;//TODO :alert icache to pass this signal
+    wire [31:0]if1_cookie_out;
+    wire     if1_cacop_ready;
+    wire     if1_cacop_complete;
+    wire [31:0] if1_inst0;
+    wire [31:0] if1_inst1;
     IF1 u_IF1(
         .clk                ( clk                ),
-        .rstn               ( rstn               ),
-        .if1_valid          ( if1_valid          ),
-        .if1_ready          ( if1_ready          ),
+        .rstn               ( aresetn               ),
+        .if1_readygo        ( if1_readygo          ),
+        .if1_allowin        ( if1_allowin         ),
         .if0_if1_pc         ( if0_if1_pc         ),
         .if1_fifo_pc        ( if1_fifo_pc        ),
-        .rready             ( rready             ),
-        .rdata              ( rdata              ),
-        .fetch_pc           ( fetch_pc           ),
-        .pc_next            ( pc_next            ),
-        .badv               ( badv               ),
-        .exception          ( exception          ),
-        .excp_flag          ( excp_flag          ),
+        .rready             ( icache_rready             ),
+        .rdata              ( icache_rdata              ),
+        .pc_next            ( if0_if1_pc_next            ),
+        .badv               ( icache_badv               ),
+        .exception          ( icache_exception          ),
+        .excp_flag          ( icache_excp_flag          ),
         .cookie_out         ( cookie_out         ),
         .cacop_ready        ( cacop_ready        ),
         .cacop_complete     ( cacop_complete     ),
@@ -135,10 +195,37 @@ module core_top(
         .if1_inst1          ( if1_inst1          )
     );
 
+    //hand shake signal
+    wire               fetch_buf_full;
+    wire               fifo_allowin;
+    wire               fifo_readygo;
 
+
+    wire  [1:0]        ibar_flag;//from pre-decoder
+    wire               ibar_flag_from_ex;
+    wire  [1:0]        csr_flag;
+    wire               csr_flag_from_ex;
+    wire  [1:0]        tlb_flag;
+    wire               tlb_flag_from_tlb;
+    wire  [1:0]        priv_flag;
+    wire               flush_from_if1_fifo;
+    wire               icache_idle;
+    wire               dcache_idle;
+    wire               csr_done;
+    wire               tlb_done;
+
+    wire  [31:0]    if1_fifo_pc_next;
+    wire  [31:0]    if1_fifo_inst0;
+    wire  [31:0]    if1_fifo_inst1;
+    wire  [31:0]    if1_fifo_icache_badv;
+    wire  [6:0]     if1_fifo_icache_exception;
+    wire  [1:0]     if1_fifo_icache_excp_flag;
+    wire  [31:0]    if1_fifo_icache_cookie_out;
+    wire            if1_fifo_cacop_ready;
+    wire            if1_fifo_cacop_complete;
     IF1_FIFO u_IF1_FIFO(
         .clk                        ( clk                        ),
-        .rstn                       ( rstn                       ),
+        .rstn                       ( aresetn                       ),
         .flush                      ( flush                      ),
         .flush_cause                ( flush_cause                ),
         .fetch_buf_full             ( fetch_buf_full             ),
@@ -182,6 +269,10 @@ module core_top(
     );
 
 
+    
+    wire    [1 :0]      inst_btype;
+
+
 
     pre_decoder u_pre_decoder(
         .if1_fifo_inst0 ( if1_fifo_inst0 ),
@@ -197,12 +288,33 @@ module core_top(
 
 
 
+    //hand shake signal,stage DO NOT GEN SIGNAL!!!
+    //stage read signal,write info to stage-stage regs
 
+    // wire input        if1_fifo_cacop_ready;
+    // wire input        if1_fifo_cacop_complete;
+
+
+    wire   [31:0] fifo_inst0;
+    wire   [31:0] fifo_inst1;
+
+    wire   [31:0] fifo_pc;//co pc with fifo_inst0 
+    wire   [31:0] fifo_pcAdd;
+    wire   [31:0] fifo_pc_next;
+    wire   [31:0] fifo_badv;
+
+    wire   [31:0] fifo_cookie_out;
+    wire   [6 :0] fifo_exception; 
+    wire   [1 :0] fifo_excp_flag;
+    wire   [1 :0] fifo_priv_flag;
+    
+
+    wire  fetch_buf_empty;
 
 
     FIFO u_FIFO(
         .clk                        ( clk                        ),
-        .rstn                       ( rstn                       ),
+        .rstn                       ( aresetn                       ),
         .fifo_readygo               ( fifo_readygo               ),
         .fifo_allowin               ( fifo_allowin               ),
         .priv_flag                  ( priv_flag                  ),
@@ -229,11 +341,23 @@ module core_top(
     );
 
 
+    //wire done
+    wire [31:0] fifo_id_inst0;
+    wire [31:0] fifo_id_inst1;
+    wire [31:0] fifo_id_pc;
+    wire [31:0] fifo_id_pcAdd;
+    wire [31:0] fifo_id_pc_next;
+    wire [31:0] fifo_id_badv;
+    wire [31:0] fifo_id_cookie_out;
+    wire [6:0]  fifo_id_exception;
+    wire [1:0]  fifo_id_excp_flag;
+    wire [1:0]  fifo_id_priv_flag;
+    wire        id_allowin;
 
-
+    wire  id_readygo;//to decoder stage,tell id I'm valid
     FIFO_ID u_FIFO_ID(
         .clk                 ( clk                 ),
-        .rstn                ( rstn                ),
+        .rstn                ( aresetn             ),
         .fifo_id_flush       ( fifo_id_flush       ),
         .fifo_id_flush_cause ( fifo_id_flush_cause ),
         .id_allowin          ( id_allowin          ),
@@ -265,72 +389,61 @@ module core_top(
     );
 
 
-
+   
+    wire  id_is_ALU_0;
+    wire  id_is_ALU_1;
+    wire  id_is_syscall_0;
+    wire  id_is_syscall_1;
+    wire  id_is_break_0;
+    wire  id_is_break_1;
+    wire  id_is_priviledged_0;
+    wire  id_is_priviledged_1;
+    wire  [`WIDTH_UOP-1:0] id_uop0;
+    wire  [`WIDTH_UOP-1:0] id_uop1;
+    wire  [31:0] id_imm0;
+    wire  [31:0] id_imm1;
+    wire  [4:0] id_rd0;
+    wire  [4:0] id_rd1;
+    wire  [4:0] id_rj0;
+    wire  [4:0] id_rj1;
+    wire  [4:0] id_rk0;
+    wire  [4:0] id_rk1;
 
     id_stage u_id_stage(
         .aclk             ( aclk             ),
         .aresetn          ( aresetn          ),
-        .inst0            ( inst0            ),
-        .inst1            ( inst1            ),
-        .pc0              ( pc0              ),
-        .pc1              ( pc1              ),
-        .is_ALU_0         ( is_ALU_0         ),
-        .is_ALU_1         ( is_ALU_1         ),
-        .is_syscall_0     ( is_syscall_0     ),
-        .is_syscall_1     ( is_syscall_1     ),
-        .is_break_0       ( is_break_0       ),
-        .is_break_1       ( is_break_1       ),
-        .is_priviledged_0 ( is_priviledged_0 ),
-        .is_priviledged_1 ( is_priviledged_1 ),
-        .uop0             ( uop0             ),
-        .uop1             ( uop1             ),
-        .imm0             ( imm0             ),
-        .imm1             ( imm1             ),
-        .rd0              ( rd0              ),
-        .rd1              ( rd1              ),
-        .rj0              ( rj0              ),
-        .rj1              ( rj1              ),
-        .rk0              ( rk0              ),
-        .rk1              ( rk1              )
+        .inst0            ( fifo_id_inst0            ),
+        .inst1            ( fifo_id_inst1            ),
+        .pc0              ( fifo_id_pc              ),
+        .pc1              ( fifo_id_pcAdd              ),
+        .is_ALU_0         ( id_is_ALU_0         ),
+        .is_ALU_1         ( id_is_ALU_1         ),
+        .is_syscall_0     ( id_is_syscall_0     ),
+        .is_syscall_1     ( id_is_syscall_1     ),
+        .is_break_0       ( id_is_break_0       ),
+        .is_break_1       ( id_is_break_1       ),
+        .is_priviledged_0 ( id_is_priviledged_0 ),
+        .is_priviledged_1 ( id_is_priviledged_1 ),
+        .uop0             ( id_uop0             ),
+        .uop1             ( id_uop1             ),
+        .imm0             ( id_imm0             ),
+        .imm1             ( id_imm1             ),
+        .rd0              ( id_rd0              ),
+        .rd1              ( id_rd1              ),
+        .rj0              ( id_rj0              ),
+        .rj1              ( id_rj1              ),
+        .rk0              ( id_rk0              ),
+        .rk1              ( id_rk1              )
     );
 
 
 
 
 
-    wire clk;
-    assign clk=aclk; //idle的时钟没写，暂时用clk代替
+   
 
-    wire id_readygo;
-    wire id_allowin;
     wire reg_readygo;
     wire reg_allowin;
-    wire [31:0] fifo_id_inst0;
-    wire [31:0] fifo_id_inst1;
-    wire [31:0] fifo_id_pc0;
-    wire [31:0] fifo_id_pc1;
-    wire [31:0] fifo_id_badv;
-    wire [1:0] fifo_id_excp_flag;
-    wire [6:0] fifo_id_exception;
-    wire [1:0] fifo_id_priv_flag;
-    wire ID_is_ALU_0;
-    wire ID_is_ALU_1;
-    wire ID_is_syscall_0;
-    wire ID_is_syscall_1;
-    wire ID_is_break_0;
-    wire ID_is_break_1;
-    wire ID_is_priviledged_0;
-    wire ID_is_priviledged_1;
-    wire [`WIDTH_UOP-1:0] ID_uop0;
-    wire [`WIDTH_UOP-1:0] ID_uop1;
-    wire [31:0] ID_imm0;
-    wire [31:0] ID_imm1;
-    wire [4:0] ID_rd0;
-    wire [4:0] ID_rd1;
-    wire [4:0] ID_rj0;
-    wire [4:0] ID_rj1;
-    wire [4:0] ID_rk0;
-    wire [4:0] ID_rk1;
     wire [31:0] iq_pc0;
     wire [31:0] iq_pc1;
     wire [31:0] iq_inst0;
@@ -356,94 +469,236 @@ module core_top(
     wire [4:0]  iq_rj1 ;
     wire [4:0]  iq_rk0 ;
     wire [4:0]  iq_rk1 ;
-    ID_REG top_ID_REG(
-        .aclk(clk),
-        .aresetn(aresetn),
-        .id_readygo(id_readygo),
-        .id_allowin(id_allowin),
-        .reg_readygo(reg_readygo),
-        .reg_allowin(reg_allowin),
-        .fifo_id_inst0(fifo_id_inst0),
-        .fifo_id_inst1(fifo_id_inst1),
-        .fifo_id_pc0(fifo_id_pc0),
-        .fifo_id_pc1(fifo_id_pc1),
-        .fifo_id_badv(fifo_id_badv),
-        .fifo_id_excp_flag(fifo_id_excp_flag),
-        .fifo_id_exception(fifo_id_exception),
-        .fifo_id_priv_flag(fifo_id_priv_flag),
-        .is_ALU_0(ID_is_ALU_0),
-        .is_ALU_1(ID_is_ALU_1),
-        .is_syscall_0(ID_is_syscall_0),
-        .is_syscall_1(ID_is_syscall_1),
-        .is_break_0(ID_is_break_0),
-        .is_break_1(ID_is_break_1),
-        .is_priviledged_0(ID_is_priviledged_0),
-        .is_priviledged_1(ID_is_priviledged_1),
-        .uop0(ID_uop0),
-        .uop1(ID_uop1),
-        .imm0(ID_imm0),
-        .imm1(ID_imm1),
-        .rd0(ID_rd0),
-        .rd1(ID_rd1),
-        .rj0(ID_rj0),
-        .rj1(ID_rj1),
-        .rk0(ID_rk0),
-        .rk1(ID_rk1),
-        .iq_pc0(iq_pc0),
-        .iq_pc1(iq_pc1),
-        .iq_inst0(iq_inst0),
-        .iq_inst1(iq_inst1),
-        .iq_badv(iq_badv),
-        .iq_excp_flag(iq_excp_flag),
-        .iq_exception(iq_exception),
-        .iq_is_ALU_0(iq_is_ALU_0),
-        .iq_is_ALU_1(iq_is_ALU_1),
-        .iq_is_syscall_0(iq_is_syscall_0),
-        .iq_is_syscall_1(iq_is_syscall_1),
-        .iq_is_break_0(iq_is_break_0),
-        .iq_is_break_1(iq_is_break_1),
-        .iq_is_priviledged_0(iq_is_priviledged_0),
-        .iq_is_priviledged_1(iq_is_priviledged_1),
-        .iq_uop0(iq_uop0),
-        .iq_uop1(iq_uop1),
-        .iq_imm0(iq_imm0),
-        .iq_imm1(iq_imm1),
-        .iq_rd0(iq_rd0),
-        .iq_rd1(iq_rd1),
-        .iq_rj0(iq_rj0),
-        .iq_rj1(iq_rj1),
-        .iq_rk0(iq_rk0),
-        .iq_rk1(iq_rk1)
-    );
-    wire forward_stall;
-    wire ex_allowin;
-    wire ex_readygo;
-    REG_EX1 top_REG_EX1(
-        .clk(clk),
-        .aresetn(aresetn),
-        .flush(1'b0),//flush部分to do
-        .forward_stall(forward_stall),
-        .reg_readygo(reg_readygo),
-        .reg_allowin(reg_allowin),
-        .ex_allowin(ex_allowin),
-        .ex_readygo(ex_readygo),
-        .id_reg_pc0(iq_pc0),
-        .id_reg_pc1(iq_pc1),
-        .id_reg_inst0(iq_inst0),
-        .id_reg_inst1(iq_inst1),
-        .id_reg_exception(iq_exception),
-        .id_reg_excp_flag(iq_excp_flag),
+    
+    ID_REG u_ID_REG(
+        .aclk                 ( aclk                 ),
+        .aresetn              ( aresetn              ),
+        .id_readygo           ( id_readygo           ),
+        .id_allowin           ( id_allowin           ),
+        .reg_allowin          ( reg_allowin          ),
+        .reg_readygo          ( reg_readygo          ),
+        .fifo_id_inst0        ( fifo_id_inst0        ),
+        .fifo_id_inst1        ( fifo_id_inst1        ),
+        .fifo_id_pc0          ( fifo_id_pc          ),
+        .fifo_id_pc1          ( fifo_id_pcAdd          ),
+        .fifo_id_badv         ( fifo_id_badv         ),
+        .fifo_id_excp_flag    ( fifo_id_excp_flag    ),
+        .fifo_id_exception    ( fifo_id_exception    ),
+        .fifo_id_priv_flag    ( fifo_id_priv_flag    ),
+        .is_ALU_0             ( id_is_ALU_0             ),
+        .is_ALU_1             ( id_is_ALU_1             ),
+        .is_syscall_0         ( id_is_syscall_0         ),
+        .is_syscall_1         ( id_is_syscall_1         ),
+        .is_break_0           ( id_is_break_0           ),
+        .is_break_1           ( id_is_break_1           ),
+        .is_priviledged_0     ( id_is_priviledged_0     ),
+        .is_priviledged_1     ( id_is_priviledged_1     ),
+        .uop0                 ( id_uop0                 ),
+        .uop1                 ( id_uop1                 ),
+        .imm0                 ( id_imm0                 ),
+        .imm1                 ( id_imm1                 ),
+        .rd0                  ( id_rd0                  ),
+        .rd1                  ( id_rd1                  ),
+        .rj0                  ( id_rj0                  ),
+        .rj1                  ( id_rj1                  ),
+        .rk0                  ( id_rk0                  ),
+        .rk1                  ( id_rk1                  ),
+        .iq_pc0               ( iq_pc0               ),
+        .iq_pc1               ( iq_pc1               ),
+        .iq_inst0             ( iq_inst0             ),
+        .iq_inst1             ( iq_inst1             ),
+        .iq_badv              ( iq_badv              ),
+        .iq_excp_flag         ( iq_excp_flag         ),
+        .iq_exception         ( iq_exception         ),
+        .iq_is_ALU_0          ( iq_is_ALU_0          ),
+        .iq_is_ALU_1          ( iq_is_ALU_1          ),
+        .iq_is_syscall_0      ( iq_is_syscall_0      ),
+        .iq_is_syscall_1      ( iq_is_syscall_1      ),
+        .iq_is_break_0        ( iq_is_break_0        ),
+        .iq_is_break_1        ( iq_is_break_1        ),
+        .iq_is_priviledged_0  ( iq_is_priviledged_0  ),
+        .iq_is_priviledged_1  ( iq_is_priviledged_1  ),
+        .iq_uop0              ( iq_uop0              ),
+        .iq_uop1              ( iq_uop1              ),
+        .iq_imm0              ( iq_imm0              ),
+        .iq_imm1              ( iq_imm1              ),
+        .iq_rd0               ( iq_rd0               ),
+        .iq_rd1               ( iq_rd1               ),
+        .iq_rj0               ( iq_rj0               ),
+        .iq_rj1               ( iq_rj1               ),
+        .iq_rk0               ( iq_rk0               ),
+        .iq_rk1               ( iq_rk1               )
     );
 
 
 
+    wire  flush_to_reg_ex1;
+    wire  ex_allowin;
+    wire  ex_readygo;
+    wire  [4:0] wb_rd0;
+    wire  [4:0] wb_rd1;
+    wire  we_0;
+    wire  we_1;
+    wire [31:0] wb_rd0_data;
+    wire [31:0] wb_rd1_data;
 
+    wire [31:0] reg_ex_pc0;
+    wire [31:0] reg_ex_pc1;
+    wire [31:0] reg_ex_inst0;
+    wire [31:0] reg_ex_inst1;
+    wire reg_ex_excp_flag;
+    wire [6:0] reg_ex_exception;
+    wire [31:0] reg_ex_badv;
+    wire reg_ex_is_ALU_0;
+    wire reg_ex_is_ALU_1;
+    wire reg_ex_is_syscall_0;
+    wire reg_ex_is_syscall_1;
+    wire reg_ex_is_break_0;
+    wire reg_ex_is_break_1;
+    wire reg_ex_is_priviledged_0;
+    wire reg_ex_is_priviledged_1;
+    wire [`WIDTH_UOP-1:0] reg_ex_uop0;
+    wire [`WIDTH_UOP-1:0] reg_ex_uop1;
+    wire [31:0] reg_ex_imm0;
+    wire [31:0] reg_ex_imm1;
+    wire [31:0] reg_ex_rj0_data;
+    wire [31:0] reg_ex_rj1_data;
+    wire [31:0] reg_ex_rk0_data;
+    wire [31:0] reg_ex_rk1_data;
+    wire [4:0]  reg_ex_rj0;
+    wire [4:0]  reg_ex_rj1;
+    wire [4:0]  reg_ex_rk0;
+    wire [4:0]  reg_ex_rk1;
+    wire [4:0]  reg_ex_rd0;
+    wire [4:0]  reg_ex_rd1;
+
+    wire        forward_stall ;
+
+    REG_EX1 u_REG_EX1(
+        .clk                     ( clk                     ),
+        .aresetn                 ( aresetn                 ),
+        .flush                   ( flush_to_reg_ex1        ),
+        .forward_stall           ( forward_stall           ),
+        .reg_readygo             ( reg_readygo             ),
+        .reg_allowin             ( reg_allowin             ),
+        .ex_allowin              ( ex_allowin              ),
+        .ex_readygo              ( ex_readygo              ),
+        .id_reg_pc0              ( iq_pc0              ),
+        .id_reg_pc1              ( iq_pc1              ),
+        .id_reg_inst0            ( iq_inst0            ),
+        .id_reg_inst1            ( iq_inst1            ),
+        .id_reg_exception        ( iq_exception        ),
+        .id_reg_excp_flag        ( iq_excp_flag        ),
+        .id_reg_badv             ( iq_badv             ),
+        .id_reg_is_ALU_0         ( iq_is_ALU_0         ),
+        .id_reg_is_ALU_1         ( iq_is_ALU_1         ),
+        .id_reg_is_syscall_0     ( iq_is_syscall_0     ),
+        .id_reg_is_syscall_1     ( iq_is_syscall_1     ),
+        .id_reg_is_break_0       ( iq_is_break_0       ),
+        .id_reg_is_break_1       ( iq_is_break_1       ),
+        .id_reg_is_priviledged_0 ( iq_is_priviledged_0 ),
+        .id_reg_is_priviledged_1 ( iq_is_priviledged_1 ),
+        .id_reg_uop0             ( iq_uop0             ),
+        .id_reg_uop1             ( iq_uop1             ),
+        .id_reg_imm0             ( iq_imm0             ),
+        .id_reg_imm1             ( iq_imm1             ),
+        .wb_rd0                  ( wb_rd0                  ),
+        .wb_rd1                  ( wb_rd1                  ),
+        .we_0                    ( we_0                    ),
+        .we_1                    ( we_1                    ),
+        .rd0_data                ( wb_rd0_data                ),
+        .rd1_data                ( wb_rd1_data                ),
+        .id_reg_rj0              ( iq_rj0              ),
+        .id_reg_rj1              ( iq_rj1              ),
+        .id_reg_rk0              ( iq_rk0              ),
+        .id_reg_rk1              ( iq_rk1              ),
+        .id_reg_rd0              ( iq_rd0              ),
+        .id_reg_rd1              ( iq_rd1              ),
+        .reg_ex_pc0              ( reg_ex_pc0              ),
+        .reg_ex_pc1              ( reg_ex_pc1              ),
+        .reg_ex_inst0            ( reg_ex_inst0            ),
+        .reg_ex_inst1            ( reg_ex_inst1            ),
+        .reg_ex_excp_flag        ( reg_ex_excp_flag        ),
+        .reg_ex_exception        ( reg_ex_exception        ),
+        .reg_ex_badv             ( reg_ex_badv             ),
+        .reg_ex_is_ALU_0         ( reg_ex_is_ALU_0         ),
+        .reg_ex_is_ALU_1         ( reg_ex_is_ALU_1         ),
+        .reg_ex_is_syscall_0     ( reg_ex_is_syscall_0     ),
+        .reg_ex_is_syscall_1     ( reg_ex_is_syscall_1     ),
+        .reg_ex_is_break_0       ( reg_ex_is_break_0       ),
+        .reg_ex_is_break_1       ( reg_ex_is_break_1       ),
+        .reg_ex_is_priviledged_0 ( reg_ex_is_priviledged_0 ),
+        .reg_ex_is_priviledged_1 ( reg_ex_is_priviledged_1 ),
+        .reg_ex_uop0             ( reg_ex_uop0             ),
+        .reg_ex_uop1             ( reg_ex_uop1             ),
+        .reg_ex_imm0             ( reg_ex_imm0             ),
+        .reg_ex_imm1             ( reg_ex_imm1             ),
+        .reg_ex_rj0_data         ( reg_ex_rj0_data         ),
+        .reg_ex_rj1_data         ( reg_ex_rj1_data         ),
+        .reg_ex_rk0_data         ( reg_ex_rk0_data         ),
+        .reg_ex_rk1_data         ( reg_ex_rk1_data         ),
+        .reg_ex_rj0              ( reg_ex_rj0              ),
+        .reg_ex_rj1              ( reg_ex_rj1              ),
+        .reg_ex_rk0              ( reg_ex_rk0              ),
+        .reg_ex_rk1              ( reg_ex_rk1              ),
+        .reg_ex_rd0              ( reg_ex_rd0              ),
+        .reg_ex_rd1              ( reg_ex_rd1              )
+    );
+
+
+
+    wire [31:0] ex1_alu_result0;
+    wire [31:0] ex1_alu_result1;
+    wire        ex1_alu_result0_valid;
+    wire        ex1_alu_result1_valid;
+    wire        ex1_ibar;
+
+    //前递用到的信号
+    //从ex1_ex2段间输入
+    wire [4:0] ex1_ex2_rd0;
+    wire [4:0] ex1_ex2_rd1;
+    wire [31:0] ex1_ex2_data_0;
+    wire [31:0] ex1_ex2_data_1;
+    wire ex1_ex2_data_0_valid; //可不可以前递，没算好不能前递
+    wire ex1_ex2_data_1_valid;
+    //从ex2_wb段间输入
+    wire [4:0] ex2_wb_rd0;
+    wire [4:0] ex2_wb_rd1;
+    wire [31:0] ex2_wb_data_0;
+    wire [31:0] ex2_wb_data_1;
+    wire ex2_wb_data_0_valid;
+    wire ex2_wb_data_1_valid;
+    //csr
+    wire [31:0] tid; //读时钟id的指令RDCNTID用到
+
+    //读时钟的指令RDCNTV(L/H)要用到，开始从cpu_top接进来;现在放在模块内了
+    //wire [63:0] stable_counter;
+
+    //分支预测
+    wire predict_to_branch; //分支预测的信号
+    wire [31:0] pc0_predict;
+    
+    wire predict_dir_fail; //分支预测跳不跳失败的信号
+    wire predict_addr_fail; //分支预测往哪跳失败的信号
+    wire fact_taken; //实际跳不跳
+    wire [31:0] fact_pc; //分支指令的pc
+    wire [31:0] fact_tpc; //目标地址pc
+
+    //给cache
+    wire rvalid_dcache;
+    wire wvalid_dcache;
+    wire op_dcache; //0读1写
+    wire [3:0] write_type_dcache; //写入类型;0b0001为byte;0b0011为half;0b1111为word
+    wire [31:0] addr_dcache;
+    wire [31:0] w_data_dcache;
+    wire  is_atom_dcache;
+   // output uncache, 由csr负责
 
     EX1 u_EX1(
         .clk                  ( clk                  ),
         .aclk                 ( aclk                 ),
         .aresetn              ( aresetn              ),
-        .flush                ( flush                ),
+        .flush                ( flush_to_ex1                ),
         .pc0                  ( pc0                  ),
         .pc1                  ( pc1                  ),
         .inst0                ( inst0                ),
@@ -752,10 +1007,8 @@ module core_top(
         .hardware_interrupt  ( hardware_interrupt  )
     );
 
-    BTB#(
-        .DEPTH=16         ( undefined )
-    )u_BTB(
-        .rstn             ( rstn             ),
+    BTB u_BTB(
+        .rstn             ( aresetn             ),
         .clk              ( clk              ),
         .inst_btype       ( inst_btype       ),
         .inst_bpos        ( inst_bpos        ),
@@ -775,7 +1028,7 @@ module core_top(
         .COOKIE_WIDTH      ( 32 )
     )u_icache(
         .clk               ( clk               ),
-        .rstn              ( rstn              ),
+        .rstn              ( aresetn              ),
         .rvalid            ( rvalid            ),
         .rready            ( rready            ),
         .raddr             ( raddr             ),
@@ -809,7 +1062,7 @@ module core_top(
         .WORD_OFFSET_WIDTH                 ( 4 )
     )u_dcache(
         .clk                               ( clk                               ),
-        .rstn                              ( rstn                              ),
+        .rstn                              ( aresetn                              ),
         ./* from pipeline */   addr        ( /* from pipeline */   addr        ),
         .p_addr                            ( p_addr                            ),
         .rvalid                            ( rvalid                            ),
@@ -857,7 +1110,7 @@ module core_top(
 
     TLB u_TLB(
         .clk            ( clk            ),
-        .rstn           ( rstn           ),
+        .rstn           ( aresetn           ),
         .CSR_ASID       ( CSR_ASID       ),
         .CSR_VPPN       ( CSR_VPPN       ),
         .CSR_PG         ( CSR_PG         ),
@@ -926,6 +1179,30 @@ module core_top(
         .r_last   ( r_last   ),
         .r_valid  ( r_valid  ),
         .r_ready  ( r_ready  )
+    );
+
+
+    HazardUnit u_HazardUnit(
+        .flush_from_wb     ( flush_from_wb     ),
+        .flush_from_ex2    ( flush_from_ex2    ),
+        .flush_from_ex1    ( flush_from_ex1    ),
+        .flush_from_reg    ( flush_from_reg    ),
+        .flush_from_id     ( flush_from_id     ),
+        .flush_from_fifo   ( flush_from_fifo   ),
+        .flush_from_if1    ( flush_from_if1    ),
+        .flush_to_ex2_wb   ( flush_to_ex2_wb   ),
+        .flush_to_ex1_ex2  ( flush_to_ex1_ex2  ),
+        .flush_to_reg_ex1  ( flush_to_reg_ex1  ),
+        .flush_to_id_reg   ( flush_to_id_reg   ),
+        .flush_to_fifo_id  ( flush_to_fifo_id  ),
+        .flush_to_fifo     ( flush_to_fifo     ),
+        .flush_to_if1_fifo ( flush_to_if1_fifo ),
+        .flush_to_if1      ( flush_to_if1      ),
+        .flush_to_if0      ( flush_to_if0      ),
+        .flush_to_tlb      ( flush_to_tlb      ),
+        .flush_to_icache   ( flush_to_icache   ),
+        .flush_to_dcache   ( flush_to_dcache   ),
+        .flush_to_btb      ( flush_to_btb      )
     );
 
 endmodule
