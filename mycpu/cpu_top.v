@@ -66,7 +66,27 @@ module core_top(
     wire clk;
     assign clk=aclk; //TODO:idle的时钟没写，暂时用clk代替
 
+    wire flush_from_wb;
+    wire flush_from_ex2;
+    wire flush_from_ex1;
+    wire flush_from_reg;
+    wire flush_from_id;
+    wire flush_from_fifo;
+    wire flush_from_if1;
 
+    wire flush_to_ex2_wb;
+    wire flush_to_ex1_ex2;
+    wire flush_to_reg_ex1;
+    wire flush_to_id_reg;
+    wire flush_to_fifo_id;
+    wire flush_to_fifo;
+    wire flush_to_if1_fifo;
+    wire flush_to_if1;
+    wire flush_to_if0;
+    wire flush_to_tlb;
+    wire flush_to_icache;
+    wire flush_to_dcache;
+    wire flush_to_btb;
 
 
 
@@ -318,7 +338,8 @@ module core_top(
 
     FIFO u_FIFO(
         .clk                        ( clk                        ),
-        .rstn                       ( aresetn                       ),
+        .rstn                       ( aresetn                    ),
+        .flush                      ( flush_to_fifo              ),
         .fifo_readygo               ( fifo_readygo               ),
         .fifo_allowin               ( fifo_allowin               ),
         .priv_flag                  ( priv_flag                  ),
@@ -546,7 +567,6 @@ module core_top(
 
 
 
-    wire  flush_to_reg_ex1;
     wire  ex_allowin;
     wire  ex_readygo;
     wire  [4:0] wb_rd0;
