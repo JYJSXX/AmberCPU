@@ -2,6 +2,7 @@
 `include"../exception.vh"
 module EX1(
     input   clk,
+    input   aclk,
     input   aresetn,
     input   flush,
     input   [31:0] pc0,
@@ -56,8 +57,8 @@ module EX1(
     //csr
     input [31:0] tid, //读时钟id的指令RDCNTID用到
 
-    //读时钟的指令RDCNTV(L/H)要用到，从cpu_top接进来
-    input [63:0] stable_counter,
+    //读时钟的指令RDCNTV(L/H)要用到，开始从cpu_top接进来,现在放在模块内了
+    //input [63:0] stable_counter,
 
     //分支预测
     input predict_to_branch, //分支预测的信号
@@ -159,6 +160,11 @@ module EX1(
 
 
 );
+    reg [63:0] stable_counter;
+    always @(posedge aclk)
+        if(~aresetn) stable_counter<=0;
+        else stable_counter <= stable_counter+1;
+        
 always@(*)begin
     if(excp_flag_in) begin
         exception_out = exception_in;
