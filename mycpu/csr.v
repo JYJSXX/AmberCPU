@@ -33,6 +33,7 @@ module csr
     output [2:0] DMW1_VSEG,
     output [31:0] ASID,
     output [31:0] TLBEHI,
+    output [31:0]  TLBIDX,
     
     output     [`TLB_CPRLEN - 1:0]     tlb_cpr_out,    
     output     [`TLB_TRANSLEN - 1:0]   tlb_trans_1_out,
@@ -55,7 +56,7 @@ module csr
     //input llbit_clear, //by other没有用，直接看ertn就行
     input tlbsrch_ready, //已经判断完是否命中
     input tlbsrch_hit, //TLBSRCH是否命中
-    input [5:0] tlb_index_in, //TLB命中的索引   最高位是hit，后面不要了
+    input [4:0] tlb_index_in, //TLB命中的索引   最高位是hit，后面不要了
 
     input tlbrd_ready,
     input tlbrd_hit,
@@ -809,5 +810,6 @@ assign rdata[31:0] = {32{addr==`CSR_CRMD}} & csr_crmd |
         assign PG=csr_crmd[4];
         assign ASID=csr_asid;
         assign TLBEHI=csr_tlbehi;
+        assign TLBIDX=csr_tlbidx;
         
 endmodule

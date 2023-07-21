@@ -28,7 +28,7 @@ module TLB(
     output reg                          TLBSRCH_hit,
     output reg  [4:0]                   TLBSRCH_INDEX,
 
-    input                               TLBRD_INDEX,
+    input       [4:0]                   TLBRD_INDEX,
     input                               TLBRD_valid,
     output reg                          TLBRD_ready,
     output reg                          TLBRD_hit,

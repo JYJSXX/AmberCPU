@@ -1,4 +1,5 @@
 `include "define.vh"
+`include "../TLB/TLB.vh"
 module core_top(
     input           aclk,
     input           aresetn,
@@ -67,7 +68,26 @@ module core_top(
     assign clk=aclk; //TODO:idle的时钟没写，暂时用clk代替
 
 
-
+    wire flush_from_wb;    
+    wire flush_from_ex2;   
+    wire flush_from_ex1;   
+    wire flush_from_reg;   
+    wire flush_from_id;    
+    wire flush_from_fifo;  
+    wire flush_from_if1;   
+    wire flush_to_ex2_wb;  
+    wire flush_to_ex1_ex2; 
+    wire flush_to_reg_ex1; 
+    wire flush_to_id_reg;  
+    wire flush_to_fifo_id; 
+    wire flush_to_fifo;    
+    wire flush_to_if1_fifo;
+    wire flush_to_if1;     
+    wire flush_to_if0 ;    
+    wire flush_to_tlb;     
+    wire flush_to_icache ; 
+    wire flush_to_dcache ; 
+    wire flush_to_btb ;    
 
 
     //for hand shake with pipeline
@@ -546,7 +566,6 @@ module core_top(
 
 
 
-    wire  flush_to_reg_ex1;
     wire  ex_allowin;
     wire  ex_readygo;
     wire  [4:0] wb_rd0;
@@ -558,8 +577,10 @@ module core_top(
 
     wire [31:0] reg_ex_pc0;
     wire [31:0] reg_ex_pc1;
+    wire [31:0] reg_ex_pc_next;
     wire [31:0] reg_ex_inst0;
     wire [31:0] reg_ex_inst1;
+    wire reg_ex_branch_flag;
     wire reg_ex_excp_flag;
     wire [6:0] reg_ex_exception;
     wire [31:0] reg_ex_badv;
@@ -599,6 +620,7 @@ module core_top(
         .ex_readygo              ( ex_readygo              ),
         .id_reg_pc0              ( iq_pc0              ),
         .id_reg_pc1              ( iq_pc1              ),
+        .id_reg_pc_next          ( iq_pc_next          ),
         .id_reg_inst0            ( iq_inst0            ),
         .id_reg_inst1            ( iq_inst1            ),
         .id_reg_exception        ( iq_exception        ),
@@ -631,8 +653,10 @@ module core_top(
         .id_reg_rd1              ( iq_rd1              ),
         .reg_ex_pc0              ( reg_ex_pc0              ),
         .reg_ex_pc1              ( reg_ex_pc1              ),
+        .reg_ex_pc_next          ( reg_ex_pc_next          ),
         .reg_ex_inst0            ( reg_ex_inst0            ),
         .reg_ex_inst1            ( reg_ex_inst1            ),
+        .reg_ex_branch_flag      ( reg_ex_branch_flag      ),
         .reg_ex_excp_flag        ( reg_ex_excp_flag        ),
         .reg_ex_exception        ( reg_ex_exception        ),
         .reg_ex_badv             ( reg_ex_badv             ),
@@ -666,7 +690,6 @@ module core_top(
     wire [31:0] ex1_alu_result1;
     wire        ex1_alu_result0_valid;
     wire        ex1_alu_result1_valid;
-    wire        ex1_ibar;
 
     //前递用到的信号
     //从ex1_ex2段间输入
@@ -684,34 +707,91 @@ module core_top(
     wire ex2_wb_data_0_valid;
     wire ex2_wb_data_1_valid;
     //csrfact_pc; //分支指令的pc
-    wire [31:0] fact;
+    //wire [31:0] fact;
     wire [31:0] tid; //读时钟id的指令RDCNTID用到
 
     //读时钟的指令RDCNTV(L/H)要用到，开始从cpu_top接进来;现在放在模块内了
     //wire [63:0] stable_counter;
 
     //分支预测
-    // wire predict_to_branch; //分支预测的信号 repllaced by iq_branch_flag
-    wire [31:0] pc0_predict;
-
-
+   
     //TODO predice logic
     wire predict_dir_fail; //分支预测跳不跳失败的信号
-    wire predict_addr_fail; //分支预测往哪跳失败的信号
+    wire predict_add_fail; //分支预测往哪跳失败的信号
     wire fact_taken; //实际跳不跳
     wire [31:0] fact_pc; //分支指令的pc
     wire [31:0] fact_tpc; //目标地址pc
 
     //给cache
-    wire rvalid_dcache;
-    wire wvalid_dcache;
+    wire cpu_d_rvalid;
+    wire cpu_d_wvalid;
     wire op_dcache; //0读1写
-    wire [3:0] write_type_dcache; //写入类型;0b0001为byte;0b0011为half;0b1111为word
+    wire [3:0] d_wstrb; //写入类型;0b0001为byte;0b0011为half;0b1111为word
     wire [31:0] addr_dcache;
     wire [31:0] w_data_dcache;
     wire  is_atom_dcache;
    // output uncache, 由csr负责
     wire ibar;
+
+    //给mul
+    wire [31:0] mul_stage1_res_hh;
+    wire [31:0] mul_stage1_res_hl;
+    wire [31:0] mul_stage1_res_lh;
+    wire [31:0] mul_stage1_res_ll;
+    wire [31:0] mul_compensate;
+
+    //给divider
+    wire [31:0] quotient;
+    wire [31:0] remainder;
+    wire stall_divider;
+    wire div_ready;
+
+    //下面都是特权指令的
+    wire privilege_ready;
+    //给csr
+    wire [31:0] csr_addr;
+    wire [31:0] csr_wdata;
+    wire csr_wen;
+    wire csr_ren;
+    wire [31:0] csr_rdata;
+    //给wb段
+    wire [31:0] csr_rd_data;
+    //CACOP
+    wire [1:0] cacop_ins_type;
+    wire [31:0] cacop_vaddr;
+    wire cacop_i_en;
+    wire cacop_d_en;
+    wire cacop_i_ready;
+    wire cacop_d_ready;
+    wire cacop_i_done;
+    wire cacop_d_done;
+    //ERTN
+    wire ertn_en;
+    //idle
+    wire i_idle;
+    wire d_idle;
+    wire block_cache;
+    wire block_clock;
+    //TLB
+    wire tlbsrch_ready;
+    wire tlbsrch_valid;
+    wire tlbrd_ready;
+    wire tlbrd_valid;
+    wire tlbwr_ready;
+    wire tlbwr_valid;
+    wire tlbfill_ready;
+    wire tlbfill_valid;
+    wire invtlb_ready;
+    wire invtlb_valid;
+    wire [4:0] invtlb_op;
+    wire [31:0] invtlb_asid;
+    wire [18:0] invtlb_va;
+
+    //exception
+    wire  plv; //从csr_crmd[0]
+    wire [31:0] ex1_badv;
+    wire ex1_excp_flag ;
+    wire [6:0] ex1_exception;
 
     EX1 u_EX1(
         .clk                  ( clk                  ),
@@ -761,17 +841,17 @@ module core_top(
         .ex2_wb_data_1_valid  ( ex2_wb_data_1_valid  ),
         .forward_stall        ( forward_stall        ),
         .tid                  ( tid                  ),
-        .predict_to_branch    ( iq_branch_flag       ),
-        .pc0_predict          ( pc0_predict          ),
+        .predict_to_branch    ( reg_ex_branch_flag       ),
+        .pc0_predict          ( reg_ex_pc_next          ),
         .predict_dir_fail     ( predict_dir_fail     ),
-        .predict_addr_fail    ( predict_addr_fail    ),
+        .predict_addr_fail    ( predict_add_fail     ),
         .fact_taken           ( fact_taken           ),
         .fact_pc              ( fact_pc              ),
         .fact_tpc             ( fact_tpc             ),
-        .rvalid_dcache        ( rvalid_dcache        ),
-        .wvalid_dcache        ( wvalid_dcache        ),
+        .rvalid_dcache        ( cpu_d_rvalid             ),
+        .wvalid_dcache        ( cpu_d_wvalid       ),
         .op_dcache            ( op_dcache            ),
-        .write_type_dcache    ( write_type_dcache    ),
+        .write_type_dcache    ( d_wstrb              ),
         .addr_dcache          ( addr_dcache          ),
         .w_data_dcache        ( w_data_dcache        ),
         .is_atom_dcache       ( is_atom_dcache       ),
@@ -821,35 +901,68 @@ module core_top(
         .excp_flag_in         ( reg_ex_excp_flag         ),
         .exception_in         ( reg_ex_exception         ),
         .badv_in              ( reg_ex_badv              ),
-        .badv_out             ( badv_out             ),
-        .excp_flag_out        ( excp_flag_out        ),
-        .exception_out        ( exception_out        )
+        .badv_out             ( ex1_badv             ),
+        .excp_flag_out        ( ex1_excp_flag        ),
+        .exception_out        ( ex1_exception        )
     );
 
+    
+    //wire  flush_out;
+    wire   ex2_allowin;
+    wire   ex2_readygo;
 
+
+
+    
+
+    wire  [31:0] ex1_ex2_pc0;
+    wire  [31:0] ex1_ex2_pc1;
+    wire  [31:0] ex1_ex2_inst0;
+    wire  [31:0] ex1_ex2_inst1;
+
+    wire  [`WIDTH_UOP-1:0] ex1_ex2_uop0;
+    wire  [`WIDTH_UOP-1:0] ex1_ex2_uop1;
+    wire  [31:0] ex1_ex2_imm0;
+    wire  [31:0] ex1_ex2_imm1;
+    wire  [4:0] ex1_ex2_rj0;
+    wire  [4:0] ex1_ex2_rj1;
+    wire  [4:0] ex1_ex2_rk0;
+    wire  [4:0] ex1_ex2_rk1;
+    wire  [31:0] ex1_ex2_mul_stage1_res_hh;
+    wire  [31:0] ex1_ex2_mul_stage1_res_hl;
+    wire  [31:0] ex1_ex2_mul_stage1_res_lh;
+    wire  [31:0] ex1_ex2_mul_stage1_res_ll;
+    wire  [31:0] ex1_ex2_mul_compensate;
+
+
+
+    //从ex1接入 exception相关
+    wire   [31:0] ex1_ex2_badv;      
+    wire   ex1_ex2_excp_flag; 
+    wire   [6:0] ex1_ex2_exception; 
 
     EX1_EX2 u_EX1_EX2(
         .clk                       ( clk                       ),
         .aresetn                   ( aresetn                   ),
-        .flush_in                  ( flush_in                  ),
-        .ex1_readygo               ( ex1_readygo               ),
-        .ex1_allowin               ( ex1_allowin               ),
+        .flush_in                  ( flush_to_ex1_ex2                  ),
+        .ex1_readygo               ( ex_readygo               ),
+        .ex1_allowin               ( ex_allowin               ),
         .ex2_allowin               ( ex2_allowin               ),
         .ex2_readygo               ( ex2_readygo               ),
-        .reg_ex1_pc0               ( reg_ex1_pc0               ),
-        .reg_ex1_pc1               ( reg_ex1_pc1               ),
-        .reg_ex1_inst0             ( reg_ex1_inst0             ),
-        .reg_ex1_inst1             ( reg_ex1_inst1             ),
-        .reg_ex1_uop0              ( reg_ex1_uop0              ),
-        .reg_ex1_uop1              ( reg_ex1_uop1              ),
-        .reg_ex1_imm0              ( reg_ex1_imm0              ),
-        .reg_ex1_imm1              ( reg_ex1_imm1              ),
-        .reg_ex1_rj0               ( reg_ex1_rj0               ),
-        .reg_ex1_rj1               ( reg_ex1_rj1               ),
-        .reg_ex1_rk0               ( reg_ex1_rk0               ),
-        .reg_ex1_rk1               ( reg_ex1_rk1               ),
-        .reg_ex1_rd0               ( reg_ex1_rd0               ),
-        .reg_ex1_rd1               ( reg_ex1_rd1               ),
+        .reg_ex1_pc0               ( reg_ex_pc0               ),
+        .reg_ex1_pc1               ( reg_ex_pc1               ),
+        .reg_ex1_inst0             ( reg_ex_inst0             ),
+        .reg_ex1_inst1             ( reg_ex_inst1             ),
+        .reg_ex1_uop0              ( reg_ex_uop0              ),
+        .reg_ex1_uop1              ( reg_ex_uop1              ),
+        .reg_ex1_imm0              ( reg_ex_imm0              ),
+        .reg_ex1_imm1              ( reg_ex_imm1              ),
+        .reg_ex1_rj0               ( reg_ex_rj0               ),
+        .reg_ex1_rj1               ( reg_ex_rj1               ),
+        .reg_ex1_rk0               ( reg_ex_rk0               ),
+        .reg_ex1_rk1               ( reg_ex_rk1               ),
+        .reg_ex1_rd0               ( reg_ex_rd0               ),
+        .reg_ex1_rd1               ( reg_ex_rd1               ),
         .mul_stage1_res_hh         ( mul_stage1_res_hh         ),
         .mul_stage1_res_hl         ( mul_stage1_res_hl         ),
         .mul_stage1_res_lh         ( mul_stage1_res_lh         ),
@@ -882,9 +995,9 @@ module core_top(
         .ex1_ex2_data_1            ( ex1_ex2_data_1            ),
         .ex1_ex2_data_0_valid      ( ex1_ex2_data_0_valid      ),
         .ex1_ex2_data_1_valid      ( ex1_ex2_data_1_valid      ),
-        .badv_in                   ( badv_in                   ),
-        .excp_flag_in              ( excp_flag_in              ),
-        .exception_in              ( exception_in              ),
+        .badv_in                   ( ex1_badv                   ),
+        .excp_flag_in              ( ex1_excp_flag              ),
+        .exception_in              ( ex1_exception              ),
         .ex1_ex2_badv              ( ex1_ex2_badv              ),
         .ex1_ex2_excp_flag         ( ex1_ex2_excp_flag         ),
         .ex1_ex2_exception         ( ex1_ex2_exception         )
@@ -892,10 +1005,12 @@ module core_top(
 
 
 
+    wire [31:0] ex2_rd0_data;
+    wire [31:0] ex2_rd1_data;
 
     EX2 u_EX2(
-        .uop0                 ( uop0                 ),
-        .uop1                 ( uop1                 ),
+        .uop0                 ( ex1_ex2_uop0                 ),
+        .uop1                 ( ex1_ex2_uop1                 ),
         .ex1_ex2_data_0       ( ex1_ex2_data_0       ),
         .ex1_ex2_data_1       ( ex1_ex2_data_1       ),
         .ex1_ex2_data_0_valid ( ex1_ex2_data_0_valid ),
@@ -905,45 +1020,72 @@ module core_top(
         .mul_stage1_res_lh    ( mul_stage1_res_lh    ),
         .mul_stage1_res_ll    ( mul_stage1_res_ll    ),
         .mul_compensate       ( mul_compensate       ),
-        .rd0_data             ( rd0_data             ),
-        .rd1_data             ( rd1_data             )
+        .rd0_data             ( ex2_rd0_data         ),
+        .rd1_data             ( ex2_rd1_data         )
     );
 
 
+   
 
+    
+
+    
+
+    //dcache
+    wire [31:0] r_data_dcache;
+    wire rready_dcache;
+
+    //csr 三条读写csr的指令都要写
+    wire [31:0] csr_data_in;
+    wire csr_ready;
+
+
+    //exception
+    wire [31:0] csr_estat; //从csr
+    wire [31:0] csr_crmd;
+    
+    wire [6:0] ex2_wb_exception; 
+    wire ex2_wb_excp_flag; 
+    wire [31:0] ex2_wb_badv;      
+    wire  wen_badv;
+    wire tlb_exception; //决定是否回到直接地址翻译
+    wire [31:0] era_out;
+    wire wen_era;
+    wire [18:0] vppn_out;
+    wire wen_vppn;
 
     EX2_WB u_EX2_WB(
         .clk                 ( clk                 ),
         .aresetn             ( aresetn             ),
-        .flush_in            ( flush_in            ),
-        .flush_out_all       ( flush_out_all       ),
+        .flush_in            ( flush_to_ex2_wb            ),
+        .flush_out_all       ( flush_from_wb       ),
         .ex2_allowin         ( ex2_allowin         ),
-        .pc0                 ( pc0                 ),
-        .pc1                 ( pc1                 ),
+        .pc0                 ( ex1_ex2_pc0                 ),
+        .pc1                 ( ex1_ex2_pc1                 ),
         .ex1_ex2_inst0       ( ex1_ex2_inst0       ),
         .ex1_ex2_inst1       ( ex1_ex2_inst1       ),
-        .uop0                ( uop0                ),
-        .uop1                ( uop1                ),
-        .ex2_result0         ( ex2_result0         ),
-        .ex2_result1         ( ex2_result1         ),
-        .ex_rd0              ( ex_rd0              ),
-        .ex_rd1              ( ex_rd1              ),
-        .ex2_result0_valid   ( ex2_result0_valid   ),
-        .ex2_result1_valid   ( ex2_result1_valid   ),
+        .uop0                ( ex1_ex2_uop0                ),
+        .uop1                ( ex1_ex2_uop1                ),
+        .ex2_result0         ( ex2_rd0_data         ),
+        .ex2_result1         ( ex2_rd1_data         ),
+        .ex_rd0              ( ex1_ex2_rd0              ),
+        .ex_rd1              ( ex1_ex2_rd1              ),
+        .ex2_result0_valid   ( ex2_data0_valid   ),
+        .ex2_result1_valid   ( ex2_data1_valid   ),
         .ex2_wb_data_0       ( ex2_wb_data_0       ),
         .ex2_wb_data_1       ( ex2_wb_data_1       ),
         .ex2_wb_data_0_valid ( ex2_wb_data_0_valid ),
         .ex2_wb_data_1_valid ( ex2_wb_data_1_valid ),
         .ex2_wb_rd0          ( ex2_wb_rd0          ),
         .ex2_wb_rd1          ( ex2_wb_rd1          ),
-        .ex2_wb_we0          ( ex2_wb_we0          ),
-        .ex2_wb_we1          ( ex2_wb_we1          ),
+        .ex2_wb_we0          ( we_0          ),
+        .ex2_wb_we1          ( we_1          ),
         .quotient            ( quotient            ),
         .remainder           ( remainder           ),
         .stall_divider       ( stall_divider       ),
         .div_ready           ( div_ready           ),
-        .dcache_data         ( dcache_data         ),
-        .dcache_ready        ( dcache_ready        ),
+        .dcache_data         ( r_data_dcache         ),
+        .dcache_ready        ( rready_dcache        ),
         .csr_data_in         ( csr_data_in         ),
         .csr_ready           ( csr_ready           ),
         .debug0_wb_pc        ( debug0_wb_pc        ),
@@ -958,15 +1100,15 @@ module core_top(
         .debug1_wb_inst      ( debug1_wb_inst      ),
         .csr_estat           ( csr_estat           ),
         .csr_crmd            ( csr_crmd            ),
-        .ecode_in            ( ecode_in            ),
-        .exception_flag_in   ( exception_flag_in   ),
-        .badv_in             ( badv_in             ),
-        .ecode_out           ( ecode_out           ),
-        .exception_flag_out  ( exception_flag_out  ),
-        .badv_out            ( badv_out            ),
+        .ecode_in            ( ex1_ex2_exception            ),
+        .exception_flag_in   ( ex1_ex2_excp_flag   ),
+        .badv_in             ( ex1_ex2_badv             ),
+        .ecode_out           ( ex2_wb_exception           ),
+        .exception_flag_out  ( ex2_wb_excp_flag  ),
+        .badv_out            ( ex2_wb_badv           ),
         .wen_badv            ( wen_badv            ),
         .tlb_exception       ( tlb_exception       ),
-        .era_in              ( era_in              ),
+        .era_in              ( ex1_ex2_pc0         ),
         .era_out             ( era_out             ),
         .wen_era             ( wen_era             ),
         .vppn_out            ( vppn_out            ),
@@ -974,18 +1116,59 @@ module core_top(
     );
 
 
+    
+
+    wire [31:0] crmd; //当前模式信息，包含privilege
+    wire [31:0] estat;    //例外状态 idle_interupt; 
+    wire [31:0] csr_era;
+    wire [31:0] eentry;
+    wire [31:0] tlbrentry;
+    wire [31:0] pgdl,pgdh;
+    wire cpu_interupt;
+    wire [31:0] dmw0;
+    wire [31:0] dmw1;
+    wire llbit;
+    wire idle_over;
+    //TLB输出
+    //待定
+    wire PG;
+    wire [2:0] DMW0_PSEG;
+    wire [2:0] DMW1_PSEG;
+    wire [2:0] DMW0_VSEG;
+    wire [2:0] DMW1_VSEG;
+    wire [31:0] ASID;
+    wire [31:0] TLBEHI;
+    
+    wire     [`TLB_CPRLEN - 1:0]     tlb_cpr_out;    
+    wire     [`TLB_TRANSLEN - 1:0]   tlb_trans_1_out;
+    wire     [`TLB_TRANSLEN - 1:0]   tlb_trans_2_out;
+
+   
+    // wire [`PGD_BASE] pgd_base_in; //页表基址
+    // wire wen_pgd_base; //写入页表基址
+    //wire [18:0] tlbehi_vppn_in;
+    //wire wen_tlbehi_vppn;
+    wire llbit_set;
+    wire tlbsrch_hit; //TLBSRCH是否命中
+    wire [4:0] tlb_index_in; //TLB命中的索引   最高位是hit，后面不要了
+
+    wire tlbrd_hit;
+    wire     [`TLB_CPRLEN - 1:0]     tlbrd_cpr;    
+    wire     [`TLB_TRANSLEN - 1:0]   tlbrd_trans_1;
+    wire     [`TLB_TRANSLEN - 1:0]   tlbrd_trans_2;
+    wire  [31:0] TLBIDX;
     csr u_csr(
         .clk             ( clk             ),
         .aclk            ( aclk            ),
         .aresetn         ( aresetn         ),
-        .software_en     ( software_en     ),
-        .addr            ( addr            ),
-        .rdata           ( rdata           ),
-        .wen             ( wen             ),
-        .wdata           ( wdata           ),
+        .software_en     ( csr_wen     ),
+        .addr            ( csr_addr            ),
+        .rdata           ( csr_rdata           ),
+        .wen             ( csr_wen             ),
+        .wdata           ( csr_wdata           ),
         .crmd            ( crmd            ),
         .estat           ( estat           ),
-        .era_out         ( era_out         ),
+        .era_out         ( csr_era        ),
         .eentry          ( eentry          ),
         .tlbrentry       ( tlbrentry       ),
         .pgdl            ( pgdl            ),
@@ -1002,17 +1185,18 @@ module core_top(
         .DMW1_VSEG       ( DMW1_VSEG       ),
         .ASID            ( ASID            ),
         .TLBEHI          ( TLBEHI          ),
+        .TLBIDX          ( TLBIDX          ),
         .tlb_cpr_out     ( tlb_cpr_out     ),
         .tlb_trans_1_out ( tlb_trans_1_out ),
         .tlb_trans_2_out ( tlb_trans_2_out ),
-        .exception       ( exception       ),
-        .ertn            ( ertn            ),
+        .exception       ( ex2_wb_excp_flag       ),
+        .ertn            ( ertn_en            ),
         .tlb_exception   ( tlb_exception   ),
-        .expcode_in      ( expcode_in      ),
-        .wen_expcode     ( wen_expcode     ),
-        .era_in          ( era_in          ),
+        .expcode_in      ( ex2_wb_exception      ),
+        .wen_expcode     ( ex2_wb_excp_flag     ),
+        .era_in          ( era_out          ),
         .wen_era         ( wen_era         ),
-        .badv_in         ( badv_in         ),
+        .badv_in         ( ex2_wb_badv         ),
         .wen_badv        ( wen_badv        ),
         .llbit_set       ( llbit_set       ),
         .tlbsrch_ready   ( tlbsrch_ready   ),
@@ -1023,7 +1207,7 @@ module core_top(
         .tlbrd_cpr       ( tlbrd_cpr       ),
         .tlbrd_trans_1   ( tlbrd_trans_1   ),
         .tlbrd_trans_2   ( tlbrd_trans_2   ),
-        .hardware_interrupt  ( hardware_interrupt  )
+        .hardware_interrupt  ( intrpt  )
     );
 
     BTB u_BTB(
@@ -1130,14 +1314,14 @@ module core_top(
     TLB u_TLB(
         .clk            ( clk            ),
         .rstn           ( aresetn           ),
-        .CSR_ASID       ( CSR_ASID       ),
-        .CSR_VPPN       ( CSR_VPPN       ),
-        .CSR_PG         ( CSR_PG         ),
-        .CSR_CRMD       ( CSR_CRMD       ),
-        .CSR_DMW0       ( CSR_DMW0       ),
-        .CSR_DMW1       ( CSR_DMW1       ),
-        .CSR_TLBEHI     ( CSR_TLBEHI     ),
-        .CSR_TLBIDX     ( CSR_TLBIDX     ),
+        .CSR_ASID       ( ASID       ),
+        .CSR_VPPN       ( TLBEHI       ),
+        .CSR_PG         ( PG         ),
+        .CSR_CRMD       ( crmd       ),
+        .CSR_DMW0       ( dmw0       ),
+        .CSR_DMW1       ( dmw1       ),
+        .CSR_TLBEHI     ( TLBEHI     ),
+        .CSR_TLBIDX     ( TLBIDX     ),
         .stall_i        ( stall_i        ),
         .stall_d        ( stall_d        ),
         .VA_I           ( VA_I           ),
@@ -1146,27 +1330,27 @@ module core_top(
         .PA_D           ( PA_D           ),
         .is_cached_I    ( is_cached_I    ),
         .is_cached_D    ( is_cached_D    ),
-        .TLBSRCH_valid  ( TLBSRCH_valid  ),
-        .TLBSRCH_ready  ( TLBSRCH_ready  ),
-        .TLBSRCH_hit    ( TLBSRCH_hit    ),
-        .TLBSRCH_INDEX  ( TLBSRCH_INDEX  ),
-        .TLBRD_INDEX    ( TLBRD_INDEX    ),
-        .TLBRD_valid    ( TLBRD_valid    ),
-        .TLBRD_ready    ( TLBRD_ready    ),
-        .TLBRD_hit      ( TLBRD_hit      ),
-        .TLB_CPR        ( TLB_CPR        ),
-        .TLB_TRANS_1    ( TLB_TRANS_1    ),
-        .TLB_TRANS_2    ( TLB_TRANS_2    ),
-        .TLBWR_valid    ( TLBWR_valid    ),
-        .TLBWR_ready    ( TLBWR_ready    ),
-        .TLB_CPR_w      ( TLB_CPR_w      ),
-        .TLB_TRANS_1_w  ( TLB_TRANS_1_w  ),
-        .TLB_TRANS_2_w  ( TLB_TRANS_2_w  ),
-        .TLBINVLD_valid ( TLBINVLD_valid ),
-        .TLBINVLD_ready ( TLBINVLD_ready ),
-        .TLBINVLD_OP    ( TLBINVLD_OP    ),
-        .TLBINVLD_ASID  ( TLBINVLD_ASID  ),
-        .TLBINVLD_VA    ( TLBINVLD_VA    )
+        .TLBSRCH_valid  ( tlbsrch_valid  ),
+        .TLBSRCH_ready  ( tlbsrch_ready  ),
+        .TLBSRCH_hit    ( tlbsrch_hit    ),
+        .TLBSRCH_INDEX  ( tlbsrch_index_in  ),
+        .TLBRD_INDEX    ( TLBIDX[4:0]         ),
+        .TLBRD_valid    ( tlbrd_valid    ),
+        .TLBRD_ready    ( tlbrd_ready    ),
+        .TLBRD_hit      ( tlbrd_hit      ),
+        .TLB_CPR        ( tlbrd_cpr        ),
+        .TLB_TRANS_1    ( tlbrd_trans_1    ),
+        .TLB_TRANS_2    ( tlbrd_trans_2    ),
+        .TLBWR_valid    ( tlbwr_valid    ),
+        .TLBWR_ready    ( tlbwr_ready    ),
+        .TLB_CPR_w      ( tlb_cpr_out      ),
+        .TLB_TRANS_1_w  ( tlb_trans_1_out  ),
+        .TLB_TRANS_2_w  ( tlb_trans_2_out  ),
+        .TLBINVLD_valid ( invtlb_valid ),
+        .TLBINVLD_ready ( invtlb_ready ),
+        .TLBINVLD_OP    ( invtlb_op    ),
+        .TLBINVLD_ASID  ( invtlb_asid  ),
+        .TLBINVLD_VA    ( invtlb_va    )
     );
 
 

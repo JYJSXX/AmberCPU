@@ -11,6 +11,7 @@ module  REG_EX1(
     output  reg ex_readygo,
     input   [31:0] id_reg_pc0,
     input   [31:0] id_reg_pc1,
+    input   [31:0] id_reg_pc_next,
     input   [31:0] id_reg_inst0,
     input   [31:0] id_reg_inst1,
     input   [6:0] id_reg_exception,
@@ -44,8 +45,10 @@ module  REG_EX1(
 
     output  reg [31:0] reg_ex_pc0,
     output  reg [31:0] reg_ex_pc1,
+    output  reg [31:0] reg_ex_pc_next,
     output  reg [31:0] reg_ex_inst0,
     output  reg [31:0] reg_ex_inst1,
+    output  reg reg_ex_branch_flag,
     output  reg reg_ex_excp_flag,
     output  reg [6:0] reg_ex_exception,
     output  reg [31:0] reg_ex_badv,
@@ -101,8 +104,10 @@ always@(posedge clk)begin
     if(~aresetn | flush | (~reg_readygo & ex_allowin) ) begin
         reg_ex_pc0 <= 0;
         reg_ex_pc1 <= 0;
+        reg_ex_pc_next <= 0;
         reg_ex_inst0 <= 0;
         reg_ex_inst1 <= 0;
+        reg_ex_branch_flag <= 0;
         reg_ex_excp_flag <= 0;
         reg_ex_exception <= 0;
         reg_ex_badv <= 0;
@@ -133,8 +138,10 @@ always@(posedge clk)begin
     else if(reg_readygo&&ex_allowin)begin
         reg_ex_pc0 <= id_reg_pc0;
         reg_ex_pc1 <= id_reg_pc1;
+        reg_ex_pc_next <= id_reg_pc_next;
         reg_ex_inst0 <= id_reg_inst0;
         reg_ex_inst1 <= id_reg_inst1;
+        reg_ex_branch_flag <= id_reg_branch_flag;
         reg_ex_excp_flag <= id_reg_excp_flag;
         reg_ex_exception <= id_reg_exception;
         reg_ex_badv <= id_reg_badv;
@@ -166,8 +173,10 @@ always@(posedge clk)begin
         //寄存器保持不变
         reg_ex_pc0 <= reg_ex_pc0;
         reg_ex_pc1 <= reg_ex_pc1;
+        reg_ex_pc_next <= reg_ex_pc_next;
         reg_ex_inst0 <= reg_ex_inst0;
         reg_ex_inst1 <= reg_ex_inst1;
+        reg_ex_branch_flag <= reg_ex_branch_flag;
         reg_ex_excp_flag <= reg_ex_excp_flag;
         reg_ex_exception <= reg_ex_exception;
         reg_ex_badv <= reg_ex_badv;
