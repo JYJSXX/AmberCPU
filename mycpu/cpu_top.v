@@ -1113,7 +1113,7 @@ module core_top(
 
     TLB u_TLB(
         .clk            ( clk            ),
-        .rstn           ( aresetn           ),
+        .rstn           ( aresetn        ),
         .CSR_ASID       ( CSR_ASID       ),
         .CSR_VPPN       ( CSR_VPPN       ),
         .CSR_PG         ( CSR_PG         ),
