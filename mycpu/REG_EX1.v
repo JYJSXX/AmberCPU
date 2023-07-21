@@ -15,6 +15,7 @@ module  REG_EX1(
     input   [31:0] id_reg_inst1,
     input   [6:0] id_reg_exception,
     input   id_reg_excp_flag,
+    input   id_reg_branch_flag,
     input   [31:0] id_reg_badv,
     input   id_reg_is_ALU_0,
     input   id_reg_is_ALU_1,

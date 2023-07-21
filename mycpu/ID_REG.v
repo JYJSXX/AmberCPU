@@ -12,10 +12,12 @@ module ID_REG(
     input [31:0] fifo_id_inst1,
     input [31:0] fifo_id_pc0,
     input [31:0] fifo_id_pc1,
+    input [31:0] fifo_id_pc_next,
     input [31:0] fifo_id_badv,
     input [1:0]  fifo_id_excp_flag,
     input [6:0]  fifo_id_exception,
     input [1:0]  fifo_id_priv_flag,
+    input [1:0]  fifo_id_branch_flag,
 
     input is_ALU_0, //id段内生成的
     input is_ALU_1,
@@ -38,11 +40,13 @@ module ID_REG(
 
     output  [31:0] iq_pc0,
     output  [31:0] iq_pc1,
+    output  [31:0] iq_pc_next,
     output  [31:0] iq_inst0,
     output  [31:0] iq_inst1,
     output  [31:0] iq_badv,
-    output  [1 :0] iq_excp_flag,
-    output  [6:0]  iq_exception,
+    output         iq_excp_flag,//LOGIC TODO
+    output  [6 :0] iq_exception,
+    output         iq_branch_flag,//logic todo
     output  iq_is_ALU_0 ,
     output  iq_is_ALU_1 ,
     output  iq_is_syscall_0 ,

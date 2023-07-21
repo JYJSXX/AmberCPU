@@ -11,6 +11,7 @@ module FIFO(
 
     
     input [1 :0] priv_flag,
+    input [1 :0] branch_flag,
     input [31:0] if1_fifo_inst0,
     input [31:0] if1_fifo_inst1,
     input [31:0] if1_fifo_pc,
@@ -20,6 +21,7 @@ module FIFO(
     input [31:0] if1_fifo_icache_cookie_out,
     input [6 :0] if1_fifo_icache_exception,
     input [1:0]  if1_fifo_icache_excp_flag,
+
     // input        if1_fifo_cacop_ready,
     // input        if1_fifo_cacop_complete,
 
@@ -36,6 +38,8 @@ module FIFO(
     output reg [6 :0] fifo_exception, 
     output reg [1 :0] fifo_excp_flag,
     output reg [1 :0] fifo_priv_flag,
+    output reg [1 :0] fifo_branch_flag,
+
     // output reg        fifo_cacop_ready,
     // output reg        fifo_cacop_complete,
 
@@ -68,8 +72,9 @@ module FIFO(
     assign stat_din             =   {
                                         // if1_fifo_cacop_complete,
                                         // if1_fifo_cacop_ready,
-                                        priv_flag,
-                                        if1_fifo_icache_excp_flag,
+                                        branch_flag[1:0],
+                                        priv_flag[1:0],
+                                        if1_fifo_icache_excp_flag[1:0],
                                         if1_fifo_icache_exception[6:0],
                                         if1_fifo_icache_cookie_out[31:0]
                                     };
@@ -88,6 +93,7 @@ module FIFO(
             fifo_exception=if1_fifo_icache_exception;
             fifo_excp_flag=if1_fifo_icache_excp_flag;
             fifo_priv_flag=priv_flag;
+            fifo_branch_flag=branch_flag;
             // fifo_cacop_ready=if1_fifo_cacop_ready;
             // fifo_cacop_complete=if1_fifo_cacop_complete;
         end else if(!empty)begin
@@ -101,6 +107,7 @@ module FIFO(
             fifo_exception=stat_dout[38:32];
             fifo_excp_flag=stat_dout[40:39];
             fifo_priv_flag=stat_dout[42:41];
+            fifo_branch_flag=stat_dout[44:43];
             // fifo_cacop_ready=stat_dout[43:43];
             // fifo_cacop_complete=stat_dout[44:44];
         end else begin
@@ -114,6 +121,7 @@ module FIFO(
             fifo_exception=7'b0000000;
             fifo_excp_flag=2'b00;
             fifo_priv_flag=2'b00;
+            fifo_branch_flag=2'b00;
             // fifo_cacop_ready=0;
             // fifo_cacop_complete=0;
         end
@@ -149,7 +157,7 @@ module FIFO(
     );
 
     fifo_generator#(
-        .DATA_WIDTH ( 43 ),
+        .DATA_WIDTH ( 45 ),
         .DEPTH      ( BUF_DEPTH )
     )co_statbuf(
         .clk        ( clk        ),

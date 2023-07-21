@@ -272,6 +272,7 @@ module core_top(
 
     
     wire    [1 :0]      inst_btype;
+    wire    [1 :0]      branch_flag;
 
 
 
@@ -283,6 +284,7 @@ module core_top(
         .ibar_flag      ( ibar_flag      ),
         .csr_flag       ( csr_flag       ),
         .tlb_flag       ( tlb_flag       ),
+        .branch_flag    ( branch_flag    ),
         .inst_btype     ( inst_btype     )
     );
 
@@ -308,6 +310,7 @@ module core_top(
     wire   [6 :0] fifo_exception; 
     wire   [1 :0] fifo_excp_flag;
     wire   [1 :0] fifo_priv_flag;
+    wire   [1 :0] fifo_branch_flag;
     
 
     wire  fetch_buf_empty;
@@ -337,6 +340,7 @@ module core_top(
         .fifo_exception             ( fifo_exception             ),
         .fifo_excp_flag             ( fifo_excp_flag             ),
         .fifo_priv_flag             ( fifo_priv_flag             ),
+        .fifo_branch_flag           ( fifo_branch_flag           ),
         .fetch_buf_empty            ( fetch_buf_empty            ),
         .fetch_buf_full             ( fetch_buf_full             )
     );
@@ -353,6 +357,7 @@ module core_top(
     wire [6:0]  fifo_id_exception;
     wire [1:0]  fifo_id_excp_flag;
     wire [1:0]  fifo_id_priv_flag;
+    wire [1:0]  fifo_id_branch_flag;
     wire        id_allowin;
 
     wire  id_readygo;//to decoder stage,tell id I'm valid
@@ -375,6 +380,7 @@ module core_top(
         .fifo_exception      ( fifo_exception      ),
         .fifo_excp_flag      ( fifo_excp_flag      ),
         .fifo_priv_flag      ( fifo_priv_flag      ),
+        .fifo_branch_flag    ( fifo_branch_flag    ),
         .fetch_buf_empty     ( fetch_buf_empty     ),
         .fetch_buf_full      ( fetch_buf_full      ),
         .fifo_id_inst0       ( fifo_id_inst0       ),
@@ -386,7 +392,8 @@ module core_top(
         .fifo_id_cookie_out  ( fifo_id_cookie_out  ),
         .fifo_id_exception   ( fifo_id_exception   ),
         .fifo_id_excp_flag   ( fifo_id_excp_flag   ),
-        .fifo_id_priv_flag   ( fifo_id_priv_flag   )
+        .fifo_id_priv_flag   ( fifo_id_priv_flag   ),
+        .fifo_id_branch_flag ( fifo_id_branch_flag )
     );
 
 
@@ -447,11 +454,13 @@ module core_top(
     wire reg_allowin;
     wire [31:0] iq_pc0;
     wire [31:0] iq_pc1;
+    wire [31:0] iq_pc_next;
     wire [31:0] iq_inst0;
     wire [31:0] iq_inst1;
     wire [31:0] iq_badv;
     wire [1 :0] iq_excp_flag;
-    wire [6:0] iq_exception;
+    wire [6:0]  iq_exception;
+    wire        iq_branch_flag;
     wire iq_is_ALU_0 ;
     wire iq_is_ALU_1 ;
     wire iq_is_syscall_0 ;
@@ -482,10 +491,12 @@ module core_top(
         .fifo_id_inst1        ( fifo_id_inst1        ),
         .fifo_id_pc0          ( fifo_id_pc          ),
         .fifo_id_pc1          ( fifo_id_pcAdd          ),
+        .fifo_id_pc_next      ( fifo_id_pc_next      ),
         .fifo_id_badv         ( fifo_id_badv         ),
         .fifo_id_excp_flag    ( fifo_id_excp_flag    ),
         .fifo_id_exception    ( fifo_id_exception    ),
         .fifo_id_priv_flag    ( fifo_id_priv_flag    ),
+        .fifo_id_branch_flag  ( fifo_id_branch_flag  ),
         .is_ALU_0             ( id_is_ALU_0             ),
         .is_ALU_1             ( id_is_ALU_1             ),
         .is_syscall_0         ( id_is_syscall_0         ),
@@ -506,11 +517,13 @@ module core_top(
         .rk1                  ( id_rk1                  ),
         .iq_pc0               ( iq_pc0               ),
         .iq_pc1               ( iq_pc1               ),
+        .iq_pc_next           ( iq_pc_next           ),
         .iq_inst0             ( iq_inst0             ),
         .iq_inst1             ( iq_inst1             ),
         .iq_badv              ( iq_badv              ),
         .iq_excp_flag         ( iq_excp_flag         ),
         .iq_exception         ( iq_exception         ),
+        .iq_branch_flag       ( iq_branch_flag       ),
         .iq_is_ALU_0          ( iq_is_ALU_0          ),
         .iq_is_ALU_1          ( iq_is_ALU_1          ),
         .iq_is_syscall_0      ( iq_is_syscall_0      ),
@@ -590,6 +603,7 @@ module core_top(
         .id_reg_inst1            ( iq_inst1            ),
         .id_reg_exception        ( iq_exception        ),
         .id_reg_excp_flag        ( iq_excp_flag        ),
+        .id_reg_branch_flag      ( iq_branch_flag      ),
         .id_reg_badv             ( iq_badv             ),
         .id_reg_is_ALU_0         ( iq_is_ALU_0         ),
         .id_reg_is_ALU_1         ( iq_is_ALU_1         ),
@@ -669,14 +683,15 @@ module core_top(
     wire [31:0] ex2_wb_data_1;
     wire ex2_wb_data_0_valid;
     wire ex2_wb_data_1_valid;
-    //csr
+    //csrfact_pc; //分支指令的pc
+    wire [31:0] fact;
     wire [31:0] tid; //读时钟id的指令RDCNTID用到
 
     //读时钟的指令RDCNTV(L/H)要用到，开始从cpu_top接进来;现在放在模块内了
     //wire [63:0] stable_counter;
 
     //分支预测
-    wire predict_to_branch; //分支预测的信号
+    // wire predict_to_branch; //分支预测的信号 repllaced by iq_branch_flag
     wire [31:0] pc0_predict;
 
 
@@ -696,36 +711,37 @@ module core_top(
     wire [31:0] w_data_dcache;
     wire  is_atom_dcache;
    // output uncache, 由csr负责
+    wire ibar;
 
     EX1 u_EX1(
         .clk                  ( clk                  ),
         .aclk                 ( aclk                 ),
         .aresetn              ( aresetn              ),
         .flush                ( flush_to_ex1                ),
-        .pc0                  ( pc0                  ),
-        .pc1                  ( pc1                  ),
-        .inst0                ( inst0                ),
-        .inst1                ( inst1                ),
-        .is_ALU_0             ( is_ALU_0             ),
-        .is_ALU_1             ( is_ALU_1             ),
-        .is_syscall_0         ( is_syscall_0         ),
-        .is_syscall_1         ( is_syscall_1         ),
-        .is_break_0           ( is_break_0           ),
-        .is_break_1           ( is_break_1           ),
-        .is_priviledged_0     ( is_priviledged_0     ),
-        .is_priviledged_1     ( is_priviledged_1     ),
-        .uop0                 ( uop0                 ),
-        .uop1                 ( uop1                 ),
-        .imm0                 ( imm0                 ),
-        .imm1                 ( imm1                 ),
-        .rj0_data             ( rj0_data             ),
-        .rj1_data             ( rj1_data             ),
-        .rk0_data             ( rk0_data             ),
-        .rk1_data             ( rk1_data             ),
-        .ex_rj0               ( ex_rj0               ),
-        .ex_rj1               ( ex_rj1               ),
-        .ex_rk0               ( ex_rk0               ),
-        .ex_rk1               ( ex_rk1               ),
+        .pc0                  ( reg_ex_pc0                  ),
+        .pc1                  ( reg_ex_pc1                  ),
+        .inst0                ( reg_ex_inst0                ),
+        .inst1                ( reg_ex_inst1                ),
+        .is_ALU_0             ( reg_ex_is_ALU_0             ),
+        .is_ALU_1             ( reg_ex_is_ALU_1             ),
+        .is_syscall_0         ( reg_ex_is_syscall_0         ),
+        .is_syscall_1         ( reg_ex_is_syscall_1         ),
+        .is_break_0           ( reg_ex_is_break_0           ),
+        .is_break_1           ( reg_ex_is_break_1           ),
+        .is_priviledged_0     ( reg_ex_is_priviledged_0     ),
+        .is_priviledged_1     ( reg_ex_is_priviledged_1     ),
+        .uop0                 ( reg_ex_uop0                 ),
+        .uop1                 ( reg_ex_uop1                 ),
+        .imm0                 ( reg_ex_imm0                 ),
+        .imm1                 ( reg_ex_imm1                 ),
+        .rj0_data             ( reg_ex_rj0_data             ),
+        .rj1_data             ( reg_ex_rj1_data             ),
+        .rk0_data             ( reg_ex_rk0_data             ),
+        .rk1_data             ( reg_ex_rk1_data             ),
+        .ex_rj0               ( reg_ex_rj0               ),
+        .ex_rj1               ( reg_ex_rj1               ),
+        .ex_rk0               ( reg_ex_rk0               ),
+        .ex_rk1               ( reg_ex_rk1               ),
         .alu_result0          ( alu_result0          ),
         .alu_result1          ( alu_result1          ),
         .alu_result0_valid    ( alu_result0_valid    ),
@@ -745,7 +761,7 @@ module core_top(
         .ex2_wb_data_1_valid  ( ex2_wb_data_1_valid  ),
         .forward_stall        ( forward_stall        ),
         .tid                  ( tid                  ),
-        .predict_to_branch    ( predict_to_branch    ),
+        .predict_to_branch    ( iq_branch_flag       ),
         .pc0_predict          ( pc0_predict          ),
         .predict_dir_fail     ( predict_dir_fail     ),
         .predict_addr_fail    ( predict_addr_fail    ),
@@ -802,9 +818,9 @@ module core_top(
         .invtlb_asid          ( invtlb_asid          ),
         .invtlb_va            ( invtlb_va            ),
         .plv                  ( plv                  ),
-        .excp_flag_in         ( excp_flag_in         ),
-        .exception_in         ( exception_in         ),
-        .badv_in              ( badv_in              ),
+        .excp_flag_in         ( reg_ex_excp_flag         ),
+        .exception_in         ( reg_ex_exception         ),
+        .badv_in              ( reg_ex_badv              ),
         .badv_out             ( badv_out             ),
         .excp_flag_out        ( excp_flag_out        ),
         .exception_out        ( exception_out        )
@@ -1113,7 +1129,7 @@ module core_top(
 
     TLB u_TLB(
         .clk            ( clk            ),
-        .rstn           ( aresetn        ),
+        .rstn           ( aresetn           ),
         .CSR_ASID       ( CSR_ASID       ),
         .CSR_VPPN       ( CSR_VPPN       ),
         .CSR_PG         ( CSR_PG         ),
@@ -1154,54 +1170,36 @@ module core_top(
     );
 
 
-    
-    sram_axi SRAM2AXI(
-        .aclk           (aclk),           //时钟信号
-        .aresetn        (aresetn),        //复位信号
-        .ar_id          (arid),          //读ID 0 for instruction, 1 for data
-        .ar_addr        (araddr),        //读地址
-        .ar_len         (arlen),         //读长度 默认为0xf
-        .ar_size        (arsize),        //读大小即粒度 num of bytes = 2^size 默认为2
-        .ar_burst       (arburst),       //读突发类型 默认为1 increamental
-        .ar_valid       (arvalid),       //读有效
-        .ar_ready       (arready),       //读准备好
-        .r_id           (rid),           //读数据对应读地址ID
-        .r_data         (rdata),         //读数据
-        .r_last         (rlast),         //读数据结束
-        .r_valid        (rvalid),        //读数据有效
-        .r_ready        (rready),        //读数据准备好
-        .aw_addr        (awaddr),        //写地址
-        .aw_size        (awsize),        //写大小
-        .aw_len         (awlen),         //写长度
-        .aw_burst       (awburst),       //写突发类型
-        .aw_valid       (awvalid),       //写有效
-        .aw_ready       (awready),       //写准备好
-        .w_data         (wdata),         //写数据
-        .w_valid        (wvalid),        //写有效
-        .w_ready        (wready),        //写准备好
-        .w_last         (wlast),         //写使能
-        .w_strb         (wstrb),         //字节写通位
-        .b_valid        (bvalid),        //写响应有效
-        .b_ready        (bready),        //写响应准备好
-        .i_raddr        (i_raddr),        //指令cache读地址
-        .i_rdata        (i_rdata),        //指令cache读数据
-        .i_rvalid       (i_rvalid),       //指令cache读有效
-        .i_rready       (i_rready),       //指令cache读准备好
-        .i_rlen         (i_rlen),         //指令cache读长度
-        .d_raddr        (d_raddr),        //数据cache读地址
-        .d_rdata        (d_rdata),        //数据cache读数据
-        .d_rvalid       (d_rvalid),       //数据cache读有效
-        .d_rready       (d_rready),       //数据cache读准备好
-        .d_rlen         (d_rlen),         //数据cache读长度
-        .d_waddr        (d_waddr),        //数据cache写地址
-        .d_wdata        (d_wdata),        //数据cache写数据
-        .d_wvalid       (d_wvalid),       //数据cache写有效
-        .d_wready       (d_wready),       //数据cache写准备好
-        .d_wlen         (d_wlen),         //数据cache写长度
-        .d_wstrb        (d_wstrb)         //数据cache写使能
+    axi2dpram u_axi2dpram(
+        .aclk     ( aclk     ),
+        .aresetn  ( aresetn  ),
+        .aw_id    ( aw_id    ),
+        .aw_addr  ( aw_addr  ),
+        .aw_len   ( aw_len   ),
+        .aw_size  ( aw_size  ),
+        .aw_valid ( aw_valid ),
+        .aw_ready ( aw_ready ),
+        .w_data   ( w_data   ),
+        .w_strb   ( w_strb   ),
+        .w_last   ( w_last   ),
+        .w_valid  ( w_valid  ),
+        .w_ready  ( w_ready  ),
+        .b_id     ( b_id     ),
+        .b_valid  ( b_valid  ),
+        .b_ready  ( b_ready  ),
+        .ar_id    ( ar_id    ),
+        .ar_addr  ( ar_addr  ),
+        .ar_len   ( ar_len   ),
+        .arsize   ( arsize   ),
+        .ar_valid ( ar_valid ),
+        .ar_ready ( ar_ready ),
+        .r_id     ( r_id     ),
+        .r_data   ( r_data   ),
+        .r_last   ( r_last   ),
+        .r_valid  ( r_valid  ),
+        .r_ready  ( r_ready  )
+    );
 
-);
-    
 
     HazardUnit u_HazardUnit(
         .flush_from_wb     ( flush_from_wb     ),

@@ -22,6 +22,7 @@ module FIFO_ID (
     input [6:0]  fifo_exception,
     input [1:0]  fifo_excp_flag,
     input [1:0]  fifo_priv_flag,
+    input [1:0]  fifo_branch_flag,
 
     input fetch_buf_empty,
     input fetch_buf_full,
@@ -34,7 +35,8 @@ module FIFO_ID (
     output reg[31:0] fifo_id_cookie_out,
     output reg[6:0]  fifo_id_exception,
     output reg[1:0]  fifo_id_excp_flag,
-    output reg[1:0]  fifo_id_priv_flag
+    output reg[1:0]  fifo_id_priv_flag,
+    output reg[1:0]  fifo_id_branch_flag
 );
     
 

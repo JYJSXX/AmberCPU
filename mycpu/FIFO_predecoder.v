@@ -8,6 +8,7 @@ module pre_decoder (
     output   [1 :0]      ibar_flag,
     output   [1 :0]      csr_flag,
     output   [1 :0]      tlb_flag,
+    output   [1 :0]      branch_flag,
     output   [1 :0]      inst_btype
     //两条指令中有一条跳转就是跳转，有一条无条件就是无条件
     //00 normal, 01 ibar,10 unconditional branch,10 PC relative, 11 indirect
