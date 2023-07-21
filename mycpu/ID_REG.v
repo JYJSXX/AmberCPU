@@ -4,9 +4,9 @@ module ID_REG(
     input aclk,
     input aresetn,
     input           id_readygo,
-    output  reg     id_allowin,
+    output          id_allowin,
     input           reg_allowin,
-    output  reg     reg_readygo,
+    output          reg_readygo,
     
     input [31:0] fifo_id_inst0, //前一个段间寄存器的
     input [31:0] fifo_id_inst1,
