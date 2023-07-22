@@ -19,7 +19,7 @@ module EX2_WB(
     input [5:0] ex_rd1,
     input ex2_result0_valid,
     input ex2_result1_valid,
-    input tlb_d_valid,
+    input en_VA_D_OUT,
     output reg [31:0] ex2_wb_data_0,
     output reg [31:0] ex2_wb_data_1,
     output reg ex2_wb_data_0_valid,
@@ -77,7 +77,7 @@ module EX2_WB(
 );
 reg tlb_d_valid_reg;
 always@(posedge clk )begin
-        tlb_d_valid_reg <= tlb_d_valid;
+        tlb_d_valid_reg <= en_VA_D_OUT;
     end
 
 assign flush_out_all = exception_flag_out;
