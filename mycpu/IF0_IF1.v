@@ -12,6 +12,8 @@ module IF0_IF1 (
     input               flush,
     input               flush_cause,
     input               rready,
+    input               tlb_rvalid,//存一级用于判断MISS和STALL
+    output  reg         if0_if1_tlb_rvalid,
 
     input [31:0]        fetch_pc,
     input [31:0]        pc_next,
@@ -20,7 +22,7 @@ module IF0_IF1 (
     output reg[31:0]    if0_if1_pc_next
 
 );
-    assign if0_allowin= if1_allowin&rready;
+    assign if0_allowin= if1_allowin;
     assign if1_readygo= rready;
 
     always @(posedge clk) begin
@@ -28,11 +30,13 @@ module IF0_IF1 (
             //clear stage-stage reg
             if0_if1_pc<=`PC_RESET;
             if0_if1_pc_next<=`PC_RESET+8;
+            if0_if1_tlb_rvalid<=0;
         end else begin
             if (if0_readygo&&if1_allowin) begin
                 //update stage-stage reg
                 if0_if1_pc<=fetch_pc;
                 if0_if1_pc_next<=pc_next;
+                if0_if1_tlb_rvalid<=tlb_rvalid;
             end else if (!if1_allowin) begin
                 //hold stage-stage reg
             end

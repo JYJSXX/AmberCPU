@@ -154,21 +154,24 @@ module core_top(
 
     wire  [31:0]       if0_if1_pc;
     wire [31:0]        if0_if1_pc_next;
+    wire               if0_if1_tlb_rvalid;
 
     IF0_IF1 u_IF0_IF1(
-        .clk             ( clk              ),
-        .rstn            ( aresetn          ),
-        .if0_readygo     ( if0_readygo      ),
-        .if0_allowin     ( if0_allowin      ),
-        .if1_readygo     ( if1_readygo      ),
-        .if1_allowin     ( if1_allowin      ),
-        .flush           ( flush_to_if0_if1 ),
-        .flush_cause     ( flush_cause      ),
-        .rready          ( icache_rready    ),
-        .fetch_pc        ( fetch_pc         ),
-        .pc_next         ( pc_next          ),
-        .if0_if1_pc      ( if0_if1_pc       ),
-        .if0_if1_pc_next ( if0_if1_pc_next  )
+        .clk                    ( clk              ),
+        .rstn                   ( aresetn          ),
+        .if0_readygo            ( if0_readygo      ),
+        .if0_allowin            ( if0_allowin      ),
+        .if1_readygo            ( if1_readygo      ),
+        .if1_allowin            ( if1_allowin      ),
+        .flush                  ( flush_to_if0_if1 ),
+        .flush_cause            ( flush_cause      ),
+        .rready                 ( icache_rready    ),
+        .tlb_rvalid             ( tlb_rvalid       ),
+        .if0_if1_tlb_rvalid     ( if0_if1_tlb_rvalid),
+        .fetch_pc               ( fetch_pc         ),
+        .pc_next                ( pc_next          ),
+        .if0_if1_pc             ( if0_if1_pc       ),
+        .if0_if1_pc_next        ( if0_if1_pc_next  )
     );
 
     
@@ -263,6 +266,7 @@ module core_top(
         .fifo_allowin               ( fifo_allowin               ),
         .fifo_readygo               ( fifo_readygo               ),
         .if1_rready                 ( if1_rready                 ),
+        .if0_if1_tlb_rvalid         ( if0_if1_tlb_rvalid         ),
         .if1_pc                     ( if1_pc                     ),
         .if1_pc_next                ( if1_pc_next                ),
         .if1_badv                   ( if1_badv                   ),
@@ -1251,7 +1255,7 @@ module core_top(
     wire is_cached_I, is_cached_D; //是否经过cache
     wire [6:0] tlb_exception_code_i, tlb_exception_code_d; //tlb例外码
     wire icache_rvalid,icache_raddr;
-    icache#(
+    icache#(.
         .INDEX_WIDTH       ( 6 ),
         .WORD_OFFSET_WIDTH ( 4 ),
         .COOKIE_WIDTH      ( 32 )
