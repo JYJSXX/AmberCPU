@@ -70,7 +70,11 @@ module core_top(
     wire i_idle;
     wire d_idle;
 
-    wire flush_from_wb;
+    /*
+    TODO:
+    Flush signal 相关全都没做
+    */
+    wire flush_from_wb;         
     wire flush_from_ex2;
     wire flush_from_ex1;
     wire flush_from_reg;
@@ -85,12 +89,21 @@ module core_top(
     wire flush_to_fifo_id; 
     wire flush_to_fifo;    
     wire flush_to_if1_fifo;
+    wire flush_to_if0;
     wire flush_to_if0_if1;     
     wire flush_to_tlb;     
     wire flush_to_icache ; 
     wire flush_to_dcache ; 
     wire flush_to_btb ;       
 
+     //分支预测
+    wire predict_dir_fail; //分支预测跳不跳失败的信号
+    wire predict_add_fail; //分支预测往哪跳失败的信号
+    wire fact_taken; //实际跳不跳
+    wire [31:0] fact_pc; //分支指令的pc
+    wire [31:0] fact_tpc; //目标地址pc
+
+    wire ibar;
 
 
     //for hand shake with pipeline
@@ -100,8 +113,8 @@ module core_top(
     //for pc update
     wire set_pc_from_ID;
     wire [31:0]pc_from_ID;
-    wire set_pc_from_EX;
-    wire [31:0]pc_from_EX;
+    // wire set_pc_from_EX; replaced by fact_pc/fact taken
+    // wire [31:0]pc_from_EX;
     wire set_pc_from_WB;
     wire [31:0]pc_from_WB;
     wire set_pc_from_PRIV;//from if1_fifo
@@ -127,8 +140,8 @@ module core_top(
         .flush               ( flush_to_if0        ),
         .set_pc_from_ID      ( set_pc_from_ID      ),
         .pc_from_ID          ( pc_from_ID          ),
-        .set_pc_from_EX      ( set_pc_from_EX      ),
-        .pc_from_EX          ( pc_from_EX          ),
+        .set_pc_from_EX      ( fact_taken          ),
+        .pc_from_EX          ( fact_tpc            ),
         .set_pc_from_WB      ( set_pc_from_WB      ),
         .pc_from_WB          ( pc_from_WB          ),
         .set_pc_from_PRIV    ( set_pc_from_PRIV    ),
@@ -150,7 +163,7 @@ module core_top(
     wire               flush_cause;
     wire               icache_rready;
 
-    wire  [31:0]       if0_if1_pc;
+    wire [31:0]        if0_if1_pc;
     wire [31:0]        if0_if1_pc_next;
     wire               if0_if1_tlb_rvalid;
 
@@ -162,7 +175,7 @@ module core_top(
         .if1_readygo            ( if1_readygo      ),
         .if1_allowin            ( if1_allowin      ),
         .flush                  ( flush_to_if0_if1 ),
-        .flush_cause            ( flush_cause      ),
+        .flush_cause            ( flush_cause      ),   // TODO: To be completed
         .rready                 ( icache_rready    ),
         .tlb_rvalid             ( tlb_rvalid       ),
         .if0_if1_tlb_rvalid     ( if0_if1_tlb_rvalid),
@@ -233,8 +246,9 @@ module core_top(
     wire               fifo_readygo;
 
 
+
     wire  [1:0]        ibar_flag;//from pre-decoder
-    wire               ibar_flag_from_ex;
+    // wire               ibar_flag_from_ex; replaced by ibar
     wire  [1:0]        csr_flag;
     wire               csr_flag_from_ex;
     wire  [1:0]        tlb_flag;
@@ -246,7 +260,7 @@ module core_top(
     wire               csr_done;
     wire               tlb_done;
 
-    wire [31:0] if1_fifo_pc;
+    wire  [31:0]    if1_fifo_pc;
     wire  [31:0]    if1_fifo_pc_next;
     wire  [31:0]    if1_fifo_inst0;
     wire  [31:0]    if1_fifo_inst1;
@@ -258,8 +272,8 @@ module core_top(
     // wire            if1_fifo_cacop_complete;
     IF1_FIFO u_IF1_FIFO(
         .clk                        ( clk                        ),
-        .rstn                       ( aresetn                       ),
-        .flush                      ( flush                      ),
+        .rstn                       ( aresetn                    ),
+        .flush                      ( flush_to_if1_fifo          ),
         .flush_cause                ( flush_cause                ),
         .fetch_buf_full             ( fetch_buf_full             ),
         .if1_readygo                ( if1_readygo                ),
@@ -276,12 +290,12 @@ module core_top(
         .if1_cookie_out             ( if1_cookie_out             ),
         .if1_inst0                  ( if1_inst0                  ),
         .if1_inst1                  ( if1_inst1                  ),
-        .ibar_flag                  ( ibar_flag                  ),
+        .ibar_flag                  ( ibar                  ),
         .ibar_flag_from_ex          ( ibar_flag_from_ex          ),
         .csr_flag                   ( csr_flag                   ),
         .csr_flag_from_ex           ( csr_flag_from_ex           ),
         .tlb_flag                   ( tlb_flag                   ),
-        .tlb_flag_from_ex           ( tlb_flag_from_ex          ),
+        .tlb_flag_from_ex           ( tlb_flag_from_ex           ),
         .priv_flag                  ( priv_flag                  ),
         .pc_from_PRIV               ( pc_from_PRIV               ),
         .set_pc_from_PRIV           ( set_pc_from_PRIV           ),
@@ -727,14 +741,6 @@ module core_top(
     //读时钟的指令RDCNTV(L/H)要用到，开始从cpu_top接进来;现在放在模块内了
     //wire [63:0] stable_counter;
 
-    //分支预测
-   
-    //TODO predice logic
-    wire predict_dir_fail; //分支预测跳不跳失败的信号
-    wire predict_add_fail; //分支预测往哪跳失败的信号
-    wire fact_taken; //实际跳不跳
-    wire [31:0] fact_pc; //分支指令的pc
-    wire [31:0] fact_tpc; //目标地址pc
 
     //给cache
     wire cpu_d_rvalid;
@@ -745,7 +751,7 @@ module core_top(
     wire [31:0] w_data_dcache;
     wire  is_atom_dcache;
    // output uncache, 由csr负责
-    wire ibar;
+    
 
     //给mul
     wire [31:0] mul_stage1_res_hh;
@@ -762,6 +768,8 @@ module core_top(
 
     //下面都是特权指令的
     wire privilege_ready;
+    assign csr_done = privilege_ready & reg_ex_uop0[`UOP_CSR];
+    assign tlb_done = privilege_ready & reg_ex_uop0[`UOP_TLB] & (reg_ex_inst0[11:10] == 2'b00 || reg_ex_inst0[11:0] ==2'b01 || reg_ex_inst0[15]);
     //给csr
     wire [31:0] csr_addr;
     wire [31:0] csr_wdata;
