@@ -53,7 +53,7 @@ module csr
     //input [18:0] tlbehi_vppn_in,
     //input wen_tlbehi_vppn,
     input llbit_set,
-    //input llbit_clear, //by other没有用，直接看ertn就行
+    input llbit_clear, //by other没有用，直接看ertn就行
     input tlbsrch_ready, //已经判断完是否命中
     input tlbsrch_hit, //TLBSRCH是否命中
     input [4:0] tlb_index_in, //TLB命中的索引   最高位是hit，后面不要了
@@ -444,7 +444,9 @@ always @(posedge clk)
         else if(ertn) begin 
             llbctl_rollb<=llbctl_klo;
             llbctl_klo<=0;
-        end else if(software_en&&addr==`CSR_LLBCTL) begin
+        end 
+        else if(llbit_clear) llbctl_rollb<=0;
+        else if(software_en&&addr==`CSR_LLBCTL) begin
             if(wen&&wdata[1]) llbctl_rollb<=0;
             if(wen) llbctl_klo<=wdata[2];
         end
