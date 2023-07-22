@@ -48,9 +48,9 @@ module IF1_FIFO(
     output reg[31:0]    if1_fifo_icache_badv,
     output reg[6:0]     if1_fifo_icache_exception,
     output reg[1:0]     if1_fifo_icache_excp_flag,
-    output reg[31:0]    if1_fifo_icache_cookie_out,
-    output reg          if1_fifo_cacop_ready,
-    output reg          if1_fifo_cacop_complete
+    output reg[31:0]    if1_fifo_icache_cookie_out
+    // output reg          if1_fifo_cacop_ready,
+    // output reg          if1_fifo_cacop_complete
     );
     
     localparam      IDLE            =   3'b000,
