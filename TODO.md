@@ -22,4 +22,4 @@
 
 **TLB.v**
 
-- [ ] .vaddr0(VA_I_reg3), //todo:
+- [x] .vaddr0(VA_I_reg3), //todo:
