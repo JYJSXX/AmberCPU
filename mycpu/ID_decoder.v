@@ -6,7 +6,7 @@
 module ID_decoder
 (
     input [31:0] inst,
-    output [31:0] pc, //目前未考虑分支预测，异常等等
+    //output [31:0] pc, //目前未考虑分支预测，异常等等
     output is_ALU,
     output is_syscall,
     output is_break,
