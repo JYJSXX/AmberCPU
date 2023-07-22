@@ -283,7 +283,7 @@ module core_top(
         .csr_flag                   ( csr_flag                   ),
         .csr_flag_from_ex           ( csr_flag_from_ex           ),
         .tlb_flag                   ( tlb_flag                   ),
-        .tlb_flag_from_tlb          ( tlb_flag_from_ex          ),
+        .tlb_flag_from_ex           ( tlb_flag_from_ex          ),
         .priv_flag                  ( priv_flag                  ),
         .pc_from_PRIV               ( pc_from_PRIV               ),
         .set_pc_from_PRIV           ( set_pc_from_PRIV           ),
