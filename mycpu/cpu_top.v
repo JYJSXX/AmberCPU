@@ -1076,6 +1076,7 @@ module core_top(
         .ex_rd1              ( ex1_ex2_rd1              ),
         .ex2_result0_valid   ( ex2_data0_valid   ),
         .ex2_result1_valid   ( ex2_data1_valid   ),
+        .en_VA_D_OUT         ( en_VA_D_OUT         ),
         .ex2_wb_data_0       ( ex2_wb_data_0       ),
         .ex2_wb_data_1       ( ex2_wb_data_1       ),
         .ex2_wb_data_0_valid ( ex2_wb_data_0_valid ),

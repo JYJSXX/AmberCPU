@@ -19,7 +19,7 @@ module EX2_WB(
     input [5:0] ex_rd1,
     input ex2_result0_valid,
     input ex2_result1_valid,
-
+    input en_VA_D_OUT,
     output reg [31:0] ex2_wb_data_0,
     output reg [31:0] ex2_wb_data_1,
     output reg ex2_wb_data_0_valid,
@@ -75,6 +75,11 @@ module EX2_WB(
     output reg [18:0] vppn_out,
     output reg wen_vppn
 );
+reg tlb_d_valid_reg;
+always@(posedge clk )begin
+        tlb_d_valid_reg <= en_VA_D_OUT;
+    end
+
 assign flush_out_all = exception_flag_out;
 wire csr_crmd_ie;
 assign csr_crmd_ie = csr_crmd[2];
@@ -201,7 +206,7 @@ assign cond1 = uop1[`UOP_COND];
     end
 always@(*) begin
     ex2_allowin=0;
-    if((ex2_wb_data_0_valid | dcache_ready | div_ready | csr_ready) && ex2_wb_data_1_valid) begin
+    if((ex2_wb_data_0_valid | ~(~dcache_ready && tlb_d_valid_reg)  | div_ready | csr_ready) && ex2_wb_data_1_valid) begin
         ex2_allowin=1;
     end
 end
