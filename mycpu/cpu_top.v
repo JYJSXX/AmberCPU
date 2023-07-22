@@ -96,6 +96,14 @@ module core_top(
     wire flush_to_dcache ; 
     wire flush_to_btb ;       
 
+     //分支预测
+    wire predict_dir_fail; //分支预测跳不跳失败的信号
+    wire predict_add_fail; //分支预测往哪跳失败的信号
+    wire fact_taken; //实际跳不跳
+    wire [31:0] fact_pc; //分支指令的pc
+    wire [31:0] fact_tpc; //目标地址pc
+
+    wire ibar;
 
 
     //for hand shake with pipeline
@@ -236,6 +244,7 @@ module core_top(
     wire               fetch_buf_full;
     wire               fifo_allowin;
     wire               fifo_readygo;
+
 
 
     wire  [1:0]        ibar_flag;//from pre-decoder
@@ -735,14 +744,6 @@ module core_top(
     //读时钟的指令RDCNTV(L/H)要用到，开始从cpu_top接进来;现在放在模块内了
     //wire [63:0] stable_counter;
 
-    //分支预测
-   
-    //TODO predice logic
-    wire predict_dir_fail; //分支预测跳不跳失败的信号
-    wire predict_add_fail; //分支预测往哪跳失败的信号
-    wire fact_taken; //实际跳不跳
-    wire [31:0] fact_pc; //分支指令的pc
-    wire [31:0] fact_tpc; //目标地址pc
 
     //给cache
     wire cpu_d_rvalid;
@@ -753,7 +754,7 @@ module core_top(
     wire [31:0] w_data_dcache;
     wire  is_atom_dcache;
    // output uncache, 由csr负责
-    wire ibar;
+    
 
     //给mul
     wire [31:0] mul_stage1_res_hh;
