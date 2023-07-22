@@ -2,11 +2,13 @@
 
 **cpu_top.v**
 
-- [ ]  debug0_valid,
-- [ ]  debug1_valid,
-- [ ]  assign clk=aclk; //TODO:idle的时钟没写，暂时用clk代替
-- [ ]  wire [1:0] if1_excp_flag;//TODO :alert icache to pass this signal
+- [ ] debug0_valid,
+- [ ] debug1_valid,
+- [ ] assign clk=aclk; //TODO:idle的时钟没写，暂时用clk代替
+- [ ] wire [1:0] if1_excp_flag;//TODO :alert icache to pass this signal
 - [ ] .fifo_id_flush_cause ( fifo_id_flush_cause ),  // TODO: To be completed
+- [ ] .flush_cause       ( flush_cause    ),  // TODO: To be completed
+- [ ] TODO: Flush signal 相关全都没做
 
 **BTB.v**
 

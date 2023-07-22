@@ -70,7 +70,11 @@ module core_top(
     wire i_idle;
     wire d_idle;
 
-    wire flush_from_wb;
+    /*
+    TODO:
+    Flush signal 相关全都没做
+    */
+    wire flush_from_wb;         
     wire flush_from_ex2;
     wire flush_from_ex1;
     wire flush_from_reg;
@@ -150,7 +154,7 @@ module core_top(
     wire               flush_cause;
     wire               icache_rready;
 
-    wire  [31:0]       if0_if1_pc;
+    wire [31:0]        if0_if1_pc;
     wire [31:0]        if0_if1_pc_next;
     wire               if0_if1_tlb_rvalid;
 
@@ -162,7 +166,7 @@ module core_top(
         .if1_readygo            ( if1_readygo      ),
         .if1_allowin            ( if1_allowin      ),
         .flush                  ( flush_to_if0_if1 ),
-        .flush_cause            ( flush_cause      ),
+        .flush_cause            ( flush_cause      ),   // TODO: To be completed
         .rready                 ( icache_rready    ),
         .tlb_rvalid             ( tlb_rvalid       ),
         .if0_if1_tlb_rvalid     ( if0_if1_tlb_rvalid),
@@ -258,7 +262,7 @@ module core_top(
     // wire            if1_fifo_cacop_complete;
     IF1_FIFO u_IF1_FIFO(
         .clk                        ( clk                        ),
-        .rstn                       ( aresetn                       ),
+        .rstn                       ( aresetn                    ),
         .flush                      ( flush                      ),
         .flush_cause                ( flush_cause                ),
         .fetch_buf_full             ( fetch_buf_full             ),
@@ -281,7 +285,7 @@ module core_top(
         .csr_flag                   ( csr_flag                   ),
         .csr_flag_from_ex           ( csr_flag_from_ex           ),
         .tlb_flag                   ( tlb_flag                   ),
-        .tlb_flag_from_ex           ( tlb_flag_from_ex          ),
+        .tlb_flag_from_ex           ( tlb_flag_from_ex           ),
         .priv_flag                  ( priv_flag                  ),
         .pc_from_PRIV               ( pc_from_PRIV               ),
         .set_pc_from_PRIV           ( set_pc_from_PRIV           ),
