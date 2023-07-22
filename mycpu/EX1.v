@@ -4,7 +4,7 @@ module EX1(
     input   clk,
     input   aclk,
     input   aresetn,
-    input   flush,
+    output   flush,
     input   [31:0] pc0,
     input   [31:0] pc1,
     input   [31:0] inst0,
@@ -161,6 +161,7 @@ module EX1(
 
 );
     reg [63:0] stable_counter;
+    assign flush=predict_addr_fail || predict_dir_fail || uop0[`INS_ERTN];
     always @(posedge aclk)
         if(~aresetn) stable_counter<=0;
         else stable_counter <= stable_counter+1;
