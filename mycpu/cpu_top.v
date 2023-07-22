@@ -139,7 +139,7 @@ module core_top(
         .fetch_pc            ( fetch_pc            ),
         .rvalid              ( tlb_rvalid       ),
         .raddr               ( tlb_raddr        ),
-        .cookie_in           ( 114514              ),
+        .cookie_in           ( 32'd114514          ),
         .pc_next             ( pc_next             ),
         .pc_in_stall         ( pc_in_stall         )
     );
