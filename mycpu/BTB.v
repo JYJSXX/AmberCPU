@@ -72,6 +72,10 @@ module BTB #(
     assign flag=BPOS[(inst_bpos&inst_btype[0])<<FACT_INDEX];
     assign BPOS_MISS=BPOS&&!(flag);
     assign pred_taken=flag|taken;
+    
+    // TODO unimplemented
+    wire [31:0]  pred_pc_hang;
+    assign pred_pc_hang=0;
 
     
     

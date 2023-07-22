@@ -109,20 +109,20 @@ module core_top(
     wire [31:0]pc_from_PRIV;
 
     //for BTB
-    wire [31:0]pred_pc;
-    wire pred_taken;
-    wire  [31:0] fetch_pc;
+    wire [31:0]  pred_pc;
+    wire         pred_taken;
+    wire [31:0]  fetch_pc;
     //for tlb
-    wire  tlb_rvalid;
-    wire  [31:0] tlb_raddr;
-    wire  [31:0]cookie_in=114514;
+    wire         tlb_rvalid;
+    wire [31:0]  tlb_raddr;
+    wire [31:0]  cookie_in=114514;
 
     
-    wire  [31:0] pc_next;//rready control logic : use a tmp to store inst temporarily
-    wire  [31:0] pc_in_stall;
+    wire [31:0]  pc_next;//rready control logic : use a tmp to store inst temporarily
+    wire         pc_in_stall;
     IF0 u_IF0(
         .clk                 ( clk                 ),
-        .rstn                ( aresetn                ),
+        .rstn                ( aresetn             ),
         .if0_readygo         ( if0_readygo         ),
         .if0_allowin         ( if0_allowin         ),
         .flush               ( flush_to_if0        ),
@@ -137,9 +137,9 @@ module core_top(
         .pred_pc             ( pred_pc             ),
         .pred_taken          ( pred_taken          ),
         .fetch_pc            ( fetch_pc            ),
-        .rvalid              ( tlb_rvalid       ),
-        .raddr               ( tlb_raddr        ),
-        .cookie_in           ( 32'd114514          ),
+        .rvalid              ( tlb_rvalid          ),
+        .raddr               ( tlb_raddr           ),
+        .cookie_in           ( cookie_in           ),
         .pc_next             ( pc_next             ),
         .pc_in_stall         ( pc_in_stall         )
     );
@@ -351,6 +351,7 @@ module core_top(
     FIFO u_FIFO(
         .clk                        ( clk                        ),
         .rstn                       ( aresetn                    ),
+        .branch_flag                ( branch_flag                ),
         .flush                      ( flush_to_fifo              ),
         .fifo_readygo               ( fifo_readygo               ),
         .fifo_allowin               ( fifo_allowin               ),
@@ -455,8 +456,8 @@ module core_top(
         .aresetn          ( aresetn          ),
         .inst0            ( fifo_id_inst0            ),
         .inst1            ( fifo_id_inst1            ),
-        .pc0              ( fifo_id_pc              ),
-        .pc1              ( fifo_id_pcAdd              ),
+        // .pc0              ( fifo_id_pc              ),
+        // .pc1              ( fifo_id_pcAdd              ),
         .is_ALU_0         ( id_is_ALU_0         ),
         .is_ALU_1         ( id_is_ALU_1         ),
         .is_syscall_0     ( id_is_syscall_0     ),
@@ -491,7 +492,7 @@ module core_top(
     wire [31:0] iq_inst0;
     wire [31:0] iq_inst1;
     wire [31:0] iq_badv;
-    wire [1 :0] iq_excp_flag;
+    wire        iq_excp_flag;
     wire [6:0]  iq_exception;
     wire        iq_branch_flag;
     wire iq_is_ALU_0 ;
@@ -803,6 +804,9 @@ module core_top(
     wire [31:0] ex1_badv;
     wire ex1_excp_flag ;
     wire [6:0] ex1_exception;
+
+    wire [31:0] alu_result0, alu_result1;
+    wire        alu_result0_valid, alu_result1_valid;
 
     EX1 u_EX1(
         .clk                  ( clk                  ),
@@ -1206,6 +1210,7 @@ module core_top(
         .badv_in         ( ex2_wb_badv         ),
         .wen_badv        ( wen_badv        ),
         .llbit_set       ( llbit_set       ),
+        .llbit_clear     ( llbit_clear     ),
         .tlbsrch_ready   ( tlbsrch_ready   ),
         .tlbsrch_hit     ( tlbsrch_hit     ),
         .tlb_index_in    ( tlb_index_in    ),
@@ -1336,7 +1341,8 @@ module core_top(
         .is_atom                           ( is_atom_dcache                    ),
         .llbit_set                         ( llbit_set                         ),
         .llbit                             ( llbit                             ),
-        .llbit_clear                       ( llbit_clear                       )
+        .llbit_clear                       ( llbit_clear                       ),
+        .ibar                              ( ibar                              )
     );
 
 

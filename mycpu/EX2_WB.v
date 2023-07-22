@@ -15,8 +15,8 @@ module EX2_WB(
     input [`WIDTH_UOP-1:0] uop1,
     input [31:0] ex2_result0, //乘法和要写的分支已经在里面了
     input [31:0] ex2_result1,
-    input [5:0] ex_rd0,
-    input [5:0] ex_rd1,
+    input [4:0] ex_rd0,
+    input [4:0] ex_rd1,
     input ex2_result0_valid,
     input ex2_result1_valid,
     input en_VA_D_OUT,
@@ -24,8 +24,8 @@ module EX2_WB(
     output reg [31:0] ex2_wb_data_1,
     output reg ex2_wb_data_0_valid,
     output reg ex2_wb_data_1_valid,
-    output reg [5:0] ex2_wb_rd0,
-    output reg [5:0] ex2_wb_rd1,
+    output reg [4:0] ex2_wb_rd0,
+    output reg [4:0] ex2_wb_rd1,
     output reg ex2_wb_we0,
     output reg ex2_wb_we1,
 
