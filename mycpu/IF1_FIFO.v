@@ -15,6 +15,7 @@ module IF1_FIFO(
     output  wire        fifo_readygo,
 
     input               if1_rready,//icache rready makes reg update anytime
+    input               if0_if1_tlb_rvalid,
     input [31:0]        if1_pc,
     input [31:0]        if1_pc_next,
     input [31:0]        if1_badv,
@@ -85,6 +86,7 @@ module IF1_FIFO(
     
     assign fifo_readygo = if1_fifo_valid;
     assign if1_allowin  =       fifo_allowin&&
+                                (!if0_if1_tlb_rvalid||if1_rready)&&
                                 (
                                     (stat==IDLE)||(stat==WAIT_FETCH)
                                 )&&

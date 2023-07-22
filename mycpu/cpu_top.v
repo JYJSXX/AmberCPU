@@ -154,21 +154,24 @@ module core_top(
 
     wire  [31:0]       if0_if1_pc;
     wire [31:0]        if0_if1_pc_next;
+    wire               if0_if1_tlb_rvalid;
 
     IF0_IF1 u_IF0_IF1(
-        .clk             ( clk              ),
-        .rstn            ( aresetn          ),
-        .if0_readygo     ( if0_readygo      ),
-        .if0_allowin     ( if0_allowin      ),
-        .if1_readygo     ( if1_readygo      ),
-        .if1_allowin     ( if1_allowin      ),
-        .flush           ( flush_to_if0_if1 ),
-        .flush_cause     ( flush_cause      ),
-        .rready          ( icache_rready    ),
-        .fetch_pc        ( fetch_pc         ),
-        .pc_next         ( pc_next          ),
-        .if0_if1_pc      ( if0_if1_pc       ),
-        .if0_if1_pc_next ( if0_if1_pc_next  )
+        .clk                    ( clk              ),
+        .rstn                   ( aresetn          ),
+        .if0_readygo            ( if0_readygo      ),
+        .if0_allowin            ( if0_allowin      ),
+        .if1_readygo            ( if1_readygo      ),
+        .if1_allowin            ( if1_allowin      ),
+        .flush                  ( flush_to_if0_if1 ),
+        .flush_cause            ( flush_cause      ),
+        .rready                 ( icache_rready    ),
+        .tlb_rvalid             ( tlb_rvalid       ),
+        .if0_if1_tlb_rvalid     ( if0_if1_tlb_rvalid),
+        .fetch_pc               ( fetch_pc         ),
+        .pc_next                ( pc_next          ),
+        .if0_if1_pc             ( if0_if1_pc       ),
+        .if0_if1_pc_next        ( if0_if1_pc_next  )
     );
 
     
@@ -263,6 +266,7 @@ module core_top(
         .fifo_allowin               ( fifo_allowin               ),
         .fifo_readygo               ( fifo_readygo               ),
         .if1_rready                 ( if1_rready                 ),
+        .if0_if1_tlb_rvalid         ( if0_if1_tlb_rvalid         ),
         .if1_pc                     ( if1_pc                     ),
         .if1_pc_next                ( if1_pc_next                ),
         .if1_badv                   ( if1_badv                   ),
@@ -1072,6 +1076,7 @@ module core_top(
         .ex_rd1              ( ex1_ex2_rd1              ),
         .ex2_result0_valid   ( ex2_data0_valid   ),
         .ex2_result1_valid   ( ex2_data1_valid   ),
+        .en_VA_D_OUT         ( en_VA_D_OUT         ),
         .ex2_wb_data_0       ( ex2_wb_data_0       ),
         .ex2_wb_data_1       ( ex2_wb_data_1       ),
         .ex2_wb_data_0_valid ( ex2_wb_data_0_valid ),
