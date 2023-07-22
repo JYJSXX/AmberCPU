@@ -69,6 +69,7 @@ module ID_REG(
 );
     reg [31:0] id_reg_pc0;
     reg [31:0] id_reg_pc1;
+    reg [31:0] id_reg_pc_next;
     reg [31:0] id_reg_inst0;
     reg [31:0] id_reg_inst1;
     reg [31:0] id_reg_badv;
@@ -97,6 +98,7 @@ always@(posedge aclk) begin
     if(~aresetn | (~id_readygo && reg_allowin && reg_readygo)) begin
         id_reg_pc0  <= 0;
         id_reg_pc1  <= 0;
+        id_reg_pc_next<=0;
         id_reg_inst0  <= 0;
         id_reg_inst1  <= 0;
         id_reg_badv  <= 0;
@@ -123,6 +125,7 @@ always@(posedge aclk) begin
     end else if(id_readygo && reg_allowin)begin
         id_reg_pc0  <= fifo_id_pc0;
         id_reg_pc1  <= fifo_id_pc1;
+        id_reg_pc_next<=fifo_id_pc_next;
         id_reg_inst0  <= fifo_id_inst0;
         id_reg_inst1  <= fifo_id_inst1;
         id_reg_badv  <= fifo_id_badv;
@@ -151,6 +154,7 @@ always@(posedge aclk) begin
     else if(~reg_allowin) begin
         id_reg_pc0  <= id_reg_pc0;
         id_reg_pc1  <= id_reg_pc1;
+        id_reg_pc_next<=id_reg_pc_next;
         id_reg_inst0  <= id_reg_inst0;
         id_reg_inst1  <= id_reg_inst1;
         id_reg_badv  <= id_reg_badv;
@@ -187,6 +191,7 @@ end
         .reg_allowin              ( reg_allowin              ),
         .id_reg_pc0               ( id_reg_pc0               ),
         .id_reg_pc1               ( id_reg_pc1               ),
+        .id_reg_pc_next           ( id_reg_pc_next           ),
         .id_reg_inst0             ( id_reg_inst0             ),
         .id_reg_inst1             ( id_reg_inst1             ),
         .id_reg_badv              ( id_reg_badv              ),
@@ -214,6 +219,7 @@ end
         .id_reg_rk1               ( id_reg_rk1               ),
         .iq_pc0                   ( iq_pc0                   ),
         .iq_pc1                   ( iq_pc1                   ),
+        .iq_pc_next               ( iq_pc_next               ),
         .iq_inst0                 ( iq_inst0                 ),
         .iq_inst1                 ( iq_inst1                 ),
         .iq_badv                  ( iq_badv                  ),
