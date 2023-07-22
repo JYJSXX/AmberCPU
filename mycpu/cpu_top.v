@@ -1055,7 +1055,7 @@ module core_top(
     wire wen_era;
     wire [18:0] vppn_out;
     wire wen_vppn;
-
+    wire cpu_interrupt;
     EX2_WB u_EX2_WB(
         .clk                 ( clk                 ),
         .aresetn             ( aresetn             ),
@@ -1111,6 +1111,7 @@ module core_top(
         .wen_badv            ( wen_badv            ),
         .tlb_exception       ( tlb_exception       ),
         .era_in              ( ex1_ex2_pc0         ),
+        .cpu_interrupt        ( cpu_interrupt        ),
         .era_out             ( era_out             ),
         .wen_era             ( wen_era             ),
         .vppn_out            ( vppn_out            ),
@@ -1121,12 +1122,12 @@ module core_top(
     
 
     wire [31:0] crmd; //当前模式信息，包含privilege
-    wire [31:0] estat;    //例外状态 idle_interupt; 
+    wire [31:0] estat;    //例外状态 idle_interrupt; 
     wire [31:0] csr_era;
     wire [31:0] eentry;
     wire [31:0] tlbrentry;
     wire [31:0] pgdl,pgdh;
-    wire cpu_interupt;
+    
     wire [31:0] dmw0;
     wire [31:0] dmw1;
     wire llbit;
@@ -1175,7 +1176,7 @@ module core_top(
         .tlbrentry       ( tlbrentry       ),
         .pgdl            ( pgdl            ),
         .pgdh            ( pgdh            ),
-        .cpu_interupt    ( cpu_interupt    ),
+        .cpu_interrupt    ( cpu_interrupt    ),
         .dmw0            ( dmw0            ),
         .dmw1            ( dmw1            ),
         .llbit           ( llbit           ),

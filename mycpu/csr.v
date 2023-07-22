@@ -14,12 +14,12 @@ module csr
     input [31:0] wdata,
 
     output [31:0] crmd, //当前模式信息，包含privilege
-    output [31:0] estat,    //例外状态 idle_interupt, 
+    output [31:0] estat,    //例外状态 idle_interrupt, 
     output [31:0] era_out,
     output [31:0] eentry,
     output [31:0] tlbrentry,
     output [31:0] pgdl,pgdh,
-    output cpu_interupt,
+    output cpu_interrupt,
     output [31:0] dmw0,
     output [31:0] dmw1,
     output llbit,
@@ -284,7 +284,7 @@ module csr
     reg [`TICLR_CLR] tlclr_clr;
     assign csr_tlclr[`TICLR_CLR] = tlclr_clr;
     assign csr_tlclr[`TICLR_ZERO] = 0;
-assign cpu_interupt=crmd_ie&&(ecfg_lie&csr_estat)!=0; //全局中断允许且（局部中断使能位与例外状态位）不为0
+assign cpu_interrupt=crmd_ie&&(ecfg_lie&csr_estat)!=0; //全局中断允许且（局部中断使能位与例外状态位）不为0
 assign idle_over= csr_estat[12:0]; //各种中断，无论软件硬件，无论是否使能，只有有例外就结束idle(马哥这样实现的)
 wire pg_next;
 wire da_next;
@@ -360,6 +360,11 @@ always @(posedge clk)
             estat_is_soft <= 0;
             estat_ecode <= 0;
             estat_subecode <= 0;
+        end
+        else if(~(|hardware_interrupt))begin
+            estat_ecode <= 0;
+            estat_subecode <= 0;
+        
         end else if(wen_expcode) begin
             estat_ecode <= expcode_in[5:0];
             estat_subecode <= expcode_in[5:0]==0 ? 0:{8'b0,expcode_in[6]};
@@ -801,7 +806,7 @@ assign rdata[31:0] = {32{addr==`CSR_CRMD}} & csr_crmd |
         assign pgdh=csr_pgdh;
         assign dmw0=csr_dmw0;
         assign dmw1=csr_dmw1;
-        //cpu_interupt已经在前面赋值了
+        //cpu_interrupt已经在前面赋值了
         assign llbit=csr_llbctl[0];
         assign DMW0_PSEG=csr_dmw0[`DMW0_PSEG];
         assign DMW0_VSEG=csr_dmw0[`DMW0_VSEG];
