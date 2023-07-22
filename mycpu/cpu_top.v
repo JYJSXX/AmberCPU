@@ -52,14 +52,14 @@ module core_top(
     output [ 4:0] debug0_wb_rf_wnum,
     output [31:0] debug0_wb_rf_wdata,
     output [31:0] debug0_wb_inst,
-    output debug0_valid,
+    output debug0_valid,    // TODO:
 
     output [31:0] debug1_wb_pc,
     output [ 3:0] debug1_wb_rf_wen,
     output [ 4:0] debug1_wb_rf_wnum,
     output [31:0] debug1_wb_rf_wdata,
     output [31:0] debug1_wb_inst,
-    output debug1_valid
+    output debug1_valid         // TODO:
 );
 
     assign {arlock, arcache, arprot, awlock, awcache, awprot} = 0;
@@ -184,8 +184,8 @@ module core_top(
     wire [6:0] dcache_exception;
     wire [1:0] icache_excp_flag;
     wire [31:0] cookie_out;
-    wire cacop_ready;
-    wire cacop_complete;
+    // wire cacop_ready;
+    // wire cacop_complete;
 
     wire [63:0]       icache_rdata;   //指令cache读数据
 
@@ -214,8 +214,8 @@ module core_top(
         .exception          ( icache_exception          ),
         .excp_flag          ( icache_excp_flag          ),
         .cookie_out         ( cookie_out         ),
-        .cacop_ready        ( cacop_ready        ),
-        .cacop_complete     ( cacop_complete     ),
+        // .cacop_ready        ( cacop_ready        ),
+        // .cacop_complete     ( cacop_complete     ),
         .if1_rready         ( if1_rready         ),
         .if1_pc             ( if1_pc             ),
         .if1_pc_next        ( if1_pc_next        ),
@@ -401,8 +401,8 @@ module core_top(
     FIFO_ID u_FIFO_ID(
         .clk                 ( clk                 ),
         .rstn                ( aresetn             ),
-        .fifo_id_flush       ( fifo_id_flush       ),
-        .fifo_id_flush_cause ( fifo_id_flush_cause ),
+        .fifo_id_flush       ( flush_to_fifo_id    ),
+        .fifo_id_flush_cause ( fifo_id_flush_cause ),  // TODO: To be completed
         .id_allowin          ( id_allowin          ),
         .id_readygo          ( id_readygo          ),
         .fifo_allowin        ( fifo_allowin        ),
@@ -1092,7 +1092,7 @@ module core_top(
         .ex_rd1              ( ex1_ex2_rd1              ),
         .ex2_result0_valid   ( ex2_result0_valid   ),
         .ex2_result1_valid   ( ex2_result1_valid   ),
-        .en_VA_D_OUT         ( dcache_valid        ), // TODO
+        .en_VA_D_OUT         ( dcache_valid        ), 
         .ex2_wb_data_0       ( ex2_wb_data_0       ),
         .ex2_wb_data_1       ( ex2_wb_data_1       ),
         .ex2_wb_data_0_valid ( ex2_wb_data_0_valid ),

@@ -44,9 +44,9 @@ module ID_REG(
     output  [31:0] iq_inst0,
     output  [31:0] iq_inst1,
     output  [31:0] iq_badv,
-    output         iq_excp_flag,//LOGIC TODO
+    output         iq_excp_flag,
     output  [6 :0] iq_exception,
-    output         iq_branch_flag,//logic todo
+    output         iq_branch_flag,
     output  iq_is_ALU_0 ,
     output  iq_is_ALU_1 ,
     output  iq_is_syscall_0 ,
