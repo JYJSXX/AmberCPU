@@ -70,7 +70,11 @@ module core_top(
     wire i_idle;
     wire d_idle;
 
-    wire flush_from_wb;
+    /*
+    TODO:
+    Flush signal 相关全都没做
+    */
+    wire flush_from_wb;         
     wire flush_from_ex2;
     wire flush_from_ex1;
     wire flush_from_reg;
@@ -92,6 +96,14 @@ module core_top(
     wire flush_to_dcache ; 
     wire flush_to_btb ;       
 
+     //分支预测
+    wire predict_dir_fail; //分支预测跳不跳失败的信号
+    wire predict_add_fail; //分支预测往哪跳失败的信号
+    wire fact_taken; //实际跳不跳
+    wire [31:0] fact_pc; //分支指令的pc
+    wire [31:0] fact_tpc; //目标地址pc
+
+    wire ibar;
 
 
     //for hand shake with pipeline
@@ -151,7 +163,7 @@ module core_top(
     wire               flush_cause;
     wire               icache_rready;
 
-    wire  [31:0]       if0_if1_pc;
+    wire [31:0]        if0_if1_pc;
     wire [31:0]        if0_if1_pc_next;
     wire               if0_if1_tlb_rvalid;
 
@@ -163,7 +175,7 @@ module core_top(
         .if1_readygo            ( if1_readygo      ),
         .if1_allowin            ( if1_allowin      ),
         .flush                  ( flush_to_if0_if1 ),
-        .flush_cause            ( flush_cause      ),
+        .flush_cause            ( flush_cause      ),   // TODO: To be completed
         .rready                 ( icache_rready    ),
         .tlb_rvalid             ( tlb_rvalid       ),
         .if0_if1_tlb_rvalid     ( if0_if1_tlb_rvalid),
@@ -234,6 +246,7 @@ module core_top(
     wire               fifo_readygo;
 
 
+
     wire  [1:0]        ibar_flag;//from pre-decoder
     // wire               ibar_flag_from_ex; replaced by ibar
     wire  [1:0]        csr_flag;
@@ -282,7 +295,7 @@ module core_top(
         .csr_flag                   ( csr_flag                   ),
         .csr_flag_from_ex           ( csr_flag_from_ex           ),
         .tlb_flag                   ( tlb_flag                   ),
-        .tlb_flag_from_ex           ( tlb_flag_from_ex          ),
+        .tlb_flag_from_ex           ( tlb_flag_from_ex           ),
         .priv_flag                  ( priv_flag                  ),
         .pc_from_PRIV               ( pc_from_PRIV               ),
         .set_pc_from_PRIV           ( set_pc_from_PRIV           ),
@@ -586,12 +599,8 @@ module core_top(
 
     wire  ex_allowin;
     wire  ex_readygo;
-    wire  [4:0] wb_rd0;
-    wire  [4:0] wb_rd1;
     wire  we_0;
     wire  we_1;
-    wire [31:0] wb_rd0_data;
-    wire [31:0] wb_rd1_data;
 
     wire [31:0] reg_ex_pc0;
     wire [31:0] reg_ex_pc1;
@@ -624,6 +633,10 @@ module core_top(
     wire [4:0]  reg_ex_rk1;
     wire [4:0]  reg_ex_rd0;
     wire [4:0]  reg_ex_rd1;
+    wire [4:0] ex2_wb_rd0;
+    wire [4:0] ex2_wb_rd1;
+    wire [31:0] ex2_wb_data_0;
+    wire [31:0] ex2_wb_data_1;
 
     wire        forward_stall ;
 
@@ -657,12 +670,12 @@ module core_top(
         .id_reg_uop1             ( iq_uop1             ),
         .id_reg_imm0             ( iq_imm0             ),
         .id_reg_imm1             ( iq_imm1             ),
-        .wb_rd0                  ( wb_rd0                  ),
-        .wb_rd1                  ( wb_rd1                  ),
+        .wb_rd0                  ( ex2_wb_rd0          ),
+        .wb_rd1                  ( ex2_wb_rd1          ),
         .we_0                    ( we_0                    ),
         .we_1                    ( we_1                    ),
-        .rd0_data                ( wb_rd0_data                ),
-        .rd1_data                ( wb_rd1_data                ),
+        .rd0_data                ( ex2_wb_data_0               ),
+        .rd1_data                ( ex2_wb_data_1               ),
         .id_reg_rj0              ( iq_rj0              ),
         .id_reg_rj1              ( iq_rj1              ),
         .id_reg_rk0              ( iq_rk0              ),
@@ -718,10 +731,7 @@ module core_top(
     wire ex1_ex2_data_0_valid; //可不可以前递，没算好不能前递
     wire ex1_ex2_data_1_valid;
     //从ex2_wb段间输入
-    wire [4:0] ex2_wb_rd0;
-    wire [4:0] ex2_wb_rd1;
-    wire [31:0] ex2_wb_data_0;
-    wire [31:0] ex2_wb_data_1;
+
     wire ex2_wb_data_0_valid;
     wire ex2_wb_data_1_valid;
     //csrfact_pc; //分支指令的pc
@@ -731,14 +741,6 @@ module core_top(
     //读时钟的指令RDCNTV(L/H)要用到，开始从cpu_top接进来;现在放在模块内了
     //wire [63:0] stable_counter;
 
-    //分支预测
-   
-    //TODO predice logic
-    wire predict_dir_fail; //分支预测跳不跳失败的信号
-    wire predict_add_fail; //分支预测往哪跳失败的信号
-    wire fact_taken; //实际跳不跳
-    wire [31:0] fact_pc; //分支指令的pc
-    wire [31:0] fact_tpc; //目标地址pc
 
     //给cache
     wire cpu_d_rvalid;
@@ -749,7 +751,7 @@ module core_top(
     wire [31:0] w_data_dcache;
     wire  is_atom_dcache;
    // output uncache, 由csr负责
-    wire ibar;
+    
 
     //给mul
     wire [31:0] mul_stage1_res_hh;
@@ -766,6 +768,8 @@ module core_top(
 
     //下面都是特权指令的
     wire privilege_ready;
+    assign csr_done = privilege_ready & reg_ex_uop0[`INS_CSR];
+    assign tlb_done = privilege_ready & reg_ex_uop0[`INS_TLB] & (reg_ex_inst0[11:10] == 2'b00 || reg_ex_inst0[11:0] ==2'b01 || reg_ex_inst0[15]);
     //给csr
     wire [31:0] csr_addr;
     wire [31:0] csr_wdata;
@@ -1090,15 +1094,15 @@ module core_top(
         .ex2_result1         ( ex2_rd1_data         ),
         .ex_rd0              ( ex1_ex2_rd0              ),
         .ex_rd1              ( ex1_ex2_rd1              ),
-        .ex2_result0_valid   ( ex2_result0_valid   ),
-        .ex2_result1_valid   ( ex2_result1_valid   ),
+        .ex2_result0_valid   ( ex2_data0_valid   ),
+        .ex2_result1_valid   ( ex2_data1_valid   ),
         .en_VA_D_OUT         ( dcache_valid        ), 
         .ex2_wb_data_0       ( ex2_wb_data_0       ),
         .ex2_wb_data_1       ( ex2_wb_data_1       ),
         .ex2_wb_data_0_valid ( ex2_wb_data_0_valid ),
         .ex2_wb_data_1_valid ( ex2_wb_data_1_valid ),
         .ex2_wb_rd0          ( ex2_wb_rd0          ),
-        .ex2_wb_rd1          ( ex2_wb_rd1          ),
+        .ex2_wb_rd1          ( wb_rd1          ),
         .ex2_wb_we0          ( we_0          ),
         .ex2_wb_we1          ( we_1          ),
         .quotient            ( quotient            ),
