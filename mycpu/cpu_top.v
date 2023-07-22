@@ -599,12 +599,8 @@ module core_top(
 
     wire  ex_allowin;
     wire  ex_readygo;
-    wire  [4:0] wb_rd0;
-    wire  [4:0] wb_rd1;
     wire  we_0;
     wire  we_1;
-    wire [31:0] wb_rd0_data;
-    wire [31:0] wb_rd1_data;
 
     wire [31:0] reg_ex_pc0;
     wire [31:0] reg_ex_pc1;
@@ -637,6 +633,10 @@ module core_top(
     wire [4:0]  reg_ex_rk1;
     wire [4:0]  reg_ex_rd0;
     wire [4:0]  reg_ex_rd1;
+    wire [4:0] ex2_wb_rd0;
+    wire [4:0] ex2_wb_rd1;
+    wire [31:0] ex2_wb_data_0;
+    wire [31:0] ex2_wb_data_1;
 
     wire        forward_stall ;
 
@@ -670,12 +670,12 @@ module core_top(
         .id_reg_uop1             ( iq_uop1             ),
         .id_reg_imm0             ( iq_imm0             ),
         .id_reg_imm1             ( iq_imm1             ),
-        .wb_rd0                  ( wb_rd0                  ),
-        .wb_rd1                  ( wb_rd1                  ),
+        .wb_rd0                  ( ex2_wb_rd0          ),
+        .wb_rd1                  ( ex2_wb_rd1          ),
         .we_0                    ( we_0                    ),
         .we_1                    ( we_1                    ),
-        .rd0_data                ( wb_rd0_data                ),
-        .rd1_data                ( wb_rd1_data                ),
+        .rd0_data                ( ex2_wb_data_0               ),
+        .rd1_data                ( ex2_wb_data_1               ),
         .id_reg_rj0              ( iq_rj0              ),
         .id_reg_rj1              ( iq_rj1              ),
         .id_reg_rk0              ( iq_rk0              ),
@@ -731,10 +731,7 @@ module core_top(
     wire ex1_ex2_data_0_valid; //可不可以前递，没算好不能前递
     wire ex1_ex2_data_1_valid;
     //从ex2_wb段间输入
-    wire [4:0] ex2_wb_rd0;
-    wire [4:0] ex2_wb_rd1;
-    wire [31:0] ex2_wb_data_0;
-    wire [31:0] ex2_wb_data_1;
+
     wire ex2_wb_data_0_valid;
     wire ex2_wb_data_1_valid;
     //csrfact_pc; //分支指令的pc
@@ -771,8 +768,8 @@ module core_top(
 
     //下面都是特权指令的
     wire privilege_ready;
-    assign csr_done = privilege_ready & reg_ex_uop0[`UOP_CSR];
-    assign tlb_done = privilege_ready & reg_ex_uop0[`UOP_TLB] & (reg_ex_inst0[11:10] == 2'b00 || reg_ex_inst0[11:0] ==2'b01 || reg_ex_inst0[15]);
+    assign csr_done = privilege_ready & reg_ex_uop0[`INS_CSR];
+    assign tlb_done = privilege_ready & reg_ex_uop0[`INS_TLB] & (reg_ex_inst0[11:10] == 2'b00 || reg_ex_inst0[11:0] ==2'b01 || reg_ex_inst0[15]);
     //给csr
     wire [31:0] csr_addr;
     wire [31:0] csr_wdata;
@@ -1097,15 +1094,15 @@ module core_top(
         .ex2_result1         ( ex2_rd1_data         ),
         .ex_rd0              ( ex1_ex2_rd0              ),
         .ex_rd1              ( ex1_ex2_rd1              ),
-        .ex2_result0_valid   ( ex2_result0_valid   ),
-        .ex2_result1_valid   ( ex2_result1_valid   ),
+        .ex2_result0_valid   ( ex2_data0_valid   ),
+        .ex2_result1_valid   ( ex2_data1_valid   ),
         .en_VA_D_OUT         ( dcache_valid        ), 
         .ex2_wb_data_0       ( ex2_wb_data_0       ),
         .ex2_wb_data_1       ( ex2_wb_data_1       ),
         .ex2_wb_data_0_valid ( ex2_wb_data_0_valid ),
         .ex2_wb_data_1_valid ( ex2_wb_data_1_valid ),
         .ex2_wb_rd0          ( ex2_wb_rd0          ),
-        .ex2_wb_rd1          ( ex2_wb_rd1          ),
+        .ex2_wb_rd1          ( wb_rd1          ),
         .ex2_wb_we0          ( we_0          ),
         .ex2_wb_we1          ( we_1          ),
         .quotient            ( quotient            ),
@@ -1500,6 +1497,7 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .flush_to_fifo     ( flush_to_fifo     ),
         .flush_to_if1_fifo ( flush_to_if1_fifo ),
         .flush_to_if0_if1  ( flush_to_if0_if1  ),
+        .flush_to_if0      ( flush_to_if0      ),
         .flush_to_tlb      ( flush_to_tlb      ),
         .flush_to_icache   ( flush_to_icache   ),
         .flush_to_dcache   ( flush_to_dcache   ),
