@@ -1228,6 +1228,25 @@ module core_top(
     );
 
     
+    //sram
+    wire     [31:0]      i_raddr,        //指令cache读地址
+    wire     [511:0]     i_rdata,        //指令cache读数据
+    wire                 i_rvalid,       //指令cache读有效
+    wire                 i_rready,       //指令cache读准备好
+    wire     [7:0]       i_rlen,         //指令cache读长度
+    wire     [31:0]      d_raddr,        //数据cache读地址
+    wire     [511:0]     d_rdata,        //数据cache读数据
+    wire                 d_rvalid,       //数据cache读有效
+    wire                 d_rready,       //数据cache读准备好
+    wire     [7:0]       d_rlen,         //数据cache读长度
+    wire     [31:0]      d_waddr,        //数据cache写地址
+    wire     [511:0]     d_wdata,        //数据cache写数据
+    wire                 d_wvalid,       //数据cache写有效
+    wire                 d_wready,       //数据cache写准备好
+    wire     [7:0]       d_wlen,         //数据cache写长度
+    wire     [3:0]       d_wstrb         //数据cache写使能
+
+    
     icache#(
         .INDEX_WIDTH       ( 6 ),
         .WORD_OFFSET_WIDTH ( 4 ),
@@ -1358,65 +1377,35 @@ module core_top(
         .TLBINVLD_VA    ( invtlb_va    )
     );
 
-    
-    axi2dpram u_axi2dpram(
-        .aclk     ( aclk     ),
-        .aresetn  ( aresetn  ),
-        .aw_id    ( aw_id    ),
-        .aw_addr  ( aw_addr  ),
-        .aw_len   ( aw_len   ),
-        .aw_size  ( aw_size  ),
-        .aw_valid ( aw_valid ),
-        .aw_ready ( aw_ready ),
-        .w_data   ( w_data   ),
-        .w_strb   ( w_strb   ),
-        .w_last   ( w_last   ),
-        .w_valid  ( w_valid  ),
-        .w_ready  ( w_ready  ),
-        .b_id     ( b_id     ),
-        .b_valid  ( b_valid  ),
-        .b_ready  ( b_ready  ),
-        .ar_id    ( ar_id    ),
-        .ar_addr  ( ar_addr  ),
-        .ar_len   ( ar_len   ),
-        .arsize   ( arsize   ),
-        .ar_valid ( ar_valid ),
-        .ar_ready ( ar_ready ),
-        .r_id     ( r_id     ),
-        .r_data   ( r_data   ),
-        .r_last   ( r_last   ),
-        .r_valid  ( r_valid  ),
-        .r_ready  ( r_ready  )
-    );
 
     sram_axi u_sram_axi(
         .aclk     ( aclk     ),
         .aresetn  ( aresetn  ),
-        .ar_id    ( ar_id    ),
-        .ar_addr  ( ar_addr  ),
-        .ar_len   ( ar_len   ),
-        .ar_size  ( ar_size  ),
-        .ar_burst ( ar_burst ),
-        .ar_valid ( ar_valid ),
-        .ar_ready ( ar_ready ),
-        .r_id     ( r_id     ),
-        .r_data   ( r_data   ),
-        .r_last   ( r_last   ),
-        .r_valid  ( r_valid  ),
-        .r_ready  ( r_ready  ),
-        .aw_addr  ( aw_addr  ),
-        .aw_size  ( aw_size  ),
-        .aw_len   ( aw_len   ),
-        .aw_burst ( aw_burst ),
-        .aw_valid ( aw_valid ),
-        .aw_ready ( aw_ready ),
-        .w_data   ( w_data   ),
-        .w_valid  ( w_valid  ),
-        .w_ready  ( w_ready  ),
-        .w_last   ( w_last   ),
-        .w_strb   ( w_strb   ),
-        .b_valid  ( b_valid  ),
-        .b_ready  ( b_ready  ),
+        .ar_id    ( arid    ),
+        .ar_addr  ( araddr  ),
+        .ar_len   ( arlen   ),
+        .ar_size  ( arsize  ),
+        .ar_burst ( arburst ),
+        .ar_valid ( arvalid ),
+        .ar_ready ( arready ),
+        .r_id     ( rid     ),
+        .r_data   ( rdata   ),
+        .r_last   ( rlast   ),
+        .r_valid  ( rvalid  ),
+        .r_ready  ( rready  ),
+        .aw_addr  ( awaddr  ),
+        .aw_size  ( awsize  ),
+        .aw_len   ( awlen   ),
+        .aw_burst ( awburst ),
+        .aw_valid ( awvalid ),
+        .aw_ready ( awready ),
+        .w_data   ( wdata   ),
+        .w_valid  ( wvalid  ),
+        .w_ready  ( wready  ),
+        .w_last   ( wlast   ),
+        .w_strb   ( wstrb   ),
+        .b_valid  ( bvalid  ),
+        .b_ready  ( bready  ),
         .i_raddr  ( i_raddr  ),
         .i_rdata  ( i_rdata  ),
         .i_rvalid ( i_rvalid ),
