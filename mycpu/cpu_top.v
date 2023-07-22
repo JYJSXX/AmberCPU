@@ -118,7 +118,8 @@ module core_top(
     wire  [31:0]cookie_in=114514;
 
     
-    wire  [31:0] pc_next;//rready control logic TODO
+    wire  [31:0] pc_next;//rready control logic : use a tmp to store inst temporarily
+    wire  [31:0] pc_in_stall;
     IF0 u_IF0(
         .clk                 ( clk                 ),
         .rstn                ( aresetn                ),
@@ -137,9 +138,10 @@ module core_top(
         .pred_taken          ( pred_taken          ),
         .fetch_pc            ( fetch_pc            ),
         .rvalid              ( icache_rvalid       ),
-        .raddr               ( icache_raddr               ),
-        .cookie_in           ( 114514 ),
-        .pc_next             ( pc_next             )
+        .raddr               ( icache_raddr        ),
+        .cookie_in           ( 114514              ),
+        .pc_next             ( pc_next             ),
+        .pc_in_stall         ( pc_in_stall         )
     );
 
     //hand shake
@@ -1172,7 +1174,7 @@ module core_top(
         .tlbrentry       ( tlbrentry       ),
         .pgdl            ( pgdl            ),
         .pgdh            ( pgdh            ),
-        .cpu_interrupt    ( cpu_interrupt    ),
+        .cpu_interrupt   ( cpu_interrupt    ),
         .dmw0            ( dmw0            ),
         .dmw1            ( dmw1            ),
         .llbit           ( llbit           ),
