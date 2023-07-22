@@ -15,7 +15,9 @@ module EX2(
 
 
     output [31:0] rd0_data,
-    output [31:0] rd1_data
+    output [31:0] rd1_data,
+    output ex2_data0_valid,
+    output ex2_data1_valid
 
 
 );
@@ -32,7 +34,8 @@ Mul_Stage_2 mul_stage_2(
     .mul_compensate(mul_compensate),
     .mul_stage2_res(mul_result)
 );
-
+assign ex2_data0_valid = ex1_ex2_data_0_valid | uop0[`INS_MUL];
+assign ex2_data1_valid = ex1_ex2_data_1_valid | uop1[`INS_MUL];
 assign rd0_data = ex1_ex2_data_0_valid ? ex1_ex2_data_0 :
  uop0[`INS_MUL] &&  cond0[0] ? mul_result[63:32] : 
  uop0[`INS_MUL] &&  ~cond0[0] ? mul_result[31:0] :
