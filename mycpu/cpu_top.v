@@ -1152,6 +1152,7 @@ module core_top(
     //wire [18:0] tlbehi_vppn_in;
     //wire wen_tlbehi_vppn;
     wire llbit_set;
+    wire llbit_clear;
     wire tlbsrch_hit; //TLBSRCH是否命中
     wire [4:0] tlb_index_in; //TLB命中的索引   最高位是hit，后面不要了
 
@@ -1261,17 +1262,17 @@ module core_top(
         .p_addr            ( p_addr            ),//todo wait for tlb
         .rdata             ( icache_rdata      ),
         .pc_out            ( if1_pc            ),
-        .idle              ( i_idle       ),
+        .idle              ( i_idle            ),
         .i_rvalid          ( i_rvalid          ),   //TODO:
-        .i_rready          ( i_rready          ),
-        .i_raddr           ( i_raddr           ),
-        .i_rdata           ( i_rdata           ),
-        .i_rlen            ( i_rlen            ),
+        .i_rready          ( i_rready          ),   //TODO:
+        .i_raddr           ( i_raddr           ),   //TODO:
+        .i_rdata           ( i_rdata           ),   //TODO:
+        .i_rlen            ( i_rlen            ),   //TODO:    
         .tlb_exception     ( tlb_exception     ),
         .badv              ( icache_badv              ),
         .exception         ( icache_exception  ),
         .flush             ( flush_to_icache   ),
-        .uncache           ( uncache           ),
+        .uncache           ( uncache           ),   //TODO:
         .cookie_in         ( cookie_in         ),
         .cookie_out        ( cookie_out        ),
         .cacop_en          ( cacop_i_en        ),
@@ -1290,35 +1291,36 @@ module core_top(
         .clk                               ( clk                               ),
         .rstn                              ( aresetn                           ),
         .addr                              ( cacop_d_en ? cacop_vaddr : addr_dcache ),
-        .p_addr                            ( p_addr                            ),
+        .p_addr                            ( p_addr                            ),   //TODO:
         .rvalid                            ( cpu_d_rvalid                      ),
         .rready                            ( rready_dcache                     ),
         .rdata                             ( r_data_dcache                     ),
         .wvalid                            ( cpu_d_wvalid                      ),
         .wready                            ( wready_dcache                     ),
         .wdata                             ( w_data_dcache                     ),
-        .wstrb                             ( write_type                        ),
+        .wstrb                             ( write_type                        ),   
         .op                                ( op_dcache                         ),
-        .uncache                           ( uncache                           ),
+        .uncache                           ( uncache                           ),   //TODO:
         .signed_ext                        ( reg_ex_uop0[`UOP_SIGN]            ),
         .idle                              ( d_idle                            ),
         .flush                             ( flush_to_dcache                   ),
-        .d_rvalid                          ( d_rvalid                          ),
-        .d_rready                          ( d_rready                          ),
-        .d_raddr                           ( d_raddr                           ),
-        .d_rdata                           ( d_rdata                           ),
-        .d_rlen                            ( d_rlen                            ),
-        .d_wvalid                          ( d_wvalid                          ),
-        .d_wready                          ( d_wready                          ),
-        .d_waddr                           ( d_waddr                           ),
-        .d_wdata                           ( d_wdata                           ),
-        .d_wstrb                           ( d_wstrb                           ),
-        .d_wlen                            ( d_wlen                            ),
-        .exception                         ( exception                         ),
-        .exception_flag                    ( exception_flag                    ),
-        .forward_exception                 ( forward_exception                 ),
-        .tlb_exception                     ( tlb_exception                     ),
-        .badv                              ( badv                              ),
+        .d_rvalid                          ( d_rvalid                          ),   //TODO:
+        .d_rready                          ( d_rready                          ),   //TODO:
+        .d_raddr                           ( d_raddr                           ),   //TODO:
+        .d_rdata                           ( d_rdata                           ),   //TODO:
+        .d_rlen                            ( d_rlen                            ),   //TODO:
+        .d_wvalid                          ( d_wvalid                          ),   //TODO:
+        .d_wready                          ( d_wready                          ),   //TODO:
+        .d_waddr                           ( d_waddr                           ),   //TODO:
+        .d_wdata                           ( d_wdata                           ),   //TODO:
+        .d_wstrb                           ( d_wstrb                           ),   //TODO:
+        .d_wlen                            ( d_wlen                            ),   //TODO:
+        .exception                         ( exception                         ),   //TODO:
+        .exception_flag                    ( exception_flag                    ),   //TODO:   
+        .d_exception_flag                  ( d_exception_flag                  ),   //TODO:
+        .forward_exception                 ( forward_exception                 ),   //TODO:
+        .tlb_exception                     ( tlb_exception                     ),   //TODO:
+        .badv                              ( badv                              ),   //TODO:
         .cacop_en                          ( cacop_d_en                        ),
         .cacop_code                        ( cacop_ins_type                    ),
         .cacop_ready                       ( cacop_d_ready                     ),
@@ -1349,7 +1351,7 @@ module core_top(
         .CSR_TLBIDX     ( TLBIDX     ),
         .stall_i        ( stall_i        ),
         .stall_d        ( stall_d        ),
-        .VA_I           ( VA_I           ),
+        .VA_I           ( fetch_pc       ),
         .VA_D           ( VA_D           ),
         .PA_I           ( PA_I           ),
         .PA_D           ( PA_D           ),
