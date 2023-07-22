@@ -1270,12 +1270,12 @@ module core_top(
         .i_raddr           ( i_raddr           ), 
         .i_rdata           ( i_rdata           ), 
         .i_rlen            ( i_rlen            ),    
-        .tlb_exception     ( tlb_exception_code_i ),    //TODO:rename
+        .tlb_exception     ( tlb_exception_code_i ),    //TODO:rename OK
         .badv              ( icache_badv       ),
         .exception         ( icache_exception  ),
         .i_exception_flag  ( icache_excp_flag  ),   
         .flush             ( flush_to_icache   ),
-        .uncache           ( !is_cached_I      ),   //TODO:
+        .uncache           ( !is_cached_I      ),   //TODO:ok
         .cookie_in         ( cookie_in         ),
         .cookie_out        ( cookie_out        ),
         .cacop_en          ( cacop_i_en        ),
@@ -1303,7 +1303,7 @@ module core_top(
         .wdata                             ( w_data_dcache                     ),
         .wstrb                             ( write_type                        ),   
         .op                                ( op_dcache                         ),
-        .uncache                           ( !is_cached_D                      ),   //TODO:
+        .uncache                           ( !is_cached_D                      ),   //TODO:ok
         .signed_ext                        ( reg_ex_uop0[`UOP_SIGN]            ),
         .idle                              ( d_idle                            ),
         .flush                             ( flush_to_dcache                   ),
@@ -1319,10 +1319,10 @@ module core_top(
         .d_wstrb                           ( d_wstrb                           ),
         .d_wlen                            ( d_wlen                            ),
         .exception                         ( dcache_exception                  ),  
-        .exception_flag                    ( exception_flag                    ),   //TODO:   
-        .d_exception_flag                  ( d_exception_flag                  ),   //TODO:
-        .forward_exception                 ( forward_exception                 ),   //TODO:
-        .tlb_exception                     ( tlb_exception_code_d              ),   //TODO:
+        .exception_flag                    ( reg_ex_excp_flag                    ),   //TODO:  ok 
+        .d_exception_flag                  ( d_exception_flag                  ),   //TODO:ok
+        .forward_exception                 ( reg_ex_exception                 ),   //TODO:ok
+        .tlb_exception                     ( tlb_exception_code_d              ),   //TODO:ok
         .badv                              ( icache_badv                       ),  
         .cacop_en                          ( cacop_d_en                        ),
         .cacop_code                        ( cacop_ins_type                    ),

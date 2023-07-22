@@ -56,7 +56,7 @@ module FIFO(
     wire stat_empty,stat_full;
     wire [63:0] inst_din,inst_dout;
     wire [95:0] pcbdv_din,pcbdv_dout;
-    wire [42:0] stat_din,stat_dout;
+    wire [44:0] stat_din,stat_dout;
     //[31:0]cookie  [38:32]exception [40:39]excp_flag [42:41]ibar_flag
     //[43:43]cacop_ready  [44:44]cacop_complete
 
