@@ -355,6 +355,7 @@ module core_top(
         .fifo_readygo               ( fifo_readygo               ),
         .fifo_allowin               ( fifo_allowin               ),
         .priv_flag                  ( priv_flag                  ),
+        .branch_flag                ( branch_flag                ),
         .if1_fifo_inst0             ( if1_fifo_inst0             ),
         .if1_fifo_inst1             ( if1_fifo_inst1             ),
         .if1_fifo_pc                ( if1_fifo_pc                ),
