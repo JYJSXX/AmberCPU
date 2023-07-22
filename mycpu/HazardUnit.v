@@ -14,8 +14,7 @@ module HazardUnit (
     output flush_to_fifo_id,
     output flush_to_fifo,
     output flush_to_if1_fifo,
-    output flush_to_if1,
-    output flush_to_if0,
+    output flush_to_if0_if1,
     output flush_to_tlb,
     output flush_to_icache,
     output flush_to_dcache,
@@ -60,7 +59,7 @@ module HazardUnit (
                                         flush_from_fifo?1:
                                         flush_from_if1? 1:0;
     
-    assign  flush_to_if0            =   flush_from_wb?  1:
+    assign  flush_to_if0_if1        =   flush_from_wb?  1:
                                         flush_from_ex2? 1:
                                         flush_from_ex1? 1:
                                         flush_from_reg? 1:
@@ -69,8 +68,8 @@ module HazardUnit (
                                         flush_from_if1? 1:0;
 
     assign  flush_to_tlb            =   flush_to_reg_ex1;
-    assign  flush_to_icache         =   flush_to_if0;
+    assign  flush_to_icache         =   flush_to_if0_if1;
     assign  flush_to_dcache         =   flush_to_reg_ex1;
-    assign  flush_to_btb            =   flush_to_if0;
+    assign  flush_to_btb            =   flush_to_if0_if1;
 
 endmodule
