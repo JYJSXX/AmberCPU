@@ -804,7 +804,7 @@ module core_top(
         .clk                  ( clk                  ),
         .aclk                 ( aclk                 ),
         .aresetn              ( aresetn              ),
-        .flush                ( flush_to_ex1                ),
+        .flush                ( flush_from_ex1              ),
         .pc0                  ( reg_ex_pc0                  ),
         .pc1                  ( reg_ex_pc1                  ),
         .inst0                ( reg_ex_inst0                ),
