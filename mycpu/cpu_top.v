@@ -115,7 +115,7 @@ module core_top(
     //for tlb
     wire         tlb_rvalid;
     wire [31:0]  tlb_raddr;
-    wire [31:0]  cookie_in=114514;
+    wire [31:0]  cookie_in;
 
     
     wire [31:0]  pc_next;//rready control logic : use a tmp to store inst temporarily
@@ -308,6 +308,7 @@ module core_top(
     
     wire    [1 :0]      inst_btype;
     wire    [1 :0]      branch_flag;
+    wire                inst_bpos;
 
 
 
@@ -320,7 +321,8 @@ module core_top(
         .csr_flag       ( csr_flag       ),
         .tlb_flag       ( tlb_flag       ),
         .branch_flag    ( branch_flag    ),
-        .inst_btype     ( inst_btype     )
+        .inst_btype     ( inst_btype     ),
+        .inst_bpos      ( inst_bpos      )
     );
 
 
@@ -810,6 +812,8 @@ module core_top(
 
     wire [31:0] alu_result0, alu_result1;
     wire        alu_result0_valid, alu_result1_valid;
+    //wire csr_flag_from_ex;
+    wire tlb_flag_from_ex;
 
     EX1 u_EX1(
         .clk                  ( clk                  ),
@@ -845,6 +849,8 @@ module core_top(
         .alu_result0_valid    ( alu_result0_valid    ),
         .alu_result1_valid    ( alu_result1_valid    ),
         .ibar                 ( ibar                 ),
+        .csr_flag_from_ex     ( csr_flag_from_ex     ),
+        .tlb_flag_from_ex     ( tlb_flag_from_ex     ),
         .ex1_ex2_rd0          ( ex1_ex2_rd0          ),
         .ex1_ex2_rd1          ( ex1_ex2_rd1          ),
         .ex1_ex2_data_0       ( ex1_ex2_data_0       ),
@@ -1056,8 +1062,8 @@ module core_top(
 
 
     //exception
-    wire [31:0] csr_estat; //从csr
-    wire [31:0] csr_crmd;
+    //wire [31:0] csr_estat; //从csr
+    //wire [31:0] csr_crmd;
     
     wire [6:0] ex2_wb_exception; 
     wire ex2_wb_excp_flag; 
@@ -1103,8 +1109,8 @@ module core_top(
         .div_ready           ( div_ready           ),
         .dcache_data         ( r_data_dcache         ),
         .dcache_ready        ( rready_dcache        ),
-        .csr_data_in         ( csr_rdata           ),
-        .csr_ready           ( csr_ready           ),
+        .csr_data_in         ( csr_rd_data          ),
+        .csr_ready           ( privilege_ready           ),
         .debug0_wb_pc        ( debug0_wb_pc        ),
         .debug0_wb_rf_wen    ( debug0_wb_rf_wen    ),
         .debug0_wb_rf_wnum   ( debug0_wb_rf_wnum   ),
@@ -1115,8 +1121,8 @@ module core_top(
         .debug1_wb_rf_wnum   ( debug1_wb_rf_wnum   ),
         .debug1_wb_rf_wdata  ( debug1_wb_rf_wdata  ),
         .debug1_wb_inst      ( debug1_wb_inst      ),
-        .csr_estat           ( csr_estat           ),
-        .csr_crmd            ( csr_crmd            ),
+        //.csr_estat           ( csr_estat           ),
+        //.csr_crmd            ( csr_crmd            ),
         .ecode_in            ( ex1_ex2_exception            ),
         .exception_flag_in   ( ex1_ex2_excp_flag   ),
         .badv_in             ( ex1_ex2_badv             ),
