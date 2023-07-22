@@ -135,7 +135,7 @@ module core_top(
         .fetch_pc            ( fetch_pc            ),
         .rvalid              ( icache_rvalid       ),
         .raddr               ( icache_raddr               ),
-        .regcookie_in        ( 114514 ),
+        .cookie_in           ( 114514 ),
         .pc_next             ( pc_next             )
     );
 
@@ -151,18 +151,19 @@ module core_top(
     wire [31:0]        if0_if1_pc_next;
 
     IF0_IF1 u_IF0_IF1(
-        .clk         ( clk         ),
-        .rstn        ( aresetn        ),
-        .if0_readygo ( if0_readygo ),
-        .if0_allowin ( if0_allowin ),
-        .if1_readygo ( if1_readygo ),
-        .if1_allowin ( if1_allowin ),
-        .flush       ( flush_to_if0_if1      ),
-        .flush_cause ( flush_cause ),
-        .fetch_pc    ( fetch_pc    ),
-        .pc_next     ( pc_next     ),
-        .if0_if1_pc  ( if0_if1_pc  ),
-        .if0_if1_pc_next  ( if0_if1_pc_next  )
+        .clk             ( clk              ),
+        .rstn            ( aresetn          ),
+        .if0_readygo     ( if0_readygo      ),
+        .if0_allowin     ( if0_allowin      ),
+        .if1_readygo     ( if1_readygo      ),
+        .if1_allowin     ( if1_allowin      ),
+        .flush           ( flush_to_if0_if1 ),
+        .flush_cause     ( flush_cause      ),
+        .rready          ( icache_rready    ),
+        .fetch_pc        ( fetch_pc         ),
+        .pc_next         ( pc_next          ),
+        .if0_if1_pc      ( if0_if1_pc       ),
+        .if0_if1_pc_next ( if0_if1_pc_next  )
     );
 
     
@@ -1234,21 +1235,21 @@ module core_top(
         .COOKIE_WIDTH      ( 32 )
     )u_icache(
         .clk               ( clk               ),
-        .rstn              ( aresetn              ),
-        .rvalid            ( icache_rvalid            ),
-        .rready            ( icache_rready            ),
-        .raddr             ( icache_raddr             ),
-        .p_addr            ( p_addr            ),
-        .rdata             ( rdata             ),
-        .pc_out            ( pc_out            ),
-        .idle              ( idle              ),
+        .rstn              ( aresetn           ),
+        .rvalid            ( icache_rvalid     ),
+        .rready            ( icache_rready     ),
+        .raddr             ( icache_raddr      ),
+        .p_addr            ( p_addr            ),//todo wait for tlb
+        .rdata             ( icache_rdata      ),
+        .pc_out            ( if1_pc            ),
+        .idle              ( icache_idle              ),
         .i_rvalid          ( i_rvalid          ),
         .i_rready          ( i_rready          ),
         .i_raddr           ( i_raddr           ),
         .i_rdata           ( i_rdata           ),
         .i_rlen            ( i_rlen            ),
         .tlb_exception     ( tlb_exception     ),
-        .badv              ( badv              ),
+        .badv              ( icache_badv              ),
         .exception         ( icache_exception  ),
         .flush             ( flush_to_icache   ),
         .uncache           ( uncache           ),
@@ -1269,7 +1270,7 @@ module core_top(
     )u_dcache(
         .clk                               ( clk                               ),
         .rstn                              ( rstn                              ),
-        ./* from pipeline */   addr        ( cacop_d_en ? cacop_vaddr : addr_dcache ),
+        .addr                              ( cacop_d_en ? cacop_vaddr : addr_dcache ),
         .p_addr                            ( p_addr                            ),
         .rvalid                            ( cpu_d_rvalid                      ),
         .rready                            ( rready_dcache                     ),
@@ -1281,7 +1282,7 @@ module core_top(
         .op                                ( op_dcache                         ),
         .uncache                           ( uncache                           ),
         .signed_ext                        ( signed_ext                        ),
-        .idle                              ( idle                              ),
+        .idle                              ( dcache_idle                              ),
         .flush                             ( flush_to_dcache                   ),
         .d_rvalid                          ( d_rvalid                          ),
         .d_rready                          ( d_rready                          ),
