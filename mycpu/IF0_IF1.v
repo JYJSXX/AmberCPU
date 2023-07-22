@@ -25,11 +25,11 @@ module IF0_IF1 (
     assign if0_allowin= if1_allowin;
     assign if1_readygo= rready;
 
-    always @(posedge clk) begin
-        if((~rstn)||flush||(!if0_readygo&&if1_allowin&&if1_readygo))begin
+    always @(posedge clk or negedge rstn) begin
+        if((~rstn)||flush||(!if0_readygo&&if1_allowin&&rready))begin
             //clear stage-stage reg
-            if0_if1_pc<=`PC_RESET;
-            if0_if1_pc_next<=`PC_RESET+8;
+            if0_if1_pc<=32'b0;
+            if0_if1_pc_next<=32'b0;
             if0_if1_tlb_rvalid<=0;
         end else begin
             if (if0_readygo&&if1_allowin) begin
@@ -39,6 +39,9 @@ module IF0_IF1 (
                 if0_if1_tlb_rvalid<=tlb_rvalid;
             end else if (!if1_allowin) begin
                 //hold stage-stage reg
+                if0_if1_pc<=if0_if1_pc;
+                if0_if1_pc_next<=if0_if1_pc_next;
+                if0_if1_tlb_rvalid<=if0_if1_tlb_rvalid;
             end
         end
     end

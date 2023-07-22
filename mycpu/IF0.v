@@ -4,7 +4,7 @@ module IF0 (
     input rstn,
 
     //for hand shake with pipeline
-    input if0_readygo,
+    output if0_readygo,
     input if0_allowin,  
     input flush,
 
@@ -33,7 +33,7 @@ module IF0 (
     output pc_in_stall
     
 );
-    reg  [31:0] pc=`PC_RESET;//指令集手册P68
+    reg  [31:0] pc;//指令集手册P68
     // wire [31:0] pc_next;
     
     assign pc_next      =   pred_taken?pred_pc:fetch_pc+8;
@@ -41,6 +41,7 @@ module IF0 (
     assign rvalid       =   if0_allowin;
     assign raddr        =   pc;
     assign pc_in_stall  =   !if0_allowin;
+    assign if0_readygo  =   if0_allowin;
 
     always @(posedge clk) begin
         if (~rstn) begin
