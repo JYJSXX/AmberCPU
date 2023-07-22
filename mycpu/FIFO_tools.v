@@ -16,12 +16,16 @@ module fifo_generator
   reg [DEPTH-1:0] readPtr;
   reg [DEPTH-1:0] writePtr;
   reg [DEPTH-1:0] count;
+  integer i;
 
   always @(posedge clk or negedge rstn) begin
     if (~rstn) begin
       readPtr <= 0;
       writePtr <= 0;
       count <= 0;
+      for (i = 0; i < DEPTH; i = i + 1) begin
+        mem[i] <= 0;
+      end
       // readDataReg <= 0;
     end else begin
       // 读操作
