@@ -810,6 +810,8 @@ module core_top(
 
     wire [31:0] alu_result0, alu_result1;
     wire        alu_result0_valid, alu_result1_valid;
+    //wire csr_flag_from_ex;
+    wire tlb_flag_from_ex;
 
     EX1 u_EX1(
         .clk                  ( clk                  ),
@@ -845,6 +847,8 @@ module core_top(
         .alu_result0_valid    ( alu_result0_valid    ),
         .alu_result1_valid    ( alu_result1_valid    ),
         .ibar                 ( ibar                 ),
+        .csr_flag_from_ex     ( csr_flag_from_ex     ),
+        .tlb_flag_from_ex     ( tlb_flag_from_ex     ),
         .ex1_ex2_rd0          ( ex1_ex2_rd0          ),
         .ex1_ex2_rd1          ( ex1_ex2_rd1          ),
         .ex1_ex2_data_0       ( ex1_ex2_data_0       ),
@@ -1103,8 +1107,8 @@ module core_top(
         .div_ready           ( div_ready           ),
         .dcache_data         ( r_data_dcache         ),
         .dcache_ready        ( rready_dcache        ),
-        .csr_data_in         ( csr_rdata           ),
-        .csr_ready           ( csr_ready           ),
+        .csr_data_in         ( csr_rd_data          ),
+        .csr_ready           ( privilege_ready           ),
         .debug0_wb_pc        ( debug0_wb_pc        ),
         .debug0_wb_rf_wen    ( debug0_wb_rf_wen    ),
         .debug0_wb_rf_wnum   ( debug0_wb_rf_wnum   ),

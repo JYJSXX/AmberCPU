@@ -137,9 +137,9 @@ assign cond1 = uop1[`UOP_COND];
             end
             else if(uop0[`INS_CSR]) begin
                 ex2_wb_data_0 <= csr_data_in;
-                ex2_wb_data_0_valid <= csr_ready;
+                ex2_wb_data_0_valid <= csr_ready & uop0[`INS_CSR];
                 ex2_wb_rd0 <= ex_rd0;
-                ex2_wb_we0 <= csr_ready;
+                ex2_wb_we0 <= csr_ready & uop0[`INS_CSR];
             end
             else if(uop0[`INS_DIV]) begin
                 if(cond0[0]) begin
@@ -206,7 +206,7 @@ assign cond1 = uop1[`UOP_COND];
     end
 always@(*) begin
     ex2_allowin=0;
-    if((ex2_wb_data_0_valid | ~(~dcache_ready && tlb_d_valid_reg)  | div_ready | csr_ready) && ex2_wb_data_1_valid) begin
+    if((ex2_wb_data_0_valid | ~(~dcache_ready && tlb_d_valid_reg)  | div_ready | (csr_ready & uop0[`INS_CSR])) && ex2_wb_data_1_valid) begin
         ex2_allowin=1;
     end
 end
