@@ -132,6 +132,7 @@ module core_top(
     
     wire [31:0]  pc_next;//rready control logic : use a tmp to store inst temporarily
     wire         pc_in_stall;
+    wire ex2_wb_excp_flag; 
     IF0 u_IF0(
         .clk                 ( clk                 ),
         .rstn                ( aresetn             ),
@@ -142,7 +143,7 @@ module core_top(
         .pc_from_ID          ( pc_from_ID          ),
         .set_pc_from_EX      ( fact_taken          ),
         .pc_from_EX          ( fact_tpc            ),
-        .set_pc_from_WB      ( set_pc_from_WB      ),
+        .set_pc_from_WB      ( ex2_wb_excp_flag    ),
         .pc_from_WB          ( pc_from_WB          ),
         .set_pc_from_PRIV    ( set_pc_from_PRIV    ),
         .pc_from_PRIV        ( pc_from_PRIV        ),
@@ -1068,7 +1069,6 @@ module core_top(
     //wire [31:0] csr_crmd;
     
     wire [6:0] ex2_wb_exception; 
-    wire ex2_wb_excp_flag; 
     wire [31:0] ex2_wb_badv;      
     wire  wen_badv;
     wire tlb_exception; //决定是否回到直接地址翻译
@@ -1078,6 +1078,9 @@ module core_top(
     wire wen_vppn;
     wire cpu_interrupt;
     wire dcache_valid;
+    
+    wire [31:0] eentry;
+    wire [31:0] tlbrentry;
     EX2_WB u_EX2_WB(
         .clk                 ( clk                 ),
         .aresetn             ( aresetn             ),
@@ -1102,7 +1105,7 @@ module core_top(
         .ex2_wb_data_0_valid ( ex2_wb_data_0_valid ),
         .ex2_wb_data_1_valid ( ex2_wb_data_1_valid ),
         .ex2_wb_rd0          ( ex2_wb_rd0          ),
-        .ex2_wb_rd1          ( wb_rd1          ),
+        .ex2_wb_rd1          ( ex2_wb_rd1          ),
         .ex2_wb_we0          ( we_0          ),
         .ex2_wb_we1          ( we_1          ),
         .quotient            ( quotient            ),
@@ -1138,7 +1141,10 @@ module core_top(
         .era_out             ( era_out             ),
         .wen_era             ( wen_era             ),
         .vppn_out            ( vppn_out            ),
-        .wen_vppn            ( wen_vppn            )
+        .wen_vppn            ( wen_vppn            ),
+        .pc_from_WB          ( pc_from_WB          ),
+        .eentry              ( eentry              ),
+        .tlbrentry           ( tlbrentry           )
     );
 
 
@@ -1147,8 +1153,6 @@ module core_top(
     wire [31:0] crmd; //当前模式信息，包含privilege
     wire [31:0] estat;    //例外状态 idle_interrupt; 
     wire [31:0] csr_era;
-    wire [31:0] eentry;
-    wire [31:0] tlbrentry;
     wire [31:0] pgdl,pgdh;
     
     wire [31:0] dmw0;
@@ -1235,7 +1239,7 @@ module core_top(
         .tlbrd_cpr       ( tlbrd_cpr       ),
         .tlbrd_trans_1   ( tlbrd_trans_1   ),
         .tlbrd_trans_2   ( tlbrd_trans_2   ),
-        .hardware_interrupt  ( intrpt  ),
+        .hardware_interrupt  ( intrpt      ),
         .tid             ( tid             )
     );
 
