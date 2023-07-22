@@ -1231,22 +1231,22 @@ module core_top(
 
     
     //sram
-    wire     [31:0]      i_raddr,        //指令cache读地址
-    wire     [511:0]     i_rdata,        //指令cache读数据
-    wire                 i_rvalid,       //指令cache读有效
-    wire                 i_rready,       //指令cache读准备好
-    wire     [7:0]       i_rlen,         //指令cache读长度
-    wire     [31:0]      d_raddr,        //数据cache读地址
-    wire     [511:0]     d_rdata,        //数据cache读数据
-    wire                 d_rvalid,       //数据cache读有效
-    wire                 d_rready,       //数据cache读准备好
-    wire     [7:0]       d_rlen,         //数据cache读长度
-    wire     [31:0]      d_waddr,        //数据cache写地址
-    wire     [511:0]     d_wdata,        //数据cache写数据
-    wire                 d_wvalid,       //数据cache写有效
-    wire                 d_wready,       //数据cache写准备好
-    wire     [7:0]       d_wlen,         //数据cache写长度
-    wire     [3:0]       d_wstrb         //数据cache写使能
+    wire     [31:0]      i_raddr;        //指令cache读地址
+    wire     [511:0]     i_rdata;        //指令cache读数据
+    wire                 i_rvalid;       //指令cache读有效
+    wire                 i_rready;       //指令cache读准备好
+    wire     [7:0]       i_rlen;         //指令cache读长度
+    wire     [31:0]      d_raddr;        //数据cache读地址
+    wire     [511:0]     d_rdata;        //数据cache读数据
+    wire                 d_rvalid;       //数据cache读有效
+    wire                 d_rready;       //数据cache读准备好
+    wire     [7:0]       d_rlen;         //数据cache读长度
+    wire     [31:0]      d_waddr;        //数据cache写地址
+    wire     [511:0]     d_wdata;        //数据cache写数据
+    wire                 d_wvalid;       //数据cache写有效
+    wire                 d_wready;       //数据cache写准备好
+    wire     [7:0]       d_wlen;         //数据cache写长度
+    wire     [3:0]       d_wstrb;        //数据cache写使能
 
     
     icache#(
