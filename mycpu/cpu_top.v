@@ -109,20 +109,20 @@ module core_top(
     wire [31:0]pc_from_PRIV;
 
     //for BTB
-    wire [31:0]pred_pc;
-    wire pred_taken;
-    wire  [31:0] fetch_pc;
+    wire [31:0]  pred_pc;
+    wire         pred_taken;
+    wire [31:0]  fetch_pc;
     //for tlb
-    wire  tlb_rvalid;
-    wire  [31:0] tlb_raddr;
-    wire  [31:0]cookie_in=114514;
+    wire         tlb_rvalid;
+    wire [31:0]  tlb_raddr;
+    wire [31:0]  cookie_in=114514;
 
     
-    wire  [31:0] pc_next;//rready control logic : use a tmp to store inst temporarily
-    wire  [31:0] pc_in_stall;
+    wire [31:0]  pc_next;//rready control logic : use a tmp to store inst temporarily
+    wire         pc_in_stall;
     IF0 u_IF0(
         .clk                 ( clk                 ),
-        .rstn                ( aresetn                ),
+        .rstn                ( aresetn             ),
         .if0_readygo         ( if0_readygo         ),
         .if0_allowin         ( if0_allowin         ),
         .flush               ( flush_to_if0        ),
@@ -137,9 +137,9 @@ module core_top(
         .pred_pc             ( pred_pc             ),
         .pred_taken          ( pred_taken          ),
         .fetch_pc            ( fetch_pc            ),
-        .rvalid              ( tlb_rvalid       ),
-        .raddr               ( tlb_raddr        ),
-        .cookie_in           ( 32'd114514          ),
+        .rvalid              ( tlb_rvalid          ),
+        .raddr               ( tlb_raddr           ),
+        .cookie_in           ( cookie_in           ),
         .pc_next             ( pc_next             ),
         .pc_in_stall         ( pc_in_stall         )
     );
@@ -186,6 +186,9 @@ module core_top(
     wire [31:0] cookie_out;
     wire cacop_ready;
     wire cacop_complete;
+
+    wire [63:0]       icache_rdata;   //指令cache读数据
+
 
     wire if1_rready;
     wire [31:0]if1_pc;
@@ -351,6 +354,7 @@ module core_top(
     FIFO u_FIFO(
         .clk                        ( clk                        ),
         .rstn                       ( aresetn                    ),
+        .branch_flag                ( branch_flag                ),
         .flush                      ( flush_to_fifo              ),
         .fifo_readygo               ( fifo_readygo               ),
         .fifo_allowin               ( fifo_allowin               ),
@@ -456,8 +460,8 @@ module core_top(
         .aresetn          ( aresetn          ),
         .inst0            ( fifo_id_inst0            ),
         .inst1            ( fifo_id_inst1            ),
-        .pc0              ( fifo_id_pc              ),
-        .pc1              ( fifo_id_pcAdd              ),
+        // .pc0              ( fifo_id_pc              ),
+        // .pc1              ( fifo_id_pcAdd              ),
         .is_ALU_0         ( id_is_ALU_0         ),
         .is_ALU_1         ( id_is_ALU_1         ),
         .is_syscall_0     ( id_is_syscall_0     ),
@@ -492,7 +496,7 @@ module core_top(
     wire [31:0] iq_inst0;
     wire [31:0] iq_inst1;
     wire [31:0] iq_badv;
-    wire [1 :0] iq_excp_flag;
+    wire        iq_excp_flag;
     wire [6:0]  iq_exception;
     wire        iq_branch_flag;
     wire iq_is_ALU_0 ;
@@ -804,6 +808,9 @@ module core_top(
     wire [31:0] ex1_badv;
     wire ex1_excp_flag ;
     wire [6:0] ex1_exception;
+
+    wire [31:0] alu_result0, alu_result1;
+    wire        alu_result0_valid, alu_result1_valid;
 
     EX1 u_EX1(
         .clk                  ( clk                  ),
@@ -1169,8 +1176,8 @@ module core_top(
         .clk             ( clk             ),
         .aclk            ( aclk            ),
         .aresetn         ( aresetn         ),
-        .software_en     ( csr_wen     ),
-        .addr            ( csr_addr            ),
+        .software_en     ( csr_wen        ),
+        .addr            ( csr_addr[13:0]   ),
         .rdata           ( csr_rdata           ),
         .wen             ( csr_wen             ),
         .wdata           ( csr_wdata           ),
@@ -1207,6 +1214,7 @@ module core_top(
         .badv_in         ( ex2_wb_badv         ),
         .wen_badv        ( wen_badv        ),
         .llbit_set       ( llbit_set       ),
+        .llbit_clear     ( llbit_clear     ),
         .tlbsrch_ready   ( tlbsrch_ready   ),
         .tlbsrch_hit     ( tlbsrch_hit     ),
         .tlb_index_in    ( tlb_index_in    ),
@@ -1251,6 +1259,7 @@ module core_top(
     wire                 d_wready;       //数据cache写准备好
     wire     [7:0]       d_wlen;         //数据cache写长度
     wire     [3:0]       d_wstrb;        //数据cache写使能
+
 
     // cache和tlb相关信号
     wire [31:0] PA_I, PA_D; //物理地址
@@ -1339,7 +1348,8 @@ module core_top(
         .is_atom                           ( is_atom_dcache                    ),
         .llbit_set                         ( llbit_set                         ),
         .llbit                             ( llbit                             ),
-        .llbit_clear                       ( llbit_clear                       )
+        .llbit_clear                       ( llbit_clear                       ),
+        .ibar                              ( ibar                              )
     );
 
 
@@ -1353,7 +1363,7 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
     TLB u_TLB(
         .clk            ( clk            ),
         .rstn           ( aresetn           ),
-        .CSR_ASID       ( ASID       ),
+        .CSR_ASID       ( ASID[9:0]   ),
         .CSR_VPPN       ( TLBEHI       ),
         .CSR_PG         ( PG         ),
         .CSR_CRMD       ( crmd       ),
@@ -1380,30 +1390,30 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .VA_TAG_OFFSET_D_OUT(dcache_addr[11:0]),
         .PA_TAG_OFFSET_I_OUT(PA_I[11:0]),
         .PA_TAG_OFFSET_D_OUT(PA_D[11:0]),
-        .SOL_D_OUT      ( SOL_D_OUT      ),
-        .TLBSRCH_valid  ( tlbsrch_valid  ),
-        .TLBSRCH_ready  ( tlbsrch_ready  ),
-        .TLBSRCH_hit    ( tlbsrch_hit    ),
-        .TLBSRCH_INDEX  ( tlbsrch_index_in  ),
-        .TLBRD_INDEX    ( TLBIDX[4:0]         ),
-        .TLBRD_valid    ( tlbrd_valid    ),
-        .TLBRD_ready    ( tlbrd_ready    ),
-        .TLBRD_hit      ( tlbrd_hit      ),
+        .SOL_D_OUT      ( SOL_D_OUT        ),
+        .TLBSRCH_valid  ( tlbsrch_valid    ),
+        .TLBSRCH_ready  ( tlbsrch_ready    ),
+        .TLBSRCH_hit    ( tlbsrch_hit      ),
+        .TLBSRCH_INDEX  ( tlb_index_in     ),
+        .TLBRD_INDEX    ( TLBIDX[4:0]      ),
+        .TLBRD_valid    ( tlbrd_valid      ),
+        .TLBRD_ready    ( tlbrd_ready      ),
+        .TLBRD_hit      ( tlbrd_hit        ),
         .TLB_CPR        ( tlbrd_cpr        ),
         .TLB_TRANS_1    ( tlbrd_trans_1    ),
         .TLB_TRANS_2    ( tlbrd_trans_2    ),
-        .TLBWR_valid    ( tlbwr_valid    ),
-        .TLBWR_ready    ( tlbwr_ready    ),
+        .TLBWR_valid    ( tlbwr_valid      ),
+        .TLBWR_ready    ( tlbwr_ready      ),
         .TLB_CPR_w      ( tlb_cpr_out      ),
         .TLB_TRANS_1_w  ( tlb_trans_1_out  ),
         .TLB_TRANS_2_w  ( tlb_trans_2_out  ),
-        .TLBINVLD_valid ( invtlb_valid ),
-        .TLBINVLD_ready ( invtlb_ready ),
-        .TLBINVLD_OP    ( invtlb_op    ),
-        .TLBINVLD_ASID  ( invtlb_asid  ),
-        .TLBINVLD_VA    ( invtlb_va    ),
+        .TLBINVLD_valid ( invtlb_valid     ),
+        .TLBINVLD_ready ( invtlb_ready     ),
+        .TLBINVLD_OP    ( invtlb_op        ),
+        .TLBINVLD_ASID  ( invtlb_asid[9:0] ),
+        .TLBINVLD_VA    ( invtlb_va        ),
         .store_or_load  ( reg_ex_cond0[2]  ),
-        .plv_1bit         (crmd[0]      ),
+        .plv_1bit         (crmd[0]         ),
         .tlb_exception_code_i(tlb_exception_code_i),
         .tlb_exception_code_d(tlb_exception_code_d)
     );
@@ -1412,31 +1422,31 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
     sram_axi u_sram_axi(
         .aclk     ( aclk     ),
         .aresetn  ( aresetn  ),
-        .ar_id    ( arid    ),
-        .ar_addr  ( araddr  ),
-        .ar_len   ( arlen   ),
-        .ar_size  ( arsize  ),
-        .ar_burst ( arburst ),
-        .ar_valid ( arvalid ),
-        .ar_ready ( arready ),
-        .r_id     ( rid     ),
-        .r_data   ( rdata   ),
-        .r_last   ( rlast   ),
-        .r_valid  ( rvalid  ),
-        .r_ready  ( rready  ),
-        .aw_addr  ( awaddr  ),
-        .aw_size  ( awsize  ),
-        .aw_len   ( awlen   ),
-        .aw_burst ( awburst ),
-        .aw_valid ( awvalid ),
-        .aw_ready ( awready ),
-        .w_data   ( wdata   ),
-        .w_valid  ( wvalid  ),
-        .w_ready  ( wready  ),
-        .w_last   ( wlast   ),
-        .w_strb   ( wstrb   ),
-        .b_valid  ( bvalid  ),
-        .b_ready  ( bready  ),
+        .ar_id    ( arid     ),
+        .ar_addr  ( araddr   ),
+        .ar_len   ( arlen    ),
+        .ar_size  ( arsize   ),
+        .ar_burst ( arburst  ),
+        .ar_valid ( arvalid  ),
+        .ar_ready ( arready  ),
+        .r_id     ( rid      ),
+        .r_data   ( rdata    ),
+        .r_last   ( rlast    ),
+        .r_valid  ( rvalid   ),
+        .r_ready  ( rready   ),
+        .aw_addr  ( awaddr   ),
+        .aw_size  ( awsize   ),
+        .aw_len   ( awlen    ),
+        .aw_burst ( awburst  ),
+        .aw_valid ( awvalid  ),
+        .aw_ready ( awready  ),
+        .w_data   ( wdata    ),
+        .w_valid  ( wvalid   ),
+        .w_ready  ( wready   ),
+        .w_last   ( wlast    ),
+        .w_strb   ( wstrb    ),
+        .b_valid  ( bvalid   ),
+        .b_ready  ( bready   ),
         .i_raddr  ( i_raddr  ),
         .i_rdata  ( i_rdata  ),
         .i_rvalid ( i_rvalid ),
