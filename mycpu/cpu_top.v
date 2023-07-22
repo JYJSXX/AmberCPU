@@ -67,6 +67,9 @@ module core_top(
     wire clk;
     assign clk=aclk; //TODO:idle的时钟没写，暂时用clk代替
 
+    wire i_idle;
+    wire d_idle;
+
     wire flush_from_wb;
     wire flush_from_ex2;
     wire flush_from_ex1;
@@ -134,8 +137,8 @@ module core_top(
         .pred_taken          ( pred_taken          ),
         .fetch_pc            ( fetch_pc            ),
         .rvalid              ( icache_rvalid       ),
-        .raddr               ( icache_raddr        ),
-        .regcookie_in        ( 114514 ),
+        .raddr               ( icache_raddr               ),
+        .cookie_in           ( 114514 ),
         .pc_next             ( pc_next             )
     );
 
@@ -151,18 +154,19 @@ module core_top(
     wire [31:0]        if0_if1_pc_next;
 
     IF0_IF1 u_IF0_IF1(
-        .clk         ( clk         ),
-        .rstn        ( aresetn        ),
-        .if0_readygo ( if0_readygo ),
-        .if0_allowin ( if0_allowin ),
-        .if1_readygo ( if1_readygo ),
-        .if1_allowin ( if1_allowin ),
-        .flush       ( flush_to_if0_if1      ),
-        .flush_cause ( flush_cause ),
-        .fetch_pc    ( fetch_pc    ),
-        .pc_next     ( pc_next     ),
-        .if0_if1_pc  ( if0_if1_pc  ),
-        .if0_if1_pc_next  ( if0_if1_pc_next  )
+        .clk             ( clk              ),
+        .rstn            ( aresetn          ),
+        .if0_readygo     ( if0_readygo      ),
+        .if0_allowin     ( if0_allowin      ),
+        .if1_readygo     ( if1_readygo      ),
+        .if1_allowin     ( if1_allowin      ),
+        .flush           ( flush_to_if0_if1 ),
+        .flush_cause     ( flush_cause      ),
+        .rready          ( icache_rready    ),
+        .fetch_pc        ( fetch_pc         ),
+        .pc_next         ( pc_next          ),
+        .if0_if1_pc      ( if0_if1_pc       ),
+        .if0_if1_pc_next ( if0_if1_pc_next  )
     );
 
     
@@ -231,8 +235,8 @@ module core_top(
     wire               tlb_flag_from_tlb;
     wire  [1:0]        priv_flag;
     wire               flush_from_if1_fifo;
-    wire               icache_idle;
-    wire               dcache_idle;
+    // wire               icache_idle;
+    // wire               dcache_idle;
     wire               csr_done;
     wire               tlb_done;
 
@@ -274,8 +278,8 @@ module core_top(
         .pc_from_PRIV               ( pc_from_PRIV               ),
         .set_pc_from_PRIV           ( set_pc_from_PRIV           ),
         .flush_from_if1_fifo        ( flush_from_if1_fifo        ),
-        .icache_idle                ( icache_idle                ),
-        .dcache_idle                ( dcache_idle                ),
+        .icache_idle                ( i_idle                     ),
+        .dcache_idle                ( d_idle                     ),
         .csr_done                   ( csr_done                   ),
         .tlb_done                   ( tlb_done                   ),
         .if1_fifo_pc                ( if1_fifo_pc                ),
@@ -770,8 +774,6 @@ module core_top(
     //ERTN
     wire ertn_en;
     //idle
-    wire i_idle;
-    wire d_idle;
     wire block_cache;
     wire block_clock;
     //TLB
@@ -1033,6 +1035,7 @@ module core_top(
     //dcache
     wire [31:0] r_data_dcache;
     wire rready_dcache;
+    wire wready_dcache;
 
     //csr 三条读写csr的指令都要写
     wire [31:0] csr_data_in;
@@ -1221,9 +1224,10 @@ module core_top(
         .fact_tpc         ( fact_tpc         ),
         .fact_taken       ( fact_taken       ),
         .predict_dir_fail ( predict_dir_fail ),
-        .predict_add_fail  ( predict_add_fail  )
+        .predict_add_fail ( predict_add_fail )
     );
 
+    
     icache#(
         .INDEX_WIDTH       ( 6 ),
         .WORD_OFFSET_WIDTH ( 4 ),
@@ -1231,22 +1235,22 @@ module core_top(
     )u_icache(
         .clk               ( clk               ),
         .rstn              ( aresetn           ),
-        .rvalid            ( rvalid            ),
-        .rready            ( rready            ),
-        .raddr             ( raddr             ),
-        .p_addr            ( p_addr            ),
-        .rdata             ( rdata             ),
-        .pc_out            ( pc_out            ),
-        .idle              ( i_idle            ),
-        .i_rvalid          ( i_rvalid          ),
+        .rvalid            ( icache_rvalid     ),
+        .rready            ( icache_rready     ),
+        .raddr             ( icache_raddr      ),
+        .p_addr            ( p_addr            ),//todo wait for tlb
+        .rdata             ( icache_rdata      ),
+        .pc_out            ( if1_pc            ),
+        .idle              ( i_idle       ),
+        .i_rvalid          ( i_rvalid          ),   //TODO:
         .i_rready          ( i_rready          ),
         .i_raddr           ( i_raddr           ),
         .i_rdata           ( i_rdata           ),
         .i_rlen            ( i_rlen            ),
         .tlb_exception     ( tlb_exception     ),
-        .badv              ( badv              ),
-        .exception         ( exception         ),
-        .flush             ( flush             ),
+        .badv              ( icache_badv              ),
+        .exception         ( icache_exception  ),
+        .flush             ( flush_to_icache   ),
         .uncache           ( uncache           ),
         .cookie_in         ( cookie_in         ),
         .cookie_out        ( cookie_out        ),
@@ -1265,21 +1269,21 @@ module core_top(
     )u_dcache(
         .clk                               ( clk                               ),
         .rstn                              ( aresetn                           ),
-        ./* from pipeline */   addr        ( cacop_d_en ? cacop_vaddr : addr_dcache ),
+        .addr                              ( cacop_d_en ? cacop_vaddr : addr_dcache ),
         .p_addr                            ( p_addr                            ),
         .rvalid                            ( cpu_d_rvalid                      ),
         .rready                            ( rready_dcache                     ),
         .rdata                             ( r_data_dcache                     ),
         .wvalid                            ( cpu_d_wvalid                      ),
-        .wready                            ( wready                            ),
+        .wready                            ( wready_dcache                     ),
         .wdata                             ( w_data_dcache                     ),
         .wstrb                             ( write_type                        ),
         .op                                ( op_dcache                         ),
         .uncache                           ( uncache                           ),
         .signed_ext                        ( reg_ex_uop0[`UOP_SIGN]            ),
         .idle                              ( d_idle                            ),
-        .flush                             ( flush                             ),
-        ./* from AXI arbiter */   d_rvalid ( /* from AXI arbiter */   d_rvalid ),
+        .flush                             ( flush_to_dcache                   ),
+        .d_rvalid                          ( d_rvalid                          ),
         .d_rready                          ( d_rready                          ),
         .d_raddr                           ( d_raddr                           ),
         .d_rdata                           ( d_rdata                           ),
@@ -1354,7 +1358,7 @@ module core_top(
         .TLBINVLD_VA    ( invtlb_va    )
     );
 
-
+    
     axi2dpram u_axi2dpram(
         .aclk     ( aclk     ),
         .aresetn  ( aresetn  ),
@@ -1383,6 +1387,52 @@ module core_top(
         .r_last   ( r_last   ),
         .r_valid  ( r_valid  ),
         .r_ready  ( r_ready  )
+    );
+
+    sram_axi u_sram_axi(
+        .aclk     ( aclk     ),
+        .aresetn  ( aresetn  ),
+        .ar_id    ( ar_id    ),
+        .ar_addr  ( ar_addr  ),
+        .ar_len   ( ar_len   ),
+        .ar_size  ( ar_size  ),
+        .ar_burst ( ar_burst ),
+        .ar_valid ( ar_valid ),
+        .ar_ready ( ar_ready ),
+        .r_id     ( r_id     ),
+        .r_data   ( r_data   ),
+        .r_last   ( r_last   ),
+        .r_valid  ( r_valid  ),
+        .r_ready  ( r_ready  ),
+        .aw_addr  ( aw_addr  ),
+        .aw_size  ( aw_size  ),
+        .aw_len   ( aw_len   ),
+        .aw_burst ( aw_burst ),
+        .aw_valid ( aw_valid ),
+        .aw_ready ( aw_ready ),
+        .w_data   ( w_data   ),
+        .w_valid  ( w_valid  ),
+        .w_ready  ( w_ready  ),
+        .w_last   ( w_last   ),
+        .w_strb   ( w_strb   ),
+        .b_valid  ( b_valid  ),
+        .b_ready  ( b_ready  ),
+        .i_raddr  ( i_raddr  ),
+        .i_rdata  ( i_rdata  ),
+        .i_rvalid ( i_rvalid ),
+        .i_rready ( i_rready ),
+        .i_rlen   ( i_rlen   ),
+        .d_raddr  ( d_raddr  ),
+        .d_rdata  ( d_rdata  ),
+        .d_rvalid ( d_rvalid ),
+        .d_rready ( d_rready ),
+        .d_rlen   ( d_rlen   ),
+        .d_waddr  ( d_waddr  ),
+        .d_wdata  ( d_wdata  ),
+        .d_wvalid ( d_wvalid ),
+        .d_wready ( d_wready ),
+        .d_wlen   ( d_wlen   ),
+        .d_wstrb  ( d_wstrb  )
     );
 
 
