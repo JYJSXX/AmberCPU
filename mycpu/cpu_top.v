@@ -1224,9 +1224,10 @@ module core_top(
         .fact_tpc         ( fact_tpc         ),
         .fact_taken       ( fact_taken       ),
         .predict_dir_fail ( predict_dir_fail ),
-        .predict_add_fail  ( predict_add_fail  )
+        .predict_add_fail ( predict_add_fail )
     );
 
+    
     icache#(
         .INDEX_WIDTH       ( 6 ),
         .WORD_OFFSET_WIDTH ( 4 ),
@@ -1234,9 +1235,9 @@ module core_top(
     )u_icache(
         .clk               ( clk               ),
         .rstn              ( aresetn              ),
-        .rvalid            ( rvalid            ),
-        .rready            ( rready            ),
-        .raddr             ( raddr             ),
+        .rvalid            ( icache_rvalid            ),
+        .rready            ( icache_rready            ),
+        .raddr             ( icache_raddr             ),
         .p_addr            ( p_addr            ),
         .rdata             ( rdata             ),
         .pc_out            ( pc_out            ),
@@ -1248,8 +1249,8 @@ module core_top(
         .i_rlen            ( i_rlen            ),
         .tlb_exception     ( tlb_exception     ),
         .badv              ( badv              ),
-        .exception         ( exception         ),
-        .flush             ( flush             ),
+        .exception         ( icache_exception  ),
+        .flush             ( flush_to_icache   ),
         .uncache           ( uncache           ),
         .cookie_in         ( cookie_in         ),
         .cookie_out        ( cookie_out        ),
@@ -1281,8 +1282,8 @@ module core_top(
         .uncache                           ( uncache                           ),
         .signed_ext                        ( signed_ext                        ),
         .idle                              ( idle                              ),
-        .flush                             ( flush                             ),
-        ./* from AXI arbiter */   d_rvalid ( /* from AXI arbiter */   d_rvalid ),
+        .flush                             ( flush_to_dcache                   ),
+        .d_rvalid                          ( d_rvalid                          ),
         .d_rready                          ( d_rready                          ),
         .d_raddr                           ( d_raddr                           ),
         .d_rdata                           ( d_rdata                           ),
@@ -1357,7 +1358,7 @@ module core_top(
         .TLBINVLD_VA    ( invtlb_va    )
     );
 
-
+    
     axi2dpram u_axi2dpram(
         .aclk     ( aclk     ),
         .aresetn  ( aresetn  ),
@@ -1387,6 +1388,109 @@ module core_top(
         .r_valid  ( r_valid  ),
         .r_ready  ( r_ready  )
     );
+
+    sram_axi u_sram_axi(
+        .aclk     ( aclk     ),
+        .aresetn  ( aresetn  ),
+        .ar_id    ( ar_id    ),
+        .ar_addr  ( ar_addr  ),
+        .ar_len   ( ar_len   ),
+        .ar_size  ( ar_size  ),
+        .ar_burst ( ar_burst ),
+        .ar_valid ( ar_valid ),
+        .ar_ready ( ar_ready ),
+        .r_id     ( r_id     ),
+        .r_data   ( r_data   ),
+        .r_last   ( r_last   ),
+        .r_valid  ( r_valid  ),
+        .r_ready  ( r_ready  ),
+        .aw_addr  ( aw_addr  ),
+        .aw_size  ( aw_size  ),
+        .aw_len   ( aw_len   ),
+        .aw_burst ( aw_burst ),
+        .aw_valid ( aw_valid ),
+        .aw_ready ( aw_ready ),
+        .w_data   ( w_data   ),
+        .w_valid  ( w_valid  ),
+        .w_ready  ( w_ready  ),
+        .w_last   ( w_last   ),
+        .w_strb   ( w_strb   ),
+        .b_valid  ( b_valid  ),
+        .b_ready  ( b_ready  ),
+        .i_raddr  ( i_raddr  ),
+        .i_rdata  ( i_rdata  ),
+        .i_rvalid ( i_rvalid ),
+        .i_rready ( i_rready ),
+        .i_rlen   ( i_rlen   ),
+        .d_raddr  ( d_raddr  ),
+        .d_rdata  ( d_rdata  ),
+        .d_rvalid ( d_rvalid ),
+        .d_rready ( d_rready ),
+        .d_rlen   ( d_rlen   ),
+        .d_waddr  ( d_waddr  ),
+        .d_wdata  ( d_wdata  ),
+        .d_wvalid ( d_wvalid ),
+        .d_wready ( d_wready ),
+        .d_wlen   ( d_wlen   ),
+        .d_wstrb  ( d_wstrb  )
+    );
+
+
+    axi_arbiter u_axi_arbiter(
+        .clk      ( clk      ),
+        .rstn     ( rstn     ),
+        .i_rvalid ( i_rvalid ),
+        .i_rready ( i_rready ),
+        .i_raddr  ( i_raddr  ),
+        .i_rdata  ( i_rdata  ),
+        .i_rlast  ( i_rlast  ),
+        .i_rsize  ( i_rsize  ),
+        .i_rlen   ( i_rlen   ),
+        .d_rvalid ( d_rvalid ),
+        .d_rready ( d_rready ),
+        .d_raddr  ( d_raddr  ),
+        .d_rdata  ( d_rdata  ),
+        .d_rlast  ( d_rlast  ),
+        .d_rsize  ( d_rsize  ),
+        .d_rlen   ( d_rlen   ),
+        .d_wvalid ( d_wvalid ),
+        .d_wready ( d_wready ),
+        .d_waddr  ( d_waddr  ),
+        .d_wdata  ( d_wdata  ),
+        .d_wstrb  ( d_wstrb  ),
+        .d_wlast  ( d_wlast  ),
+        .d_wsize  ( d_wsize  ),
+        .d_wlen   ( d_wlen   ),
+        .d_bvalid ( d_bvalid ),
+        .d_bready ( d_bready ),
+        .araddr   ( araddr   ),
+        .arvalid  ( arvalid  ),
+        .arready  ( arready  ),
+        .arlen    ( arlen    ),
+        .arsize   ( arsize   ),
+        .arburst  ( arburst  ),
+        .rdata    ( rdata    ),
+        .rresp    ( rresp    ),
+        .rvalid   ( rvalid   ),
+        .rready   ( rready   ),
+        .rlast    ( rlast    ),
+        .awaddr   ( awaddr   ),
+        .awvalid  ( awvalid  ),
+        .awready  ( awready  ),
+        .awlen    ( awlen    ),
+        .awsize   ( awsize   ),
+        .awburst  ( awburst  ),
+        .wdata    ( wdata    ),
+        .wstrb    ( wstrb    ),
+        .wvalid   ( wvalid   ),
+        .wready   ( wready   ),
+        .wlast    ( wlast    ),
+        .bresp    ( bresp    ),
+        .bvalid   ( bvalid   ),
+        .bready   ( bready   )
+    );
+
+
 
 
     HazardUnit u_HazardUnit(
