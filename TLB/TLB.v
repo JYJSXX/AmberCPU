@@ -62,10 +62,10 @@ module TLB(
     input       [9:0]                   TLBINVLD_ASID,
     input       [`TLB_VPPN_LEN - 1:0]   TLBINVLD_VA,
 
-    input                              store_or_load, //1:store 0:load
-    input                              plv_1bit,
-    output     [6:0]                   tlb_exception_code_i,
-    output     [6:0]                   tlb_exception_code_d
+    input                               store_or_load, //1:store 0:load
+    input                               plv_1bit,
+    output     [6:0]                    tlb_exception_code_i,
+    output     [6:0]                    tlb_exception_code_d
 );
 
 reg     [`TLB_CPRLEN - 1:0]     tlb_cpr         [`TLB_NUM - 1:0];       //TLB比较部分
