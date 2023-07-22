@@ -25,7 +25,7 @@ module dcache #(
     input                   uncache,            // indicate whether the request is an uncache request
     input                   signed_ext,         // indicate whether the request is a signed extension request
     output                  idle,               // indicate whether the cache is idle
-    input                   flush,              // indicate whether the cache is flush
+    input                   flush,              // TODO 还没接入
     /* from AXI arbiter */
     // read
     output reg              d_rvalid,           // valid signal of read request to main memory
@@ -783,7 +783,7 @@ module dcache #(
             wready          = wrt_finish & we_pipe;
             data_from_mem   = 0;
             req_buf_we      = wrt_finish & (rvalid || wvalid);
-            if(cacop_en_buf)
+            if(cacop_en_buf && wrt_finish)
                 cacop_complete  = 1;
         end
         CACOP: begin
