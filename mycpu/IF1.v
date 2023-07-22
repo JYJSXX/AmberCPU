@@ -20,7 +20,7 @@ module IF1 (
     // input cacop_complete,
 
     output if1_rready,
-    output [31:0]if1_pc,
+    // output [31:0]if1_pc,
     output [31:0]if1_pc_next,
     output [31:0]if1_badv,
     output [6:0] if1_exception,
@@ -35,7 +35,7 @@ module IF1 (
     assign if1_inst0 = if0_if1_pc[2]? `INST_NOP:rdata[31:0];//针对branch到奇数PC
     assign if1_inst1 = rdata[63:32];
     assign if1_rready = rready;
-    assign if1_pc = if0_if1_pc;
+    // assign if1_pc = if0_if1_pc;
     assign if1_pc_next=pc_next;
     assign if1_badv  = badv;
     assign if1_exception = exception;

@@ -217,7 +217,7 @@ module core_top(
         // .cacop_ready        ( cacop_ready        ),
         // .cacop_complete     ( cacop_complete     ),
         .if1_rready         ( if1_rready         ),
-        .if1_pc             ( if1_pc             ),
+        // .if1_pc             ( if1_pc             ),
         .if1_pc_next        ( if1_pc_next        ),
         .if1_badv           ( if1_badv           ),
         .if1_exception      ( if1_exception      ),
