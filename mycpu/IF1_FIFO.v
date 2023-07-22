@@ -98,11 +98,11 @@ module IF1_FIFO(
     assign pc_from_PRIV = pc_after_priv;
 
 
-    //TODO add FSM for 1.detect ibar 2.detect ex's ibar signal 3.detect icache&dcache idle
+    //add FSM for 1.detect ibar 2.detect ex's ibar signal 3.detect icache&dcache idle
     
 
     always @(posedge clk) begin
-        if (!rstn||flush) begin//TODO:FSM logic & valid_ready logic
+        if (!rstn||flush) begin
             stat<=IDLE;
             pc_after_priv<=`PC_RESET;
             if1_fifo_valid<=0;
@@ -194,7 +194,7 @@ module IF1_FIFO(
             if1_fifo_icache_excp_flag<=tmp_icache_excp_flag;
 
         end
-        else if(~fifo_allowin)begin//TODO
+        else if(~fifo_allowin)begin
             //hold stage-stage reg
             if(if1_readygo&&~tmp)begin
                 tmp<=1;

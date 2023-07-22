@@ -52,14 +52,14 @@ module core_top(
     output [ 4:0] debug0_wb_rf_wnum,
     output [31:0] debug0_wb_rf_wdata,
     output [31:0] debug0_wb_inst,
-    output debug0_valid,
+    output debug0_valid,    // TODO:
 
     output [31:0] debug1_wb_pc,
     output [ 3:0] debug1_wb_rf_wen,
     output [ 4:0] debug1_wb_rf_wnum,
     output [31:0] debug1_wb_rf_wdata,
     output [31:0] debug1_wb_inst,
-    output debug1_valid
+    output debug1_valid         // TODO:
 );
 
     assign {arlock, arcache, arprot, awlock, awcache, awprot} = 0;
@@ -403,8 +403,8 @@ module core_top(
     FIFO_ID u_FIFO_ID(
         .clk                 ( clk                 ),
         .rstn                ( aresetn             ),
-        .fifo_id_flush       ( fifo_id_flush       ),
-        .fifo_id_flush_cause ( fifo_id_flush_cause ),
+        .fifo_id_flush       ( flush_to_fifo_id    ),
+        .fifo_id_flush_cause ( fifo_id_flush_cause ),  // TODO: To be completed
         .id_allowin          ( id_allowin          ),
         .id_readygo          ( id_readygo          ),
         .fifo_allowin        ( fifo_allowin        ),
@@ -812,6 +812,8 @@ module core_top(
 
     wire [31:0] alu_result0, alu_result1;
     wire        alu_result0_valid, alu_result1_valid;
+    //wire csr_flag_from_ex;
+    wire tlb_flag_from_ex;
 
     EX1 u_EX1(
         .clk                  ( clk                  ),
@@ -847,6 +849,8 @@ module core_top(
         .alu_result0_valid    ( alu_result0_valid    ),
         .alu_result1_valid    ( alu_result1_valid    ),
         .ibar                 ( ibar                 ),
+        .csr_flag_from_ex     ( csr_flag_from_ex     ),
+        .tlb_flag_from_ex     ( tlb_flag_from_ex     ),
         .ex1_ex2_rd0          ( ex1_ex2_rd0          ),
         .ex1_ex2_rd1          ( ex1_ex2_rd1          ),
         .ex1_ex2_data_0       ( ex1_ex2_data_0       ),
@@ -1026,6 +1030,8 @@ module core_top(
 
     wire [31:0] ex2_rd0_data;
     wire [31:0] ex2_rd1_data;
+    wire       ex2_data0_valid;
+    wire       ex2_data1_valid;
 
     EX2 u_EX2(
         .uop0                 ( ex1_ex2_uop0                 ),
@@ -1040,7 +1046,9 @@ module core_top(
         .mul_stage1_res_ll    ( mul_stage1_res_ll    ),
         .mul_compensate       ( mul_compensate       ),
         .rd0_data             ( ex2_rd0_data         ),
-        .rd1_data             ( ex2_rd1_data         )
+        .rd1_data             ( ex2_rd1_data         ),
+        .ex2_data0_valid      ( ex2_data0_valid      ),
+        .ex2_data1_valid      ( ex2_data1_valid      )
     );
 
     //dcache
@@ -1049,13 +1057,13 @@ module core_top(
     wire wready_dcache;
 
     //csr 三条读写csr的指令都要写
-    wire [31:0] csr_data_in;
+    //wire [31:0] csr_data_in;
     wire csr_ready;
 
 
     //exception
-    wire [31:0] csr_estat; //从csr
-    wire [31:0] csr_crmd;
+    //wire [31:0] csr_estat; //从csr
+    //wire [31:0] csr_crmd;
     
     wire [6:0] ex2_wb_exception; 
     wire ex2_wb_excp_flag; 
@@ -1067,6 +1075,7 @@ module core_top(
     wire [18:0] vppn_out;
     wire wen_vppn;
     wire cpu_interrupt;
+    wire dcache_valid;
     EX2_WB u_EX2_WB(
         .clk                 ( clk                 ),
         .aresetn             ( aresetn             ),
@@ -1083,9 +1092,9 @@ module core_top(
         .ex2_result1         ( ex2_rd1_data         ),
         .ex_rd0              ( ex1_ex2_rd0              ),
         .ex_rd1              ( ex1_ex2_rd1              ),
-        .ex2_result0_valid   ( ex2_data0_valid   ),
-        .ex2_result1_valid   ( ex2_data1_valid   ),
-        .en_VA_D_OUT         ( en_VA_D_OUT         ), // TODO
+        .ex2_result0_valid   ( ex2_result0_valid   ),
+        .ex2_result1_valid   ( ex2_result1_valid   ),
+        .en_VA_D_OUT         ( dcache_valid        ), 
         .ex2_wb_data_0       ( ex2_wb_data_0       ),
         .ex2_wb_data_1       ( ex2_wb_data_1       ),
         .ex2_wb_data_0_valid ( ex2_wb_data_0_valid ),
@@ -1100,8 +1109,8 @@ module core_top(
         .div_ready           ( div_ready           ),
         .dcache_data         ( r_data_dcache         ),
         .dcache_ready        ( rready_dcache        ),
-        .csr_data_in         ( csr_data_in         ),
-        .csr_ready           ( csr_ready           ),
+        .csr_data_in         ( csr_rd_data          ),
+        .csr_ready           ( privilege_ready           ),
         .debug0_wb_pc        ( debug0_wb_pc        ),
         .debug0_wb_rf_wen    ( debug0_wb_rf_wen    ),
         .debug0_wb_rf_wnum   ( debug0_wb_rf_wnum   ),
@@ -1112,8 +1121,8 @@ module core_top(
         .debug1_wb_rf_wnum   ( debug1_wb_rf_wnum   ),
         .debug1_wb_rf_wdata  ( debug1_wb_rf_wdata  ),
         .debug1_wb_inst      ( debug1_wb_inst      ),
-        .csr_estat           ( csr_estat           ),
-        .csr_crmd            ( csr_crmd            ),
+        //.csr_estat           ( csr_estat           ),
+        //.csr_crmd            ( csr_crmd            ),
         .ecode_in            ( ex1_ex2_exception            ),
         .exception_flag_in   ( ex1_ex2_excp_flag   ),
         .badv_in             ( ex1_ex2_badv             ),
@@ -1268,7 +1277,8 @@ module core_top(
     wire [6:0] tlb_exception_code_i, tlb_exception_code_d; //tlb例外码
     wire icache_rvalid;
     wire [31:0] icache_raddr, dcache_addr;
-    wire SOL_D_OUT, dcache_valid;
+    wire SOL_D_OUT;
+    
     icache#(
         .INDEX_WIDTH       ( 6 ),
         .WORD_OFFSET_WIDTH ( 4 ),

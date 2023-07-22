@@ -37,7 +37,8 @@ module EX1(
     output alu_result0_valid,
     output alu_result1_valid,
     output ibar,
-
+    output csr_flag_from_ex,
+    output tlb_flag_from_ex,
     //前递用到的信号
     //从ex1_ex2段间输入
     input [4:0] ex1_ex2_rd0,
@@ -160,6 +161,8 @@ module EX1(
 
 
 );
+assign csr_flag_from_ex = uop0[`INS_CSR];
+assign tlb_flag_from_ex = uop0[`INS_TLB] && (inst0[11:10] == 2'b00 || inst0[11:0] ==2'b01 || inst0[15]);
     reg [63:0] stable_counter;
     assign flush=predict_addr_fail || predict_dir_fail || uop0[`INS_ERTN];
     always @(posedge aclk)

@@ -24,7 +24,7 @@ module IF1 (
     output [31:0]if1_pc_next,
     output [31:0]if1_badv,
     output [6:0] if1_exception,
-    output [1:0] if1_excp_flag,//TODO :alert icache to pass this signal
+    output [1:0] if1_excp_flag,
     output [31:0]if1_cookie_out,
     // output       if1_cacop_ready,
     // output       if1_cacop_complete,
