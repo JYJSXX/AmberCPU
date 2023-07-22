@@ -237,7 +237,7 @@ always @(posedge clk or negedge rstn) begin
                 TLB_I_VA_12_ODD[j]  <= VA_I[0];
                 TLB_I_VA_21_ODD[j]  <= VA_I[9];
                 VA_I_reg <= VA_I;
-                en_i_reg <= en_i;
+                en_i_reg <= 1;
             end
             else begin
                 TLB_I_HIT_4K_OUT[j] <= TLB_I_HIT_4K_OUT[j];
