@@ -512,15 +512,15 @@ wire [`TLB_NUM - 1:0]       TLB_D_MAT_FINAL_0;
 wire [`TLB_NUM - 1:0]       TLB_D_PLV_FINAL_0;
 wire [`TLB_PPN_LEN - 1:0]   TLB_D_PPN_FINAL_0;
 
-reg [`TLB_NUM - 1:0]        TLB_I_V_FINAL = 0;
-reg [`TLB_NUM - 1:0]        TLB_I_D_FINAL = 0;
-reg [`TLB_NUM - 1:0]        TLB_I_MAT_FINAL = 0;
-reg [`TLB_NUM - 1:0]        TLB_I_PLV_FINAL = 0;
+reg                         TLB_I_V_FINAL = 0;
+reg                         TLB_I_D_FINAL = 0;
+reg                         TLB_I_MAT_FINAL = 0;
+reg                         TLB_I_PLV_FINAL = 0;
 reg [`TLB_PPN_LEN - 1:0]    TLB_I_PPN_FINAL = 0;
-reg [`TLB_NUM - 1:0]        TLB_D_V_FINAL = 0;
-reg [`TLB_NUM - 1:0]        TLB_D_D_FINAL = 0;
-reg [`TLB_NUM - 1:0]        TLB_D_MAT_FINAL = 0;
-reg [`TLB_NUM - 1:0]        TLB_D_PLV_FINAL = 0;
+reg                         TLB_D_V_FINAL = 0;
+reg                         TLB_D_D_FINAL = 0;
+reg                         TLB_D_MAT_FINAL = 0;
+reg                         TLB_D_PLV_FINAL = 0;
 reg [`TLB_PPN_LEN - 1:0]    TLB_D_PPN_FINAL = 0;
 reg                         VA_I_reg3 = 0;
 reg                         VA_D_reg3 = 0;
@@ -552,20 +552,20 @@ always @(posedge clk or negedge rstn) begin
     end
     else begin
         if (~stall_i) begin
-            TLB_I_V_FINAL <= TLB_I_V_FINAL_0;
-            TLB_I_D_FINAL <= TLB_I_D_FINAL_0;
-            TLB_I_MAT_FINAL <= TLB_I_MAT_FINAL_0;
-            TLB_I_PLV_FINAL <= TLB_I_PLV_FINAL_0;
+            TLB_I_V_FINAL   <= |TLB_I_V_FINAL_0;
+            TLB_I_D_FINAL   <= |TLB_I_D_FINAL_0;
+            TLB_I_MAT_FINAL <= |TLB_I_MAT_FINAL_0;
+            TLB_I_PLV_FINAL <= |TLB_I_PLV_FINAL_0;
             TLB_I_PPN_FINAL <= TLB_I_PPN_FINAL_0;
             VA_I_reg3 <= VA_I_reg2[31];
             en_i_reg3 <= en_i_reg2;
             TAG_OFFSET_I_reg3 <= TAG_OFFSET_I_reg2;
         end
         else begin
-            TLB_I_V_FINAL <= TLB_I_V_FINAL;
-            TLB_I_D_FINAL <= TLB_I_D_FINAL;
-            TLB_I_MAT_FINAL <= TLB_I_MAT_FINAL;
-            TLB_I_PLV_FINAL <= TLB_I_PLV_FINAL;
+            TLB_I_V_FINAL   <= |TLB_I_V_FINAL;
+            TLB_I_D_FINAL   <= |TLB_I_D_FINAL;
+            TLB_I_MAT_FINAL <= |TLB_I_MAT_FINAL;
+            TLB_I_PLV_FINAL <= |TLB_I_PLV_FINAL;
             TLB_I_PPN_FINAL <= TLB_I_PPN_FINAL;
             VA_I_reg3 <= VA_I_reg3;
             en_i_reg3 <= en_i_reg3;
