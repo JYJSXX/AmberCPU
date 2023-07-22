@@ -1270,12 +1270,12 @@ module core_top(
         .i_raddr           ( i_raddr           ), 
         .i_rdata           ( i_rdata           ), 
         .i_rlen            ( i_rlen            ),    
-        .tlb_exception     ( tlb_exception_code_i ),    //TODO:rename
+        .tlb_exception     ( tlb_exception_code_i ),    //TODO:rename OK
         .badv              ( icache_badv       ),
         .exception         ( icache_exception  ),
         .i_exception_flag  ( icache_excp_flag  ),   
         .flush             ( flush_to_icache   ),
-        .uncache           ( !is_cached_I      ),   //TODO:
+        .uncache           ( !is_cached_I      ),   //TODO:ok
         .cookie_in         ( cookie_in         ),
         .cookie_out        ( cookie_out        ),
         .cacop_en          ( cacop_i_en        ),
@@ -1303,7 +1303,7 @@ module core_top(
         .wdata                             ( w_data_dcache                     ),
         .wstrb                             ( write_type                        ),   
         .op                                ( op_dcache                         ),
-        .uncache                           ( !is_cached_D                      ),   //TODO:
+        .uncache                           ( !is_cached_D                      ),   //TODO:ok
         .signed_ext                        ( reg_ex_uop0[`UOP_SIGN]            ),
         .idle                              ( d_idle                            ),
         .flush                             ( flush_to_dcache                   ),
@@ -1319,10 +1319,10 @@ module core_top(
         .d_wstrb                           ( d_wstrb                           ),
         .d_wlen                            ( d_wlen                            ),
         .exception                         ( dcache_exception                  ),  
-        .exception_flag                    ( exception_flag                    ),   //TODO:   
-        .d_exception_flag                  ( d_exception_flag                  ),   //TODO:
-        .forward_exception                 ( forward_exception                 ),   //TODO:
-        .tlb_exception                     ( tlb_exception_code_d              ),   //TODO:
+        .exception_flag                    ( reg_ex_excp_flag                    ),   //TODO:  ok 
+        .d_exception_flag                  ( d_exception_flag                  ),   //TODO:ok
+        .forward_exception                 ( reg_ex_exception                 ),   //TODO:ok
+        .tlb_exception                     ( tlb_exception_code_d              ),   //TODO:ok
         .badv                              ( icache_badv                       ),  
         .cacop_en                          ( cacop_d_en                        ),
         .cacop_code                        ( cacop_ins_type                    ),
@@ -1340,7 +1340,8 @@ module core_top(
 
 
 
-
+wire [3:0]reg_ex_cond0;
+assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
     TLB u_TLB(
         .clk            ( clk            ),
         .rstn           ( aresetn           ),
@@ -1353,7 +1354,8 @@ module core_top(
         .CSR_TLBEHI     ( TLBEHI     ),
         .CSR_TLBIDX     ( TLBIDX     ),
         .stall_i        ( stall_i        ),
-        .stall_d        ( ~reg_ex_uop0[`INS_MEM]       ),
+        .stall_d        ( stall_d       ),
+        .en_d           ( reg_ex_uop0[`INS_MEM]        ),
         .VA_I           ( fetch_pc       ),
         .VA_D           ( VA_D           ),
         .PA_I           ( PA_I           ),
@@ -1380,7 +1382,11 @@ module core_top(
         .TLBINVLD_ready ( invtlb_ready ),
         .TLBINVLD_OP    ( invtlb_op    ),
         .TLBINVLD_ASID  ( invtlb_asid  ),
-        .TLBINVLD_VA    ( invtlb_va    )
+        .TLBINVLD_VA    ( invtlb_va    ),
+        .store_or_load  ( reg_ex_cond0[2]  ),
+        .plv_1bit         (crmd[0]      ),
+        .tlb_exception_code_i(tlb_exception_code_i),
+        .tlb_exception_code_d(tlb_exception_code_d)
     );
 
 

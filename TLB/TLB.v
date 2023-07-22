@@ -15,12 +15,13 @@ module TLB(
 
     input                               stall_i,//读使能
     input                               stall_d,
+    input                               en_d,
     input       [`TLB_VPPN_LEN : 0]     VA_I,
     input       [`TLB_VPPN_LEN : 0]     VA_D,
-    output      [`TLB_PPN_LEN - 1:0]    PA_I,
-    output      [`TLB_PPN_LEN - 1:0]    PA_D,
-    output                              is_cached_I,
-    output                              is_cached_D,
+    output reg  [`TLB_PPN_LEN - 1:0]    PA_I,
+    output reg  [`TLB_PPN_LEN - 1:0]    PA_D,
+    output reg                          is_cached_I,
+    output reg                          is_cached_D,
 
     //Priv      
     input                               TLBSRCH_valid,
@@ -46,7 +47,12 @@ module TLB(
     output reg                          TLBINVLD_ready,
     input       [4:0]                   TLBINVLD_OP,
     input       [9:0]                   TLBINVLD_ASID,
-    input       [`TLB_VPPN_LEN - 1:0]   TLBINVLD_VA
+    input       [`TLB_VPPN_LEN - 1:0]   TLBINVLD_VA,
+
+    input                              store_or_load, //1:store 0:load
+    input                              plv_1bit,
+    output                             tlb_exception_code_i,
+    output                             tlb_exception_code_d
 );
 
 reg     [`TLB_CPRLEN - 1:0]     tlb_cpr         [`TLB_NUM - 1:0];       //TLB比较部分
@@ -140,6 +146,8 @@ reg     [1:0]                   rd_TLB_PLV_2_reg    [`TLB_NUM - 1:0];
 reg     [`TLB_PPN_LEN - 1:0]    rd_TLB_PPN_2_reg    [`TLB_NUM - 1:0];
 reg                             stall_i_reg                           ;
 reg                             stall_d_reg                           ;
+reg                             en_i_reg                              ;
+reg                             en_d_reg                              ;
 // reg                             CSR_PG_reg                          ;
 // reg                             CSR_CRMD_reg                        ;
 // reg                             CSR_DMW0_reg                        ;
@@ -444,30 +452,74 @@ generate
     end
 endgenerate
 
-wire [`TLB_NUM - 1:0]       TLB_I_V_FINAL;
-wire [`TLB_NUM - 1:0]       TLB_I_D_FINAL;
-wire [`TLB_NUM - 1:0]       TLB_I_MAT_FINAL;
-wire [`TLB_NUM - 1:0]       TLB_I_PLV_FINAL;
-wire [`TLB_PPN_LEN - 1:0]   TLB_I_PPN_FINAL;
-wire [`TLB_NUM - 1:0]       TLB_D_V_FINAL;
-wire [`TLB_NUM - 1:0]       TLB_D_D_FINAL;
-wire [`TLB_NUM - 1:0]       TLB_D_MAT_FINAL;
-wire [`TLB_NUM - 1:0]       TLB_D_PLV_FINAL;
-wire [`TLB_PPN_LEN - 1:0]   TLB_D_PPN_FINAL;
+wire [`TLB_NUM - 1:0]       TLB_I_V_FINAL_0;
+wire [`TLB_NUM - 1:0]       TLB_I_D_FINAL_0;
+wire [`TLB_NUM - 1:0]       TLB_I_MAT_FINAL_0;
+wire [`TLB_NUM - 1:0]       TLB_I_PLV_FINAL_0;
+wire [`TLB_PPN_LEN - 1:0]   TLB_I_PPN_FINAL_0;
+wire [`TLB_NUM - 1:0]       TLB_D_V_FINAL_0;
+wire [`TLB_NUM - 1:0]       TLB_D_D_FINAL_0;
+wire [`TLB_NUM - 1:0]       TLB_D_MAT_FINAL_0;
+wire [`TLB_NUM - 1:0]       TLB_D_PLV_FINAL_0;
+wire [`TLB_PPN_LEN - 1:0]   TLB_D_PPN_FINAL_0;
 
-assign TLB_I_V_FINAL    =   TLB_I_V_TRANS_reg;
-assign TLB_I_D_FINAL    =   TLB_I_D_TRANS_reg;
-assign TLB_I_MAT_FINAL  =   TLB_I_MAT_TRANS_reg;
-assign TLB_I_PLV_FINAL  =   TLB_I_PLV_TRANS_reg;
-assign TLB_D_V_FINAL    =   TLB_D_V_TRANS_reg;
-assign TLB_D_D_FINAL    =   TLB_D_D_TRANS_reg;
-assign TLB_D_MAT_FINAL  =   TLB_D_MAT_TRANS_reg;
-assign TLB_D_PLV_FINAL  =   TLB_D_PLV_TRANS_reg;
+reg [`TLB_NUM - 1:0]       TLB_I_V_FINAL = 0;
+reg [`TLB_NUM - 1:0]       TLB_I_D_FINAL = 0;
+reg [`TLB_NUM - 1:0]       TLB_I_MAT_FINAL = 0;
+reg [`TLB_NUM - 1:0]       TLB_I_PLV_FINAL = 0;
+reg [`TLB_PPN_LEN - 1:0]   TLB_I_PPN_FINAL = 0;
+reg [`TLB_NUM - 1:0]       TLB_D_V_FINAL = 0;
+reg [`TLB_NUM - 1:0]       TLB_D_D_FINAL = 0;
+reg [`TLB_NUM - 1:0]       TLB_D_MAT_FINAL = 0;
+reg [`TLB_NUM - 1:0]       TLB_D_PLV_FINAL = 0;
+reg [`TLB_PPN_LEN - 1:0]   TLB_D_PPN_FINAL = 0;
+reg                        VA_I_reg3 = 0;
+reg                        VA_D_reg3 = 0;
+
+always @(posedge clk or negedge rstn) begin
+    if(~rstn)begin
+        TLB_I_V_FINAL <= 0;
+        TLB_I_D_FINAL <= 0;
+        TLB_I_MAT_FINAL <= 0;
+        TLB_I_PLV_FINAL <= 0;
+        TLB_I_PPN_FINAL <= 0;
+        TLB_D_V_FINAL <= 0;
+        TLB_D_D_FINAL <= 0;
+        TLB_D_MAT_FINAL <= 0;
+        TLB_D_PLV_FINAL <= 0;
+        TLB_D_PPN_FINAL <= 0;
+        VA_I_reg3 <= 0;
+        VA_D_reg3 <= 0;
+    end
+    else begin
+        TLB_I_V_FINAL <= TLB_I_V_FINAL_0;
+        TLB_I_D_FINAL <= TLB_I_D_FINAL_0;
+        TLB_I_MAT_FINAL <= TLB_I_MAT_FINAL_0;
+        TLB_I_PLV_FINAL <= TLB_I_PLV_FINAL_0;
+        TLB_I_PPN_FINAL <= TLB_I_PPN_FINAL_0;
+        TLB_D_V_FINAL <= TLB_D_V_FINAL_0;
+        TLB_D_D_FINAL <= TLB_D_D_FINAL_0;
+        TLB_D_MAT_FINAL <= TLB_D_MAT_FINAL_0;
+        TLB_D_PLV_FINAL <= TLB_D_PLV_FINAL_0;
+        TLB_D_PPN_FINAL <= TLB_D_PPN_FINAL_0;
+        VA_I_reg3 <= VA_I_reg2[31];
+        VA_D_reg3 <= VA_D_reg2[31];
+    end
+end
+
+assign TLB_I_V_FINAL_0    =   TLB_I_V_TRANS_reg;
+assign TLB_I_D_FINAL_0    =   TLB_I_D_TRANS_reg;
+assign TLB_I_MAT_FINAL_0  =   TLB_I_MAT_TRANS_reg;
+assign TLB_I_PLV_FINAL_0  =   TLB_I_PLV_TRANS_reg;
+assign TLB_D_V_FINAL_0    =   TLB_D_V_TRANS_reg;
+assign TLB_D_D_FINAL_0    =   TLB_D_D_TRANS_reg;
+assign TLB_D_MAT_FINAL_0  =   TLB_D_MAT_TRANS_reg;
+assign TLB_D_PLV_FINAL_0  =   TLB_D_PLV_TRANS_reg;
 
 generate
     for (i = 0; i < `TLB_PPN_LEN; i = i + 1)begin
-        assign TLB_I_PPN_FINAL[i] = TLB_I_PPN_TRANS_FINAL[i];
-        assign TLB_D_PPN_FINAL[i] = TLB_D_PPN_TRANS_FINAL[i];
+        assign TLB_I_PPN_FINAL_0[i] = TLB_I_PPN_TRANS_FINAL[i];
+        assign TLB_D_PPN_FINAL_0[i] = TLB_D_PPN_TRANS_FINAL[i];
     end
 endgenerate
 
@@ -480,11 +532,20 @@ wire [`TLB_VPPN_LEN:0] DMW0_PPN_D = {CSR_DMW0[`DMW0_PSEG], VA_D_reg2[`TLB_VPPN_L
 wire        DMW1_JUDGE_D = VA_D_reg2[`TLB_VPPN_LEN : `TLB_VPPN_LEN - 2] == CSR_DMW1[`DMW0_VSEG];
 wire [`TLB_VPPN_LEN:0] DMW1_PPN_D = {CSR_DMW1[`DMW1_PSEG], VA_D_reg2[`TLB_VPPN_LEN - 3:0]};
 
-assign PA_I = CSR_PG ? (DMW0_JUDGE_I ? DMW0_PPN_I : (DMW1_JUDGE_I ? DMW1_PPN_I : TLB_I_PPN_FINAL)) : VA_I_reg2;
-assign PA_D = CSR_PG ? (DMW0_JUDGE_D ? DMW0_PPN_D : (DMW1_JUDGE_D ? DMW1_PPN_D : TLB_D_PPN_FINAL)) : VA_D_reg2;
-assign is_cached_I = CSR_PG ? (DMW0_JUDGE_I ? CSR_DMW0[4] : (DMW1_JUDGE_I ? CSR_DMW1[4] : TLB_I_MAT_FINAL)) : CSR_CRMD[5];
-assign is_cached_D = CSR_PG ? (DMW0_JUDGE_D ? CSR_DMW0[4] : (DMW1_JUDGE_D ? CSR_DMW1[4] : TLB_D_MAT_FINAL)) : CSR_CRMD[7];
-
+always @(*)begin
+    if (~rstn) begin
+        PA_I = 0;
+        PA_D = 0;
+        is_cached_I = 0;
+        is_cached_D = 0;
+    end
+    else begin
+        PA_I = CSR_PG ? (DMW0_JUDGE_I ? DMW0_PPN_I : (DMW1_JUDGE_I ? DMW1_PPN_I : TLB_I_PPN_FINAL_0)) : VA_I_reg2;
+        PA_D = CSR_PG ? (DMW0_JUDGE_D ? DMW0_PPN_D : (DMW1_JUDGE_D ? DMW1_PPN_D : TLB_D_PPN_FINAL_0)) : VA_D_reg2;
+        is_cached_I = CSR_PG ? (DMW0_JUDGE_I ? CSR_DMW0[4] : (DMW1_JUDGE_I ? CSR_DMW1[4] : TLB_I_MAT_FINAL_0)) : CSR_CRMD[5];
+        is_cached_D = CSR_PG ? (DMW0_JUDGE_D ? CSR_DMW0[4] : (DMW1_JUDGE_D ? CSR_DMW1[4] : TLB_D_MAT_FINAL_0)) : CSR_CRMD[7];
+    end
+end
 //TLB SEARCH PART
 
 wire [`TLB_NUM - 1:0] CSR_TLBSRCH;
@@ -627,5 +688,33 @@ end
 
 //TLB INVALIDATE PART
 
+//TLB_EXP
+TLB_EXP tlb_exp(
+    .vaddr0(VA_I_reg3), //todo:
+    .en0(~stall_i),
+    .plv0_1bit(plv_1bit), //crmd_plv
+    .is_if_0(1), //PIF 
+    .is_store_0(0), //PIS
+    .is_load_0(0), //PIL
+    .tlbhit0(|TLB_I_HIT), //TLBR TLB重填例外
+    .tlb_d0(TLB_I_D_FINAL), //页脏为1，PME 页修改例外 找到dirty页
+    .tlb_v0(TLB_I_V_FINAL), //页有效为1，PIF PIS PIL
+    .tlb_plv0_1bit(plv_1bit), //页特权等级，PPI
+    .exception0(tlb_exception_code_i),
+    .tlbexception_flag0(tlbexception_flag0), //直接把exception0按位或就行，反正INT不会有TLB生成
+    
+    .vaddr1(VA_D_reg3),
+    .en1(~stall_d),
+    .plv1_1bit(plv_1bit), //crmd_plv
+    .is_if_1(0), //PIF
+    .is_store_1(store_or_load), //PIS
+    .is_load_1(~store_or_load), //PIL
+    .tlbhit1(|TLB_D_HIT), //TLBR TLB重填例外
+    .tlb_d1(TLB_D_D_FINAL), //页脏为1，PME 页修改例外 找到dirty页
+    .tlb_v1(TLB_D_V_FINAL), //页有效为1，PIF PIS PIL
+    .tlb_plv1_1bit(plv_1bit), //页特权等级，PPI
+    .exception1(tlb_exception_code_d),
+    .tlbexception_flag1(|tlb_exception_code_d) //直接把exception0按位或就行，反正INT不会有TLB生成
+);
 
 endmodule
