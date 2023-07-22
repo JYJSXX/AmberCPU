@@ -1260,7 +1260,9 @@ module core_top(
     wire [31:0] PA_I, PA_D; //物理地址
     wire is_cached_I, is_cached_D; //是否经过cache
     wire [6:0] tlb_exception_code_i, tlb_exception_code_d; //tlb例外码
-    wire icache_rvalid,icache_raddr;
+    wire icache_rvalid;
+    wire [31:0] icache_raddr, dcache_addr;
+    wire SOL_D_OUT, dcache_valid;
     icache#(
         .INDEX_WIDTH       ( 6 ),
         .WORD_OFFSET_WIDTH ( 4 ),
@@ -1303,12 +1305,12 @@ module core_top(
     )u_dcache(
         .clk                               ( clk                               ),
         .rstn                              ( aresetn                           ),
-        .addr                              ( cacop_d_en ? cacop_vaddr : addr_dcache ),
+        .addr                              ( cacop_d_en ? cacop_vaddr : dcache_addr ),
         .p_addr                            ( PA_D                              ),   
-        .rvalid                            ( cpu_d_rvalid                      ),
+        .rvalid                            ( dcache_valid & ~SOL_D_OUT         ),
         .rready                            ( rready_dcache                     ),
         .rdata                             ( r_data_dcache                     ),
-        .wvalid                            ( cpu_d_wvalid                      ),
+        .wvalid                            ( dcache_valid & SOL_D_OUT          ),
         .wready                            ( wready_dcache                     ),
         .wdata                             ( w_data_dcache                     ),
         .wstrb                             ( write_type                        ),   
@@ -1367,16 +1369,23 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .stall_i        ( stall_i        ),
         .stall_d        ( stall_d       ),
         .en_d           ( reg_ex_uop0[`INS_MEM]        ),
-        .VA_I           ( fetch_pc       ),
-        .VA_D           ( VA_D           ),
-        .PA_I           ( PA_I           ),
-        .PA_D           ( PA_D           ),
+        .VA_I           ( fetch_pc[31:12]   ),
+        .VA_D           ( addr_dcache[31:12]           ),
+        .TAG_OFFSET_I   ( fetch_pc[11:0] ),
+        .TAG_OFFSET_D   (addr_dcache[11:0]),
+        .PA_I           ( PA_I[31:12]           ),
+        .PA_D           ( PA_D[31:12]          ),
         .is_cached_I    ( is_cached_I    ),
         .is_cached_D    ( is_cached_D    ),
         .en_VA_I_OUT    ( icache_rvalid  ),
-        .en_VA_D_OUT    ( ),
-        .VA_I_OUT       ( icache_raddr   ),
-        .VA_D_OUT       (),
+        .en_VA_D_OUT    ( dcache_valid   ),
+        .VA_I_OUT       ( icache_raddr[31:12]   ),
+        .VA_D_OUT       ( dcache_addr[31:12]    ),
+        .VA_TAG_OFFSET_I_OUT(icache_raddr[11:0]),
+        .VA_TAG_OFFSET_D_OUT(dcache_addr[11:0]),
+        .PA_TAG_OFFSET_I_OUT(PA_I[11:0]),
+        .PA_TAG_OFFSET_D_OUT(PA_D[11:0]),
+        .SOL_D_OUT      ( SOL_D_OUT      ),
         .TLBSRCH_valid  ( tlbsrch_valid  ),
         .TLBSRCH_ready  ( tlbsrch_ready  ),
         .TLBSRCH_hit    ( tlbsrch_hit    ),
