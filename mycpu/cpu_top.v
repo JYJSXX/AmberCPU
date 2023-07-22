@@ -175,7 +175,6 @@ module core_top(
     //hand shake
     wire if1_valid;
     wire if1_ready ;     
-    wire [31:0] if1_fifo_pc;
     wire [31:0] icache_badv;
     wire [31:0] dcache_badv;
     wire [6:0] icache_exception;
@@ -202,7 +201,6 @@ module core_top(
         .if1_readygo        ( if1_readygo          ),
         .if1_allowin        ( if1_allowin         ),
         .if0_if1_pc         ( if0_if1_pc         ),
-        .if1_fifo_pc        ( if1_fifo_pc        ),
         .rready             ( icache_rready             ),
         .rdata              ( icache_rdata              ),
         .pc_next            ( if0_if1_pc_next            ),
@@ -244,6 +242,7 @@ module core_top(
     wire               csr_done;
     wire               tlb_done;
 
+    wire [31:0] if1_fifo_pc;
     wire  [31:0]    if1_fifo_pc_next;
     wire  [31:0]    if1_fifo_inst0;
     wire  [31:0]    if1_fifo_inst1;
@@ -1304,7 +1303,7 @@ module core_top(
         .wdata                             ( w_data_dcache                     ),
         .wstrb                             ( write_type                        ),   
         .op                                ( op_dcache                         ),
-        .uncache                           ( !is_cached_D                       ),   //TODO:
+        .uncache                           ( !is_cached_D                      ),   //TODO:
         .signed_ext                        ( reg_ex_uop0[`UOP_SIGN]            ),
         .idle                              ( d_idle                            ),
         .flush                             ( flush_to_dcache                   ),
