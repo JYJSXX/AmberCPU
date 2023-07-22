@@ -728,7 +728,7 @@ module core_top(
     wire cpu_d_rvalid;
     wire cpu_d_wvalid;
     wire op_dcache; //0读1写
-    wire [3:0] d_wstrb; //写入类型;0b0001为byte;0b0011为half;0b1111为word
+    wire [3:0] write_type; //写入类型;0b0001为byte;0b0011为half;0b1111为word
     wire [31:0] addr_dcache;
     wire [31:0] w_data_dcache;
     wire  is_atom_dcache;
@@ -853,7 +853,7 @@ module core_top(
         .rvalid_dcache        ( cpu_d_rvalid             ),
         .wvalid_dcache        ( cpu_d_wvalid       ),
         .op_dcache            ( op_dcache            ),
-        .write_type_dcache    ( d_wstrb              ),
+        .write_type_dcache    ( write_type              ),
         .addr_dcache          ( addr_dcache          ),
         .w_data_dcache        ( w_data_dcache        ),
         .is_atom_dcache       ( is_atom_dcache       ),
@@ -1254,10 +1254,10 @@ module core_top(
         .uncache           ( uncache           ),
         .cookie_in         ( cookie_in         ),
         .cookie_out        ( cookie_out        ),
-        .cacop_en          ( cacop_en          ),
-        .cacop_code        ( cacop_code        ),
-        .cacop_ready       ( cacop_ready       ),
-        .cacop_complete    ( cacop_complete    ),
+        .cacop_en          ( cacop_i_en        ),
+        .cacop_code        ( cacop_ins_type    ),
+        .cacop_ready       ( cacop_i_ready     ),
+        .cacop_complete    ( cacop_i_done      ),
         .ibar              ( ibar              )
     );
 
@@ -1269,16 +1269,16 @@ module core_top(
     )u_dcache(
         .clk                               ( clk                               ),
         .rstn                              ( rstn                              ),
-        ./* from pipeline */   addr        ( /* from pipeline */   addr        ),
+        ./* from pipeline */   addr        ( cacop_d_en ? cacop_vaddr : addr_dcache ),
         .p_addr                            ( p_addr                            ),
-        .rvalid                            ( rvalid                            ),
-        .rready                            ( rready                            ),
-        .rdata                             ( rdata                             ),
-        .wvalid                            ( wvalid                            ),
+        .rvalid                            ( cpu_d_rvalid                      ),
+        .rready                            ( rready_dcache                     ),
+        .rdata                             ( r_data_dcache                     ),
+        .wvalid                            ( cpu_d_wvalid                      ),
         .wready                            ( wready                            ),
-        .wdata                             ( wdata                             ),
-        .wstrb                             ( wstrb                             ),
-        .op                                ( op                                ),
+        .wdata                             ( w_data_dcache                     ),
+        .wstrb                             ( write_type                        ),
+        .op                                ( op_dcache                         ),
         .uncache                           ( uncache                           ),
         .signed_ext                        ( signed_ext                        ),
         .idle                              ( idle                              ),
@@ -1299,11 +1299,11 @@ module core_top(
         .forward_exception                 ( forward_exception                 ),
         .tlb_exception                     ( tlb_exception                     ),
         .badv                              ( badv                              ),
-        .cacop_code                        ( cacop_code                        ),
-        .cacop_en                          ( cacop_en                          ),
-        .cacop_complete                    ( cacop_complete                    ),
-        .cacop_ready                       ( cacop_ready                       ),
-        .is_atom                           ( is_atom                           ),
+        .cacop_en                          ( cacop_d_en                        ),
+        .cacop_code                        ( cacop_ins_type                    ),
+        .cacop_ready                       ( cacop_d_ready                     ),
+        .cacop_complete                    ( cacop_d_done                      ),
+        .is_atom                           ( is_atom_dcache                    ),
         .llbit_set                         ( llbit_set                         ),
         .llbit                             ( llbit                             ),
         .llbit_clear                       ( llbit_clear                       )
