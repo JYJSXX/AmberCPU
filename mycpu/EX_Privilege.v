@@ -274,14 +274,19 @@ module EX_Privilege(
                 done = 1;
             end
             PR_TLBSRCH:
+            if (tlbsrch_ready)
                 done=1;
             PR_TLBRD:
+            if(tlbrd_ready)
                 done=1;
             PR_TLBWR:
+            if(tlbwr_ready)
                 done=1;
             PR_TLBFILL:
+            if(tlbfill_ready)
                 done=1;
             PR_TLBINV:
+            if(invtlb_ready)
                 done=1;
             
         endcase
