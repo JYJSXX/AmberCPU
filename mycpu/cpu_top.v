@@ -1256,7 +1256,7 @@ module core_top(
     wire is_cached_I, is_cached_D; //是否经过cache
     wire [6:0] tlb_exception_code_i, tlb_exception_code_d; //tlb例外码
     wire icache_rvalid,icache_raddr;
-    icache#(.
+    icache#(
         .INDEX_WIDTH       ( 6 ),
         .WORD_OFFSET_WIDTH ( 4 ),
         .COOKIE_WIDTH      ( 32 )
