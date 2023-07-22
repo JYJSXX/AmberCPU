@@ -3,6 +3,7 @@
 module TLB(
     input                               clk,
     input                               rstn,
+    input                               flush,
 
     input       [9:0]                   CSR_ASID,
     input       [31:0]                  CSR_VPPN,
@@ -238,6 +239,40 @@ always @(posedge clk or negedge rstn) begin
             rd_TLB_PPN_2_reg[j] <= 0;
         end
     end
+    else if (flush) begin
+        en_i_reg <= 0;
+        en_d_reg <= 0;
+        // CSR_PG_reg <= 0;
+        // CSR_CRMD_reg <= 0;
+        // CSR_DMW0_reg <= 0;
+        // CSR_DMW1_reg <= 0;
+        VA_I_reg <= 0;
+        VA_D_reg <= 0;
+        TAG_OFFSET_I_reg <= 0;
+        TAG_OFFSET_D_reg <= 0;
+        SOL_reg <= 0;
+        for(j = 0; j < `TLB_NUM; j = j + 1)begin
+            TLB_PS_EQUAL_4K[j]  <= 0;
+            TLB_I_HIT_4K_OUT[j] <= 0;
+            TLB_I_HIT_4M_OUT[j] <= 0;
+            TLB_I_VA_12_ODD[j]  <= 0;
+            TLB_I_VA_21_ODD[j]  <= 0;
+            TLB_D_HIT_4K_OUT[j] <= 0;
+            TLB_D_HIT_4M_OUT[j] <= 0;
+            TLB_D_VA_12_ODD[j]  <= 0;
+            TLB_D_VA_21_ODD[j]  <= 0;
+            rd_TLB_V_1_reg[j]   <= 0;
+            rd_TLB_D_1_reg[j]   <= 0;
+            rd_TLB_MAT_1_reg[j] <= 0;
+            rd_TLB_PLV_1_reg[j] <= 0;
+            rd_TLB_PPN_1_reg[j] <= 0;
+            rd_TLB_V_2_reg[j]   <= 0;
+            rd_TLB_D_2_reg[j]   <= 0;
+            rd_TLB_MAT_2_reg[j] <= 0;
+            rd_TLB_PLV_2_reg[j] <= 0;
+            rd_TLB_PPN_2_reg[j] <= 0;
+        end
+    end
     else begin
         // CSR_PG_reg <= CSR_PG;
         // CSR_CRMD_reg <= CSR_CRMD;
@@ -439,6 +474,31 @@ always @(posedge clk or negedge rstn)begin
             TLB_D_PPN_TRANS_reg[j] <= 0;
         end
     end
+    else if (flush)begin
+        TLB_I_V_TRANS_reg <= 0;
+        TLB_I_D_TRANS_reg <= 0;
+        TLB_I_MAT_TRANS_reg <= 0;
+        TLB_I_PLV_TRANS_reg <= 0;
+        TLB_D_V_TRANS_reg <= 0;
+        TLB_D_D_TRANS_reg <= 0;
+        TLB_D_MAT_TRANS_reg <= 0;
+        TLB_D_PLV_TRANS_reg <= 0;
+        // CSR_PG_reg2 <= 0;
+        // CSR_CRMD_reg2 <= 0;
+        // CSR_DMW0_reg2 <= 0;
+        // CSR_DMW1_reg2 <= 0;
+        VA_I_reg2 <= 0;
+        VA_D_reg2 <= 0;
+        en_i_reg2 <= 0;
+        en_d_reg2 <= 0;
+        TAG_OFFSET_I_reg2 <= 0;
+        TAG_OFFSET_D_reg2 <= 0;
+        SOL_reg2 <= 0;
+        for(j = 0; j < `TLB_PPN_LEN; j = j + 1)begin
+            TLB_I_PPN_TRANS_reg[j] <= 0;
+            TLB_D_PPN_TRANS_reg[j] <= 0;
+        end
+    end
     else begin
         if(~stall_i) begin
             TLB_I_V_TRANS_reg <= TLB_I_V_TRANS;
@@ -534,6 +594,25 @@ assign  SOL_D_OUT = SOL_reg3;
 
 always @(posedge clk or negedge rstn) begin
     if(~rstn)begin
+        TLB_I_V_FINAL <= 0;
+        TLB_I_D_FINAL <= 0;
+        TLB_I_MAT_FINAL <= 0;
+        TLB_I_PLV_FINAL <= 0;
+        TLB_I_PPN_FINAL <= 0;
+        TLB_D_V_FINAL <= 0;
+        TLB_D_D_FINAL <= 0;
+        TLB_D_MAT_FINAL <= 0;
+        TLB_D_PLV_FINAL <= 0;
+        TLB_D_PPN_FINAL <= 0;
+        VA_I_reg3 <= 0;
+        VA_D_reg3 <= 0;
+        en_i_reg3 <= 0;
+        en_d_reg3 <= 0;
+        TAG_OFFSET_I_reg3 <= 0;
+        TAG_OFFSET_D_reg3 <= 0;
+        SOL_reg3 <= 0;
+    end
+    else if (flush)begin
         TLB_I_V_FINAL <= 0;
         TLB_I_D_FINAL <= 0;
         TLB_I_MAT_FINAL <= 0;
@@ -783,7 +862,7 @@ end
 
 //TLB_EXP
 TLB_EXP tlb_exp(
-    .vaddr0(VA_I_reg3), //todo:
+    .vaddr0(VA_I_reg3),
     .en0(en_i_reg3),
     .plv0_1bit(plv_1bit), //crmd_plv
     .is_if_0(1), //PIF 
