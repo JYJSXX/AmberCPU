@@ -134,7 +134,7 @@ module core_top(
         .pred_taken          ( pred_taken          ),
         .fetch_pc            ( fetch_pc            ),
         .rvalid              ( icache_rvalid       ),
-        .raddr               ( icache_raddr               ),
+        .raddr               ( icache_raddr        ),
         .regcookie_in        ( 114514 ),
         .pc_next             ( pc_next             )
     );
@@ -914,9 +914,6 @@ module core_top(
     wire   ex2_readygo;
 
 
-
-    
-
     wire  [31:0] ex1_ex2_pc0;
     wire  [31:0] ex1_ex2_pc1;
     wire  [31:0] ex1_ex2_inst0;
@@ -1233,14 +1230,14 @@ module core_top(
         .COOKIE_WIDTH      ( 32 )
     )u_icache(
         .clk               ( clk               ),
-        .rstn              ( aresetn              ),
+        .rstn              ( aresetn           ),
         .rvalid            ( rvalid            ),
         .rready            ( rready            ),
         .raddr             ( raddr             ),
         .p_addr            ( p_addr            ),
         .rdata             ( rdata             ),
         .pc_out            ( pc_out            ),
-        .idle              ( idle              ),
+        .idle              ( i_idle            ),
         .i_rvalid          ( i_rvalid          ),
         .i_rready          ( i_rready          ),
         .i_raddr           ( i_raddr           ),
@@ -1267,7 +1264,7 @@ module core_top(
         .WORD_OFFSET_WIDTH                 ( 4 )
     )u_dcache(
         .clk                               ( clk                               ),
-        .rstn                              ( rstn                              ),
+        .rstn                              ( aresetn                           ),
         ./* from pipeline */   addr        ( cacop_d_en ? cacop_vaddr : addr_dcache ),
         .p_addr                            ( p_addr                            ),
         .rvalid                            ( cpu_d_rvalid                      ),
@@ -1279,8 +1276,8 @@ module core_top(
         .wstrb                             ( write_type                        ),
         .op                                ( op_dcache                         ),
         .uncache                           ( uncache                           ),
-        .signed_ext                        ( signed_ext                        ),
-        .idle                              ( idle                              ),
+        .signed_ext                        ( reg_ex_uop0[`UOP_SIGN]            ),
+        .idle                              ( d_idle                            ),
         .flush                             ( flush                             ),
         ./* from AXI arbiter */   d_rvalid ( /* from AXI arbiter */   d_rvalid ),
         .d_rready                          ( d_rready                          ),
