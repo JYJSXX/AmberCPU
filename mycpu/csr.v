@@ -138,14 +138,14 @@ module csr
     reg [`ESTAT_IS_SOFT] estat_is_soft;
     reg [`ESTAT_IS_HARD] estat_is_hard;
     reg [`ESTAT_IS_TI] estat_is_ti;
-    reg [`ESTAT_IS_IPI] estat_is_ipi;   // TODO
+    //reg [`ESTAT_IS_IPI] estat_is_ipi;  
     reg [`ESTAT_ECODE] estat_ecode;
     reg [`ESTAT_ESUBCODE] estat_subecode;
     assign csr_estat[`ESTAT_IS_SOFT] = estat_is_soft; //软件中断位
     assign csr_estat[`ESTAT_IS_HARD] = estat_is_hard; //硬件中断位
     assign csr_estat[`ESTAT_ZERO_0] = 0;
     assign csr_estat[`ESTAT_IS_TI] = estat_is_ti; //计时器中断位
-    //assign csr_estat[`ESTAT_IS_IPI] = estat_is_ipi; //核间中断位 // TODO
+    //assign csr_estat[`ESTAT_IS_IPI] = estat_is_ipi; //核间中断位
     assign csr_estat[`ESTAT_IS_IPI] = 0; //核间中断位
     assign csr_estat[`ESTAT_ECODE]  = estat_ecode;
     assign csr_estat[`ESTAT_ESUBCODE] = estat_subecode;
@@ -163,10 +163,10 @@ module csr
 
     //LLBCTL
     reg [`LLBCTL_ROLLB] llbctl_rollb;
-    reg [`LLBCTL_WCLLB] llbctl_wcllb; // TODO ok
+    //reg [`LLBCTL_WCLLB] llbctl_wcllb;
     reg [`LLBCTL_KLO] llbctl_klo;
     assign csr_llbctl[`LLBCTL_ROLLB] = llbctl_rollb;
-    assign csr_llbctl[`LLBCTL_WCLLB] = 0; // TODO ok
+    assign csr_llbctl[`LLBCTL_WCLLB] = 0;
     assign csr_llbctl[`LLBCTL_KLO] = llbctl_klo;
     assign csr_llbctl[`LLBCTL_ZERO] = 0;
 
@@ -282,8 +282,8 @@ module csr
     assign csr_tcfg[`TCFG_INITVAL] = tcfg_initval;
     
     //TICLR
-    reg [`TICLR_CLR] tlclr_clr;  // TODO ok
-    assign csr_tlclr[`TICLR_CLR] = 0; // TODO ok
+    reg [`TICLR_CLR] tlclr_clr; 
+    assign csr_tlclr[`TICLR_CLR] = 0;
     assign csr_tlclr[`TICLR_ZERO] = 0;
 assign cpu_interrupt=crmd_ie&&(ecfg_lie&csr_estat)!=0; //全局中断允许且（局部中断使能位与例外状态位）不为0
 assign idle_over= csr_estat[12:0]; //各种中断，无论软件硬件，无论是否使能，只有有例外就结束idle(马哥这样实现的)

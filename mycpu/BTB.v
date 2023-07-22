@@ -54,7 +54,7 @@ module BTB #(
     reg [1:0]  SCORE=0;
     reg taken=0;
 
-    wire we;//TODO
+    wire we;
     wire [31:0] _pred_pc;
     wire       hit;
     wire [PC_INDEX_WIDTH-1:0]       INDEX;

@@ -29,7 +29,7 @@ module IF0 (
     output reg[31:0]cookie_in=114514,
 
     //other
-    output [31:0] pc_next,//rready control logic TODO
+    output [31:0] pc_next,
     output pc_in_stall
     
 );

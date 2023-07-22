@@ -111,7 +111,7 @@ module IQ (
             iq_badv=id_reg_badv;
             iq_excp_flag=id_reg_excp_flag[1];
             iq_branch_flag=id_reg_branch_flag[1];
-            iq_exception=id_reg_exception;//TODO NOTICE exception be divided here
+            iq_exception=id_reg_exception;
             iq_is_ALU_0 =id_reg_is_ALU_1;
             iq_is_ALU_1 =1'b1;//TODO NOTICE HERE IS REPLACED BY NOP
             iq_is_syscall_0=id_reg_is_syscall_1;
