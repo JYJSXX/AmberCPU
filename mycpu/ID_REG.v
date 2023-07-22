@@ -74,6 +74,8 @@ module ID_REG(
     reg [31:0] id_reg_inst1;
     reg [31:0] id_reg_badv;
     reg [1 :0] id_reg_excp_flag;
+    reg [1 :0] id_reg_branch_flag;
+    reg [1 :0] id_reg_priv_flag;
     reg [6:0] id_reg_exception;
     reg id_reg_is_ALU_0 ;
     reg id_reg_is_ALU_1 ;
@@ -102,7 +104,9 @@ always@(posedge aclk) begin
         id_reg_inst0  <= 0;
         id_reg_inst1  <= 0;
         id_reg_badv  <= 0;
-        id_reg_excp_flag  <= 0;
+        id_reg_excp_flag  <= 2'b00;
+        id_reg_branch_flag<=2'b00;
+        id_reg_priv_flag  <=2'b00;
         id_reg_exception  <= 0;
         id_reg_is_ALU_0  <= 0;
         id_reg_is_ALU_1  <= 0;
@@ -130,6 +134,8 @@ always@(posedge aclk) begin
         id_reg_inst1  <= fifo_id_inst1;
         id_reg_badv  <= fifo_id_badv;
         id_reg_excp_flag  <= fifo_id_excp_flag;
+        id_reg_branch_flag<= fifo_id_branch_flag;
+        id_reg_priv_flag  <=fifo_id_priv_flag;
         id_reg_exception  <= fifo_id_exception;
         id_reg_is_ALU_0  <= is_ALU_0;
         id_reg_is_ALU_1  <= is_ALU_1;
@@ -159,6 +165,8 @@ always@(posedge aclk) begin
         id_reg_inst1  <= id_reg_inst1;
         id_reg_badv  <= id_reg_badv;
         id_reg_excp_flag  <= id_reg_excp_flag;
+        id_reg_priv_flag  <=id_reg_excp_flag;
+        id_reg_branch_flag<=id_reg_branch_flag;
         id_reg_exception  <= id_reg_exception;
         id_reg_is_ALU_0  <= id_reg_is_ALU_0;
         id_reg_is_ALU_1  <= id_reg_is_ALU_1;
