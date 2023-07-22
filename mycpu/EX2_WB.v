@@ -57,8 +57,8 @@ module EX2_WB(
     output reg [31:0] debug1_wb_inst,
 
     //exception
-    input [31:0] csr_estat, //从csr
-    input [31:0] csr_crmd,
+    //input [31:0] csr_estat, //从csr
+    //input [31:0] csr_crmd,
     
     input [6:0] ecode_in,//从前一级流水
     input exception_flag_in,
@@ -81,10 +81,10 @@ always@(posedge clk )begin
     end
 
 assign flush_out_all = exception_flag_out;
-wire csr_crmd_ie;
-assign csr_crmd_ie = csr_crmd[2];
-wire [12:0] csr_estat_is;
-assign csr_estat_is = csr_estat[12:0];
+//wire csr_crmd_ie;
+//assign csr_crmd_ie = csr_crmd[2];
+//wire [12:0] csr_estat_is;
+//assign csr_estat_is = csr_estat[12:0];
 wire set_badv;
 assign set_badv = (ecode_in == `EXP_PIL) || (ecode_in == `EXP_PIS) 
 || (ecode_in == `EXP_PIF) || (ecode_in == `EXP_PME) || (ecode_in == `EXP_PPI)

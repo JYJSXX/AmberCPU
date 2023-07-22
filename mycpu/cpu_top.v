@@ -1060,8 +1060,8 @@ module core_top(
 
 
     //exception
-    wire [31:0] csr_estat; //从csr
-    wire [31:0] csr_crmd;
+    //wire [31:0] csr_estat; //从csr
+    //wire [31:0] csr_crmd;
     
     wire [6:0] ex2_wb_exception; 
     wire ex2_wb_excp_flag; 
@@ -1119,8 +1119,8 @@ module core_top(
         .debug1_wb_rf_wnum   ( debug1_wb_rf_wnum   ),
         .debug1_wb_rf_wdata  ( debug1_wb_rf_wdata  ),
         .debug1_wb_inst      ( debug1_wb_inst      ),
-        .csr_estat           ( csr_estat           ),
-        .csr_crmd            ( csr_crmd            ),
+        //.csr_estat           ( csr_estat           ),
+        //.csr_crmd            ( csr_crmd            ),
         .ecode_in            ( ex1_ex2_exception            ),
         .exception_flag_in   ( ex1_ex2_excp_flag   ),
         .badv_in             ( ex1_ex2_badv             ),
