@@ -23,7 +23,7 @@ module IF0 (
     input pred_taken,
     output [31:0] fetch_pc,
 
-    //for ICache
+    //for TLB
     output rvalid,
     output [31:0] raddr,
     output reg[31:0]cookie_in=114514,

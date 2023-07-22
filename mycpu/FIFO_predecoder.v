@@ -67,7 +67,7 @@ module pre_decoder (
     assign  inst_btype         =inst1_btype         ?   inst1_btype:
                                 if1_fifo_pc[2]      ?   2'b00:
                                 inst0_btype ==2'b11 ?   2'b11:2'b00;
-
+    assign  branch_flag        ={inst1_btype,inst0_btype};
     // always @(posedge clk or negedge rstn) begin//get posedge for ibar
     //     if (!rstn) begin
     //         ibar_tmp0<=0;

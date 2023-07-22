@@ -55,6 +55,7 @@ module FIFO_ID (
             fifo_id_exception<=7'h00;
             fifo_id_excp_flag<=2'b00;
             fifo_id_priv_flag<=2'b00;
+            fifo_id_branch_flag<=2'b00;
         end else if(fifo_readygo&&id_allowin)begin
             fifo_id_inst0   <=fifo_inst0;
             fifo_id_inst1   <=fifo_inst1;
@@ -66,6 +67,7 @@ module FIFO_ID (
             fifo_id_exception<=fifo_exception;
             fifo_id_excp_flag<=fifo_excp_flag;
             fifo_id_priv_flag<=fifo_priv_flag;
+            fifo_id_branch_flag<=fifo_branch_flag;
         end
     end
 endmodule
