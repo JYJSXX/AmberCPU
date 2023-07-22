@@ -1265,7 +1265,7 @@ module core_top(
         .i_raddr           ( i_raddr           ), 
         .i_rdata           ( i_rdata           ), 
         .i_rlen            ( i_rlen            ),    
-        .tlb_exception     ( tlb_exception     ),
+        .tlb_exception     ( tlb_exception     ),    //TODO:rename
         .badv              ( icache_badv       ),
         .exception         ( icache_exception  ),
         .i_exception_flag  ( icache_excp_flag  ),   
