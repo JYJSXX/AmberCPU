@@ -33,6 +33,7 @@ module TLB(
     output      [11:0]                  VA_TAG_OFFSET_D_OUT,
     output      [11:0]                  PA_TAG_OFFSET_I_OUT,
     output      [11:0]                  PA_TAG_OFFSET_D_OUT,
+    output                              SOL_D_OUT,
 
     //Priv      
     input                               TLBSRCH_valid,
@@ -165,7 +166,7 @@ reg     [`TLB_VPPN_LEN : 0]     VA_D_reg                            ;
 reg     [`TLB_VPPN_LEN : 0]     VA_I_reg                            ;
 reg     [11:0]                  TAG_OFFSET_I_reg                    ;
 reg     [11:0]                  TAG_OFFSET_D_reg                    ;
-  
+reg                             SOL_reg                             ;
 
 initial begin
     en_i_reg = 0;
@@ -178,6 +179,7 @@ initial begin
     VA_D_reg = 0;
     TAG_OFFSET_I_reg = 0;
     TAG_OFFSET_D_reg = 0;
+    SOL_reg = 0;
     for (j = 0; j < `TLB_NUM; j = j + 1)begin
         TLB_I_HIT_4K_OUT[j] = 0;
         TLB_D_HIT_4K_OUT[j] = 0;
@@ -211,8 +213,9 @@ always @(posedge clk or negedge rstn) begin
         // CSR_DMW1_reg <= 0;
         VA_I_reg <= 0;
         VA_D_reg <= 0;
-        TAG_OFFSET_I_reg = 0;
-        TAG_OFFSET_D_reg = 0;
+        TAG_OFFSET_I_reg <= 0;
+        TAG_OFFSET_D_reg <= 0;
+        SOL_reg <= 0;
         for(j = 0; j < `TLB_NUM; j = j + 1)begin
             TLB_PS_EQUAL_4K[j]  <= 0;
             TLB_I_HIT_4K_OUT[j] <= 0;
@@ -268,6 +271,7 @@ always @(posedge clk or negedge rstn) begin
                 VA_D_reg <= VA_D;
                 en_d_reg <= en_d;
                 TAG_OFFSET_D_reg <= TAG_OFFSET_D;
+                SOL_reg <= store_or_load;
             end
             else begin
                 TLB_D_HIT_4K_OUT[j] <= TLB_D_HIT_4K_OUT[j];
@@ -277,6 +281,7 @@ always @(posedge clk or negedge rstn) begin
                 VA_D_reg <= VA_D_reg;
                 en_d_reg <= en_d_reg;
                 TAG_OFFSET_D_reg <= TAG_OFFSET_D_reg;
+                SOL_reg <= SOL_reg;
             end
             TLB_PS_EQUAL_4K[j]  <= (rd_TLB_PS[j] == 12);
             rd_TLB_V_1_reg[j]   <= rd_TLB_V_1[j];
@@ -392,6 +397,7 @@ reg                     en_i_reg2 = 0;
 reg                     en_d_reg2 = 0;
 reg [11:0]              TAG_OFFSET_I_reg2 = 0;
 reg [11:0]              TAG_OFFSET_D_reg2 = 0;
+reg                     SOL_reg2 = 0;
 
 assign en_VA_I_OUT = en_i_reg2;
 assign en_VA_D_OUT = en_d_reg2;
@@ -427,6 +433,7 @@ always @(posedge clk or negedge rstn)begin
         en_d_reg2 <= 0;
         TAG_OFFSET_I_reg2 <= 0;
         TAG_OFFSET_D_reg2 <= 0;
+        SOL_reg2 <= 0;
         for(j = 0; j < `TLB_PPN_LEN; j = j + 1)begin
             TLB_I_PPN_TRANS_reg[j] <= 0;
             TLB_D_PPN_TRANS_reg[j] <= 0;
@@ -459,6 +466,7 @@ always @(posedge clk or negedge rstn)begin
             VA_D_reg2 <= VA_D_reg;
             en_d_reg2 <= en_d_reg;
             TAG_OFFSET_D_reg2 <= TAG_OFFSET_D_reg;
+            SOL_reg2 <= SOL_reg;
         end
         else begin
             TLB_D_V_TRANS_reg <= TLB_D_V_TRANS_reg;
@@ -468,6 +476,7 @@ always @(posedge clk or negedge rstn)begin
             VA_D_reg2 <= VA_D_reg2;
             en_d_reg2 <= en_d_reg2;
             TAG_OFFSET_D_reg2 <= TAG_OFFSET_D_reg2;
+            SOL_reg2 <= SOL_reg2;
         end
         // CSR_PG_reg2 <= CSR_PG_reg;
         // CSR_CRMD_reg2 <= CSR_CRMD_reg;
@@ -519,6 +528,7 @@ reg                         en_i_reg3 = 0;
 reg                         en_d_reg3 = 0;
 reg [11:0]                  TAG_OFFSET_I_reg3 = 0;
 reg [11:0]                  TAG_OFFSET_D_reg3 = 0;
+reg                         SOL_reg3 = 0;
 
 always @(posedge clk or negedge rstn) begin
     if(~rstn)begin
@@ -538,6 +548,7 @@ always @(posedge clk or negedge rstn) begin
         en_d_reg3 <= 0;
         TAG_OFFSET_I_reg3 <= 0;
         TAG_OFFSET_D_reg3 <= 0;
+        SOL_reg3 <= 0;
     end
     else begin
         if (~stall_i) begin
@@ -569,6 +580,7 @@ always @(posedge clk or negedge rstn) begin
             VA_D_reg3 <= VA_D_reg2[31];
             en_d_reg3 <= en_d_reg2;
             TAG_OFFSET_D_reg3 <= TAG_OFFSET_D_reg2;
+            SOL_reg3 <= SOL_reg2;
         end
         else begin
             TLB_D_V_FINAL <= TLB_D_V_FINAL;
@@ -579,6 +591,7 @@ always @(posedge clk or negedge rstn) begin
             VA_D_reg3 <= VA_D_reg3;
             en_d_reg3 <= en_d_reg3;
             TAG_OFFSET_D_reg3 <= TAG_OFFSET_D_reg3;
+            SOL_reg3 <= SOL_reg3;
         end
     end
 end
@@ -785,8 +798,8 @@ TLB_EXP tlb_exp(
     .en1(en_d_reg3),
     .plv1_1bit(plv_1bit), //crmd_plv
     .is_if_1(0), //PIF
-    .is_store_1(store_or_load), //PIS
-    .is_load_1(~store_or_load), //PIL
+    .is_store_1(SOL_reg3), //PIS
+    .is_load_1(~SOL_reg3), //PIL
     .tlbhit1(|TLB_D_HIT), //TLBR TLB重填例外
     .tlb_d1(TLB_D_D_FINAL), //页脏为1，PME 页修改例外 找到dirty页
     .tlb_v1(TLB_D_V_FINAL), //页有效为1，PIF PIS PIL
