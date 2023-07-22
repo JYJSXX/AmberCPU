@@ -335,16 +335,16 @@ generate
     for (i = 0; i < `TLB_NUM; i = i + 1)begin
         
         assign TLB_I_V[i]      =   {TLB_I_HIT[i]} & (TLB_I_ODD[i] ? rd_TLB_V_2_reg[i] : rd_TLB_V_1_reg[i]);
-        assign TLB_I_D[i]      =   {TLB_I_HIT[i]} & (TLB_I_ODD[i] ? rd_TLB_D_2_reg[i] : rd_TLB_V_1_reg[i]);
-        assign TLB_I_MAT[i]    =   {TLB_I_HIT[i]} & (TLB_I_ODD[i] ? rd_TLB_MAT_2_reg[i][0] : rd_TLB_V_1_reg[i]);
-        assign TLB_I_PLV[i]    =   {TLB_I_HIT[i]} & (TLB_I_ODD[i] ? rd_TLB_PLV_2_reg[i][0] : rd_TLB_V_1_reg[i]);
-        assign TLB_I_PPN[i]    =   {(`TLB_PPN_LEN - 1){TLB_I_HIT[i] & TLB_D_V[i]}} & (TLB_I_ODD[i] ? rd_TLB_PPN_2_reg[i] : rd_TLB_V_1_reg[i]);
+        assign TLB_I_D[i]      =   {TLB_I_HIT[i]} & (TLB_I_ODD[i] ? rd_TLB_D_2_reg[i] : rd_TLB_D_1_reg[i]);
+        assign TLB_I_MAT[i]    =   {TLB_I_HIT[i]} & (TLB_I_ODD[i] ? rd_TLB_MAT_2_reg[i][0] : rd_TLB_MAT_1_reg[i][0]);
+        assign TLB_I_PLV[i]    =   {TLB_I_HIT[i]} & (TLB_I_ODD[i] ? rd_TLB_PLV_2_reg[i][0] : rd_TLB_PLV_1_reg[i][0]);
+        assign TLB_I_PPN[i]    =   {(`TLB_PPN_LEN - 1){TLB_I_HIT[i] & TLB_D_V[i]}} & (TLB_I_ODD[i] ? rd_TLB_PPN_2_reg[i] : rd_TLB_PPN_1_reg[i]);
 
         assign TLB_D_V[i]      =   {TLB_D_HIT[i]} & (TLB_D_ODD[i] ? rd_TLB_V_2_reg[i] : rd_TLB_V_1_reg[i]);
-        assign TLB_D_D[i]      =   {TLB_D_HIT[i]} & (TLB_D_ODD[i] ? rd_TLB_D_2_reg[i] : rd_TLB_V_1_reg[i]);
-        assign TLB_D_MAT[i]    =   {TLB_D_HIT[i]} & (TLB_D_ODD[i] ? rd_TLB_MAT_2_reg[i][0] : rd_TLB_V_1_reg[i]);
-        assign TLB_D_PLV[i]    =   {TLB_D_HIT[i]} & (TLB_D_ODD[i] ? rd_TLB_PLV_2_reg[i][0] : rd_TLB_V_1_reg[i]);
-        assign TLB_D_PPN[i]    =   {(`TLB_PPN_LEN - 1){TLB_D_HIT[i] & TLB_D_V[i]}} & (TLB_D_ODD[i] ? rd_TLB_PPN_2_reg[i] : rd_TLB_V_1_reg[i]);
+        assign TLB_D_D[i]      =   {TLB_D_HIT[i]} & (TLB_D_ODD[i] ? rd_TLB_D_2_reg[i] : rd_TLB_D_1_reg[i]);
+        assign TLB_D_MAT[i]    =   {TLB_D_HIT[i]} & (TLB_D_ODD[i] ? rd_TLB_MAT_2_reg[i][0] : rd_TLB_MAT_1_reg[i][0]);
+        assign TLB_D_PLV[i]    =   {TLB_D_HIT[i]} & (TLB_D_ODD[i] ? rd_TLB_PLV_2_reg[i][0] : rd_TLB_PLV_1_reg[i][0]);
+        assign TLB_D_PPN[i]    =   {(`TLB_PPN_LEN - 1){TLB_D_HIT[i] & TLB_D_V[i]}} & (TLB_D_ODD[i] ? rd_TLB_PPN_2_reg[i] : rd_TLB_PPN_1_reg[i]);
     end
 endgenerate
 
