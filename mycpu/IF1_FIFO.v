@@ -123,9 +123,9 @@ module IF1_FIFO(
         flush_from_if1_fifo=0;
         case (stat)
             IDLE:begin
-                next_stat=  ibar_flag?  WAIT_EX_IBAR:
-                            csr_flag ?  WAIT_EX_CSR:
-                            tlb_flag ?  WAIT_TLB_TLB:
+                next_stat=  ibar_flag_from_ex?  WAIT_EX_IBAR:
+                            csr_flag_from_ex ?  WAIT_EX_CSR:
+                            tlb_flag_from_ex ?  WAIT_TLB_TLB:
                             IDLE;
             end
             WAIT_EX_IBAR:begin

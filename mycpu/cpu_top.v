@@ -1492,6 +1492,7 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .flush_to_fifo     ( flush_to_fifo     ),
         .flush_to_if1_fifo ( flush_to_if1_fifo ),
         .flush_to_if0_if1  ( flush_to_if0_if1  ),
+        .flush_to_if0      ( flush_to_if0      ),
         .flush_to_tlb      ( flush_to_tlb      ),
         .flush_to_icache   ( flush_to_icache   ),
         .flush_to_dcache   ( flush_to_dcache   ),

@@ -15,6 +15,7 @@ module HazardUnit (
     output flush_to_fifo,
     output flush_to_if1_fifo,
     output flush_to_if0_if1,
+    output flush_to_if0,
     output flush_to_tlb,
     output flush_to_icache,
     output flush_to_dcache,
