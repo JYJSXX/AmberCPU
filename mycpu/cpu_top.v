@@ -1329,7 +1329,7 @@ module core_top(
         .CSR_TLBIDX     ( TLBIDX     ),
         .stall_i        ( stall_i        ),
         .stall_d        ( stall_d        ),
-        .VA_I           ( VA_I           ),
+        .VA_I           ( fetch_pc       ),
         .VA_D           ( VA_D           ),
         .PA_I           ( PA_I           ),
         .PA_D           ( PA_D           ),
