@@ -63,7 +63,8 @@ module csr
     input     [`TLB_CPRLEN - 1:0]     tlbrd_cpr,    
     input     [`TLB_TRANSLEN - 1:0]   tlbrd_trans_1,
     input     [`TLB_TRANSLEN - 1:0]   tlbrd_trans_2,
-    input [7:0] hardware_interrupt
+    input [7:0] hardware_interrupt,
+    output  [31:0] tid
 
     // input tlb_index_we,
     // input tlb_ps_we,
@@ -819,5 +820,5 @@ assign rdata[31:0] = {32{addr==`CSR_CRMD}} & csr_crmd |
         assign ASID=csr_asid;
         assign TLBEHI=csr_tlbehi;
         assign TLBIDX=csr_tlbidx;
-        
+        assign tid = csr_tid;
 endmodule

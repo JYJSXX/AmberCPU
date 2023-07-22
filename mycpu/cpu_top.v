@@ -805,7 +805,7 @@ module core_top(
     wire [18:0] invtlb_va;
 
     //exception
-    wire  plv; //从csr_crmd[0]
+    //wire  plv; //从csr_crmd[0]
     wire [31:0] ex1_badv;
     wire ex1_excp_flag ;
     wire [6:0] ex1_exception;
@@ -920,7 +920,7 @@ module core_top(
         .invtlb_op            ( invtlb_op            ),
         .invtlb_asid          ( invtlb_asid          ),
         .invtlb_va            ( invtlb_va            ),
-        .plv                  ( plv                  ),
+        .plv                  ( crmd[0]                  ),
         .excp_flag_in         ( reg_ex_excp_flag         ),
         .exception_in         ( reg_ex_exception         ),
         .badv_in              ( reg_ex_badv              ),
@@ -1232,7 +1232,8 @@ module core_top(
         .tlbrd_cpr       ( tlbrd_cpr       ),
         .tlbrd_trans_1   ( tlbrd_trans_1   ),
         .tlbrd_trans_2   ( tlbrd_trans_2   ),
-        .hardware_interrupt  ( intrpt  )
+        .hardware_interrupt  ( intrpt  ),
+        .tid             ( tid             )
     );
 
     BTB u_BTB(
@@ -1381,8 +1382,8 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .CSR_DMW1       ( dmw1       ),
         .CSR_TLBEHI     ( TLBEHI     ),
         .CSR_TLBIDX     ( TLBIDX     ),
-        .stall_i        ( stall_i        ),
-        .stall_d        ( stall_d       ),
+        .stall_i        ( pc_in_stall        ),
+        .stall_d        ( ~ex2_allowin       ),
         .en_d           ( reg_ex_uop0[`INS_MEM]        ),
         .VA_I           ( fetch_pc[31:12]   ),
         .VA_D           ( addr_dcache[31:12]           ),
