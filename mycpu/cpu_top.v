@@ -999,6 +999,8 @@ module core_top(
         .badv_in                   ( ex1_badv                   ),
         .excp_flag_in              ( ex1_excp_flag              ),
         .exception_in              ( ex1_exception              ),
+        .d_exception               ( dcache_exception           ),
+        .d_badv                     ( dcache_badv               ),
         .ex1_ex2_badv              ( ex1_ex2_badv              ),
         .ex1_ex2_excp_flag         ( ex1_ex2_excp_flag         ),
         .ex1_ex2_exception         ( ex1_ex2_exception         )
@@ -1350,7 +1352,7 @@ module core_top(
         .CSR_TLBEHI     ( TLBEHI     ),
         .CSR_TLBIDX     ( TLBIDX     ),
         .stall_i        ( stall_i        ),
-        .stall_d        ( stall_d        ),
+        .stall_d        ( ~reg_ex_uop0[`INS_MEM]       ),
         .VA_I           ( fetch_pc       ),
         .VA_D           ( VA_D           ),
         .PA_I           ( PA_I           ),
