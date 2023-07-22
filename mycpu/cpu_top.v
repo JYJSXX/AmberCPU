@@ -1341,7 +1341,8 @@ module core_top(
 
 
 
-
+wire [3:0]reg_ex_cond0;
+assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
     TLB u_TLB(
         .clk            ( clk            ),
         .rstn           ( aresetn           ),
@@ -1354,7 +1355,8 @@ module core_top(
         .CSR_TLBEHI     ( TLBEHI     ),
         .CSR_TLBIDX     ( TLBIDX     ),
         .stall_i        ( stall_i        ),
-        .stall_d        ( ~reg_ex_uop0[`INS_MEM]       ),
+        .stall_d        ( stall_d       ),
+        .en_d           ( reg_ex_uop0[`INS_MEM]        ),
         .VA_I           ( fetch_pc       ),
         .VA_D           ( VA_D           ),
         .PA_I           ( PA_I           ),
@@ -1381,7 +1383,11 @@ module core_top(
         .TLBINVLD_ready ( invtlb_ready ),
         .TLBINVLD_OP    ( invtlb_op    ),
         .TLBINVLD_ASID  ( invtlb_asid  ),
-        .TLBINVLD_VA    ( invtlb_va    )
+        .TLBINVLD_VA    ( invtlb_va    ),
+        .store_or_load  ( reg_ex_cond0[2]  ),
+        .plv_1bit         (crmd[0]      ),
+        .tlb_exception_code_i(tlb_exception_code_i),
+        .tlb_exception_code_d(tlb_exception_code_d)
     );
 
 
