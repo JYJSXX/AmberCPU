@@ -183,8 +183,8 @@ always@(posedge aclk) begin
 
 end
     IQ u_IQ(
-        .clk                      ( clk                      ),
-        .rstn                     ( rstn                     ),
+        .clk                      ( aclk                     ),
+        .rstn                     ( aresetn                  ),
         .id_allowin               ( id_allowin               ),
         .reg_readygo              ( reg_readygo              ),
         .id_readygo               ( id_readygo               ),
@@ -195,9 +195,9 @@ end
         .id_reg_inst0             ( id_reg_inst0             ),
         .id_reg_inst1             ( id_reg_inst1             ),
         .id_reg_badv              ( id_reg_badv              ),
-        .id_reg_priv_flag         ( id_reg_priv_flag         ),
+        .id_reg_priv_flag         ( id_reg_priv_flag         ), //!
         .id_reg_excp_flag         ( id_reg_excp_flag         ),
-        .id_reg_branch_flag       ( id_reg_branch_flag       ),
+        .id_reg_branch_flag       ( id_reg_branch_flag       ), //!
         .id_reg_exception         ( id_reg_exception         ),
         .id_reg_is_ALU_0          ( id_reg_is_ALU_0          ),
         .id_reg_is_ALU_1          ( id_reg_is_ALU_1          ),
