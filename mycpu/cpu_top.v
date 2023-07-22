@@ -1055,7 +1055,7 @@ module core_top(
     wire wen_era;
     wire [18:0] vppn_out;
     wire wen_vppn;
-
+    wire cpu_interrupt;
     EX2_WB u_EX2_WB(
         .clk                 ( clk                 ),
         .aresetn             ( aresetn             ),
@@ -1111,6 +1111,7 @@ module core_top(
         .wen_badv            ( wen_badv            ),
         .tlb_exception       ( tlb_exception       ),
         .era_in              ( ex1_ex2_pc0         ),
+        .cpu_interrupt        ( cpu_interrupt        ),
         .era_out             ( era_out             ),
         .wen_era             ( wen_era             ),
         .vppn_out            ( vppn_out            ),
@@ -1121,12 +1122,12 @@ module core_top(
     
 
     wire [31:0] crmd; //当前模式信息，包含privilege
-    wire [31:0] estat;    //例外状态 idle_interupt; 
+    wire [31:0] estat;    //例外状态 idle_interrupt; 
     wire [31:0] csr_era;
     wire [31:0] eentry;
     wire [31:0] tlbrentry;
     wire [31:0] pgdl,pgdh;
-    wire cpu_interupt;
+    
     wire [31:0] dmw0;
     wire [31:0] dmw1;
     wire llbit;
@@ -1175,7 +1176,7 @@ module core_top(
         .tlbrentry       ( tlbrentry       ),
         .pgdl            ( pgdl            ),
         .pgdh            ( pgdh            ),
-        .cpu_interupt    ( cpu_interupt    ),
+        .cpu_interrupt    ( cpu_interrupt    ),
         .dmw0            ( dmw0            ),
         .dmw1            ( dmw1            ),
         .llbit           ( llbit           ),
@@ -1226,6 +1227,25 @@ module core_top(
         .predict_dir_fail ( predict_dir_fail ),
         .predict_add_fail ( predict_add_fail )
     );
+
+    
+    //sram
+    wire     [31:0]      i_raddr,        //指令cache读地址
+    wire     [511:0]     i_rdata,        //指令cache读数据
+    wire                 i_rvalid,       //指令cache读有效
+    wire                 i_rready,       //指令cache读准备好
+    wire     [7:0]       i_rlen,         //指令cache读长度
+    wire     [31:0]      d_raddr,        //数据cache读地址
+    wire     [511:0]     d_rdata,        //数据cache读数据
+    wire                 d_rvalid,       //数据cache读有效
+    wire                 d_rready,       //数据cache读准备好
+    wire     [7:0]       d_rlen,         //数据cache读长度
+    wire     [31:0]      d_waddr,        //数据cache写地址
+    wire     [511:0]     d_wdata,        //数据cache写数据
+    wire                 d_wvalid,       //数据cache写有效
+    wire                 d_wready,       //数据cache写准备好
+    wire     [7:0]       d_wlen,         //数据cache写长度
+    wire     [3:0]       d_wstrb         //数据cache写使能
 
     
     icache#(
@@ -1358,65 +1378,35 @@ module core_top(
         .TLBINVLD_VA    ( invtlb_va    )
     );
 
-    
-    axi2dpram u_axi2dpram(
-        .aclk     ( aclk     ),
-        .aresetn  ( aresetn  ),
-        .aw_id    ( aw_id    ),
-        .aw_addr  ( aw_addr  ),
-        .aw_len   ( aw_len   ),
-        .aw_size  ( aw_size  ),
-        .aw_valid ( aw_valid ),
-        .aw_ready ( aw_ready ),
-        .w_data   ( w_data   ),
-        .w_strb   ( w_strb   ),
-        .w_last   ( w_last   ),
-        .w_valid  ( w_valid  ),
-        .w_ready  ( w_ready  ),
-        .b_id     ( b_id     ),
-        .b_valid  ( b_valid  ),
-        .b_ready  ( b_ready  ),
-        .ar_id    ( ar_id    ),
-        .ar_addr  ( ar_addr  ),
-        .ar_len   ( ar_len   ),
-        .arsize   ( arsize   ),
-        .ar_valid ( ar_valid ),
-        .ar_ready ( ar_ready ),
-        .r_id     ( r_id     ),
-        .r_data   ( r_data   ),
-        .r_last   ( r_last   ),
-        .r_valid  ( r_valid  ),
-        .r_ready  ( r_ready  )
-    );
 
     sram_axi u_sram_axi(
         .aclk     ( aclk     ),
         .aresetn  ( aresetn  ),
-        .ar_id    ( ar_id    ),
-        .ar_addr  ( ar_addr  ),
-        .ar_len   ( ar_len   ),
-        .ar_size  ( ar_size  ),
-        .ar_burst ( ar_burst ),
-        .ar_valid ( ar_valid ),
-        .ar_ready ( ar_ready ),
-        .r_id     ( r_id     ),
-        .r_data   ( r_data   ),
-        .r_last   ( r_last   ),
-        .r_valid  ( r_valid  ),
-        .r_ready  ( r_ready  ),
-        .aw_addr  ( aw_addr  ),
-        .aw_size  ( aw_size  ),
-        .aw_len   ( aw_len   ),
-        .aw_burst ( aw_burst ),
-        .aw_valid ( aw_valid ),
-        .aw_ready ( aw_ready ),
-        .w_data   ( w_data   ),
-        .w_valid  ( w_valid  ),
-        .w_ready  ( w_ready  ),
-        .w_last   ( w_last   ),
-        .w_strb   ( w_strb   ),
-        .b_valid  ( b_valid  ),
-        .b_ready  ( b_ready  ),
+        .ar_id    ( arid    ),
+        .ar_addr  ( araddr  ),
+        .ar_len   ( arlen   ),
+        .ar_size  ( arsize  ),
+        .ar_burst ( arburst ),
+        .ar_valid ( arvalid ),
+        .ar_ready ( arready ),
+        .r_id     ( rid     ),
+        .r_data   ( rdata   ),
+        .r_last   ( rlast   ),
+        .r_valid  ( rvalid  ),
+        .r_ready  ( rready  ),
+        .aw_addr  ( awaddr  ),
+        .aw_size  ( awsize  ),
+        .aw_len   ( awlen   ),
+        .aw_burst ( awburst ),
+        .aw_valid ( awvalid ),
+        .aw_ready ( awready ),
+        .w_data   ( wdata   ),
+        .w_valid  ( wvalid  ),
+        .w_ready  ( wready  ),
+        .w_last   ( wlast   ),
+        .w_strb   ( wstrb   ),
+        .b_valid  ( bvalid  ),
+        .b_ready  ( bready  ),
         .i_raddr  ( i_raddr  ),
         .i_rdata  ( i_rdata  ),
         .i_rvalid ( i_rvalid ),
