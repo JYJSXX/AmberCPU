@@ -248,7 +248,7 @@ always @(posedge clk or negedge rstn) begin
                 TLB_I_VA_12_ODD[j]  <= VA_I[0];
                 TLB_I_VA_21_ODD[j]  <= VA_I[9];
                 VA_I_reg <= VA_I;
-                en_i_reg <= en_i;
+                en_i_reg <= 1;
                 TAG_OFFSET_I_reg <= TAG_OFFSET_I;
             end
             else begin
@@ -779,7 +779,7 @@ TLB_EXP tlb_exp(
     .tlb_v0(TLB_I_V_FINAL), //页有效为1，PIF PIS PIL
     .tlb_plv0_1bit(plv_1bit), //页特权等级，PPI
     .exception0(tlb_exception_code_i),
-    .tlbexception_flag0(tlbexception_flag0), //直接把exception0按位或就行，反正INT不会有TLB生成
+    //.tlbexception_flag0(tlbexception_flag0), //直接把exception0按位或就行，反正INT不会有TLB生成
     
     .vaddr1(VA_D_reg3),
     .en1(en_d_reg3),
@@ -791,8 +791,8 @@ TLB_EXP tlb_exp(
     .tlb_d1(TLB_D_D_FINAL), //页脏为1，PME 页修改例外 找到dirty页
     .tlb_v1(TLB_D_V_FINAL), //页有效为1，PIF PIS PIL
     .tlb_plv1_1bit(plv_1bit), //页特权等级，PPI
-    .exception1(tlb_exception_code_d),
-    .tlbexception_flag1(|tlb_exception_code_d) //直接把exception0按位或就行，反正INT不会有TLB生成
+    .exception1(tlb_exception_code_d)
+    //.tlbexception_flag1(|tlb_exception_code_d) //直接把exception0按位或就行，反正INT不会有TLB生成
 );
 
 endmodule

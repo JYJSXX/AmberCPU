@@ -20,7 +20,7 @@ module IF0_IF1 (
     output reg[31:0]    if0_if1_pc_next
 
 );
-    assign if0_allowin= if1_allowin;
+    assign if0_allowin= if1_allowin&rready;
     assign if1_readygo= rready;
 
     always @(posedge clk) begin
