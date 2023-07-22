@@ -771,6 +771,8 @@ module core_top(
 
     //下面都是特权指令的
     wire privilege_ready;
+    assign csr_done = privilege_ready & reg_ex_uop0[`UOP_CSR];
+    assign tlb_done = privilege_ready & reg_ex_uop0[`UOP_TLB] & (reg_ex_inst0[11:10] == 2'b00 || reg_ex_inst0[11:0] ==2'b01 || reg_ex_inst0[15]);
     //给csr
     wire [31:0] csr_addr;
     wire [31:0] csr_wdata;
