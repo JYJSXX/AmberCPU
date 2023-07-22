@@ -18,10 +18,16 @@ module TLB(
     input                               en_d,
     input       [`TLB_VPPN_LEN : 0]     VA_I,
     input       [`TLB_VPPN_LEN : 0]     VA_D,
+
+    //TO CACHE
     output reg  [`TLB_PPN_LEN - 1:0]    PA_I,
     output reg  [`TLB_PPN_LEN - 1:0]    PA_D,
     output reg                          is_cached_I,
     output reg                          is_cached_D,
+    output                              en_VA_I_OUT,
+    output                              en_VA_D_OUT,
+    output                              VA_I_OUT,
+    output                              VA_D_OUT,
 
     //Priv      
     input                               TLBSRCH_valid,
@@ -144,8 +150,6 @@ reg     [0:0]                   rd_TLB_D_2_reg      [`TLB_NUM - 1:0];
 reg     [1:0]                   rd_TLB_MAT_2_reg    [`TLB_NUM - 1:0];
 reg     [1:0]                   rd_TLB_PLV_2_reg    [`TLB_NUM - 1:0];
 reg     [`TLB_PPN_LEN - 1:0]    rd_TLB_PPN_2_reg    [`TLB_NUM - 1:0];
-reg                             stall_i_reg                           ;
-reg                             stall_d_reg                           ;
 reg                             en_i_reg                              ;
 reg                             en_d_reg                              ;
 // reg                             CSR_PG_reg                          ;
@@ -157,8 +161,8 @@ reg     [`TLB_VPPN_LEN : 0]     VA_I_reg                            ;
   
 
 initial begin
-    stall_i_reg = 0;
-    stall_d_reg = 0;
+    en_i_reg = 0;
+    en_d_reg = 0;
     // CSR_PG_reg = 0;
     // CSR_CRMD_reg = 0;
     // CSR_DMW0_reg = 0;
@@ -190,8 +194,8 @@ end
 
 always @(posedge clk or negedge rstn) begin
     if (~rstn)begin
-        stall_i_reg <= 0;
-        stall_d_reg <= 0;
+        en_i_reg <= 0;
+        en_d_reg <= 0;
         // CSR_PG_reg <= 0;
         // CSR_CRMD_reg <= 0;
         // CSR_DMW0_reg <= 0;
@@ -221,39 +225,43 @@ always @(posedge clk or negedge rstn) begin
         end
     end
     else begin
-        stall_i_reg <= stall_i;
-        stall_d_reg <= stall_d;
         // CSR_PG_reg <= CSR_PG;
         // CSR_CRMD_reg <= CSR_CRMD;
         // CSR_DMW0_reg <= CSR_DMW0;
         // CSR_DMW1_reg <= CSR_DMW1;
 
-        VA_I_reg <= VA_I;
-        VA_D_reg <= VA_D;
         for(j = 0; j < `TLB_NUM; j = j + 1)begin
             if(~stall_i) begin
                 TLB_I_HIT_4K_OUT[j] <= TLB_I_HIT_4K_IN[j];
                 TLB_I_HIT_4M_OUT[j] <= TLB_I_HIT_4M_IN[j];
                 TLB_I_VA_12_ODD[j]  <= VA_I[0];
                 TLB_I_VA_21_ODD[j]  <= VA_I[9];
+                VA_I_reg <= VA_I;
+                en_i_reg <= en_i;
             end
             else begin
                 TLB_I_HIT_4K_OUT[j] <= TLB_I_HIT_4K_OUT[j];
                 TLB_I_HIT_4M_OUT[j] <= TLB_I_HIT_4M_OUT[j];
                 TLB_I_VA_12_ODD[j]  <= TLB_I_VA_12_ODD[j];
                 TLB_I_VA_21_ODD[j]  <= TLB_I_VA_21_ODD[j];
+                VA_I_reg <= VA_I_reg;
+                en_i_reg <= en_i_reg;
             end
             if(~stall_d) begin
                 TLB_D_HIT_4K_OUT[j] <= TLB_D_HIT_4K_IN[j];
                 TLB_D_HIT_4M_OUT[j] <= TLB_D_HIT_4M_IN[j];
                 TLB_D_VA_12_ODD[j]  <= VA_D[0];
                 TLB_D_VA_21_ODD[j]  <= VA_D[9];
+                VA_D_reg <= VA_D;
+                en_d_reg <= en_d;
             end
             else begin
                 TLB_D_HIT_4K_OUT[j] <= TLB_D_HIT_4K_OUT[j];
                 TLB_D_HIT_4M_OUT[j] <= TLB_D_HIT_4M_OUT[j];
                 TLB_D_VA_12_ODD[j]  <= TLB_D_VA_12_ODD[j];
                 TLB_D_VA_21_ODD[j]  <= TLB_D_VA_21_ODD[j];
+                VA_D_reg <= VA_D_reg;
+                en_d_reg <= en_d_reg;
             end
             TLB_PS_EQUAL_4K[j]  <= (rd_TLB_PS[j] == 12);
             rd_TLB_V_1_reg[j]   <= rd_TLB_V_1[j];
@@ -359,14 +367,19 @@ reg [`TLB_NUM - 1:0]    TLB_D_D_TRANS_reg = 0;
 reg [`TLB_NUM - 1:0]    TLB_D_MAT_TRANS_reg = 0;
 reg [`TLB_NUM - 1:0]    TLB_D_PLV_TRANS_reg = 0;
 reg [`TLB_NUM - 1:0]    TLB_D_PPN_TRANS_reg [`TLB_PPN_LEN - 1:0];
-reg                     stall_i_reg2 = 0;
-reg                     stall_d_reg2 = 0;
 // reg                     CSR_PG_reg2 = 0;
 // reg                     CSR_CRMD_reg2 = 0;
 // reg                     CSR_DMW0_reg2 = 0;
 // reg                     CSR_DMW1_reg2 = 0;
 reg [`TLB_VPPN_LEN : 0] VA_I_reg2 = 0;
 reg [`TLB_VPPN_LEN : 0] VA_D_reg2 = 0;
+reg                     en_i_reg2 = 0;
+reg                     en_d_reg2 = 0;
+
+assign en_VA_I_OUT = en_i_reg2;
+assign en_VA_D_OUT = en_d_reg2;
+assign VA_I_OUT = VA_I_reg2;
+assign VA_D_OUT = VA_D_reg2;
 
 initial begin
     for(j = 0; j < `TLB_PPN_LEN; j = j + 1)begin
@@ -385,14 +398,14 @@ always @(posedge clk or negedge rstn)begin
         TLB_D_D_TRANS_reg <= 0;
         TLB_D_MAT_TRANS_reg <= 0;
         TLB_D_PLV_TRANS_reg <= 0;
-        stall_i_reg2 <= 0;
-        stall_d_reg2 <= 0;
         // CSR_PG_reg2 <= 0;
         // CSR_CRMD_reg2 <= 0;
         // CSR_DMW0_reg2 <= 0;
         // CSR_DMW1_reg2 <= 0;
         VA_I_reg2 <= 0;
         VA_D_reg2 <= 0;
+        en_i_reg2 <= 0;
+        en_d_reg2 <= 0;
         for(j = 0; j < `TLB_PPN_LEN; j = j + 1)begin
             TLB_I_PPN_TRANS_reg[j] <= 0;
             TLB_D_PPN_TRANS_reg[j] <= 0;
@@ -405,6 +418,7 @@ always @(posedge clk or negedge rstn)begin
             TLB_I_MAT_TRANS_reg <= TLB_I_MAT_TRANS;
             TLB_I_PLV_TRANS_reg <= TLB_I_PLV_TRANS;
             VA_I_reg2 <= VA_I_reg;
+            en_i_reg2 <= en_i_reg;
         end
         else begin
             TLB_I_V_TRANS_reg <= TLB_I_V_TRANS_reg;
@@ -412,6 +426,7 @@ always @(posedge clk or negedge rstn)begin
             TLB_I_MAT_TRANS_reg <= TLB_I_MAT_TRANS_reg;
             TLB_I_PLV_TRANS_reg <= TLB_I_PLV_TRANS_reg;
             VA_I_reg2 <= VA_I_reg2;
+            en_i_reg2 <= en_i_reg2;
         end
         if (~stall_d)begin
             TLB_D_V_TRANS_reg <= TLB_D_V_TRANS;
@@ -419,6 +434,7 @@ always @(posedge clk or negedge rstn)begin
             TLB_D_MAT_TRANS_reg <= TLB_D_MAT_TRANS;
             TLB_D_PLV_TRANS_reg <= TLB_D_PLV_TRANS;
             VA_D_reg2 <= VA_D_reg;
+            en_d_reg2 <= en_d_reg;
         end
         else begin
             TLB_D_V_TRANS_reg <= TLB_D_V_TRANS_reg;
@@ -426,9 +442,8 @@ always @(posedge clk or negedge rstn)begin
             TLB_D_MAT_TRANS_reg <= TLB_D_MAT_TRANS_reg;
             TLB_D_PLV_TRANS_reg <= TLB_D_PLV_TRANS_reg;
             VA_D_reg2 <= VA_D_reg2;
+            en_d_reg2 <= en_d_reg2;
         end
-        stall_i_reg2 <= stall_i_reg;
-        stall_d_reg2 <= stall_d_reg;
         // CSR_PG_reg2 <= CSR_PG_reg;
         // CSR_CRMD_reg2 <= CSR_CRMD_reg;
         // CSR_DMW0_reg2 <= CSR_DMW0_reg;
@@ -475,6 +490,8 @@ reg [`TLB_NUM - 1:0]       TLB_D_PLV_FINAL = 0;
 reg [`TLB_PPN_LEN - 1:0]   TLB_D_PPN_FINAL = 0;
 reg                        VA_I_reg3 = 0;
 reg                        VA_D_reg3 = 0;
+reg                        en_i_reg3 = 0;
+reg                        en_d_reg3 = 0;
 
 always @(posedge clk or negedge rstn) begin
     if(~rstn)begin
@@ -490,20 +507,46 @@ always @(posedge clk or negedge rstn) begin
         TLB_D_PPN_FINAL <= 0;
         VA_I_reg3 <= 0;
         VA_D_reg3 <= 0;
+        en_i_reg3 <= 0;
+        en_d_reg3 <= 0;
     end
     else begin
-        TLB_I_V_FINAL <= TLB_I_V_FINAL_0;
-        TLB_I_D_FINAL <= TLB_I_D_FINAL_0;
-        TLB_I_MAT_FINAL <= TLB_I_MAT_FINAL_0;
-        TLB_I_PLV_FINAL <= TLB_I_PLV_FINAL_0;
-        TLB_I_PPN_FINAL <= TLB_I_PPN_FINAL_0;
-        TLB_D_V_FINAL <= TLB_D_V_FINAL_0;
-        TLB_D_D_FINAL <= TLB_D_D_FINAL_0;
-        TLB_D_MAT_FINAL <= TLB_D_MAT_FINAL_0;
-        TLB_D_PLV_FINAL <= TLB_D_PLV_FINAL_0;
-        TLB_D_PPN_FINAL <= TLB_D_PPN_FINAL_0;
-        VA_I_reg3 <= VA_I_reg2[31];
-        VA_D_reg3 <= VA_D_reg2[31];
+        if (~stall_i) begin
+            TLB_I_V_FINAL <= TLB_I_V_FINAL_0;
+            TLB_I_D_FINAL <= TLB_I_D_FINAL_0;
+            TLB_I_MAT_FINAL <= TLB_I_MAT_FINAL_0;
+            TLB_I_PLV_FINAL <= TLB_I_PLV_FINAL_0;
+            TLB_I_PPN_FINAL <= TLB_I_PPN_FINAL_0;
+            VA_I_reg3 <= VA_I_reg2[31];
+            en_i_reg3 <= en_i_reg2;
+        end
+        else begin
+            TLB_I_V_FINAL <= TLB_I_V_FINAL;
+            TLB_I_D_FINAL <= TLB_I_D_FINAL;
+            TLB_I_MAT_FINAL <= TLB_I_MAT_FINAL;
+            TLB_I_PLV_FINAL <= TLB_I_PLV_FINAL;
+            TLB_I_PPN_FINAL <= TLB_I_PPN_FINAL;
+            VA_I_reg3 <= VA_I_reg3;
+            en_i_reg3 <= en_i_reg3;
+        end
+        if (~stall_d) begin
+            TLB_D_V_FINAL <= TLB_D_V_FINAL_0;
+            TLB_D_D_FINAL <= TLB_D_D_FINAL_0;
+            TLB_D_MAT_FINAL <= TLB_D_MAT_FINAL_0;
+            TLB_D_PLV_FINAL <= TLB_D_PLV_FINAL_0;
+            TLB_D_PPN_FINAL <= TLB_D_PPN_FINAL_0;
+            VA_D_reg3 <= VA_D_reg2[31];
+            en_d_reg3 <= en_d_reg2;
+        end
+        else begin
+            TLB_D_V_FINAL <= TLB_D_V_FINAL;
+            TLB_D_D_FINAL <= TLB_D_D_FINAL;
+            TLB_D_MAT_FINAL <= TLB_D_MAT_FINAL;
+            TLB_D_PLV_FINAL <= TLB_D_PLV_FINAL;
+            TLB_D_PPN_FINAL <= TLB_D_PPN_FINAL;
+            VA_D_reg3 <= VA_D_reg3;
+            en_d_reg3 <= en_d_reg3;
+        end
     end
 end
 
@@ -532,18 +575,18 @@ wire [`TLB_VPPN_LEN:0] DMW0_PPN_D = {CSR_DMW0[`DMW0_PSEG], VA_D_reg2[`TLB_VPPN_L
 wire        DMW1_JUDGE_D = VA_D_reg2[`TLB_VPPN_LEN : `TLB_VPPN_LEN - 2] == CSR_DMW1[`DMW0_VSEG];
 wire [`TLB_VPPN_LEN:0] DMW1_PPN_D = {CSR_DMW1[`DMW1_PSEG], VA_D_reg2[`TLB_VPPN_LEN - 3:0]};
 
-always @(*)begin
+always @(posedge clk or negedge rstn)begin
     if (~rstn) begin
-        PA_I = 0;
-        PA_D = 0;
-        is_cached_I = 0;
-        is_cached_D = 0;
+        PA_I <= 0;
+        PA_D <= 0;
+        is_cached_I <= 0;
+        is_cached_D <= 0;
     end
     else begin
-        PA_I = CSR_PG ? (DMW0_JUDGE_I ? DMW0_PPN_I : (DMW1_JUDGE_I ? DMW1_PPN_I : TLB_I_PPN_FINAL_0)) : VA_I_reg2;
-        PA_D = CSR_PG ? (DMW0_JUDGE_D ? DMW0_PPN_D : (DMW1_JUDGE_D ? DMW1_PPN_D : TLB_D_PPN_FINAL_0)) : VA_D_reg2;
-        is_cached_I = CSR_PG ? (DMW0_JUDGE_I ? CSR_DMW0[4] : (DMW1_JUDGE_I ? CSR_DMW1[4] : TLB_I_MAT_FINAL_0)) : CSR_CRMD[5];
-        is_cached_D = CSR_PG ? (DMW0_JUDGE_D ? CSR_DMW0[4] : (DMW1_JUDGE_D ? CSR_DMW1[4] : TLB_D_MAT_FINAL_0)) : CSR_CRMD[7];
+        PA_I <= CSR_PG ? (DMW0_JUDGE_I ? DMW0_PPN_I : (DMW1_JUDGE_I ? DMW1_PPN_I : TLB_I_PPN_FINAL_0)) : VA_I_reg2;
+        PA_D <= CSR_PG ? (DMW0_JUDGE_D ? DMW0_PPN_D : (DMW1_JUDGE_D ? DMW1_PPN_D : TLB_D_PPN_FINAL_0)) : VA_D_reg2;
+        is_cached_I <= CSR_PG ? (DMW0_JUDGE_I ? CSR_DMW0[4] : (DMW1_JUDGE_I ? CSR_DMW1[4] : TLB_I_MAT_FINAL_0)) : CSR_CRMD[5];
+        is_cached_D <= CSR_PG ? (DMW0_JUDGE_D ? CSR_DMW0[4] : (DMW1_JUDGE_D ? CSR_DMW1[4] : TLB_D_MAT_FINAL_0)) : CSR_CRMD[7];
     end
 end
 //TLB SEARCH PART
@@ -691,7 +734,7 @@ end
 //TLB_EXP
 TLB_EXP tlb_exp(
     .vaddr0(VA_I_reg3), //todo:
-    .en0(~stall_i),
+    .en0(en_i_reg3),
     .plv0_1bit(plv_1bit), //crmd_plv
     .is_if_0(1), //PIF 
     .is_store_0(0), //PIS
@@ -704,7 +747,7 @@ TLB_EXP tlb_exp(
     .tlbexception_flag0(tlbexception_flag0), //直接把exception0按位或就行，反正INT不会有TLB生成
     
     .vaddr1(VA_D_reg3),
-    .en1(~stall_d),
+    .en1(en_d_reg3),
     .plv1_1bit(plv_1bit), //crmd_plv
     .is_if_1(0), //PIF
     .is_store_1(store_or_load), //PIS
