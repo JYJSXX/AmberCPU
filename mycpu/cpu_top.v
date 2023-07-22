@@ -256,8 +256,8 @@ module core_top(
     wire  [6:0]     if1_fifo_icache_exception;
     wire  [1:0]     if1_fifo_icache_excp_flag;
     wire  [31:0]    if1_fifo_icache_cookie_out;
-    wire            if1_fifo_cacop_ready;
-    wire            if1_fifo_cacop_complete;
+    // wire            if1_fifo_cacop_ready;
+    // wire            if1_fifo_cacop_complete;
     IF1_FIFO u_IF1_FIFO(
         .clk                        ( clk                        ),
         .rstn                       ( aresetn                       ),
@@ -299,9 +299,9 @@ module core_top(
         .if1_fifo_icache_badv       ( if1_fifo_icache_badv       ),
         .if1_fifo_icache_exception  ( if1_fifo_icache_exception  ),
         .if1_fifo_icache_excp_flag  ( if1_fifo_icache_excp_flag  ),
-        .if1_fifo_icache_cookie_out ( if1_fifo_icache_cookie_out ),
-        .if1_fifo_cacop_ready       ( if1_fifo_cacop_ready       ),
-        .if1_fifo_cacop_complete    ( if1_fifo_cacop_complete    )
+        .if1_fifo_icache_cookie_out ( if1_fifo_icache_cookie_out )
+        // .if1_fifo_cacop_ready       ( if1_fifo_cacop_ready       ),
+        // .if1_fifo_cacop_complete    ( if1_fifo_cacop_complete    )
     );
 
 
@@ -359,7 +359,6 @@ module core_top(
         .fifo_readygo               ( fifo_readygo               ),
         .fifo_allowin               ( fifo_allowin               ),
         .priv_flag                  ( priv_flag                  ),
-        .branch_flag                ( branch_flag                ),
         .if1_fifo_inst0             ( if1_fifo_inst0             ),
         .if1_fifo_inst1             ( if1_fifo_inst1             ),
         .if1_fifo_pc                ( if1_fifo_pc                ),
