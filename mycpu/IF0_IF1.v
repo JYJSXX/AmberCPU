@@ -25,7 +25,7 @@ module IF0_IF1 (
     assign if0_allowin= if1_allowin;
     assign if1_readygo= rready;
 
-    always @(posedge clk or negedge rstn) begin
+    always @(posedge clk) begin
         if((~rstn)||flush||(!if0_readygo&&if1_allowin&&rready))begin
             //clear stage-stage reg
             if0_if1_pc<=32'b0;
