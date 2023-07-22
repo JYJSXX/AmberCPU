@@ -29,8 +29,8 @@ module IF0 (
     output reg[31:0]cookie_in=114514,
 
     //other
-    output [31:0] pc_next//rready control logic TODO
-
+    output [31:0] pc_next,//rready control logic TODO
+    output pc_in_stall
     
 );
     reg  [31:0] pc=`PC_RESET;//指令集手册P68
@@ -40,8 +40,9 @@ module IF0 (
     assign fetch_pc     =   pc;
     assign rvalid       =   if0_allowin;
     assign raddr        =   pc;
+    assign pc_in_stall  =   !if0_allowin;
 
-    always @(posedge clk or negedge rstn) begin
+    always @(posedge clk) begin
         if (~rstn) begin
             pc<=`PC_RESET;
         end

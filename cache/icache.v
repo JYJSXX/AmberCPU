@@ -27,10 +27,11 @@ module icache #(
     // input               i_rlast,        // indicate the last beat of read data from main memory
     // output [2:0]        i_rsize,        // indicate the size of read data once, if i_rsize = n then read 2^n bytes once
     output reg [7:0]    i_rlen,          // indicate the number of read data, if i_rlen = n then read n+1 times
-    
-    input [6:0] tlb_exception,         
+
+    output [1:0]  i_exception_flag,
+    input  [6:0]  tlb_exception,         
     output [31:0] badv,               // 无效虚拟地址
-    output [6:0] exception,
+    output [6:0]  exception,
     input               flush,          // flush signal from pipeline
     input               uncache,        // uncache signal from pipeline
     input  [COOKIE_WIDTH-1:0] cookie_in, // cookie from pipeline
@@ -195,6 +196,7 @@ module icache #(
     assign exception_temp1 = {7{~cacop_en_buf}} & exception_temp;
     assign exception_normal = (exception_temp1 == 0 || tlb_exception == `EXP_ADEF)? tlb_exception : exception_temp1;
     assign exception = exception_sel ? exception_buf : exception_normal;
+    assign i_exception_flag = exception != 0 ? 1 : 0;
 
     /* flush signal */
     always @(posedge clk)

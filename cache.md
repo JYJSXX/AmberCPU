@@ -87,6 +87,7 @@ Dcache：无效掉TagV表中的所有行，同时将所有脏行写回主存
 - pc_out(32): icache存储之前的pc（VA），并发出（对应这两条指令的起始地址）
 - badv(32): 无效虚拟地址
 - exception(7)：异常报错信息码
+- i_exception_flag(1): icache异常标志
 - cookie_out(32)：缓存一级的附加信息
 - cacop_ready(1)：接受到cacop指令，开始执行操作
 - cacop_complete(1)：完成cacop指令
