@@ -1024,6 +1024,8 @@ module core_top(
 
     wire [31:0] ex2_rd0_data;
     wire [31:0] ex2_rd1_data;
+    wire       ex2_data0_valid;
+    wire       ex2_data1_valid;
 
     EX2 u_EX2(
         .uop0                 ( ex1_ex2_uop0                 ),
@@ -1038,7 +1040,9 @@ module core_top(
         .mul_stage1_res_ll    ( mul_stage1_res_ll    ),
         .mul_compensate       ( mul_compensate       ),
         .rd0_data             ( ex2_rd0_data         ),
-        .rd1_data             ( ex2_rd1_data         )
+        .rd1_data             ( ex2_rd1_data         ),
+        .ex2_data0_valid      ( ex2_data0_valid      ),
+        .ex2_data1_valid      ( ex2_data1_valid      )
     );
 
     //dcache
@@ -1047,7 +1051,7 @@ module core_top(
     wire wready_dcache;
 
     //csr 三条读写csr的指令都要写
-    wire [31:0] csr_data_in;
+    //wire [31:0] csr_data_in;
     wire csr_ready;
 
 
@@ -1065,6 +1069,7 @@ module core_top(
     wire [18:0] vppn_out;
     wire wen_vppn;
     wire cpu_interrupt;
+    wire dcache_valid;
     EX2_WB u_EX2_WB(
         .clk                 ( clk                 ),
         .aresetn             ( aresetn             ),
@@ -1081,9 +1086,9 @@ module core_top(
         .ex2_result1         ( ex2_rd1_data         ),
         .ex_rd0              ( ex1_ex2_rd0              ),
         .ex_rd1              ( ex1_ex2_rd1              ),
-        .ex2_result0_valid   ( ex2_data0_valid   ),
-        .ex2_result1_valid   ( ex2_data1_valid   ),
-        .en_VA_D_OUT         ( en_VA_D_OUT         ), // TODO
+        .ex2_result0_valid   ( ex2_result0_valid   ),
+        .ex2_result1_valid   ( ex2_result1_valid   ),
+        .en_VA_D_OUT         ( dcache_valid        ), // TODO
         .ex2_wb_data_0       ( ex2_wb_data_0       ),
         .ex2_wb_data_1       ( ex2_wb_data_1       ),
         .ex2_wb_data_0_valid ( ex2_wb_data_0_valid ),
@@ -1098,7 +1103,7 @@ module core_top(
         .div_ready           ( div_ready           ),
         .dcache_data         ( r_data_dcache         ),
         .dcache_ready        ( rready_dcache        ),
-        .csr_data_in         ( csr_data_in         ),
+        .csr_data_in         ( csr_rdata           ),
         .csr_ready           ( csr_ready           ),
         .debug0_wb_pc        ( debug0_wb_pc        ),
         .debug0_wb_rf_wen    ( debug0_wb_rf_wen    ),
@@ -1266,7 +1271,8 @@ module core_top(
     wire [6:0] tlb_exception_code_i, tlb_exception_code_d; //tlb例外码
     wire icache_rvalid;
     wire [31:0] icache_raddr, dcache_addr;
-    wire SOL_D_OUT, dcache_valid;
+    wire SOL_D_OUT;
+    
     icache#(
         .INDEX_WIDTH       ( 6 ),
         .WORD_OFFSET_WIDTH ( 4 ),
