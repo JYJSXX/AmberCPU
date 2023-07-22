@@ -63,8 +63,8 @@ module TLB(
 
     input                              store_or_load, //1:store 0:load
     input                              plv_1bit,
-    output                             tlb_exception_code_i,
-    output                             tlb_exception_code_d
+    output     [6:0]                   tlb_exception_code_i,
+    output     [6:0]                   tlb_exception_code_d
 );
 
 reg     [`TLB_CPRLEN - 1:0]     tlb_cpr         [`TLB_NUM - 1:0];       //TLB比较部分
