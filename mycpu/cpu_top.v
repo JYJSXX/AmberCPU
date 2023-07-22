@@ -1018,7 +1018,7 @@ module core_top(
         .excp_flag_in              ( ex1_excp_flag              ),
         .exception_in              ( ex1_exception              ),
         .d_exception               ( dcache_exception           ),
-        .d_badv                     ( dcache_badv               ),
+        .d_badv                    ( dcache_badv               ),
         .ex1_ex2_badv              ( ex1_ex2_badv              ),
         .ex1_ex2_excp_flag         ( ex1_ex2_excp_flag         ),
         .ex1_ex2_exception         ( ex1_ex2_exception         )
@@ -1349,7 +1349,7 @@ module core_top(
         .d_exception_flag                  ( d_exception_flag                  ),  
         .forward_exception                 ( reg_ex_exception                  ),  
         .tlb_exception                     ( tlb_exception_code_d              ),  
-        .badv                              ( icache_badv                       ),  
+        .badv                              ( dcache_badv                       ),  
         .cacop_en                          ( cacop_d_en                        ),
         .cacop_code                        ( cacop_ins_type                    ),
         .cacop_ready                       ( cacop_d_ready                     ),
