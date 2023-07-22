@@ -66,6 +66,7 @@ module HazardUnit (
                                         flush_from_id ? 1:
                                         flush_from_fifo?1:
                                         flush_from_if1? 1:0;
+    assign  flush_to_if0            =   flush_to_if0_if1;
 
     assign  flush_to_tlb            =   flush_to_reg_ex1;
     assign  flush_to_icache         =   flush_to_if0_if1;

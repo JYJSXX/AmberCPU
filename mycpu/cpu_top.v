@@ -85,6 +85,7 @@ module core_top(
     wire flush_to_fifo_id; 
     wire flush_to_fifo;    
     wire flush_to_if1_fifo;
+    wire flush_to_if0;
     wire flush_to_if0_if1;     
     wire flush_to_tlb;     
     wire flush_to_icache ; 
@@ -100,8 +101,8 @@ module core_top(
     //for pc update
     wire set_pc_from_ID;
     wire [31:0]pc_from_ID;
-    wire set_pc_from_EX;
-    wire [31:0]pc_from_EX;
+    // wire set_pc_from_EX; replaced by fact_pc/fact taken
+    // wire [31:0]pc_from_EX;
     wire set_pc_from_WB;
     wire [31:0]pc_from_WB;
     wire set_pc_from_PRIV;//from if1_fifo
@@ -127,8 +128,8 @@ module core_top(
         .flush               ( flush_to_if0        ),
         .set_pc_from_ID      ( set_pc_from_ID      ),
         .pc_from_ID          ( pc_from_ID          ),
-        .set_pc_from_EX      ( set_pc_from_EX      ),
-        .pc_from_EX          ( pc_from_EX          ),
+        .set_pc_from_EX      ( fact_taken          ),
+        .pc_from_EX          ( fact_tpc            ),
         .set_pc_from_WB      ( set_pc_from_WB      ),
         .pc_from_WB          ( pc_from_WB          ),
         .set_pc_from_PRIV    ( set_pc_from_PRIV    ),
@@ -234,7 +235,7 @@ module core_top(
 
 
     wire  [1:0]        ibar_flag;//from pre-decoder
-    wire               ibar_flag_from_ex;
+    // wire               ibar_flag_from_ex; replaced by ibar
     wire  [1:0]        csr_flag;
     wire               csr_flag_from_ex;
     wire  [1:0]        tlb_flag;
@@ -246,7 +247,7 @@ module core_top(
     wire               csr_done;
     wire               tlb_done;
 
-    wire [31:0] if1_fifo_pc;
+    wire  [31:0]    if1_fifo_pc;
     wire  [31:0]    if1_fifo_pc_next;
     wire  [31:0]    if1_fifo_inst0;
     wire  [31:0]    if1_fifo_inst1;
@@ -258,8 +259,8 @@ module core_top(
     // wire            if1_fifo_cacop_complete;
     IF1_FIFO u_IF1_FIFO(
         .clk                        ( clk                        ),
-        .rstn                       ( aresetn                       ),
-        .flush                      ( flush                      ),
+        .rstn                       ( aresetn                    ),
+        .flush                      ( flush_to_if1_fifo          ),
         .flush_cause                ( flush_cause                ),
         .fetch_buf_full             ( fetch_buf_full             ),
         .if1_readygo                ( if1_readygo                ),
@@ -276,7 +277,7 @@ module core_top(
         .if1_cookie_out             ( if1_cookie_out             ),
         .if1_inst0                  ( if1_inst0                  ),
         .if1_inst1                  ( if1_inst1                  ),
-        .ibar_flag                  ( ibar_flag                  ),
+        .ibar_flag                  ( ibar                  ),
         .ibar_flag_from_ex          ( ibar_flag_from_ex          ),
         .csr_flag                   ( csr_flag                   ),
         .csr_flag_from_ex           ( csr_flag_from_ex           ),
