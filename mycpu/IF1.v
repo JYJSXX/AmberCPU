@@ -26,8 +26,8 @@ module IF1 (
     output [6:0] if1_exception,
     output [1:0] if1_excp_flag,//TODO :alert icache to pass this signal
     output [31:0]if1_cookie_out,
-    output       if1_cacop_ready,
-    output       if1_cacop_complete,
+    // output       if1_cacop_ready,
+    // output       if1_cacop_complete,
     output [31:0] if1_inst0,
     output [31:0] if1_inst1
 
@@ -39,7 +39,8 @@ module IF1 (
     assign if1_pc_next=pc_next;
     assign if1_badv  = badv;
     assign if1_exception = exception;
+    assign if1_excp_flag = excp_flag;
     assign if1_cookie_out = cookie_out;
-    assign if1_cacop_ready = cacop_ready;
-    assign if1_cacop_complete = cacop_complete;
+    // assign if1_cacop_ready = cacop_ready;
+    // assign if1_cacop_complete = cacop_complete;
 endmodule
