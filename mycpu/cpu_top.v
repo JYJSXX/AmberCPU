@@ -132,6 +132,7 @@ module core_top(
     
     wire [31:0]  pc_next;//rready control logic : use a tmp to store inst temporarily
     wire         pc_in_stall;
+    wire ex2_wb_excp_flag; 
     IF0 u_IF0(
         .clk                 ( clk                 ),
         .rstn                ( aresetn             ),
@@ -142,7 +143,7 @@ module core_top(
         .pc_from_ID          ( pc_from_ID          ),
         .set_pc_from_EX      ( fact_taken          ),
         .pc_from_EX          ( fact_tpc            ),
-        .set_pc_from_WB      ( set_pc_from_WB      ),
+        .set_pc_from_WB      ( ex2_wb_excp_flag    ),
         .pc_from_WB          ( pc_from_WB          ),
         .set_pc_from_PRIV    ( set_pc_from_PRIV    ),
         .pc_from_PRIV        ( pc_from_PRIV        ),
@@ -1068,7 +1069,6 @@ module core_top(
     //wire [31:0] csr_crmd;
     
     wire [6:0] ex2_wb_exception; 
-    wire ex2_wb_excp_flag; 
     wire [31:0] ex2_wb_badv;      
     wire  wen_badv;
     wire tlb_exception; //决定是否回到直接地址翻译
@@ -1078,6 +1078,9 @@ module core_top(
     wire wen_vppn;
     wire cpu_interrupt;
     wire dcache_valid;
+    
+    wire [31:0] eentry;
+    wire [31:0] tlbrentry;
     EX2_WB u_EX2_WB(
         .clk                 ( clk                 ),
         .aresetn             ( aresetn             ),
@@ -1102,7 +1105,7 @@ module core_top(
         .ex2_wb_data_0_valid ( ex2_wb_data_0_valid ),
         .ex2_wb_data_1_valid ( ex2_wb_data_1_valid ),
         .ex2_wb_rd0          ( ex2_wb_rd0          ),
-        .ex2_wb_rd1          ( wb_rd1          ),
+        .ex2_wb_rd1          ( ex2_wb_rd1          ),
         .ex2_wb_we0          ( we_0          ),
         .ex2_wb_we1          ( we_1          ),
         .quotient            ( quotient            ),
@@ -1138,7 +1141,10 @@ module core_top(
         .era_out             ( era_out             ),
         .wen_era             ( wen_era             ),
         .vppn_out            ( vppn_out            ),
-        .wen_vppn            ( wen_vppn            )
+        .wen_vppn            ( wen_vppn            ),
+        .pc_from_WB          ( pc_from_WB          ),
+        .eentry              ( eentry              ),
+        .tlbrentry           ( tlbrentry           )
     );
 
 
@@ -1147,8 +1153,6 @@ module core_top(
     wire [31:0] crmd; //当前模式信息，包含privilege
     wire [31:0] estat;    //例外状态 idle_interrupt; 
     wire [31:0] csr_era;
-    wire [31:0] eentry;
-    wire [31:0] tlbrentry;
     wire [31:0] pgdl,pgdh;
     
     wire [31:0] dmw0;
@@ -1235,7 +1239,7 @@ module core_top(
         .tlbrd_cpr       ( tlbrd_cpr       ),
         .tlbrd_trans_1   ( tlbrd_trans_1   ),
         .tlbrd_trans_2   ( tlbrd_trans_2   ),
-        .hardware_interrupt  ( intrpt  ),
+        .hardware_interrupt  ( intrpt      ),
         .tid             ( tid             )
     );
 
@@ -1375,61 +1379,62 @@ module core_top(
 wire [3:0]reg_ex_cond0;
 assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
     TLB u_TLB(
-        .clk            ( clk            ),
-        .rstn           ( aresetn           ),
-        .CSR_ASID       ( ASID[9:0]   ),
-        .CSR_VPPN       ( TLBEHI       ),
-        .CSR_PG         ( PG         ),
-        .CSR_CRMD       ( crmd       ),
-        .CSR_DMW0       ( dmw0       ),
-        .CSR_DMW1       ( dmw1       ),
-        .CSR_TLBEHI     ( TLBEHI     ),
-        .CSR_TLBIDX     ( TLBIDX     ),
-        .stall_i        ( pc_in_stall        ),
-        .stall_d        ( ~ex2_allowin       ),
-        .en_d           ( reg_ex_uop0[`INS_MEM]        ),
-        .VA_I           ( fetch_pc[31:12]   ),
-        .VA_D           ( addr_dcache[31:12]           ),
-        .TAG_OFFSET_I   ( fetch_pc[11:0] ),
-        .TAG_OFFSET_D   (addr_dcache[11:0]),
-        .PA_I           ( PA_I[31:12]           ),
-        .PA_D           ( PA_D[31:12]          ),
-        .is_cached_I    ( is_cached_I    ),
-        .is_cached_D    ( is_cached_D    ),
-        .en_VA_I_OUT    ( icache_rvalid  ),
-        .en_VA_D_OUT    ( dcache_valid   ),
-        .VA_I_OUT       ( icache_raddr[31:12]   ),
-        .VA_D_OUT       ( dcache_addr[31:12]    ),
-        .VA_TAG_OFFSET_I_OUT(icache_raddr[11:0]),
-        .VA_TAG_OFFSET_D_OUT(dcache_addr[11:0]),
-        .PA_TAG_OFFSET_I_OUT(PA_I[11:0]),
-        .PA_TAG_OFFSET_D_OUT(PA_D[11:0]),
-        .SOL_D_OUT      ( SOL_D_OUT        ),
-        .TLBSRCH_valid  ( tlbsrch_valid    ),
-        .TLBSRCH_ready  ( tlbsrch_ready    ),
-        .TLBSRCH_hit    ( tlbsrch_hit      ),
-        .TLBSRCH_INDEX  ( tlb_index_in     ),
-        .TLBRD_INDEX    ( TLBIDX[4:0]      ),
-        .TLBRD_valid    ( tlbrd_valid      ),
-        .TLBRD_ready    ( tlbrd_ready      ),
-        .TLBRD_hit      ( tlbrd_hit        ),
-        .TLB_CPR        ( tlbrd_cpr        ),
-        .TLB_TRANS_1    ( tlbrd_trans_1    ),
-        .TLB_TRANS_2    ( tlbrd_trans_2    ),
-        .TLBWR_valid    ( tlbwr_valid      ),
-        .TLBWR_ready    ( tlbwr_ready      ),
-        .TLB_CPR_w      ( tlb_cpr_out      ),
-        .TLB_TRANS_1_w  ( tlb_trans_1_out  ),
-        .TLB_TRANS_2_w  ( tlb_trans_2_out  ),
-        .TLBINVLD_valid ( invtlb_valid     ),
-        .TLBINVLD_ready ( invtlb_ready     ),
-        .TLBINVLD_OP    ( invtlb_op        ),
-        .TLBINVLD_ASID  ( invtlb_asid[9:0] ),
-        .TLBINVLD_VA    ( invtlb_va        ),
-        .store_or_load  ( reg_ex_cond0[2]  ),
-        .plv_1bit         (crmd[0]         ),
-        .tlb_exception_code_i(tlb_exception_code_i),
-        .tlb_exception_code_d(tlb_exception_code_d)
+        .clk            ( clk                       ),
+        .rstn           ( aresetn                   ),
+        .flush          ( flush_to_tlb              ),
+        .CSR_ASID       ( ASID[9:0]                 ),
+        .CSR_VPPN       ( TLBEHI                    ),
+        .CSR_PG         ( PG                        ),
+        .CSR_CRMD       ( crmd                      ),
+        .CSR_DMW0       ( dmw0                      ),
+        .CSR_DMW1       ( dmw1                      ),
+        .CSR_TLBEHI     ( TLBEHI                    ),
+        .CSR_TLBIDX     ( TLBIDX                    ),
+        .stall_i        ( pc_in_stall               ),
+        .stall_d        ( ~ex2_allowin              ),
+        .en_d           ( reg_ex_uop0[`INS_MEM]     ),
+        .VA_I           ( fetch_pc[31:12]           ),
+        .VA_D           ( addr_dcache[31:12]        ),
+        .TAG_OFFSET_I   ( fetch_pc[11:0]            ),
+        .TAG_OFFSET_D   (addr_dcache[11:0]          ),
+        .PA_I           ( PA_I[31:12]               ),
+        .PA_D           ( PA_D[31:12]               ),
+        .is_cached_I    ( is_cached_I               ),
+        .is_cached_D    ( is_cached_D               ),
+        .en_VA_I_OUT    ( icache_rvalid             ),
+        .en_VA_D_OUT    ( dcache_valid              ),
+        .VA_I_OUT       ( icache_raddr[31:12]       ),
+        .VA_D_OUT       ( dcache_addr[31:12]        ),
+        .VA_TAG_OFFSET_I_OUT(icache_raddr[11:0]     ),
+        .VA_TAG_OFFSET_D_OUT(dcache_addr[11:0]      ),
+        .PA_TAG_OFFSET_I_OUT(PA_I[11:0]             ),
+        .PA_TAG_OFFSET_D_OUT(PA_D[11:0]             ),
+        .SOL_D_OUT      ( SOL_D_OUT                 ),
+        .TLBSRCH_valid  ( tlbsrch_valid             ),
+        .TLBSRCH_ready  ( tlbsrch_ready             ),
+        .TLBSRCH_hit    ( tlbsrch_hit               ),
+        .TLBSRCH_INDEX  ( tlb_index_in              ),
+        .TLBRD_INDEX    ( TLBIDX[4:0]               ),
+        .TLBRD_valid    ( tlbrd_valid               ),
+        .TLBRD_ready    ( tlbrd_ready               ),
+        .TLBRD_hit      ( tlbrd_hit                 ),
+        .TLB_CPR        ( tlbrd_cpr                 ),
+        .TLB_TRANS_1    ( tlbrd_trans_1             ),
+        .TLB_TRANS_2    ( tlbrd_trans_2             ),
+        .TLBWR_valid    ( tlbwr_valid               ),
+        .TLBWR_ready    ( tlbwr_ready               ),
+        .TLB_CPR_w      ( tlb_cpr_out               ),
+        .TLB_TRANS_1_w  ( tlb_trans_1_out           ),
+        .TLB_TRANS_2_w  ( tlb_trans_2_out           ),
+        .TLBINVLD_valid ( invtlb_valid              ),
+        .TLBINVLD_ready ( invtlb_ready              ),
+        .TLBINVLD_OP    ( invtlb_op                 ),
+        .TLBINVLD_ASID  ( invtlb_asid[9:0]          ),
+        .TLBINVLD_VA    ( invtlb_va                 ),
+        .store_or_load  ( reg_ex_cond0[2]           ),
+        .plv_1bit         (crmd[0]                  ),
+        .tlb_exception_code_i(tlb_exception_code_i  ),
+        .tlb_exception_code_d(tlb_exception_code_d  )
     );
 
 

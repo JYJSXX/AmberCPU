@@ -73,8 +73,12 @@ module EX2_WB(
     output reg [31:0] era_out,
     output reg wen_era,
     output reg [18:0] vppn_out,
-    output reg wen_vppn
+    output reg wen_vppn,
+    output  [31:0] pc_from_WB,
+    input  [31:0] eentry,
+    input  [31:0] tlbrentry
 );
+assign pc_from_WB = (tlb_exception) ? tlbrentry : eentry;
 reg tlb_d_valid_reg;
 always@(posedge clk )begin
         tlb_d_valid_reg <= en_VA_D_OUT;
@@ -97,6 +101,13 @@ always@(posedge clk)begin
     if(~aresetn)begin
         ecode_out <= 0;
         exception_flag_out <= 0;
+        badv_out <= 0;
+        wen_badv <= 0;
+        tlb_exception <= 0;
+        era_out <= 0;
+        wen_era <= 0;
+        vppn_out <= 0;
+        wen_vppn <= 0;
     end
     else begin
         exception_flag_out <= exception_flag_in | cpu_interrupt;
@@ -108,6 +119,7 @@ always@(posedge clk)begin
         wen_era <= exception_flag_in | cpu_interrupt;
         vppn_out <= badv_in[18:0];
         wen_vppn <= exception_flag_in && set_vppn;
+        
     end
 
 end
