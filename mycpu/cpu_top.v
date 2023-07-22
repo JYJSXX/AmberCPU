@@ -175,7 +175,9 @@ module core_top(
     wire if1_ready ;     
     wire [31:0] if1_fifo_pc;
     wire [31:0] icache_badv;
+    wire [31:0] dcache_badv;
     wire [6:0] icache_exception;
+    wire [6:0] dcache_exception;
     wire [1:0] icache_excp_flag;
     wire [31:0] cookie_out;
     wire cacop_ready;
@@ -1025,13 +1027,6 @@ module core_top(
         .rd1_data             ( ex2_rd1_data         )
     );
 
-
-   
-
-    
-
-    
-
     //dcache
     wire [31:0] r_data_dcache;
     wire rready_dcache;
@@ -1263,14 +1258,15 @@ module core_top(
         .rdata             ( icache_rdata      ),
         .pc_out            ( if1_pc            ),
         .idle              ( i_idle            ),
-        .i_rvalid          ( i_rvalid          ),   //TODO:
-        .i_rready          ( i_rready          ),   //TODO:
-        .i_raddr           ( i_raddr           ),   //TODO:
-        .i_rdata           ( i_rdata           ),   //TODO:
-        .i_rlen            ( i_rlen            ),   //TODO:    
+        .i_rvalid          ( i_rvalid          ),
+        .i_rready          ( i_rready          ), 
+        .i_raddr           ( i_raddr           ), 
+        .i_rdata           ( i_rdata           ), 
+        .i_rlen            ( i_rlen            ),    
         .tlb_exception     ( tlb_exception     ),
-        .badv              ( icache_badv              ),
+        .badv              ( icache_badv       ),
         .exception         ( icache_exception  ),
+        .i_exception_flag  ( icache_excp_flag  ),   
         .flush             ( flush_to_icache   ),
         .uncache           ( uncache           ),   //TODO:
         .cookie_in         ( cookie_in         ),
@@ -1304,23 +1300,23 @@ module core_top(
         .signed_ext                        ( reg_ex_uop0[`UOP_SIGN]            ),
         .idle                              ( d_idle                            ),
         .flush                             ( flush_to_dcache                   ),
-        .d_rvalid                          ( d_rvalid                          ),   //TODO:
-        .d_rready                          ( d_rready                          ),   //TODO:
-        .d_raddr                           ( d_raddr                           ),   //TODO:
-        .d_rdata                           ( d_rdata                           ),   //TODO:
-        .d_rlen                            ( d_rlen                            ),   //TODO:
-        .d_wvalid                          ( d_wvalid                          ),   //TODO:
-        .d_wready                          ( d_wready                          ),   //TODO:
-        .d_waddr                           ( d_waddr                           ),   //TODO:
-        .d_wdata                           ( d_wdata                           ),   //TODO:
-        .d_wstrb                           ( d_wstrb                           ),   //TODO:
-        .d_wlen                            ( d_wlen                            ),   //TODO:
-        .exception                         ( exception                         ),   //TODO:
+        .d_rvalid                          ( d_rvalid                          ),
+        .d_rready                          ( d_rready                          ),
+        .d_raddr                           ( d_raddr                           ),
+        .d_rdata                           ( d_rdata                           ),
+        .d_rlen                            ( d_rlen                            ),
+        .d_wvalid                          ( d_wvalid                          ),
+        .d_wready                          ( d_wready                          ),
+        .d_waddr                           ( d_waddr                           ),
+        .d_wdata                           ( d_wdata                           ),
+        .d_wstrb                           ( d_wstrb                           ),
+        .d_wlen                            ( d_wlen                            ),
+        .exception                         ( dcache_exception                  ),  
         .exception_flag                    ( exception_flag                    ),   //TODO:   
         .d_exception_flag                  ( d_exception_flag                  ),   //TODO:
         .forward_exception                 ( forward_exception                 ),   //TODO:
         .tlb_exception                     ( tlb_exception                     ),   //TODO:
-        .badv                              ( badv                              ),   //TODO:
+        .badv                              ( icache_badv                       ),  
         .cacop_en                          ( cacop_d_en                        ),
         .cacop_code                        ( cacop_ins_type                    ),
         .cacop_ready                       ( cacop_d_ready                     ),
