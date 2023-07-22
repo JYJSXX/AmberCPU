@@ -11,6 +11,7 @@ module IF0_IF1 (
     input               if1_allowin,
     input               flush,
     input               flush_cause,
+    input               rready,
 
     input [31:0]        fetch_pc,
     input [31:0]        pc_next,

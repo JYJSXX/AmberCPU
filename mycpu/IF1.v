@@ -10,7 +10,7 @@ module IF1 (
 
     input rready,
     input [63:0] rdata,
-    input   [31:0] if0_if1_pc,
+    input [31:0] if0_if1_pc,
     input [31:0] pc_next,
     input [31:0] badv,
     input [6:0] exception,
