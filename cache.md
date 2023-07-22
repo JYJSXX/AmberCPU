@@ -140,6 +140,7 @@ Dcache：无效掉TagV表中的所有行，同时将所有脏行写回主存
 - wready (1): 写请求的就绪信号
 - exception (7): 异常信息码
 - badv (32): 无效虚拟地址
+- d_exception_flag (1): 标识dcache是否有异常
 - cacop_ready(1)：接受到cacop指令，开始执行操作
 - cacop_complete(1)：完成cacop指令
 - llbit_set (1): 完成原子指令load，将llbit置为1
