@@ -1436,63 +1436,6 @@ module core_top(
     );
 
 
-    axi_arbiter u_axi_arbiter(
-        .clk      ( clk      ),
-        .rstn     ( rstn     ),
-        .i_rvalid ( i_rvalid ),
-        .i_rready ( i_rready ),
-        .i_raddr  ( i_raddr  ),
-        .i_rdata  ( i_rdata  ),
-        .i_rlast  ( i_rlast  ),
-        .i_rsize  ( i_rsize  ),
-        .i_rlen   ( i_rlen   ),
-        .d_rvalid ( d_rvalid ),
-        .d_rready ( d_rready ),
-        .d_raddr  ( d_raddr  ),
-        .d_rdata  ( d_rdata  ),
-        .d_rlast  ( d_rlast  ),
-        .d_rsize  ( d_rsize  ),
-        .d_rlen   ( d_rlen   ),
-        .d_wvalid ( d_wvalid ),
-        .d_wready ( d_wready ),
-        .d_waddr  ( d_waddr  ),
-        .d_wdata  ( d_wdata  ),
-        .d_wstrb  ( d_wstrb  ),
-        .d_wlast  ( d_wlast  ),
-        .d_wsize  ( d_wsize  ),
-        .d_wlen   ( d_wlen   ),
-        .d_bvalid ( d_bvalid ),
-        .d_bready ( d_bready ),
-        .araddr   ( araddr   ),
-        .arvalid  ( arvalid  ),
-        .arready  ( arready  ),
-        .arlen    ( arlen    ),
-        .arsize   ( arsize   ),
-        .arburst  ( arburst  ),
-        .rdata    ( rdata    ),
-        .rresp    ( rresp    ),
-        .rvalid   ( rvalid   ),
-        .rready   ( rready   ),
-        .rlast    ( rlast    ),
-        .awaddr   ( awaddr   ),
-        .awvalid  ( awvalid  ),
-        .awready  ( awready  ),
-        .awlen    ( awlen    ),
-        .awsize   ( awsize   ),
-        .awburst  ( awburst  ),
-        .wdata    ( wdata    ),
-        .wstrb    ( wstrb    ),
-        .wvalid   ( wvalid   ),
-        .wready   ( wready   ),
-        .wlast    ( wlast    ),
-        .bresp    ( bresp    ),
-        .bvalid   ( bvalid   ),
-        .bready   ( bready   )
-    );
-
-
-
-
     HazardUnit u_HazardUnit(
         .flush_from_wb     ( flush_from_wb     ),
         .flush_from_ex2    ( flush_from_ex2    ),
