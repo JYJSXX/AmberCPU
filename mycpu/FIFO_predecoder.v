@@ -9,9 +9,10 @@ module pre_decoder (
     output   [1 :0]      csr_flag,
     output   [1 :0]      tlb_flag,
     output   [1 :0]      branch_flag,
-    output   [1 :0]      inst_btype
+    output   [1 :0]      inst_btype,
+    output               inst_bpos
     //两条指令中有一条跳转就是跳转，有一条无条件就是无条件
-    //00 normal, 01 ibar,10 unconditional branch,10 PC relative, 11 indirect
+    //00 normal, 10 unconditional branch,10 PC relative, 11 indirect
 );
     // 0 0 1 1 1
     // reg     ibar_tmp0=0 ;
@@ -68,6 +69,7 @@ module pre_decoder (
                                 if1_fifo_pc[2]      ?   2'b00:
                                 inst0_btype ==2'b11 ?   2'b11:2'b00;
     assign  branch_flag        ={inst1_btype,inst0_btype};
+    assign  bpos               =inst0_btype?0:1;
     // always @(posedge clk or negedge rstn) begin//get posedge for ibar
     //     if (!rstn) begin
     //         ibar_tmp0<=0;

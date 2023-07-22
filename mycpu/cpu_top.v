@@ -115,7 +115,7 @@ module core_top(
     //for tlb
     wire         tlb_rvalid;
     wire [31:0]  tlb_raddr;
-    wire [31:0]  cookie_in=114514;
+    wire [31:0]  cookie_in;
 
     
     wire [31:0]  pc_next;//rready control logic : use a tmp to store inst temporarily
@@ -184,8 +184,8 @@ module core_top(
     wire [6:0] dcache_exception;
     wire [1:0] icache_excp_flag;
     wire [31:0] cookie_out;
-    wire cacop_ready;
-    wire cacop_complete;
+    // wire cacop_ready;
+    // wire cacop_complete;
 
     wire [63:0]       icache_rdata;   //指令cache读数据
 
@@ -214,8 +214,8 @@ module core_top(
         .exception          ( icache_exception          ),
         .excp_flag          ( icache_excp_flag          ),
         .cookie_out         ( cookie_out         ),
-        .cacop_ready        ( cacop_ready        ),
-        .cacop_complete     ( cacop_complete     ),
+        // .cacop_ready        ( cacop_ready        ),
+        // .cacop_complete     ( cacop_complete     ),
         .if1_rready         ( if1_rready         ),
         .if1_pc             ( if1_pc             ),
         .if1_pc_next        ( if1_pc_next        ),
@@ -308,6 +308,7 @@ module core_top(
     
     wire    [1 :0]      inst_btype;
     wire    [1 :0]      branch_flag;
+    wire                inst_bpos;
 
 
 
@@ -320,7 +321,8 @@ module core_top(
         .csr_flag       ( csr_flag       ),
         .tlb_flag       ( tlb_flag       ),
         .branch_flag    ( branch_flag    ),
-        .inst_btype     ( inst_btype     )
+        .inst_btype     ( inst_btype     ),
+        .inst_bpos      ( inst_bpos      )
     );
 
 

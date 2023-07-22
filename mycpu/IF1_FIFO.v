@@ -31,7 +31,7 @@ module IF1_FIFO(
     input  [1:0]        csr_flag,
     input               csr_flag_from_ex,
     input  [1:0]        tlb_flag,
-    input               tlb_flag_from_tlb,
+    input               tlb_flag_from_ex,
     input  [1:0]        priv_flag,
     output [31:0]       pc_from_PRIV,
     output              set_pc_from_PRIV,
@@ -137,7 +137,7 @@ module IF1_FIFO(
                 flush_from_if1_fifo=1;
             end
             WAIT_TLB_TLB:begin
-                next_stat=  tlb_flag_from_tlb?WAIT_TLB_OK    :WAIT_TLB_TLB;
+                next_stat=  tlb_flag_from_ex?WAIT_TLB_OK    :WAIT_TLB_TLB;
                 flush_from_if1_fifo=1;
             end
             WAIT_CACHE_IDLE:begin
