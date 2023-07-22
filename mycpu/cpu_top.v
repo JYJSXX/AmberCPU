@@ -240,7 +240,7 @@ module core_top(
     wire  [1:0]        csr_flag;
     wire               csr_flag_from_ex;
     wire  [1:0]        tlb_flag;
-    wire               tlb_flag_from_tlb;
+    wire               tlb_flag_from_ex;
     wire  [1:0]        priv_flag;
     wire               flush_from_if1_fifo;
     // wire               icache_idle;
@@ -283,7 +283,7 @@ module core_top(
         .csr_flag                   ( csr_flag                   ),
         .csr_flag_from_ex           ( csr_flag_from_ex           ),
         .tlb_flag                   ( tlb_flag                   ),
-        .tlb_flag_from_tlb          ( tlb_flag_from_tlb          ),
+        .tlb_flag_from_tlb          ( tlb_flag_from_ex          ),
         .priv_flag                  ( priv_flag                  ),
         .pc_from_PRIV               ( pc_from_PRIV               ),
         .set_pc_from_PRIV           ( set_pc_from_PRIV           ),
@@ -813,7 +813,6 @@ module core_top(
     wire [31:0] alu_result0, alu_result1;
     wire        alu_result0_valid, alu_result1_valid;
     //wire csr_flag_from_ex;
-    wire tlb_flag_from_ex;
 
     EX1 u_EX1(
         .clk                  ( clk                  ),
