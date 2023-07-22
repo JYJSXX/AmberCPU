@@ -197,8 +197,8 @@ module core_top(
     wire [6:0] if1_exception;
     wire [1:0] if1_excp_flag;//TODO :alert icache to pass this signal
     wire [31:0]if1_cookie_out;
-    wire     if1_cacop_ready;
-    wire     if1_cacop_complete;
+    // wire     if1_cacop_ready;
+    // wire     if1_cacop_complete;
     wire [31:0] if1_inst0;
     wire [31:0] if1_inst1;
     IF1 u_IF1(
@@ -223,8 +223,8 @@ module core_top(
         .if1_exception      ( if1_exception      ),
         .if1_excp_flag      ( if1_excp_flag      ),
         .if1_cookie_out     ( if1_cookie_out     ),
-        .if1_cacop_ready    ( if1_cacop_ready    ),
-        .if1_cacop_complete ( if1_cacop_complete ),
+        // .if1_cacop_ready    ( if1_cacop_ready    ),
+        // .if1_cacop_complete ( if1_cacop_complete ),
         .if1_inst0          ( if1_inst0          ),
         .if1_inst1          ( if1_inst1          )
     );

@@ -27,12 +27,12 @@ module id_stage
     output [4:0] rk1
 );
 ID_decoder id_decoder1(
-    .inst(inst0_i),
+    .inst(inst0),
     //.pc(pc0),
     .is_ALU(is_ALU_0),
-    .is_syscall(is_syscall),
-    .is_break(is_break),
-    .is_priviledged(is_priviledged),
+    .is_syscall(is_syscall_0),
+    .is_break(is_break_0),
+    .is_priviledged(is_priviledged_0),
     .uop(uop0),
     .imm(imm0),
     .rd(rd0),
@@ -40,12 +40,12 @@ ID_decoder id_decoder1(
     .rk(rk0)
 );
 ID_decoder id_decoder2(
-    .inst(inst1_i),
+    .inst(inst1),
     //.pc(pc1),
     .is_ALU(is_ALU_1),
-    .is_syscall(is_syscall),
-    .is_break(is_break),
-    .is_priviledged(is_priviledged),
+    .is_syscall(is_syscall_1),
+    .is_break(is_break_1),
+    .is_priviledged(is_priviledged_1),
     .uop(uop1),
     .imm(imm1),
     .rd(rd1),
