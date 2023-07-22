@@ -1261,7 +1261,7 @@ module core_top(
         .rvalid            ( icache_rvalid     ),
         .rready            ( icache_rready     ),
         .raddr             ( icache_raddr      ),
-        .p_addr            ( PA_I              ),//todo wait for tlb
+        .p_addr            ( PA_I              ),
         .rdata             ( icache_rdata      ),
         .pc_out            ( if1_pc            ),
         .idle              ( i_idle            ),
@@ -1270,12 +1270,12 @@ module core_top(
         .i_raddr           ( i_raddr           ), 
         .i_rdata           ( i_rdata           ), 
         .i_rlen            ( i_rlen            ),    
-        .tlb_exception     ( tlb_exception_code_i ),    //TODO:rename OK
+        .tlb_exception     ( tlb_exception_code_i ),  
         .badv              ( icache_badv       ),
         .exception         ( icache_exception  ),
         .i_exception_flag  ( icache_excp_flag  ),   
         .flush             ( flush_to_icache   ),
-        .uncache           ( !is_cached_I      ),   //TODO:ok
+        .uncache           ( !is_cached_I      ),   
         .cookie_in         ( cookie_in         ),
         .cookie_out        ( cookie_out        ),
         .cacop_en          ( cacop_i_en        ),
@@ -1294,7 +1294,7 @@ module core_top(
         .clk                               ( clk                               ),
         .rstn                              ( aresetn                           ),
         .addr                              ( cacop_d_en ? cacop_vaddr : addr_dcache ),
-        .p_addr                            ( PA_D                            ),   //TODO:
+        .p_addr                            ( PA_D                              ),   
         .rvalid                            ( cpu_d_rvalid                      ),
         .rready                            ( rready_dcache                     ),
         .rdata                             ( r_data_dcache                     ),
@@ -1303,7 +1303,7 @@ module core_top(
         .wdata                             ( w_data_dcache                     ),
         .wstrb                             ( write_type                        ),   
         .op                                ( op_dcache                         ),
-        .uncache                           ( !is_cached_D                      ),   //TODO:ok
+        .uncache                           ( !is_cached_D                      ),  
         .signed_ext                        ( reg_ex_uop0[`UOP_SIGN]            ),
         .idle                              ( d_idle                            ),
         .flush                             ( flush_to_dcache                   ),
@@ -1319,10 +1319,10 @@ module core_top(
         .d_wstrb                           ( d_wstrb                           ),
         .d_wlen                            ( d_wlen                            ),
         .exception                         ( dcache_exception                  ),  
-        .exception_flag                    ( reg_ex_excp_flag                    ),   //TODO:  ok 
-        .d_exception_flag                  ( d_exception_flag                  ),   //TODO:ok
-        .forward_exception                 ( reg_ex_exception                 ),   //TODO:ok
-        .tlb_exception                     ( tlb_exception_code_d              ),   //TODO:ok
+        .exception_flag                    ( reg_ex_excp_flag                  ),   
+        .d_exception_flag                  ( d_exception_flag                  ),  
+        .forward_exception                 ( reg_ex_exception                  ),  
+        .tlb_exception                     ( tlb_exception_code_d              ),  
         .badv                              ( icache_badv                       ),  
         .cacop_en                          ( cacop_d_en                        ),
         .cacop_code                        ( cacop_ins_type                    ),
