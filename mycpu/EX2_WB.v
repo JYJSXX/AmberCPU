@@ -49,12 +49,14 @@ module EX2_WB(
     output  [ 4:0] debug0_wb_rf_wnum,
     output  [31:0] debug0_wb_rf_wdata,
     output reg [31:0] debug0_wb_inst,
+    output reg debug0_valid,
 
     output reg [31:0] debug1_wb_pc,
     output  [ 3:0] debug1_wb_rf_wen,
     output  [ 4:0] debug1_wb_rf_wnum,
     output  [31:0] debug1_wb_rf_wdata,
     output reg [31:0] debug1_wb_inst,
+    output reg debug1_valid,
 
     //exception
     //input [31:0] csr_estat, //从csr
@@ -218,7 +220,7 @@ assign cond1 = uop1[`UOP_COND];
     end
 always@(*) begin
     ex2_allowin=0;
-    if((ex2_wb_data_0_valid | ~(~dcache_ready && tlb_d_valid_reg)  | div_ready | (csr_ready & uop0[`INS_CSR])) && ex2_wb_data_1_valid) begin
+    if((ex2_wb_data_0_valid | ~(~dcache_ready && tlb_d_valid_reg)  | div_ready | csr_ready) && ex2_wb_data_1_valid) begin
         ex2_allowin=1;
     end
 end
@@ -228,6 +230,9 @@ always@(posedge clk)begin
     debug0_wb_inst <= ex1_ex2_inst0;
     debug1_wb_pc <= pc1;
     debug1_wb_inst <= ex1_ex2_inst1;
+    debug0_valid <= ex2_allowin;
+    debug1_valid <= ex2_allowin;
+
 end
 //下面这些自带一个周期延迟，和上面的同步
 assign debug0_wb_rf_wen = ex2_wb_we0;
