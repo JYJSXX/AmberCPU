@@ -800,7 +800,6 @@ module core_top(
     wire tlbrd_valid;
     wire tlbwr_ready;
     wire tlbwr_valid;
-    wire tlbfill_ready;
     wire tlbfill_valid;
     wire invtlb_ready;
     wire invtlb_valid;
@@ -917,7 +916,7 @@ module core_top(
         .tlbrd_valid          ( tlbrd_valid          ),
         .tlbwr_ready          ( tlbwr_ready          ),
         .tlbwr_valid          ( tlbwr_valid          ),
-        .tlbfill_ready        ( tlbfill_ready        ),
+        .tlbfill_ready        ( tlbwr_ready        ),
         .tlbfill_valid        ( tlbfill_valid        ),
         .invtlb_ready         ( invtlb_ready         ),
         .invtlb_valid         ( invtlb_valid         ),
@@ -1421,7 +1420,7 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .TLB_CPR        ( tlbrd_cpr        ),
         .TLB_TRANS_1    ( tlbrd_trans_1    ),
         .TLB_TRANS_2    ( tlbrd_trans_2    ),
-        .TLBWR_valid    ( tlbwr_valid      ),
+        .TLBWR_valid    ( tlbwr_valid|tlbfill_valid    ),
         .TLBWR_ready    ( tlbwr_ready      ),
         .TLB_CPR_w      ( tlb_cpr_out      ),
         .TLB_TRANS_1_w  ( tlb_trans_1_out  ),
