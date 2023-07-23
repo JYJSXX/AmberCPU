@@ -4,7 +4,7 @@ module IF1_FIFO(
     input clk,
     input rstn,
     input flush,
-    input flush_cause,
+    // input flush_cause, TODO：flush_cause for identify input source
     
 
     //hand shake signal

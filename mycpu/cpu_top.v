@@ -161,7 +161,7 @@ module core_top(
 
     wire               if1_readygo;
     wire               if1_allowin;
-    wire               flush_cause;
+    // wire               flush_cause; TODO:flush cause 
     wire               icache_rready;
 
     wire [31:0]        if0_if1_pc;
@@ -176,7 +176,7 @@ module core_top(
         .if1_readygo            ( if1_readygo      ),
         .if1_allowin            ( if1_allowin      ),
         .flush                  ( flush_to_if0_if1 ),
-        .flush_cause            ( flush_cause      ),   // TODO: To be completed
+        .flush_cause            ( 0                ),   // TODO: To be completed
         .rready                 ( icache_rready    ),
         .tlb_rvalid             ( tlb_rvalid       ),
         .if0_if1_tlb_rvalid     ( if0_if1_tlb_rvalid),
@@ -274,7 +274,7 @@ module core_top(
         .clk                        ( clk                        ),
         .rstn                       ( aresetn                    ),
         .flush                      ( flush_to_if1_fifo          ),
-        .flush_cause                ( flush_cause                ),
+        // .flush_cause                ( flush_cause                ),
         .fetch_buf_full             ( fetch_buf_full             ),
         .if1_readygo                ( if1_readygo                ),
         .if1_allowin                ( if1_allowin                ),
@@ -416,7 +416,7 @@ module core_top(
         .clk                 ( clk                 ),
         .rstn                ( aresetn             ),
         .fifo_id_flush       ( flush_to_fifo_id    ),
-        .fifo_id_flush_cause ( fifo_id_flush_cause ),  // TODO: To be completed
+        .fifo_id_flush_cause ( 0                   ),  // TODO: To be completed
         .id_allowin          ( id_allowin          ),
         .id_readygo          ( id_readygo          ),
         .fifo_allowin        ( fifo_allowin        ),
