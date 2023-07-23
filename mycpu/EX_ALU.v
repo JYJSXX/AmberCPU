@@ -1,4 +1,4 @@
-`include "../config.vh"
+`include "config.vh"
 `include "define.vh"
 /* verilator lint_off DECLFILENAME */
 module EX_ALU (

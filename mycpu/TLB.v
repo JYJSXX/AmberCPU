@@ -1,5 +1,5 @@
 `include "TLB.vh"
-`include "../csr.vh"
+`include "csr.vh"
 module TLB(
     input                               clk,
     input                               rstn,
@@ -52,6 +52,8 @@ module TLB(
 
     input                               TLBWR_valid,
     output reg                          TLBWR_ready,
+    input                               TLBFILL_valid,
+    output reg                          TLBFILL_ready,
     input       [`TLB_CPRLEN - 1:0]     TLB_CPR_w,
     input       [`TLB_TRANSLEN - 1:0]   TLB_TRANS_1_w,
     input       [`TLB_TRANSLEN - 1:0]   TLB_TRANS_2_w,
@@ -65,7 +67,8 @@ module TLB(
     input                               store_or_load, //1:store 0:load
     input                               plv_1bit,
     output     [6:0]                    tlb_exception_code_i,
-    output     [6:0]                    tlb_exception_code_d
+    output     [6:0]                    tlb_exception_code_d,
+    input      [4:0]                    stable_counter
 );
 
 reg     [`TLB_CPRLEN - 1:0]     tlb_cpr         [`TLB_NUM - 1:0];       //TLB比较部分
@@ -815,6 +818,17 @@ always @(posedge clk or negedge rstn)begin
         tlb_cpr[CSR_TLBIDX[`TLBIDX_INDEX]] <= TLB_CPR_w;
         tlb_trans_1[CSR_TLBIDX[`TLBIDX_INDEX]] <= TLB_TRANS_1_w;
         tlb_trans_2[CSR_TLBIDX[`TLBIDX_INDEX]] <= TLB_TRANS_2_w;
+    end
+    else if (TLBFILL_valid) begin
+        if (TLBFILL_ready) begin
+            TLBFILL_ready <= 0;
+        end
+        else begin
+            TLBWFILL_ready <= 1;
+        end
+        tlb_cpr[stable_counter] <= TLB_CPR_w;
+        tlb_trans_1[stable_counter] <= TLB_TRANS_1_w;
+        tlb_trans_2[stable_counter] <= TLB_TRANS_2_w;
     end
     else if (TLBINVLD_valid) begin
         if (TLBINVLD_ready)begin 

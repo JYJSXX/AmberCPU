@@ -1,6 +1,6 @@
 `include "define.vh"
-`include "../TLB/TLB.vh"
-`include "../config.vh"
+`include "TLB.vh"
+`include "config.vh"
 module core_top(
     input           aclk,
     input           aresetn,
@@ -111,7 +111,7 @@ module core_top(
     wire if0_readygo;
     wire if0_allowin; 
 
-    //for pc update
+    //for pc update     
     wire set_pc_from_ID;
     wire [31:0]pc_from_ID;
     // wire set_pc_from_EX; replaced by fact_pc/fact taken
@@ -809,6 +809,7 @@ module core_top(
     wire tlbwr_ready;
     wire tlbwr_valid;
     wire tlbfill_valid;
+    wire tlbfill_ready;
     wire invtlb_ready;
     wire invtlb_valid;
     wire [4:0] invtlb_op;
@@ -933,7 +934,7 @@ module core_top(
         .tlbrd_valid          ( tlbrd_valid          ),
         .tlbwr_ready          ( tlbwr_ready          ),
         .tlbwr_valid          ( tlbwr_valid          ),
-        .tlbfill_ready        ( tlbwr_ready        ),
+        .tlbfill_ready        ( tlbfill_ready        ),
         .tlbfill_valid        ( tlbfill_valid        ),
         .invtlb_ready         ( invtlb_ready         ),
         .invtlb_valid         ( invtlb_valid         ),
@@ -1409,7 +1410,11 @@ module core_top(
         .ibar              ( ibar              )
     );
 
-
+`ifdef CLAP_CONFIG_DIFFTEST
+    wire [31:0] vaddr_diff;
+    wire [31:0] paddr_diff;
+    wire [31:0] data_diff;
+`endif
 
     dcache#(
         .INDEX_WIDTH                       ( 6 ),
@@ -1457,19 +1462,20 @@ module core_top(
         .llbit                             ( llbit                             ),
         .llbit_clear                       ( llbit_clear                       ),
         .ibar                              ( ibar                              )
+        `ifdef CLAP_CONFIG_DIFFTEST
+        ,.vaddr_diff     (vaddr_diff),
+        .paddr_diff     (paddr_diff),
+        .data_diff      (data_diff)
+`endif
     );
 
-
-
-
-
-
-
 wire [3:0]reg_ex_cond0;
+
 assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
     TLB u_TLB(
         .clk            ( clk            ),
         .rstn           ( aresetn           ),
+        .flush          ( flush_to_tlb      ),
         .CSR_ASID       ( ASID[9:0]   ),
         .CSR_VPPN       ( TLBEHI       ),
         .CSR_PG         ( PG         ),
@@ -1509,8 +1515,10 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .TLB_CPR        ( tlbrd_cpr        ),
         .TLB_TRANS_1    ( tlbrd_trans_1    ),
         .TLB_TRANS_2    ( tlbrd_trans_2    ),
-        .TLBWR_valid    ( tlbwr_valid|tlbfill_valid    ),
+        .TLBWR_valid    ( tlbwr_valid      ),
         .TLBWR_ready    ( tlbwr_ready      ),
+        .TLBFILL_valid  ( tlbfill_valid    ),
+        .TLBFILL_ready  ( tlbfill_ready    ),
         .TLB_CPR_w      ( tlb_cpr_out      ),
         .TLB_TRANS_1_w  ( tlb_trans_1_out  ),
         .TLB_TRANS_2_w  ( tlb_trans_2_out  ),
@@ -1522,7 +1530,8 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .store_or_load  ( reg_ex_cond0[2]  ),
         .plv_1bit         (crmd[0]         ),
         .tlb_exception_code_i(tlb_exception_code_i),
-        .tlb_exception_code_d(tlb_exception_code_d)
+        .tlb_exception_code_d(tlb_exception_code_d),
+        .stable_counter ( stable_counter[4:0])
     );
 
 
@@ -1597,7 +1606,46 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
     );
 
 `ifdef DIFFTEST
-    
+
+    DifftestInstrCommit DifftestInstrCommit0
+    (
+        .clock(aclk),
+        .coreid(0),
+        .index(0),
+        .valid(cmt_valid0),
+        .pc({32'd0,cmt_pc0}),
+        .instr(cmt_inst0),
+        .skip(0),
+        .is_TLBFILL(cmt_inst0[31:10]=='b0000011001001000001101),
+        .TLBFILL_index(fill_index_diff),
+        .is_CNTinst(cmt_inst0[31:11]=='b000000000000000001100),
+        .timer_64_value(cmt_stable_counter),
+        .wen(cmt_wen0),
+        .wdest({3'd0,cmt_wdest0}),
+        .wdata({32'd0,cmt_wdata0}),
+        .csr_rstat(cmt_inst0[31:24]=='b00000100&&cmt_inst0[23:10]==5),
+        .csr_data(reg_diff[cmt_inst0[4:0]])
+    );
+
+    DifftestInstrCommit DifftestInstrCommit1
+    (
+        .clock(aclk),
+        .coreid(0),
+        .index(1),
+        .valid(cmt_valid1),
+        .pc({32'd0,cmt_pc1}),
+        .instr(cmt_inst1),
+        .skip(0),
+        .is_TLBFILL(0),
+        .TLBFILL_index(0),
+        .is_CNTinst(cmt_inst1[31:11]=='b000000000000000001100),
+        .timer_64_value(cmt_stable_counter),
+        .wen(cmt_wen1),
+        .wdest({3'd0,cmt_wdest1}),
+        .wdata({32'd0,cmt_wdata1}),
+        .csr_rstat(0),
+        .csr_data(0)
+    );
 
 `endif
 endmodule

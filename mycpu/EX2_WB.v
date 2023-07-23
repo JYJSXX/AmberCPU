@@ -1,5 +1,5 @@
 `include "define.vh"
-`include "../exception.vh"
+`include "exception.vh"
 module EX2_WB(
     input clk,
     input aresetn,

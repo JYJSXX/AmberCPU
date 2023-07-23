@@ -1,5 +1,5 @@
 `include "define.vh"
-`include"../exception.vh"
+`include"exception.vh"
 module EX1(
     input   clk,
     input   aclk,
