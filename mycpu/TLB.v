@@ -824,7 +824,7 @@ always @(posedge clk or negedge rstn)begin
             TLBFILL_ready <= 0;
         end
         else begin
-            TLBWFILL_ready <= 1;
+            TLBFILL_ready <= 1;
         end
         tlb_cpr[stable_counter] <= TLB_CPR_w;
         tlb_trans_1[stable_counter] <= TLB_TRANS_1_w;
