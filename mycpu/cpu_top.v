@@ -111,7 +111,7 @@ module core_top(
     wire if0_readygo;
     wire if0_allowin; 
 
-    //for pc update
+    //for pc update     
     wire set_pc_from_ID;
     wire [31:0]pc_from_ID;
     // wire set_pc_from_EX; replaced by fact_pc/fact taken
@@ -1381,6 +1381,7 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
     TLB u_TLB(
         .clk            ( clk            ),
         .rstn           ( aresetn           ),
+        .flush          ( flush_to_tlb      ),
         .CSR_ASID       ( ASID[9:0]   ),
         .CSR_VPPN       ( TLBEHI       ),
         .CSR_PG         ( PG         ),
@@ -1508,7 +1509,7 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
     );
 
 `ifdef DIFFTEST
-    
+
 
 `endif
 endmodule
