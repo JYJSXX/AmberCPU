@@ -90,7 +90,7 @@ module IF1_FIFO(
                                 (
                                     (stat==IDLE)||(next_stat==IDLE)
                                 )&&
-                                tmp!=0;
+                                tmp==0;
     assign idle         = stat==IDLE;
     assign cache_idle = icache_idle&dcache_idle;
     // assign pc_fetch_ok= if1_pc==pc_after_priv;

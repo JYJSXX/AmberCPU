@@ -36,8 +36,8 @@ module IF0_IF1 (
                 //update stage-stage reg
                 if0_if1_pc<=fetch_pc;
                 if0_if1_pc_next<=pc_next;
-                if0_if1_tlb_rvalid<=tlb_rvalid;
             end 
+            if0_if1_tlb_rvalid<=tlb_rvalid;
             // else if (!if1_allowin) begin
             //     //hold stage-stage reg
             //     if0_if1_pc<=if0_if1_pc;
