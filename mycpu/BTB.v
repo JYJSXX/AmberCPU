@@ -128,10 +128,11 @@ module BTB #(
         end
     end
     always @(posedge clk or negedge rstn) begin
-        if(!rstn||BPOS_MISS)begin
+        if(!rstn)begin
             BPOS<=0;
         end else begin
-            BPOS=BPOS|((inst_bpos&inst_btype[0])<<FACT_INDEX);
+            if(BPOS_MISS)BPOS<=0;
+            else BPOS<=BPOS|((inst_bpos&inst_btype[0])<<FACT_INDEX);
         end
     end
     //pred_taken todo

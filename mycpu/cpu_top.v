@@ -52,15 +52,19 @@ module core_top(
     output [ 3:0] debug0_wb_rf_wen,
     output [ 4:0] debug0_wb_rf_wnum,
     output [31:0] debug0_wb_rf_wdata,
-    output [31:0] debug0_wb_inst,
-    output debug0_valid,    // TODO:
+
 
     output [31:0] debug1_wb_pc,
     output [ 3:0] debug1_wb_rf_wen,
     output [ 4:0] debug1_wb_rf_wnum,
     output [31:0] debug1_wb_rf_wdata,
-    output [31:0] debug1_wb_inst,
-    output debug1_valid         // TODO:
+
+    input  break_point,
+    input  infor_flag, 
+    input  reg_num,    
+    output ws_valid,   
+    output rf_rdata
+
 );
 
     `ifdef DIFFTEST
@@ -98,6 +102,11 @@ module core_top(
     assign {awid, wid} = 8'hff;
     wire clk;
     assign clk=aclk; //TODO:idle的时钟没写，暂时用clk代替
+
+    wire [31:0] debug0_wb_inst;
+    wire debug0_valid;
+    wire [31:0] debug1_wb_inst;
+    wire debug1_valid;
 
     wire i_idle;
     wire d_idle;
