@@ -1,5 +1,5 @@
-`include "../config.vh"
-`include "../exception.vh"
+`include "config.vh"
+`include "exception.vh"
 
 module TLB_EXP(
     input vaddr0,

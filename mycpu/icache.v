@@ -1,7 +1,7 @@
 
 `timescale 1ns / 1ps
-`include "../config.vh"
-`include "../exception.vh"
+`include "config.vh"
+`include "exception.vh"
 
 module icache #(
     parameter INDEX_WIDTH       = 6,

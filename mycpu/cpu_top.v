@@ -1,6 +1,6 @@
 `include "define.vh"
-`include "../TLB/TLB.vh"
-`include "../config.vh"
+`include "TLB.vh"
+`include "config.vh"
 module core_top(
     input           aclk,
     input           aresetn,
@@ -1319,7 +1319,11 @@ module core_top(
         .ibar              ( ibar              )
     );
 
-
+`ifdef CLAP_CONFIG_DIFFTEST
+    wire [31:0] vaddr_diff;
+    wire [31:0] paddr_diff;
+    wire [31:0] data_diff;
+`endif
 
     dcache#(
         .INDEX_WIDTH                       ( 6 ),
@@ -1367,15 +1371,15 @@ module core_top(
         .llbit                             ( llbit                             ),
         .llbit_clear                       ( llbit_clear                       ),
         .ibar                              ( ibar                              )
+        `ifdef CLAP_CONFIG_DIFFTEST
+        ,.vaddr_diff     (vaddr_diff),
+        .paddr_diff     (paddr_diff),
+        .data_diff      (data_diff)
+`endif
     );
 
-
-
-
-
-
-
 wire [3:0]reg_ex_cond0;
+
 assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
     TLB u_TLB(
         .clk            ( clk            ),
@@ -1509,6 +1513,45 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
 
 `ifdef DIFFTEST
 
+    DifftestInstrCommit DifftestInstrCommit0
+    (
+        .clock(aclk),
+        .coreid(0),
+        .index(0),
+        .valid(cmt_valid0),
+        .pc({32'd0,cmt_pc0}),
+        .instr(cmt_inst0),
+        .skip(0),
+        .is_TLBFILL(cmt_inst0[31:10]=='b0000011001001000001101),
+        .TLBFILL_index(fill_index_diff),
+        .is_CNTinst(cmt_inst0[31:11]=='b000000000000000001100),
+        .timer_64_value(cmt_stable_counter),
+        .wen(cmt_wen0),
+        .wdest({3'd0,cmt_wdest0}),
+        .wdata({32'd0,cmt_wdata0}),
+        .csr_rstat(cmt_inst0[31:24]=='b00000100&&cmt_inst0[23:10]==5),
+        .csr_data(reg_diff[cmt_inst0[4:0]])
+    );
+
+    DifftestInstrCommit DifftestInstrCommit1
+    (
+        .clock(aclk),
+        .coreid(0),
+        .index(1),
+        .valid(cmt_valid1),
+        .pc({32'd0,cmt_pc1}),
+        .instr(cmt_inst1),
+        .skip(0),
+        .is_TLBFILL(0),
+        .TLBFILL_index(0),
+        .is_CNTinst(cmt_inst1[31:11]=='b000000000000000001100),
+        .timer_64_value(cmt_stable_counter),
+        .wen(cmt_wen1),
+        .wdest({3'd0,cmt_wdest1}),
+        .wdata({32'd0,cmt_wdata1}),
+        .csr_rstat(0),
+        .csr_data(0)
+    );
 
 `endif
 endmodule

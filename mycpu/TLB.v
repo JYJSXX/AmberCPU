@@ -1,5 +1,5 @@
 `include "TLB.vh"
-`include "../csr.vh"
+`include "csr.vh"
 module TLB(
     input                               clk,
     input                               rstn,
