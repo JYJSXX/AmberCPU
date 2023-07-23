@@ -1,6 +1,6 @@
-`include "../config.vh"
-`include "../csr.vh"
-`include "../TLB/TLB.vh"
+`include "config.vh"
+`include "csr.vh"
+`include "TLB.vh"
 module csr
 (
     input clk,
