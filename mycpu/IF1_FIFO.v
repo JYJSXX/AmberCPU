@@ -66,7 +66,7 @@ module IF1_FIFO(
     wire pc_fetch_ok;
     wire idle;
 
-    reg[2:0]        stat;
+    reg [2:0]       stat;
     reg             tmp;//for last rready but fifo full
     reg [2:0]       next_stat;
     reg [31:0]      pc_after_priv;
