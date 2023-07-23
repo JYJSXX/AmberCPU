@@ -76,8 +76,19 @@ module  REG_EX1(
     output  reg [4:0] reg_ex_rd0,
     output  reg [4:0] reg_ex_rd1
 
-
+    `ifdef CLAP_CONFIG_DIFFTEST
+    ,output [31:0] reg_diff [31:0],
+    input  [63:0] stable_counter,
+    output [63:0] stable_counter_diff
+    `endif
 );
+`ifdef CLAP_CONFIG_DIFFTEST
+assign reg_diff = register_file;
+always @(posedge clk) begin
+    //if(!stall) stable_counter_diff<=stable_counter;
+    stable_counter_diff<=stable_counter;
+end
+`endif
 wire [31:0] rj0_data;
 wire [31:0] rj1_data;
 wire [31:0] rk0_data;
