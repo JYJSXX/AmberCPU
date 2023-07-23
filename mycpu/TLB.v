@@ -707,18 +707,33 @@ wire [`TLB_VPPN_LEN:0] DMW0_PPN_D = {CSR_DMW0[`DMW0_PSEG], VA_D_reg2[`TLB_VPPN_L
 wire        DMW1_JUDGE_D = VA_D_reg2[`TLB_VPPN_LEN : `TLB_VPPN_LEN - 2] == CSR_DMW1[`DMW0_VSEG];
 wire [`TLB_VPPN_LEN:0] DMW1_PPN_D = {CSR_DMW1[`DMW1_PSEG], VA_D_reg2[`TLB_VPPN_LEN - 3:0]};
 
+reg TLB_en_I = 0;
+reg TLB_en_D = 0;
+
 always @(posedge clk or negedge rstn)begin
     if (~rstn) begin
         PA_I <= 0;
         PA_D <= 0;
         is_cached_I <= 0;
         is_cached_D <= 0;
+        TLB_en_I <= 0;
+        TLB_en_D <= 0;
+    end
+    else if (flush)begin
+        PA_I <= 0;
+        PA_D <= 0;
+        is_cached_I <= 0;
+        is_cached_D <= 0;
+        TLB_en_I <= 0;
+        TLB_en_D <= 0;
     end
     else begin
         PA_I <= CSR_PG ? (DMW0_JUDGE_I ? DMW0_PPN_I : (DMW1_JUDGE_I ? DMW1_PPN_I : TLB_I_PPN_FINAL_0)) : VA_I_reg2;
         PA_D <= CSR_PG ? (DMW0_JUDGE_D ? DMW0_PPN_D : (DMW1_JUDGE_D ? DMW1_PPN_D : TLB_D_PPN_FINAL_0)) : VA_D_reg2;
         is_cached_I <= CSR_PG ? (DMW0_JUDGE_I ? CSR_DMW0[4] : (DMW1_JUDGE_I ? CSR_DMW1[4] : TLB_I_MAT_FINAL_0)) : CSR_CRMD[5];
         is_cached_D <= CSR_PG ? (DMW0_JUDGE_D ? CSR_DMW0[4] : (DMW1_JUDGE_D ? CSR_DMW1[4] : TLB_D_MAT_FINAL_0)) : CSR_CRMD[7];
+        TLB_en_I <= CSR_PG & ~(DMW0_JUDGE_I | DMW1_JUDGE_I);
+        TLB_en_D <= CSR_PG & ~(DMW0_JUDGE_D | DMW1_JUDGE_D);
     end
 end
 //TLB SEARCH PART
@@ -877,7 +892,7 @@ end
 //TLB_EXP
 TLB_EXP tlb_exp(
     .vaddr0(VA_I_reg3),
-    .en0(en_i_reg3),
+    .en0(en_i_reg3 & TLB_en_I),
     .plv0_1bit(plv_1bit), //crmd_plv
     .is_if_0(1), //PIF 
     .is_store_0(0), //PIS
@@ -890,7 +905,7 @@ TLB_EXP tlb_exp(
     //.tlbexception_flag0(tlbexception_flag0), //直接把exception0按位或就行，反正INT不会有TLB生成
     
     .vaddr1(VA_D_reg3),
-    .en1(en_d_reg3),
+    .en1(en_d_reg3 & TLB_en_D),
     .plv1_1bit(plv_1bit), //crmd_plv
     .is_if_1(0), //PIF
     .is_store_1(SOL_reg3), //PIS
