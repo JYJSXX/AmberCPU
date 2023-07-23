@@ -2,8 +2,6 @@
 
 自行阅读：https://chiplab.readthedocs.io/zh/latest/Simulation/verilator.html
 
-复制一份chiplab用于仿真自己的CPU，和示例mycpu做对比（注意原来chiplab不要重命名）
-
 先到chiplab/sims/verilator/run_prog目录下
 
 打开config-generator.mak设置一下参数(该文件是软链接到chiplab/chip/config-generator.mak的一个文件指针)
@@ -19,6 +17,13 @@ MYCPU_SRC=${CHIPLAB_HOME}/IP/myCPU
 ```
 
 这部分换成CPU路径
+
+```
+MYCPU_SRC=/home/yiran/Desktop/AmberCPU/mycpu
+#MYCPU_SRC=${CHIPLAB_HOME}/IP/myCPU
+```
+
+想要切换成mycpu就重新注释然后重新跑）
 
 仿真结果看/chiplab/sims/verilator/run_prog/log/func/func_lab19_log (以lab19为例)
 
