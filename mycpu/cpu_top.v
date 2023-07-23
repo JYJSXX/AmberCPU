@@ -1501,7 +1501,7 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .plv_1bit         (crmd[0]         ),
         .tlb_exception_code_i(tlb_exception_code_i),
         .tlb_exception_code_d(tlb_exception_code_d),
-        .stable_counter ( stable_counter   )
+        .stable_counter ( stable_counter[4:0])
     );
 
 
