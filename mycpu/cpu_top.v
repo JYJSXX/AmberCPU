@@ -62,7 +62,7 @@ module core_top(
     output [31:0] debug1_wb_inst,
     output debug1_valid         // TODO:
 );
-
+    wire [63:0] stable_counter;
     assign {arlock, arcache, arprot, awlock, awcache, awprot} = 0;
     assign {awid, wid} = 8'hff;
     wire clk;
@@ -144,7 +144,7 @@ module core_top(
         .pc_from_ID          ( pc_from_ID          ),
         .set_pc_from_EX      ( fact_taken          ),
         .pc_from_EX          ( fact_tpc            ),
-        .set_pc_from_WB      ( ex2_wb_excp_flag      ),
+        .set_pc_from_WB      ( ex2_wb_excp_flag    ),
         .pc_from_WB          ( pc_from_WB          ),
         .set_pc_from_PRIV    ( set_pc_from_PRIV    ),
         .pc_from_PRIV        ( pc_from_PRIV        ),
@@ -801,6 +801,7 @@ module core_top(
     wire tlbwr_ready;
     wire tlbwr_valid;
     wire tlbfill_valid;
+    wire tlbfill_ready;
     wire invtlb_ready;
     wire invtlb_valid;
     wire [4:0] invtlb_op;
@@ -916,7 +917,7 @@ module core_top(
         .tlbrd_valid          ( tlbrd_valid          ),
         .tlbwr_ready          ( tlbwr_ready          ),
         .tlbwr_valid          ( tlbwr_valid          ),
-        .tlbfill_ready        ( tlbwr_ready        ),
+        .tlbfill_ready        ( tlbfill_ready        ),
         .tlbfill_valid        ( tlbfill_valid        ),
         .invtlb_ready         ( invtlb_ready         ),
         .invtlb_valid         ( invtlb_valid         ),
@@ -929,7 +930,8 @@ module core_top(
         .badv_in              ( reg_ex_badv              ),
         .badv_out             ( ex1_badv             ),
         .excp_flag_out        ( ex1_excp_flag        ),
-        .exception_out        ( ex1_exception        )
+        .exception_out        ( ex1_exception        ),
+        .stable_counter       ( stable_counter       )
     );
 
     
@@ -1120,11 +1122,13 @@ module core_top(
         .debug0_wb_rf_wnum   ( debug0_wb_rf_wnum   ),
         .debug0_wb_rf_wdata  ( debug0_wb_rf_wdata  ),
         .debug0_wb_inst      ( debug0_wb_inst      ),
+        .debug0_valid         ( debug0_valid         ),
         .debug1_wb_pc        ( debug1_wb_pc        ),
         .debug1_wb_rf_wen    ( debug1_wb_rf_wen    ),
         .debug1_wb_rf_wnum   ( debug1_wb_rf_wnum   ),
         .debug1_wb_rf_wdata  ( debug1_wb_rf_wdata  ),
         .debug1_wb_inst      ( debug1_wb_inst      ),
+        .debug1_valid         ( debug1_valid         ),
         //.csr_estat           ( csr_estat           ),
         //.csr_crmd            ( csr_crmd            ),
         .ecode_in            ( ex1_ex2_exception            ),
@@ -1187,6 +1191,38 @@ module core_top(
     wire     [`TLB_TRANSLEN - 1:0]   tlbrd_trans_1;
     wire     [`TLB_TRANSLEN - 1:0]   tlbrd_trans_2;
     wire  [31:0] TLBIDX;
+
+    `ifdef CLAP_CONFIG_DIFFTEST
+    wire [31:0] csr_crmd_diff     ;
+    wire [31:0] csr_prmd_diff     ;
+    wire [31:0] csr_ectl_diff     ;
+    wire [31:0] csr_estat_diff    ;
+    wire [31:0] csr_era_diff      ;
+    wire [31:0] csr_badv_diff     ;
+    wire [31:0] csr_eentry_diff   ;
+    wire [31:0] csr_tlbidx_diff   ;
+    wire [31:0] csr_tlbehi_diff   ;
+    wire [31:0] csr_tlbelo0_diff  ;
+    wire [31:0] csr_tlbelo1_diff  ;
+    wire [31:0] csr_asid_diff     ;
+    wire [31:0] csr_pgdl_diff     ;
+    wire [31:0] csr_pgdh_diff     ;
+    wire [31:0] csr_save0_diff    ;
+    wire [31:0] csr_save1_diff    ;
+    wire [31:0] csr_save2_diff    ;
+    wire [31:0] csr_save3_diff    ;
+    wire [31:0] csr_tid_diff      ;
+    wire [31:0] csr_tcfg_diff     ;
+    wire [31:0] csr_tval_diff     ;
+    wire [31:0] csr_ticlr_diff    ;
+    wire [31:0] csr_llbctl_diff   ;
+    wire [31:0] csr_tlbrentry_diff;
+    wire [31:0] csr_dmw0_diff     ;
+    wire [31:0] csr_dmw1_diff     ;
+    wire [63:0] rf_stable_counter ;
+    wire [63:0] ex_stable_counter ;
+`endif
+
     csr u_csr(
         .clk             ( clk             ),
         .aclk            ( aclk            ),
@@ -1240,6 +1276,36 @@ module core_top(
         .tlbrd_trans_2   ( tlbrd_trans_2   ),
         .hardware_interrupt  ( intrpt      ),
         .tid             ( tid             )
+
+         `ifdef CLAP_CONFIG_DIFFTEST
+        ,
+        .crmd_diff      (csr_crmd_diff     ),
+        .prmd_diff      (csr_prmd_diff     ),
+        .ectl_diff      (csr_ectl_diff     ),
+        .estat_diff     (csr_estat_diff    ),
+        .era_diff       (csr_era_diff      ),
+        .badv_diff      (csr_badv_diff     ),
+        .eentry_diff    (csr_eentry_diff   ),
+        .tlbidx_diff    (csr_tlbidx_diff   ),
+        .tlbehi_diff    (csr_tlbehi_diff   ),
+        .tlbelo0_diff   (csr_tlbelo0_diff  ),
+        .tlbelo1_diff   (csr_tlbelo1_diff  ),
+        .asid_diff      (csr_asid_diff     ),
+        .pgdl_diff      (csr_pgdl_diff     ),
+        .pgdh_diff      (csr_pgdh_diff     ),
+        .save0_diff     (csr_save0_diff    ),
+        .save1_diff     (csr_save1_diff    ),
+        .save2_diff     (csr_save2_diff    ),
+        .save3_diff     (csr_save3_diff    ),
+        .tid_diff       (csr_tid_diff      ),
+        .tcfg_diff      (csr_tcfg_diff     ),
+        .tval_diff      (csr_tval_diff     ),
+        .ticlr_diff     (csr_ticlr_diff    ),
+        .llbctl_diff    (csr_llbctl_diff   ),
+        .tlbrentry_diff (csr_tlbrentry_diff),
+        .dmw0_diff      (csr_dmw0_diff     ),
+        .dmw1_diff      (csr_dmw1_diff     )
+        `endif
     );
 
     BTB u_BTB(
@@ -1424,8 +1490,10 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .TLB_CPR        ( tlbrd_cpr        ),
         .TLB_TRANS_1    ( tlbrd_trans_1    ),
         .TLB_TRANS_2    ( tlbrd_trans_2    ),
-        .TLBWR_valid    ( tlbwr_valid|tlbfill_valid    ),
+        .TLBWR_valid    ( tlbwr_valid      ),
         .TLBWR_ready    ( tlbwr_ready      ),
+        .TLBFILL_valid  ( tlbfill_valid    ),
+        .TLBFILL_ready  ( tlbfill_ready    ),
         .TLB_CPR_w      ( tlb_cpr_out      ),
         .TLB_TRANS_1_w  ( tlb_trans_1_out  ),
         .TLB_TRANS_2_w  ( tlb_trans_2_out  ),
@@ -1437,7 +1505,8 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .store_or_load  ( reg_ex_cond0[2]  ),
         .plv_1bit         (crmd[0]         ),
         .tlb_exception_code_i(tlb_exception_code_i),
-        .tlb_exception_code_d(tlb_exception_code_d)
+        .tlb_exception_code_d(tlb_exception_code_d),
+        .stable_counter ( stable_counter[4:0])
     );
 
 
