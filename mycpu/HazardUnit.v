@@ -4,7 +4,7 @@ module HazardUnit (
     input flush_from_ex1,
     input flush_from_reg,
     input flush_from_id,
-    input flush_from_fifo,
+    input flush_from_if1_fifo,
     input flush_from_if1,
 
     output flush_to_ex2_wb,

@@ -79,8 +79,8 @@ module core_top(
     wire flush_from_ex1;
     wire flush_from_reg;
     wire flush_from_id;
-    wire flush_from_fifo;
     wire flush_from_if1;
+    wire flush_from_if1_fifo;
 
     wire flush_to_ex2_wb;  
     wire flush_to_ex1_ex2; 
@@ -255,7 +255,6 @@ module core_top(
     wire  [1:0]        tlb_flag;
     wire               tlb_flag_from_ex;
     wire  [1:0]        priv_flag;
-    wire               flush_from_if1_fifo;
     // wire               icache_idle;
     // wire               dcache_idle;
     wire               csr_done;
@@ -1486,26 +1485,26 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
 
 
     HazardUnit u_HazardUnit(
-        .flush_from_wb     ( flush_from_wb     ),
-        .flush_from_ex2    ( flush_from_ex2    ),
-        .flush_from_ex1    ( flush_from_ex1    ),
-        .flush_from_reg    ( flush_from_reg    ),
-        .flush_from_id     ( flush_from_id     ),
-        .flush_from_fifo   ( flush_from_fifo   ),
-        .flush_from_if1    ( flush_from_if1    ),
-        .flush_to_ex2_wb   ( flush_to_ex2_wb   ),
-        .flush_to_ex1_ex2  ( flush_to_ex1_ex2  ),
-        .flush_to_reg_ex1  ( flush_to_reg_ex1  ),
-        .flush_to_id_reg   ( flush_to_id_reg   ),
-        .flush_to_fifo_id  ( flush_to_fifo_id  ),
-        .flush_to_fifo     ( flush_to_fifo     ),
-        .flush_to_if1_fifo ( flush_to_if1_fifo ),
-        .flush_to_if0_if1  ( flush_to_if0_if1  ),
-        .flush_to_if0      ( flush_to_if0      ),
-        .flush_to_tlb      ( flush_to_tlb      ),
-        .flush_to_icache   ( flush_to_icache   ),
-        .flush_to_dcache   ( flush_to_dcache   ),
-        .flush_to_btb      ( flush_to_btb      )
+        .flush_from_wb          ( flush_from_wb         ),
+        .flush_from_ex2         ( flush_from_ex2        ),
+        .flush_from_ex1         ( flush_from_ex1        ),
+        .flush_from_reg         ( flush_from_reg        ),
+        .flush_from_id          ( flush_from_id         ),
+        .flush_from_if1_fifo    ( flush_from_if1_fifo   ),
+        .flush_from_if1         ( flush_from_if1        ),
+        .flush_to_ex2_wb        ( flush_to_ex2_wb       ),
+        .flush_to_ex1_ex2       ( flush_to_ex1_ex2      ),
+        .flush_to_reg_ex1       ( flush_to_reg_ex1      ),
+        .flush_to_id_reg        ( flush_to_id_reg       ),
+        .flush_to_fifo_id       ( flush_to_fifo_id      ),
+        .flush_to_fifo          ( flush_to_fifo         ),
+        .flush_to_if1_fifo      ( flush_to_if1_fifo     ),
+        .flush_to_if0_if1       ( flush_to_if0_if1      ),
+        .flush_to_if0           ( flush_to_if0          ),
+        .flush_to_tlb           ( flush_to_tlb          ),
+        .flush_to_icache        ( flush_to_icache       ),
+        .flush_to_dcache        ( flush_to_dcache       ),
+        .flush_to_btb           ( flush_to_btb          )
     );
 
 endmodule
