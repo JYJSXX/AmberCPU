@@ -25,6 +25,14 @@ MYCPU_SRC=/home/yiran/Desktop/AmberCPU/mycpu
 
 想要切换成mycpu就重新注释然后重新跑）
 
+打开config-software.mak文件
+
+```
+RUN_SOFTWARE=func/func_lab19
+```
+
+修改对应测试的func_lab
+
 仿真结果看/chiplab/sims/verilator/run_prog/log/func/func_lab19_log (以lab19为例)
 
 log文件夹下有

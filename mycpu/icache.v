@@ -423,6 +423,7 @@ module icache #(
             else rready_temp = 1;
         end
         MISS: begin
+            missbuf_we = 1;
             i_rvalid        = 1;
             if(uncache_buf) begin
                 i_rlen = 8'd1;

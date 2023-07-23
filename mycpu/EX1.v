@@ -232,8 +232,8 @@ wire pc_add_4; //根据控制信号判断要写入pc+4还是y
 assign pc_add_4 = pc0 + 4;
 assign cond0 = uop0[`UOP_COND];
 assign cond1 = uop1[`UOP_COND];
-assign alu_result0_valid = is_ALU_0 || uop0[`INS_BR];
-assign alu_result1_valid = is_ALU_1 || uop1[`INS_BR]; //beq之类的就向r0写，应该也没什么问题
+assign alu_result0_valid = is_ALU_0 || uop0[`INS_BR] || inst0 == 32'b0;
+assign alu_result1_valid = is_ALU_1 || uop1[`INS_BR] || inst1 == 32'b0; //beq之类的就向r0写，应该也没什么问题
 assign alu_result0 = uop0[`INS_BR]? pc_add_4:y_1;
 assign alu_result1 = y_2; //跳转指令单发，只在0号，1号alu不发射跳转
 wire [31:0] rj0_data_o;
