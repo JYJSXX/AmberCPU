@@ -62,7 +62,7 @@ module core_top(
     output [31:0] debug1_wb_inst,
     output debug1_valid         // TODO:
 );
-
+    wire [63:0] stable_counter;
     assign {arlock, arcache, arprot, awlock, awcache, awprot} = 0;
     assign {awid, wid} = 8'hff;
     wire clk;
@@ -929,7 +929,8 @@ module core_top(
         .badv_in              ( reg_ex_badv              ),
         .badv_out             ( ex1_badv             ),
         .excp_flag_out        ( ex1_excp_flag        ),
-        .exception_out        ( ex1_exception        )
+        .exception_out        ( ex1_exception        ),
+        .stable_counter       ( stable_counter       )
     );
 
     

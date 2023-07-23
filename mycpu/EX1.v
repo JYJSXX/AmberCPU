@@ -156,19 +156,21 @@ module EX1(
     input [31:0] badv_in,
     output reg [31:0] badv_out,
     output reg excp_flag_out,
-    output reg [6:0] exception_out
+    output reg [6:0] exception_out,
+    output [63:0] stable_counter
 
 
 
 );
+
 assign csr_flag_from_ex = uop0[`INS_CSR];
 assign tlb_flag_from_ex = uop0[`INS_TLB] && (inst0[11:10] == 2'b00 || inst0[11:0] ==2'b01 || inst0[15]);
-    reg [63:0] stable_counter;
+    reg [63:0] stable_counter_reg;
     assign flush=predict_addr_fail || predict_dir_fail || uop0[`INS_ERTN];
     always @(posedge aclk)
-        if(~aresetn) stable_counter<=0;
-        else stable_counter <= stable_counter+1;
-        
+        if(~aresetn) stable_counter_reg<=0;
+        else stable_counter_reg <= stable_counter_reg+1;
+    assign stable_counter = stable_counter_reg;     
 always@(*)begin
     if(excp_flag_in) begin
         exception_out = exception_in;
