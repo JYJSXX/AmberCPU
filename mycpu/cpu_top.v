@@ -1,5 +1,6 @@
 `include "define.vh"
 `include "../TLB/TLB.vh"
+`include "../config.vh"
 module core_top(
     input           aclk,
     input           aresetn,
@@ -161,7 +162,7 @@ module core_top(
 
     wire               if1_readygo;
     wire               if1_allowin;
-    wire               flush_cause;
+    // wire               flush_cause; TODO:flush cause 
     wire               icache_rready;
 
     wire [31:0]        if0_if1_pc;
@@ -176,7 +177,7 @@ module core_top(
         .if1_readygo            ( if1_readygo      ),
         .if1_allowin            ( if1_allowin      ),
         .flush                  ( flush_to_if0_if1 ),
-        .flush_cause            ( flush_cause      ),   // TODO: To be completed
+        .flush_cause            ( 0                ),   // TODO: To be completed
         .rready                 ( icache_rready    ),
         .tlb_rvalid             ( tlb_rvalid       ),
         .if0_if1_tlb_rvalid     ( if0_if1_tlb_rvalid),
@@ -274,7 +275,7 @@ module core_top(
         .clk                        ( clk                        ),
         .rstn                       ( aresetn                    ),
         .flush                      ( flush_to_if1_fifo          ),
-        .flush_cause                ( flush_cause                ),
+        // .flush_cause                ( flush_cause                ),
         .fetch_buf_full             ( fetch_buf_full             ),
         .if1_readygo                ( if1_readygo                ),
         .if1_allowin                ( if1_allowin                ),
@@ -416,7 +417,7 @@ module core_top(
         .clk                 ( clk                 ),
         .rstn                ( aresetn             ),
         .fifo_id_flush       ( flush_to_fifo_id    ),
-        .fifo_id_flush_cause ( fifo_id_flush_cause ),  // TODO: To be completed
+        .fifo_id_flush_cause ( 0                   ),  // TODO: To be completed
         .id_allowin          ( id_allowin          ),
         .id_readygo          ( id_readygo          ),
         .fifo_allowin        ( fifo_allowin        ),
@@ -799,7 +800,6 @@ module core_top(
     wire tlbrd_valid;
     wire tlbwr_ready;
     wire tlbwr_valid;
-    wire tlbfill_ready;
     wire tlbfill_valid;
     wire invtlb_ready;
     wire invtlb_valid;
@@ -916,7 +916,7 @@ module core_top(
         .tlbrd_valid          ( tlbrd_valid          ),
         .tlbwr_ready          ( tlbwr_ready          ),
         .tlbwr_valid          ( tlbwr_valid          ),
-        .tlbfill_ready        ( tlbfill_ready        ),
+        .tlbfill_ready        ( tlbwr_ready        ),
         .tlbfill_valid        ( tlbfill_valid        ),
         .invtlb_ready         ( invtlb_ready         ),
         .invtlb_valid         ( invtlb_valid         ),
@@ -1419,7 +1419,7 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .TLB_CPR        ( tlbrd_cpr        ),
         .TLB_TRANS_1    ( tlbrd_trans_1    ),
         .TLB_TRANS_2    ( tlbrd_trans_2    ),
-        .TLBWR_valid    ( tlbwr_valid      ),
+        .TLBWR_valid    ( tlbwr_valid|tlbfill_valid    ),
         .TLBWR_ready    ( tlbwr_ready      ),
         .TLB_CPR_w      ( tlb_cpr_out      ),
         .TLB_TRANS_1_w  ( tlb_trans_1_out  ),
@@ -1506,4 +1506,8 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .flush_to_btb           ( flush_to_btb          )
     );
 
+`ifdef DIFFTEST
+    
+
+`endif
 endmodule
