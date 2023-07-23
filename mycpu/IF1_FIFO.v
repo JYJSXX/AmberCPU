@@ -86,8 +86,12 @@ module IF1_FIFO(
     
     assign fifo_readygo =       if1_fifo_valid;
     assign if1_allowin  =       fifo_allowin&&
-                                (!if0_if1_tlb_rvalid||if1_rready)&&
                                 (
+                                    // !if0_if1_tlb_rvalid||
+                                    // if1_rready
+                                    1
+                                )&&
+                                (//if1_rready->tlb_rvalid
                                     (stat==IDLE)||(next_stat==IDLE)
                                 )&&
                                 tmp==0;
