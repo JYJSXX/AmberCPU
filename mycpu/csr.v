@@ -69,6 +69,35 @@ module csr
     // input tlb_index_we,
     // input tlb_ps_we,
     // input tlb_ne_we
+    `ifdef CLAP_CONFIG_DIFFTEST
+    ,
+    output [31:0] crmd_diff,
+    output [31:0] prmd_diff,
+    output [31:0] ectl_diff,
+    output [31:0] estat_diff,
+    output [31:0] era_diff,
+    output [31:0] badv_diff,
+    output [31:0] eentry_diff,
+    output [31:0] tlbidx_diff,
+    output [31:0] tlbehi_diff,
+    output [31:0] tlbelo0_diff,
+    output [31:0] tlbelo1_diff,
+    output [31:0] asid_diff,
+    output [31:0] pgdl_diff,
+    output [31:0] pgdh_diff,
+    output [31:0] save0_diff,
+    output [31:0] save1_diff,
+    output [31:0] save2_diff,
+    output [31:0] save3_diff,
+    output [31:0] tid_diff,
+    output [31:0] tcfg_diff,
+    output [31:0] tval_diff,
+    output [31:0] ticlr_diff,
+    output [31:0] llbctl_diff,
+    output [31:0] tlbrentry_diff,
+    output [31:0] dmw0_diff,
+    output [31:0] dmw1_diff
+`endif
 );
 
     wire [31:0] csr_crmd ;
@@ -99,7 +128,7 @@ module csr
     reg [31:0] csr_tid ;
     wire [31:0] csr_tcfg ;
     reg [31:0] csr_tval ;
-    wire [31:0] csr_tlclr ;
+    wire [31:0] csr_ticlr ;
     reg [31:0] csr_ctag ;
 
 
@@ -284,8 +313,8 @@ module csr
     
     //TICLR
     reg [`TICLR_CLR] tlclr_clr; 
-    assign csr_tlclr[`TICLR_CLR] = 0;
-    assign csr_tlclr[`TICLR_ZERO] = 0;
+    assign csr_ticlr[`TICLR_CLR] = 0;
+    assign csr_ticlr[`TICLR_ZERO] = 0;
 assign cpu_interrupt=crmd_ie&&(ecfg_lie&csr_estat)!=0; //全局中断允许且（局部中断使能位与例外状态位）不为0
 assign idle_over= csr_estat[12:0]; //各种中断，无论软件硬件，无论是否使能，只有有例外就结束idle(马哥这样实现的)
 wire pg_next;
@@ -799,7 +828,7 @@ assign rdata[31:0] = {32{addr==`CSR_CRMD}} & csr_crmd |
                     {32{addr==`CSR_TID}} & csr_tid |
                     {32{addr==`CSR_TCFG}} & csr_tcfg |
                     {32{addr==`CSR_TVAL}} & csr_tval |
-                    {32{addr==`CSR_TICLR}} & csr_tlclr |
+                    {32{addr==`CSR_TICLR}} & csr_ticlr |
                     {32{addr==`CSR_CTAG}} & csr_ctag;
         assign crmd=csr_crmd;
         assign estat=csr_estat;
@@ -811,7 +840,7 @@ assign rdata[31:0] = {32{addr==`CSR_CRMD}} & csr_crmd |
         assign dmw0=csr_dmw0;
         assign dmw1=csr_dmw1;
         //cpu_interrupt已经在前面赋值了
-        assign llbit=csr_llbctl[0];
+        assign llbit=csr_llbctl[0] | llbit_set; //llbit写优先
         assign DMW0_PSEG=csr_dmw0[`DMW0_PSEG];
         assign DMW0_VSEG=csr_dmw0[`DMW0_VSEG];
         assign DMW1_PSEG=csr_dmw1[`DMW1_PSEG];
@@ -821,4 +850,16 @@ assign rdata[31:0] = {32{addr==`CSR_CRMD}} & csr_crmd |
         assign TLBEHI=csr_tlbehi;
         assign TLBIDX=csr_tlbidx;
         assign tid = csr_tid;
+
+            `ifdef CLAP_CONFIG_DIFFTEST
+    wire [32*26-1:0] csr_diff = {csr_crmd,csr_prmd,csr_ecfg,csr_estat,csr_era,csr_badv,csr_eentry,csr_tlbidx,csr_tlbehi,csr_tlbelo0,csr_tlbelo1,csr_asid,csr_pgdl,csr_pgdh,csr_save0,csr_save1,csr_save2,csr_save3,csr_tid,csr_tcfg,csr_tval,csr_ticlr,csr_llbctl,csr_tlbrentry,csr_dmw0,csr_dmw1};
+
+    reg [32*26-1:0] csr_diff_delay0;
+
+    always @(posedge clk) begin
+        csr_diff_delay0 <= csr_diff;
+    end
+
+    assign {crmd_diff,prmd_diff,ectl_diff,estat_diff,era_diff,badv_diff,eentry_diff,tlbidx_diff,tlbehi_diff,tlbelo0_diff,tlbelo1_diff,asid_diff,pgdl_diff,pgdh_diff,save0_diff,save1_diff,save2_diff,save3_diff,tid_diff,tcfg_diff,tval_diff,ticlr_diff,llbctl_diff,tlbrentry_diff,dmw0_diff,dmw1_diff}=csr_diff_delay0;
+    `endif
 endmodule
