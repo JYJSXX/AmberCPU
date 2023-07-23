@@ -158,7 +158,16 @@ module EX1(
     output reg excp_flag_out,
     output reg [6:0] exception_out,
     output [63:0] stable_counter
-
+`ifdef DIFFTEST
+    ,input vaddr_diff_in,
+    input paddr_diff_in,
+    input data_diff_in,
+    output vaddr_diff_out,
+    output paddr_diff_out,
+    output data_diff_out,
+    output [63:0] ex_stable_counter,
+    output ex1_allowin
+`endif
 
 
 );
@@ -170,7 +179,17 @@ assign tlb_flag_from_ex = uop0[`INS_TLB] && (inst0[11:10] == 2'b00 || inst0[11:0
     always @(posedge aclk)
         if(~aresetn) stable_counter_reg<=0;
         else stable_counter_reg <= stable_counter_reg+1;
-    assign stable_counter = stable_counter_reg;     
+    assign stable_counter = stable_counter_reg;   
+`ifdef DIFFTEST      
+    always@(posedge clk)begin
+        if(ex1_allowin) begin
+            ex_stable_counter <= stable_counter;
+            vaddr_diff_out <= vaddr_diff_in;
+            paddr_diff_out <= paddr_diff_in;
+            data_diff_out <= data_diff_in;
+        end
+    end
+    `endif
 always@(*)begin
     if(excp_flag_in) begin
         exception_out = exception_in;

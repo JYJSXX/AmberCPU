@@ -69,3 +69,4 @@
 `define zero 32'h00000000
 `define INIT_ADDR 32'h1c00_0000
 `define PC_RESET 32'h1C00_0000//指令集手册P55复位
+`define TLBIDX_WIDTH 5

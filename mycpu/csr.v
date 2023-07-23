@@ -69,7 +69,7 @@ module csr
     // input tlb_index_we,
     // input tlb_ps_we,
     // input tlb_ne_we
-    `ifdef CLAP_CONFIG_DIFFTEST
+    `ifdef DIFFTEST
     ,
     output [31:0] crmd_diff,
     output [31:0] prmd_diff,
@@ -851,7 +851,7 @@ assign rdata[31:0] = {32{addr==`CSR_CRMD}} & csr_crmd |
         assign TLBIDX=csr_tlbidx;
         assign tid = csr_tid;
 
-            `ifdef CLAP_CONFIG_DIFFTEST
+            `ifdef DIFFTEST
     wire [32*26-1:0] csr_diff = {csr_crmd,csr_prmd,csr_ecfg,csr_estat,csr_era,csr_badv,csr_eentry,csr_tlbidx,csr_tlbehi,csr_tlbelo0,csr_tlbelo1,csr_asid,csr_pgdl,csr_pgdh,csr_save0,csr_save1,csr_save2,csr_save3,csr_tid,csr_tcfg,csr_tval,csr_ticlr,csr_llbctl,csr_tlbrentry,csr_dmw0,csr_dmw1};
 
     reg [32*26-1:0] csr_diff_delay0;

@@ -76,13 +76,13 @@ module  REG_EX1(
     output  reg [4:0] reg_ex_rd0,
     output  reg [4:0] reg_ex_rd1
 
-    `ifdef CLAP_CONFIG_DIFFTEST
+    `ifdef DIFFTEST
     ,output [31:0] reg_diff [31:0],
     input  [63:0] stable_counter,
     output [63:0] stable_counter_diff
     `endif
 );
-`ifdef CLAP_CONFIG_DIFFTEST
+`ifdef DIFFTEST
 assign reg_diff = register_file;
 always @(posedge clk) begin
     //if(!stall) stable_counter_diff<=stable_counter;
