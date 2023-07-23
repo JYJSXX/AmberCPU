@@ -4,7 +4,7 @@ module IF1_FIFO(
     input clk,
     input rstn,
     input flush,
-    input flush_cause,
+    // input flush_cause, TODO：flush_cause for identify input source
     
 
     //hand shake signal
@@ -59,8 +59,8 @@ module IF1_FIFO(
                     WAIT_TLB_TLB    =   3'b111,
                     WAIT_CACHE_IDLE =   3'b011,
                     WAIT_CSR_OK     =   3'b100,
-                    WAIT_TLB_OK     =   3'b101,
-                    WAIT_FETCH      =   3'b110;
+                    WAIT_TLB_OK     =   3'b101;
+                    // WAIT_FETCH      =   3'b110;
 
     wire cache_idle;
     wire pc_fetch_ok;
@@ -84,16 +84,16 @@ module IF1_FIFO(
     reg             tmp_cacop_ready;
     reg             tmp_cacop_complete;
     
-    assign fifo_readygo = if1_fifo_valid;
+    assign fifo_readygo =       if1_fifo_valid;
     assign if1_allowin  =       fifo_allowin&&
                                 (!if0_if1_tlb_rvalid||if1_rready)&&
                                 (
-                                    (stat==IDLE)||(stat==WAIT_FETCH)
+                                    (stat==IDLE)||(next_stat==IDLE)
                                 )&&
                                 tmp!=0;
     assign idle         = stat==IDLE;
     assign cache_idle = icache_idle&dcache_idle;
-    assign pc_fetch_ok= if1_pc==pc_after_priv;
+    // assign pc_fetch_ok= if1_pc==pc_after_priv;
     assign set_pc_from_PRIV = stat!=IDLE;
     assign pc_from_PRIV = pc_after_priv;
 
@@ -123,9 +123,9 @@ module IF1_FIFO(
         flush_from_if1_fifo=0;
         case (stat)
             IDLE:begin
-                next_stat=  ibar_flag?  WAIT_EX_IBAR:
-                            csr_flag ?  WAIT_EX_CSR:
-                            tlb_flag ?  WAIT_TLB_TLB:
+                next_stat=  ibar_flag!=2'b00 ?  WAIT_EX_IBAR:
+                            csr_flag!=2'b00 ?  WAIT_EX_CSR:
+                            tlb_flag!=2'b00  ?  WAIT_TLB_TLB:
                             IDLE;
             end
             WAIT_EX_IBAR:begin
@@ -141,17 +141,20 @@ module IF1_FIFO(
                 flush_from_if1_fifo=1;
             end
             WAIT_CACHE_IDLE:begin
-                next_stat=  cache_idle?WAIT_FETCH            :WAIT_CACHE_IDLE;
+                next_stat=  cache_idle?IDLE            :WAIT_CACHE_IDLE;
             end
             WAIT_CSR_OK:begin
-                next_stat=  csr_done?WAIT_FETCH:WAIT_CSR_OK;
+                next_stat=  csr_done?IDLE:WAIT_CSR_OK;
             end
             WAIT_TLB_OK:begin
-                next_stat=  tlb_done?WAIT_FETCH:WAIT_TLB_OK;
+                next_stat=  tlb_done?IDLE:WAIT_TLB_OK;
             end
-            WAIT_FETCH:begin
-                next_stat=pc_fetch_ok?IDLE:WAIT_FETCH;
+            default:begin
+                next_stat=IDLE;
             end
+            // WAIT_FETCH:begin
+            //     next_stat=pc_fetch_ok?IDLE:WAIT_FETCH;
+            // end
         endcase
     end
 

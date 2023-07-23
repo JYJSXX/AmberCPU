@@ -80,8 +80,8 @@ module core_top(
     wire flush_from_ex1;
     wire flush_from_reg;
     wire flush_from_id;
-    wire flush_from_fifo;
     wire flush_from_if1;
+    wire flush_from_if1_fifo;
 
     wire flush_to_ex2_wb;  
     wire flush_to_ex1_ex2; 
@@ -133,6 +133,7 @@ module core_top(
     
     wire [31:0]  pc_next;//rready control logic : use a tmp to store inst temporarily
     wire         pc_in_stall;
+    wire ex2_wb_excp_flag; 
     IF0 u_IF0(
         .clk                 ( clk                 ),
         .rstn                ( aresetn             ),
@@ -143,7 +144,7 @@ module core_top(
         .pc_from_ID          ( pc_from_ID          ),
         .set_pc_from_EX      ( fact_taken          ),
         .pc_from_EX          ( fact_tpc            ),
-        .set_pc_from_WB      ( set_pc_from_WB      ),
+        .set_pc_from_WB      ( ex2_wb_excp_flag      ),
         .pc_from_WB          ( pc_from_WB          ),
         .set_pc_from_PRIV    ( set_pc_from_PRIV    ),
         .pc_from_PRIV        ( pc_from_PRIV        ),
@@ -161,7 +162,7 @@ module core_top(
 
     wire               if1_readygo;
     wire               if1_allowin;
-    wire               flush_cause;
+    // wire               flush_cause; TODO:flush cause 
     wire               icache_rready;
 
     wire [31:0]        if0_if1_pc;
@@ -176,7 +177,7 @@ module core_top(
         .if1_readygo            ( if1_readygo      ),
         .if1_allowin            ( if1_allowin      ),
         .flush                  ( flush_to_if0_if1 ),
-        .flush_cause            ( flush_cause      ),   // TODO: To be completed
+        .flush_cause            ( 0                ),   // TODO: To be completed
         .rready                 ( icache_rready    ),
         .tlb_rvalid             ( tlb_rvalid       ),
         .if0_if1_tlb_rvalid     ( if0_if1_tlb_rvalid),
@@ -255,7 +256,6 @@ module core_top(
     wire  [1:0]        tlb_flag;
     wire               tlb_flag_from_ex;
     wire  [1:0]        priv_flag;
-    wire               flush_from_if1_fifo;
     // wire               icache_idle;
     // wire               dcache_idle;
     wire               csr_done;
@@ -275,7 +275,7 @@ module core_top(
         .clk                        ( clk                        ),
         .rstn                       ( aresetn                    ),
         .flush                      ( flush_to_if1_fifo          ),
-        .flush_cause                ( flush_cause                ),
+        // .flush_cause                ( flush_cause                ),
         .fetch_buf_full             ( fetch_buf_full             ),
         .if1_readygo                ( if1_readygo                ),
         .if1_allowin                ( if1_allowin                ),
@@ -291,8 +291,8 @@ module core_top(
         .if1_cookie_out             ( if1_cookie_out             ),
         .if1_inst0                  ( if1_inst0                  ),
         .if1_inst1                  ( if1_inst1                  ),
-        .ibar_flag                  ( ibar                  ),
-        .ibar_flag_from_ex          ( ibar_flag_from_ex          ),
+        .ibar_flag                  ( ibar_flag                  ),
+        .ibar_flag_from_ex          ( ibar          ),
         .csr_flag                   ( csr_flag                   ),
         .csr_flag_from_ex           ( csr_flag_from_ex           ),
         .tlb_flag                   ( tlb_flag                   ),
@@ -417,7 +417,7 @@ module core_top(
         .clk                 ( clk                 ),
         .rstn                ( aresetn             ),
         .fifo_id_flush       ( flush_to_fifo_id    ),
-        .fifo_id_flush_cause ( fifo_id_flush_cause ),  // TODO: To be completed
+        .fifo_id_flush_cause ( 0                   ),  // TODO: To be completed
         .id_allowin          ( id_allowin          ),
         .id_readygo          ( id_readygo          ),
         .fifo_allowin        ( fifo_allowin        ),
@@ -600,12 +600,8 @@ module core_top(
 
     wire  ex_allowin;
     wire  ex_readygo;
-    wire  [4:0] wb_rd0;
-    wire  [4:0] wb_rd1;
     wire  we_0;
     wire  we_1;
-    wire [31:0] wb_rd0_data;
-    wire [31:0] wb_rd1_data;
 
     wire [31:0] reg_ex_pc0;
     wire [31:0] reg_ex_pc1;
@@ -638,6 +634,10 @@ module core_top(
     wire [4:0]  reg_ex_rk1;
     wire [4:0]  reg_ex_rd0;
     wire [4:0]  reg_ex_rd1;
+    wire [4:0] ex2_wb_rd0;
+    wire [4:0] ex2_wb_rd1;
+    wire [31:0] ex2_wb_data_0;
+    wire [31:0] ex2_wb_data_1;
 
     wire        forward_stall ;
 
@@ -671,12 +671,12 @@ module core_top(
         .id_reg_uop1             ( iq_uop1             ),
         .id_reg_imm0             ( iq_imm0             ),
         .id_reg_imm1             ( iq_imm1             ),
-        .wb_rd0                  ( wb_rd0                  ),
-        .wb_rd1                  ( wb_rd1                  ),
+        .wb_rd0                  ( ex2_wb_rd0          ),
+        .wb_rd1                  ( ex2_wb_rd1          ),
         .we_0                    ( we_0                    ),
         .we_1                    ( we_1                    ),
-        .rd0_data                ( wb_rd0_data                ),
-        .rd1_data                ( wb_rd1_data                ),
+        .rd0_data                ( ex2_wb_data_0               ),
+        .rd1_data                ( ex2_wb_data_1               ),
         .id_reg_rj0              ( iq_rj0              ),
         .id_reg_rj1              ( iq_rj1              ),
         .id_reg_rk0              ( iq_rk0              ),
@@ -732,10 +732,7 @@ module core_top(
     wire ex1_ex2_data_0_valid; //可不可以前递，没算好不能前递
     wire ex1_ex2_data_1_valid;
     //从ex2_wb段间输入
-    wire [4:0] ex2_wb_rd0;
-    wire [4:0] ex2_wb_rd1;
-    wire [31:0] ex2_wb_data_0;
-    wire [31:0] ex2_wb_data_1;
+
     wire ex2_wb_data_0_valid;
     wire ex2_wb_data_1_valid;
     //csrfact_pc; //分支指令的pc
@@ -772,6 +769,8 @@ module core_top(
 
     //下面都是特权指令的
     wire privilege_ready;
+    assign csr_done = privilege_ready & reg_ex_uop0[`INS_CSR];
+    assign tlb_done = privilege_ready & reg_ex_uop0[`INS_TLB] & (reg_ex_inst0[11:10] == 2'b00 || reg_ex_inst0[11:0] ==2'b01 || reg_ex_inst0[15]);
     //给csr
     wire [31:0] csr_addr;
     wire [31:0] csr_wdata;
@@ -1070,7 +1069,6 @@ module core_top(
     //wire [31:0] csr_crmd;
     
     wire [6:0] ex2_wb_exception; 
-    wire ex2_wb_excp_flag; 
     wire [31:0] ex2_wb_badv;      
     wire  wen_badv;
     wire tlb_exception; //决定是否回到直接地址翻译
@@ -1080,6 +1078,9 @@ module core_top(
     wire wen_vppn;
     wire cpu_interrupt;
     wire dcache_valid;
+    
+    wire [31:0] eentry;
+    wire [31:0] tlbrentry;
     EX2_WB u_EX2_WB(
         .clk                 ( clk                 ),
         .aresetn             ( aresetn             ),
@@ -1096,8 +1097,8 @@ module core_top(
         .ex2_result1         ( ex2_rd1_data         ),
         .ex_rd0              ( ex1_ex2_rd0              ),
         .ex_rd1              ( ex1_ex2_rd1              ),
-        .ex2_result0_valid   ( ex2_result0_valid   ),
-        .ex2_result1_valid   ( ex2_result1_valid   ),
+        .ex2_result0_valid   ( ex2_data0_valid   ),
+        .ex2_result1_valid   ( ex2_data1_valid   ),
         .en_VA_D_OUT         ( dcache_valid        ), 
         .ex2_wb_data_0       ( ex2_wb_data_0       ),
         .ex2_wb_data_1       ( ex2_wb_data_1       ),
@@ -1140,7 +1141,10 @@ module core_top(
         .era_out             ( era_out             ),
         .wen_era             ( wen_era             ),
         .vppn_out            ( vppn_out            ),
-        .wen_vppn            ( wen_vppn            )
+        .wen_vppn            ( wen_vppn            ),
+        .pc_from_WB          ( pc_from_WB          ),
+        .eentry              ( eentry              ),
+        .tlbrentry           ( tlbrentry           )
     );
 
 
@@ -1149,8 +1153,6 @@ module core_top(
     wire [31:0] crmd; //当前模式信息，包含privilege
     wire [31:0] estat;    //例外状态 idle_interrupt; 
     wire [31:0] csr_era;
-    wire [31:0] eentry;
-    wire [31:0] tlbrentry;
     wire [31:0] pgdl,pgdh;
     
     wire [31:0] dmw0;
@@ -1237,7 +1239,7 @@ module core_top(
         .tlbrd_cpr       ( tlbrd_cpr       ),
         .tlbrd_trans_1   ( tlbrd_trans_1   ),
         .tlbrd_trans_2   ( tlbrd_trans_2   ),
-        .hardware_interrupt  ( intrpt  ),
+        .hardware_interrupt  ( intrpt      ),
         .tid             ( tid             )
     );
 
@@ -1483,25 +1485,26 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
 
 
     HazardUnit u_HazardUnit(
-        .flush_from_wb     ( flush_from_wb     ),
-        .flush_from_ex2    ( flush_from_ex2    ),
-        .flush_from_ex1    ( flush_from_ex1    ),
-        .flush_from_reg    ( flush_from_reg    ),
-        .flush_from_id     ( flush_from_id     ),
-        .flush_from_fifo   ( flush_from_fifo   ),
-        .flush_from_if1    ( flush_from_if1    ),
-        .flush_to_ex2_wb   ( flush_to_ex2_wb   ),
-        .flush_to_ex1_ex2  ( flush_to_ex1_ex2  ),
-        .flush_to_reg_ex1  ( flush_to_reg_ex1  ),
-        .flush_to_id_reg   ( flush_to_id_reg   ),
-        .flush_to_fifo_id  ( flush_to_fifo_id  ),
-        .flush_to_fifo     ( flush_to_fifo     ),
-        .flush_to_if1_fifo ( flush_to_if1_fifo ),
-        .flush_to_if0_if1  ( flush_to_if0_if1  ),
-        .flush_to_tlb      ( flush_to_tlb      ),
-        .flush_to_icache   ( flush_to_icache   ),
-        .flush_to_dcache   ( flush_to_dcache   ),
-        .flush_to_btb      ( flush_to_btb      )
+        .flush_from_wb          ( flush_from_wb         ),
+        .flush_from_ex2         ( flush_from_ex2        ),
+        .flush_from_ex1         ( flush_from_ex1        ),
+        .flush_from_reg         ( flush_from_reg        ),
+        .flush_from_id          ( flush_from_id         ),
+        .flush_from_if1_fifo    ( flush_from_if1_fifo   ),
+        .flush_from_if1         ( flush_from_if1        ),
+        .flush_to_ex2_wb        ( flush_to_ex2_wb       ),
+        .flush_to_ex1_ex2       ( flush_to_ex1_ex2      ),
+        .flush_to_reg_ex1       ( flush_to_reg_ex1      ),
+        .flush_to_id_reg        ( flush_to_id_reg       ),
+        .flush_to_fifo_id       ( flush_to_fifo_id      ),
+        .flush_to_fifo          ( flush_to_fifo         ),
+        .flush_to_if1_fifo      ( flush_to_if1_fifo     ),
+        .flush_to_if0_if1       ( flush_to_if0_if1      ),
+        .flush_to_if0           ( flush_to_if0          ),
+        .flush_to_tlb           ( flush_to_tlb          ),
+        .flush_to_icache        ( flush_to_icache       ),
+        .flush_to_dcache        ( flush_to_dcache       ),
+        .flush_to_btb           ( flush_to_btb          )
     );
 
 `ifdef DIFFTEST
