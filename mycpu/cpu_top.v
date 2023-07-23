@@ -640,7 +640,10 @@ module core_top(
     wire [31:0] ex2_wb_data_1;
 
     wire        forward_stall ;
-
+    
+    `ifdef CLAP_CONFIG_DIFFTEST
+    wire [31:0] reg_diff[31:0];
+    `endif
     REG_EX1 u_REG_EX1(
         .clk                     ( clk                     ),
         .aresetn                 ( aresetn                 ),
@@ -714,6 +717,11 @@ module core_top(
         .reg_ex_rk1              ( reg_ex_rk1              ),
         .reg_ex_rd0              ( reg_ex_rd0              ),
         .reg_ex_rd1              ( reg_ex_rd1              )
+        `ifdef CLAP_CONFIG_DIFFTEST
+        , .reg_diff(reg_diff),
+        .stable_counter(stable_counter),
+        . stable_counter_diff(rf_stable_counter)
+        `endif
     );
 
 
@@ -817,6 +825,15 @@ module core_top(
     wire [31:0] alu_result0, alu_result1;
     wire        alu_result0_valid, alu_result1_valid;
     //wire csr_flag_from_ex;
+
+`ifdef CLAP_CONFIG_DIFFTEST
+    wire [31:0] vaddr_diff;
+    wire [31:0] paddr_diff;
+    wire [31:0] data_diff;
+    wire [31:0] ex_vaddr_diff;
+    wire [31:0] ex_paddr_diff;
+    wire [31:0] ex_data_diff;
+`endif
 
     EX1 u_EX1(
         .clk                  ( clk                  ),
@@ -932,6 +949,14 @@ module core_top(
         .excp_flag_out        ( ex1_excp_flag        ),
         .exception_out        ( ex1_exception        ),
         .stable_counter       ( stable_counter       )
+        `ifdef CLAP_CONFIG_DIFFTEST
+        ,.vaddr_diff_in(vaddr_diff),
+        .paddr_diff_in(paddr_diff),
+        .data_diff_in(data_diff),
+        .vaddr_diff_out(ex_vaddr_diff),
+        .paddr_diff_out(ex_paddr_diff),
+        .data_diff_out(ex_data_diff)
+`endif
     );
 
     
