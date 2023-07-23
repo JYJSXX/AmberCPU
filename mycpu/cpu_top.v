@@ -1,5 +1,6 @@
 `include "define.vh"
 `include "../TLB/TLB.vh"
+`include "../config.vh"
 module core_top(
     input           aclk,
     input           aresetn,
@@ -1503,4 +1504,8 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .flush_to_btb      ( flush_to_btb      )
     );
 
+`ifdef DIFFTEST
+    
+
+`endif
 endmodule
