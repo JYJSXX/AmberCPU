@@ -253,7 +253,7 @@ module csr
     assign csr_asid[`ASID_ASID] = asid_asid;
     assign csr_asid[`ASID_ZERO_0] = 0;
     assign csr_asid[`ASID_ZERO_1] = 0;
-    assign csr_asid[`ASID_ASIDBITS] = 'h10;
+    assign csr_asid[`ASID_ASIDBITS] = 'ha;
 
     //PGDL
     reg [`PGDL_BASE] pgdl_base;
@@ -325,10 +325,10 @@ always @(posedge clk)
         if(~aresetn) begin
             crmd_plv <= 0;
             crmd_ie <= 0;
-            crmd_da <= 0;
-            crmd_pg <= 1;
-            crmd_datf <= 1;
-            crmd_datm <= 1;
+            crmd_da <= 1;
+            crmd_pg <= 0;
+            crmd_datf <= 0;
+            crmd_datm <= 0;
         end else if(ertn) begin
             crmd_plv <= prmd_pplv;
             crmd_ie <= prmd_pie;
@@ -469,7 +469,7 @@ always @(posedge clk)
     always @(posedge clk)
         if(~aresetn) begin
             llbctl_klo <= 0;
-            llbctl_rollb <= 0;
+            llbctl_rollb <= 1;
         end 
         else if(llbit_set) llbctl_rollb<=1;
         else if(ertn) begin 
@@ -715,7 +715,7 @@ always @(posedge clk)
         if(~aresetn) begin
             dmw0_plv0<=0;
             dmw0_plv3<=0;
-            dmw0_mat<=1;
+            dmw0_mat<=0;
             dmw0_pseg<=0;
             dmw0_vseg<=0;
         end else if(software_en&&addr==`CSR_DMW0) begin
@@ -730,7 +730,7 @@ always @(posedge clk)
         if(~aresetn) begin
             dmw1_plv0<=0;
             dmw1_plv3<=0;
-            dmw1_mat<=1;
+            dmw1_mat<=0;
             dmw1_pseg<=0;
             dmw1_vseg<=0;
         end else if(software_en&&addr==`CSR_DMW1) begin
