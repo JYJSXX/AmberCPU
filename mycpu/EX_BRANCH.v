@@ -27,7 +27,7 @@ parameter  BGEU = 'b1011;
     wire ready_to_branch;
 
     wire [31:0] pc_real_branch;
-    assign pc_real_branch = pc+imm;
+    assign pc_real_branch = pc+{imm[29:0],2'b00};
 
     wire br_sr1_eq_sr2;
     wire br_sr1_lt_sr2_unsign;
