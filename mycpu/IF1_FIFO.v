@@ -64,7 +64,7 @@ module IF1_FIFO(
                     // WAIT_FETCH      =   3'b110;
 
     localparam      WIDTH = 3,
-                    BUF_W = 2;
+                    BUF_W = 3;
 
 
     wire cache_idle;
@@ -92,6 +92,9 @@ module IF1_FIFO(
     reg             tmp_cacop_complete;
     
     assign fifo_readygo =       if1_fifo_valid;
+    wire critical_allowin;
+    assign  critical_allowin=!icache_rvalid_buf[BUF_W-1]
+                                    ||if1_rready;
     assign if1_allowin  =       fifo_allowin&&
                                 (//correct_pc->rready,consider plus 5 stage cache
                                     // !if0_if1_tlb_rvalid||
@@ -123,7 +126,7 @@ module IF1_FIFO(
         end
         else if(if1_allowin)begin
             if1_fifo_pc_buf<={if1_fifo_pc_buf[(WIDTH-1)*32-1:0],fetch_pc[31:0]};
-            icache_rvalid_buf<={icache_rvalid_buf[BUF_W-2:0],icache_rvalid};            
+            icache_rvalid_buf<={icache_rvalid_buf[BUF_W-2:0],if1_allowin};            
         end
     end
 
