@@ -1,5 +1,5 @@
 `include "define.vh"
-
+`include "config.vh"
 module regfile(
 
 	input clk,
@@ -32,13 +32,82 @@ module regfile(
 	output reg[31:0]        rdata4
 	
 	//output wire[31:0] reg1 //存放BL指令的返回地址
+	`ifdef DIFFTEST
+	,output [31:0] reg_diff0,
+	output [31:0] reg_diff1,
+	output [31:0] reg_diff2,
+	output [31:0] reg_diff3,
+	output [31:0] reg_diff4,
+	output [31:0] reg_diff5,
+	output [31:0] reg_diff6,
+	output [31:0] reg_diff7,
+	output [31:0] reg_diff8,
+	output [31:0] reg_diff9,
+	output [31:0] reg_diff10,
+	output [31:0] reg_diff11,
+	output [31:0] reg_diff12,
+	output [31:0] reg_diff13,
+	output [31:0] reg_diff14,
+	output [31:0] reg_diff15,
+	output [31:0] reg_diff16,
+	output [31:0] reg_diff17,
+	output [31:0] reg_diff18,
+	output [31:0] reg_diff19,
+	output [31:0] reg_diff20,
+	output [31:0] reg_diff21,
+	output [31:0] reg_diff22,
+	output [31:0] reg_diff23,
+	output [31:0] reg_diff24,
+	output [31:0] reg_diff25,
+	output [31:0] reg_diff26,
+	output [31:0] reg_diff27,
+	output [31:0] reg_diff28,
+	output [31:0] reg_diff29,
+	output [31:0] reg_diff30,
+	output [31:0] reg_diff31
+	`endif
 	
 );
 
     reg[31:0]  regs[0:31];
     //assign reg1 = regs[1];
+`ifdef DIFFTEST
+assign reg_diff0 = regs[0];
+assign reg_diff1 = regs[1];
+assign reg_diff2 = regs[2];
+assign reg_diff3 = regs[3];
+assign reg_diff4 = regs[4];
+assign reg_diff5 = regs[5];
+assign reg_diff6 = regs[6];
+assign reg_diff7 = regs[7];
+assign reg_diff8 = regs[8];
+assign reg_diff9 = regs[9];
+assign reg_diff10 = regs[10];
+assign reg_diff11 = regs[11];
+assign reg_diff12 = regs[12];
+assign reg_diff13 = regs[13];
+assign reg_diff14 = regs[14];
+assign reg_diff15 = regs[15];
+assign reg_diff16 = regs[16];
+assign reg_diff17 = regs[17];
+assign reg_diff18 = regs[18];
+assign reg_diff19 = regs[19];
+assign reg_diff20 = regs[20];
+assign reg_diff21 = regs[21];
+assign reg_diff22 = regs[22];
+assign reg_diff23 = regs[23];
+assign reg_diff24 = regs[24];
+assign reg_diff25 = regs[25];
+assign reg_diff26 = regs[26];
+assign reg_diff27 = regs[27];
+assign reg_diff28 = regs[28];
+assign reg_diff29 = regs[29];
+assign reg_diff30 = regs[30];
+assign reg_diff31 = regs[31];
+`endif
 
     always @ (posedge clk) begin
+
         
         case ({we2, we1})
 		2'b01: if (waddr1 != 0) regs[waddr1] <= wdata1;
