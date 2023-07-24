@@ -6,6 +6,7 @@ module shift_register#(
 (
     input clk,
     input rstn,
+    input flush,
     input [31:0] data_in,
     output reg [WIDTH - 1:0] data_out,
     input ready
