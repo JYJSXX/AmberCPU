@@ -91,9 +91,11 @@ begin
         R_IDLE:
         begin
             if(d_rvalid) 
-                r_next_state = R_DADDR;
+                if(d_rready) r_next_state = R_DDATA;
+                else r_next_state = R_DADDR;
             else if(i_rvalid)
-                r_next_state = R_IADDR;
+                if(i_rready) r_next_state = R_IDATA;
+                else r_next_state = R_IADDR;
         end
         R_IADDR:
         begin
