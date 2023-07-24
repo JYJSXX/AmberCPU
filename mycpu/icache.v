@@ -273,7 +273,7 @@ module icache #(
     
     /* settings of miss request */
     //assign i_rsize  = 3'h2;                                                         // 2 ^ 2 = 4 bytes per beat
-    assign i_raddr  = uncache_buf ? {paddr_buf[31:3], 3'b0} : {paddr_buf[31:6], 6'b0};
+    assign i_raddr  = uncache_buf ? {paddr_buf[31:3], 3'b0} : {paddr_buf[31:12], req_buf[11:6],6'b0};
 
     /* hit */
     assign tag          = p_addr[31:32-TAG_WIDTH]; // the tag of the request

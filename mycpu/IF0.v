@@ -43,7 +43,7 @@ module IF0 (
     assign pc_in_stall  =   !if0_allowin;
     assign if0_readygo  =   if0_allowin;
 
-    always @(posedge clk or negedge rstn) begin
+    always @(posedge clk) begin
         if (~rstn) begin
             pc<=`PC_RESET;
         end
