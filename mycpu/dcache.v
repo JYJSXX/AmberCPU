@@ -75,9 +75,9 @@ module dcache #(
     
     // diff test
     `ifdef DIFFTEST
-    ,output            [31:0] vaddr_diff,
+    ,output   reg         [31:0] vaddr_diff,
     output            [31:0] paddr_diff,
-    output            [31:0] data_diff
+    output    reg        [31:0] data_diff
     `endif
 );
     localparam 

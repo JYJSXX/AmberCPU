@@ -163,10 +163,10 @@ module EX1(
     ,input vaddr_diff_in,
     input paddr_diff_in,
     input data_diff_in,
-    output vaddr_diff_out,
-    output paddr_diff_out,
-    output data_diff_out,
-    output [63:0] ex_stable_counter,
+    output reg vaddr_diff_out,
+    output reg paddr_diff_out,
+    output reg data_diff_out,
+    output reg [63:0] ex_stable_counter,
     output ex1_allowin
 `endif
 
