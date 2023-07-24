@@ -281,6 +281,7 @@ module core_top(
         .fifo_allowin               ( fifo_allowin               ),
         .fifo_readygo               ( fifo_readygo               ),
         .if1_rready                 ( icache_rready              ),
+        .icache_rvalid              ( icache_rvalid              ),
         .fetch_pc                   ( fetch_pc                   ),
         .if1_pc                     ( if0_if1_pc                 ),
         .if1_pc_next                ( if0_if1_pc_next            ),
