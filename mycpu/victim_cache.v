@@ -38,13 +38,16 @@ module victim_cache#(
 
     //读，类似于Dram，组合逻辑
     wire [CAPACITY-1:0] hit;
+    wire [COUNTER_WIDTH-1:0] hit_index;
     generate
         for(i = 0; i < CAPACITY; i = i + 1) begin: hit_gen
             assign hit[i] = valid[i] && (tag[i][25:0] == r_tag[25:0]);
         end
     endgenerate
     assign victim_hit = |hit;
-    assign data_out = data[hit];
+    //找到最早的hit
+    assign hit_index = hit[0] ? 0 : (hit[1] ? 1 : (hit[2] ? 2 : (hit[3] ? 3 : (hit[4] ? 4 : (hit[5] ? 5 : (hit[6] ? 6 : (hit[7] ? 7 : 0)))))));
+    assign data_out = data[hit_index];
 
     //写，时序逻辑
     integer j;
