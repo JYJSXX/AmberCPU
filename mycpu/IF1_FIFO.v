@@ -15,7 +15,7 @@ module IF1_FIFO(
     output  wire        fifo_readygo,
 
     input               if1_rready,//icache rready makes reg update anytime
-    input               if0_if1_tlb_rvalid,
+    input [31:0]        fetch_pc,
     input [31:0]        if1_pc,
     input [31:0]        if1_pc_next,
     input [31:0]        if1_badv,
@@ -61,6 +61,9 @@ module IF1_FIFO(
                     WAIT_CSR_OK     =   3'b100,
                     WAIT_TLB_OK     =   3'b101;
                     // WAIT_FETCH      =   3'b110;
+    localparam WIDTH = 4;
+
+    reg [WIDTH*32-1:0] _pc_buf;
 
     wire cache_idle;
     wire pc_fetch_ok;
@@ -86,9 +89,10 @@ module IF1_FIFO(
     
     assign fifo_readygo =       if1_fifo_valid;
     assign if1_allowin  =       fifo_allowin&&
-                                (
+                                (//correct_pc->rready,consider plus 5 stage cache
                                     // !if0_if1_tlb_rvalid||
-                                    // if1_rready
+                                    // !(_pc_buf[WIDTH*32-1:(WIDTH-1)*32]==if1_pc)
+                                    // ||if1_rready
                                     1
                                 )&&
                                 (//if1_rready->tlb_rvalid
@@ -102,9 +106,16 @@ module IF1_FIFO(
     assign pc_from_PRIV = pc_after_priv;
 
 
-    //add FSM for 1.detect ibar 2.detect ex's ibar signal 3.detect icache&dcache idle
-    
+    always @(posedge clk or negedge rstn) begin
+        if(!rstn)begin
+            _pc_buf<=0;
+        end
+        else if(if1_allowin)begin
+            _pc_buf<={_pc_buf[(WIDTH-1)*32-1:32],fetch_pc[31:0]};
+        end
+    end
 
+    //add FSM for 1.detect ibar 2.detect ex's ibar signal 3.detect icache&dcache idle
     always @(posedge clk) begin
         if (!rstn||flush) begin
             stat<=IDLE;
