@@ -174,7 +174,7 @@ begin
         R_IDATA:
         begin
             r_ready = 1'b1;
-            if(r_last)
+            if(r_last & r_valid & r_ready)
             begin
                 i_rdata = {r_data, rdata_buffer};
                 i_rready = 1'b1;
@@ -189,7 +189,7 @@ begin
         R_DDATA:
         begin
             r_ready = 1'b1;
-            if (r_last)
+            if (r_last & r_valid & r_ready)
             begin
                 d_rdata = {r_data, rdata_buffer};
                 d_rready = 1'b1;
