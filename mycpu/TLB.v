@@ -646,20 +646,20 @@ always @(posedge clk or negedge rstn) begin
             TAG_OFFSET_I_reg3 <= TAG_OFFSET_I_reg2;
         end
         else begin
-            TLB_I_V_FINAL   <= |TLB_I_V_FINAL;
-            TLB_I_D_FINAL   <= |TLB_I_D_FINAL;
-            TLB_I_MAT_FINAL <= |TLB_I_MAT_FINAL;
-            TLB_I_PLV_FINAL <= |TLB_I_PLV_FINAL;
+            TLB_I_V_FINAL   <= TLB_I_V_FINAL;
+            TLB_I_D_FINAL   <= TLB_I_D_FINAL;
+            TLB_I_MAT_FINAL <= TLB_I_MAT_FINAL;
+            TLB_I_PLV_FINAL <= TLB_I_PLV_FINAL;
             TLB_I_PPN_FINAL <= TLB_I_PPN_FINAL;
             VA_I_reg3 <= VA_I_reg3;
             en_i_reg3 <= en_i_reg3;
             TAG_OFFSET_I_reg3 <= TAG_OFFSET_I_reg3;
         end
         if (~stall_d) begin
-            TLB_D_V_FINAL <= TLB_D_V_FINAL_0;
-            TLB_D_D_FINAL <= TLB_D_D_FINAL_0;
-            TLB_D_MAT_FINAL <= TLB_D_MAT_FINAL_0;
-            TLB_D_PLV_FINAL <= TLB_D_PLV_FINAL_0;
+            TLB_D_V_FINAL <= |TLB_D_V_FINAL_0;
+            TLB_D_D_FINAL <= |TLB_D_D_FINAL_0;
+            TLB_D_MAT_FINAL <= |TLB_D_MAT_FINAL_0;
+            TLB_D_PLV_FINAL <= |TLB_D_PLV_FINAL_0;
             TLB_D_PPN_FINAL <= TLB_D_PPN_FINAL_0;
             VA_D_reg3 <= VA_D_reg2[`TLB_VPPN_LEN];
             en_d_reg3 <= en_d_reg2;
@@ -730,8 +730,8 @@ always @(posedge clk or negedge rstn)begin
     else begin
         PA_I <= CSR_PG ? (DMW0_JUDGE_I ? DMW0_PPN_I : (DMW1_JUDGE_I ? DMW1_PPN_I : TLB_I_PPN_FINAL_0)) : VA_I_reg2;
         PA_D <= CSR_PG ? (DMW0_JUDGE_D ? DMW0_PPN_D : (DMW1_JUDGE_D ? DMW1_PPN_D : TLB_D_PPN_FINAL_0)) : VA_D_reg2;
-        is_cached_I <= CSR_PG ? (DMW0_JUDGE_I ? CSR_DMW0[4] : (DMW1_JUDGE_I ? CSR_DMW1[4] : TLB_I_MAT_FINAL_0)) : CSR_CRMD[5];
-        is_cached_D <= CSR_PG ? (DMW0_JUDGE_D ? CSR_DMW0[4] : (DMW1_JUDGE_D ? CSR_DMW1[4] : TLB_D_MAT_FINAL_0)) : CSR_CRMD[7];
+        is_cached_I <= CSR_PG ? (DMW0_JUDGE_I ? CSR_DMW0[4] : (DMW1_JUDGE_I ? CSR_DMW1[4] : |TLB_I_MAT_TRANS)) : CSR_CRMD[5];
+        is_cached_D <= CSR_PG ? (DMW0_JUDGE_D ? CSR_DMW0[4] : (DMW1_JUDGE_D ? CSR_DMW1[4] : |TLB_D_MAT_TRANS)) : CSR_CRMD[7];
         TLB_en_I <= CSR_PG & ~(DMW0_JUDGE_I | DMW1_JUDGE_I);
         TLB_en_D <= CSR_PG & ~(DMW0_JUDGE_D | DMW1_JUDGE_D);
     end

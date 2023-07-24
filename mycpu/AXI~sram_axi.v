@@ -127,6 +127,7 @@ wire [479:0] rdata_buffer;
 shift_register#(.WIDTH(480)) OUTPUT_BUFFER(
     .clk(aclk),
     .rstn(aresetn),
+    .flush(r_valid & r_ready & r_last),
     .data_in(r_data),
     .data_out(rdata_buffer),
     .ready(r_ready & r_valid)
