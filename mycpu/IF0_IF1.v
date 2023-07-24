@@ -19,7 +19,7 @@ module IF0_IF1 (
     output [31:0]     if0_if1_pc_next
 
 );
-    localparam WIDTH = 4;
+    localparam WIDTH = 3;
 
     reg [WIDTH*32-1:0] pc_buf;
     reg [WIDTH*32-1:0] pc_next_buf;

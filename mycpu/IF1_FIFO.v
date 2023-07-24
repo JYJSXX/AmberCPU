@@ -62,7 +62,7 @@ module IF1_FIFO(
                     WAIT_TLB_OK     =   3'b101;
                     // WAIT_FETCH      =   3'b110;
 
-    localparam WIDTH = 4;
+    localparam WIDTH = 3;
 
 
     wire cache_idle;

@@ -48,11 +48,11 @@ readygo_23不能受allowin_23控制
 伪代码表示：
 readygo_23 =valid (valid表示自身情况,无阻塞的流水段逻辑恒为1,有阻塞的先0,有效时数据和valid同时为1) 
 allowin_21 = allowin_23 || ready (ready表示自身情况)
-if(readygo_12 && allowin_23)
+if(readygo_12 && allowin_23&&allowin_21)
 	更新段间寄存器2
 if(~readygo_12 && allowin_23&&readygo_23)
 	清空段间寄存器2（所有控制信号置为0，防止上一周期的指令被重复执行）
-if(~allowin_23)
+if(~allowin_23||~allowin21)
 	维持段间寄存器2（所有寄存器值不动，防止上一周期的指令被丢失）
 ```
 
