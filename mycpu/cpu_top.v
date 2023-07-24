@@ -166,7 +166,7 @@ module core_top(
     wire         pred_taken;
     wire [31:0]  fetch_pc;
     //for tlb
-    wire         tlb_rvalid;
+    // wire         tlb_rvalid;
     wire [31:0]  tlb_raddr;
     wire [31:0]  cookie_in;
 
@@ -191,7 +191,7 @@ module core_top(
         .pred_pc             ( pred_pc             ),
         .pred_taken          ( pred_taken          ),
         .fetch_pc            ( fetch_pc            ),
-        .rvalid              ( tlb_rvalid          ),
+        // .rvalid              ( tlb_rvalid          ),
         .raddr               ( tlb_raddr           ),
         .cookie_in           ( cookie_in           ),
         .pc_next             ( pc_next             ),
@@ -207,7 +207,7 @@ module core_top(
 
     wire [31:0]        if0_if1_pc;
     wire [31:0]        if0_if1_pc_next;
-    wire               if0_if1_tlb_rvalid;
+    // wire               if0_if1_tlb_rvalid;
 
     IF0_IF1 u_IF0_IF1(
         .clk                    ( clk              ),
@@ -218,9 +218,6 @@ module core_top(
         .if1_allowin            ( if1_allowin      ),
         .flush                  ( flush_to_if0_if1 ),
         .flush_cause            ( 0                ),   // TODO: To be completed
-        .rready                 ( icache_rready    ),
-        .tlb_rvalid             ( tlb_rvalid       ),
-        .if0_if1_tlb_rvalid     ( if0_if1_tlb_rvalid),
         .fetch_pc               ( fetch_pc         ),
         .pc_next                ( pc_next          ),
         .if0_if1_pc             ( if0_if1_pc       ),
@@ -243,44 +240,6 @@ module core_top(
     wire [63:0]       icache_rdata;   //指令cache读数据
 
 
-    wire if1_rready;
-    wire [31:0]if1_pc;
-    wire [31:0]if1_pc_next;
-    wire [31:0]if1_badv;
-    wire [6:0] if1_exception;
-    wire [1:0] if1_excp_flag;//TODO :alert icache to pass this signal
-    wire [31:0]if1_cookie_out;
-    // wire     if1_cacop_ready;
-    // wire     if1_cacop_complete;
-    wire [31:0] if1_inst0;
-    wire [31:0] if1_inst1;
-    IF1 u_IF1(
-        .clk                ( clk                ),
-        .rstn               ( aresetn               ),
-        .if1_readygo        ( if1_readygo          ),
-        .if1_allowin        ( if1_allowin         ),
-        .if0_if1_pc         ( if0_if1_pc         ),
-        .rready             ( icache_rready             ),
-        .rdata              ( icache_rdata              ),
-        .pc_next            ( if0_if1_pc_next            ),
-        .badv               ( icache_badv               ),
-        .exception          ( icache_exception          ),
-        .excp_flag          ( icache_excp_flag          ),
-        .cookie_out         ( cookie_out         ),
-        // .cacop_ready        ( cacop_ready        ),
-        // .cacop_complete     ( cacop_complete     ),
-        .if1_rready         ( if1_rready         ),
-        // .if1_pc             ( if1_pc             ),
-        .if1_pc_next        ( if1_pc_next        ),
-        .if1_badv           ( if1_badv           ),
-        .if1_exception      ( if1_exception      ),
-        .if1_excp_flag      ( if1_excp_flag      ),
-        .if1_cookie_out     ( if1_cookie_out     ),
-        // .if1_cacop_ready    ( if1_cacop_ready    ),
-        // .if1_cacop_complete ( if1_cacop_complete ),
-        .if1_inst0          ( if1_inst0          ),
-        .if1_inst1          ( if1_inst1          )
-    );
 
     //hand shake signal
     wire               fetch_buf_full;
@@ -321,18 +280,18 @@ module core_top(
         .if1_allowin                ( if1_allowin                ),
         .fifo_allowin               ( fifo_allowin               ),
         .fifo_readygo               ( fifo_readygo               ),
-        .if1_rready                 ( if1_rready                 ),
-        .if0_if1_tlb_rvalid         ( if0_if1_tlb_rvalid         ),
-        .if1_pc                     ( if1_pc                     ),
-        .if1_pc_next                ( if1_pc_next                ),
-        .if1_badv                   ( if1_badv                   ),
-        .if1_exception              ( if1_exception              ),
-        .if1_excp_flag              ( if1_excp_flag              ),
-        .if1_cookie_out             ( if1_cookie_out             ),
-        .if1_inst0                  ( if1_inst0                  ),
-        .if1_inst1                  ( if1_inst1                  ),
+        .if1_rready                 ( icache_rready              ),
+        .fetch_pc                   ( fetch_pc                   ),
+        .if1_pc                     ( if0_if1_pc                 ),
+        .if1_pc_next                ( if0_if1_pc_next            ),
+        .if1_badv                   ( icache_badv                ),
+        .if1_exception              ( icache_exception           ),
+        .if1_excp_flag              ( icache_excp_flag           ),
+        .if1_cookie_out             ( cookie_out                 ),
+        .if1_inst0                  ( icache_rdata[31:0]         ),
+        .if1_inst1                  ( icache_rdata[63:32]        ),
         .ibar_flag                  ( ibar_flag                  ),
-        .ibar_flag_from_ex          ( ibar          ),
+        .ibar_flag_from_ex          ( ibar                       ),
         .csr_flag                   ( csr_flag                   ),
         .csr_flag_from_ex           ( csr_flag_from_ex           ),
         .tlb_flag                   ( tlb_flag                   ),
