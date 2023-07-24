@@ -91,10 +91,10 @@ begin
         R_IDLE:
         begin
             if(d_rvalid) 
-                if(d_rready) r_next_state = R_DDATA;
+                if(ar_ready) r_next_state = R_DDATA;
                 else r_next_state = R_DADDR;
             else if(i_rvalid)
-                if(i_rready) r_next_state = R_IDATA;
+                if(ar_ready) r_next_state = R_IDATA;
                 else r_next_state = R_IADDR;
         end
         R_IADDR:
@@ -224,7 +224,8 @@ begin
         W_IDLE:
         begin
             if(d_wvalid) 
-                w_next_state = W_DADDR;
+                if (aw_ready) w_next_state = W_DDATA;
+                else w_next_state = W_DADDR;
         end
         W_DADDR:
         begin
