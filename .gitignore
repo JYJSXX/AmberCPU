@@ -3,4 +3,4 @@ lab/*
 xvlog*
 mycpu_top*
 xsim.dir/*
-mycou/config.vh
+mycpu/config.vh
