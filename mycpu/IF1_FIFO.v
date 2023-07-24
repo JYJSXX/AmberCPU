@@ -61,9 +61,9 @@ module IF1_FIFO(
                     WAIT_CSR_OK     =   3'b100,
                     WAIT_TLB_OK     =   3'b101;
                     // WAIT_FETCH      =   3'b110;
-    localparam WIDTH = 4;
 
-    reg [WIDTH*32-1:0] _pc_buf;
+    localparam WIDTH = 3;
+
 
     wire cache_idle;
     wire pc_fetch_ok;
@@ -81,6 +81,7 @@ module IF1_FIFO(
     reg [31:0]      tmp_inst1;
     reg [31:0]      tmp_icache_badv;
     reg [31:0]      tmp_icache_exception;
+    reg [WIDTH*32-1:0] if1_fifo_pc_buf;
     
     reg [1:0]       tmp_icache_excp_flag;
     reg [31:0]      tmp_icache_cookie_out;
@@ -91,9 +92,10 @@ module IF1_FIFO(
     assign if1_allowin  =       fifo_allowin&&
                                 (//correct_pc->rready,consider plus 5 stage cache
                                     // !if0_if1_tlb_rvalid||
-                                    // !(_pc_buf[WIDTH*32-1:(WIDTH-1)*32]==if1_pc)
-                                    // ||if1_rready
-                                    1
+                                    !(if1_fifo_pc_buf[WIDTH*32-1:(WIDTH-1)*32]==if1_pc)
+                                    ||if1_rready
+                                    ||!if1_pc
+                                    // 1
                                 )&&
                                 (//if1_rready->tlb_rvalid
                                     (stat==IDLE)||(next_stat==IDLE)
@@ -108,10 +110,10 @@ module IF1_FIFO(
 
     always @(posedge clk or negedge rstn) begin
         if(!rstn)begin
-            _pc_buf<=0;
+            if1_fifo_pc_buf<=0;
         end
         else if(if1_allowin)begin
-            _pc_buf<={_pc_buf[(WIDTH-1)*32-1:32],fetch_pc[31:0]};
+            if1_fifo_pc_buf<={if1_fifo_pc_buf[(WIDTH-1)*32-1:0],fetch_pc[31:0]};
         end
     end
 
