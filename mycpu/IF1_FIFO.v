@@ -121,19 +121,23 @@ module IF1_FIFO(
     always @(posedge clk) begin
         if (!rstn||flush) begin
             stat<=IDLE;
-            pc_after_priv<=`PC_RESET;
+            
             if1_fifo_valid<=0;
         end else begin
-            if (priv_flag[0]) begin
-                pc_after_priv<=if1_pc+4;
-            end 
-            else if(priv_flag[1])begin
-                pc_after_priv<=if1_pc+8;
-            end
+            
             stat<=next_stat;
             if1_fifo_valid<=if1_rready;
         end
-
+    end
+    always @(*) begin
+        if (priv_flag[0]) begin
+            pc_after_priv=if1_pc+4;
+        end 
+        else if(priv_flag[1])begin
+            pc_after_priv=if1_pc+8;
+        end else begin
+            pc_after_priv=0;
+        end
     end
 
     always @(*) begin//FSM
