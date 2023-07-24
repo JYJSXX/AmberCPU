@@ -16,6 +16,8 @@ always @ (posedge clk or negedge rstn)
 begin
     if (~rstn)
         data_out <= 0;
+    else if (flush)
+        data_out <= 0;
     else if (ready)
         data_out <= {data_in, data_out[WIDTH - 1:32]};
     else
