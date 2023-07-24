@@ -15,8 +15,8 @@ module IF0_IF1 (
     input [31:0]        fetch_pc,
     input [31:0]        pc_next,
 
-    output     if0_if1_pc,
-    output     if0_if1_pc_next
+    output [31:0]     if0_if1_pc,
+    output [31:0]     if0_if1_pc_next
 
 );
     localparam WIDTH = 4;
