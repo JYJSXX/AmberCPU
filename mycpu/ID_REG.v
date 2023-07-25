@@ -3,6 +3,7 @@
 module ID_REG(
     input aclk,
     input aresetn,
+    input           flush,
     input           id_readygo,
     output          id_allowin,
     input           reg_allowin,
@@ -97,19 +98,19 @@ module ID_REG(
     reg [4:0] id_reg_rk1 ;
 //没考虑flush stall，之后再说
 always@(posedge aclk) begin
-    if(~aresetn | (~id_readygo && reg_allowin && reg_readygo)) begin
+    if(~aresetn | (~id_readygo && reg_allowin && reg_readygo)|flush) begin
         id_reg_pc0  <= 0;
         id_reg_pc1  <= 0;
         id_reg_pc_next<=0;
-        id_reg_inst0  <= 0;
-        id_reg_inst1  <= 0;
+        id_reg_inst0  <= `INST_NOP;
+        id_reg_inst1  <= `INST_NOP;
         id_reg_badv  <= 0;
         id_reg_excp_flag  <= 2'b00;
         id_reg_branch_flag<=2'b00;
         id_reg_priv_flag  <=2'b00;
         id_reg_exception  <= 0;
-        id_reg_is_ALU_0  <= 0;
-        id_reg_is_ALU_1  <= 0;
+        id_reg_is_ALU_0  <= 1;
+        id_reg_is_ALU_1  <= 1;
         id_reg_is_syscall_0  <= 0;
         id_reg_is_syscall_1  <= 0;
         id_reg_is_break_0  <= 0;
@@ -193,6 +194,7 @@ end
     IQ u_IQ(
         .clk                      ( aclk                     ),
         .rstn                     ( aresetn                  ),
+        .flush                    ( flush                    ),
         .id_allowin               ( id_allowin               ),
         .reg_readygo              ( reg_readygo              ),
         .id_readygo               ( id_readygo               ),

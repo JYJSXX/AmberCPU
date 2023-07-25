@@ -7,6 +7,7 @@ but any valid priv_flag makes iq only issues one inst for 2 cycles
 module IQ (
     input clk,
     input rstn,
+    input flush,
 
     output id_allowin,
     output reg_readygo,
@@ -92,8 +93,8 @@ module IQ (
         end
     end
 
-    always @(posedge clk or negedge rstn) begin
-        if((mod&&reg_allowin)||!rstn)begin
+    always @(posedge clk) begin
+        if((mod&&reg_allowin)||!rstn||flush)begin
             mod<=0;
         end else if(reg_allowin)begin
             mod<=single_en?1:0;            
