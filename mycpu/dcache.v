@@ -55,7 +55,7 @@ module dcache #(
     input             [6:0] forward_exception,
     input             [6:0] tlb_exception,
     output           [31:0] badv,
-    output                  d_exception_flag,
+    //output                  d_exception_flag,
 
     // cacop
     input             [1:0] cacop_code,
@@ -215,7 +215,7 @@ module dcache #(
     assign exception_temp  = exception_flag ? forward_exception : ({7{!((cacop_en_buf && hit_invalid) || (op_buf && is_atom_buf && !llbit_buf))}} 
                             & (tlb_exception == `EXP_ADEM ? tlb_exception : (exception_cache == 0 ? tlb_exception : exception_cache)));
     assign exception_obuf = {7{((rready || wready) || cacop_en_buf)}} & (exception_sel ? exception_buf : exception_temp);
-    assign d_exception_flag = exception_flag ? 1 : exception_obuf != 0;
+    //assign d_exception_flag = exception_flag ? 1 : exception_obuf != 0;
     reg  [6:0] exception_old;
     wire [6:0] exception_new;
     assign exception_new = exception_obuf;

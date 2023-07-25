@@ -1449,7 +1449,7 @@ module core_top(
         .d_wlen                            ( d_wlen                            ),
         .exception                         ( dcache_exception                  ),  
         .exception_flag                    ( reg_ex_excp_flag                  ),   
-        .d_exception_flag                  ( /*d_exception_flag*/0             ),  
+        //.d_exception_flag                  ( /*d_exception_flag*/0             ),  
         .forward_exception                 ( reg_ex_exception                  ),  
         .tlb_exception                     ( tlb_exception_code_d              ),  
         .badv                              ( dcache_badv                       ),  
