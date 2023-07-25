@@ -117,7 +117,7 @@ module icache #(
 
     /* request buffer: lock the read request addr */
     always @(posedge clk) begin
-        if(!rstn || flush) begin
+        if(!rstn) begin
             req_buf <= 0;
         end
         else if(req_buf_we) begin
@@ -238,9 +238,23 @@ module icache #(
 
     /* 2-way tagv memory: the highest bit is the valid bit */
     wire valid[1:0];
+    reg  valid_buf[1:0];
     wire [TAG_WIDTH:0] tag_in;
     assign valid[0] = tag_rdata[0][TAG_WIDTH];
     assign valid[1] = tag_rdata[1][TAG_WIDTH];
+    always @(*)begin
+        if(!rstn) begin
+            valid_buf[0] = 0;
+            valid_buf[1] = 0;
+        end
+        else if(req_buf_we) begin
+            valid_buf[0] = valid[0];
+            valid_buf[1] = valid[1];
+        end
+        else
+            valid_buf[0] = valid_buf[0];
+            valid_buf[1] = valid_buf[1];
+    end
     // the tag ready to be written to tagv table
     assign w_tag = paddr_buf[31:32-TAG_WIDTH];
     assign tag_in = tagv_clear ? 0 : {1'b1, w_tag};
@@ -288,7 +302,7 @@ module icache #(
         .r_tag      ({paddr_buf[31:12],req_buf[11:6]}),
         .victim_hit (victim_hit),
         .data_out   (victim_data),
-        .w_tag      ({tag_rdata[victim_sel],req_buf[11:6]}),
+        .w_tag      ({tag_rdata[victim_sel][TAG_WIDTH-1:0], req_buf[11:6]}),
         .we         (victim_we), // missbuf_we && valid[victim_sel] && victim_hit
         .data_in    (mem_rdata[victim_sel])
     );

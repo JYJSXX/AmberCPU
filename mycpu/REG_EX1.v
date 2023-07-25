@@ -177,7 +177,7 @@ regfile regfile1( //内部自带写优先
     `endif
 );
 always@(posedge clk)begin
-    if(~aresetn | flush | (~reg_readygo & ex_allowin) ) begin
+    if(~aresetn | flush | (~reg_readygo & ex_allowin & ex_readygo) ) begin
         reg_ex_pc0 <= 0;
         reg_ex_pc1 <= 0;
         reg_ex_pc_next <= 0;
@@ -211,7 +211,7 @@ always@(posedge clk)begin
         reg_ex_rd1 <= 0;
 
     end
-    else if(reg_readygo&&ex_allowin)begin
+    else if(reg_readygo&&ex_allowin&&reg_allowin)begin
         reg_ex_pc0 <= id_reg_pc0;
         reg_ex_pc1 <= id_reg_pc1;
         reg_ex_pc_next <= id_reg_pc_next;
