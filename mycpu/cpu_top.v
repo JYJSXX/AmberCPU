@@ -1504,7 +1504,7 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .VA_I_OUT       ( icache_raddr[31:12]   ),
         .VA_D_OUT       ( dcache_addr[31:12]    ),
         .VA_TAG_OFFSET_I_OUT(icache_raddr[11:0]),
-        .VA_TAG_OFFSET_D_OUT(dcache_addr[11:0]),
+        .VA_TAG_OFFSET_D_OUT( dcache_addr[11:0]),
         .PA_TAG_OFFSET_I_OUT(PA_I[11:0]),
         .PA_TAG_OFFSET_D_OUT(PA_D[11:0]),
         .SOL_D_OUT      ( SOL_D_OUT        ),
