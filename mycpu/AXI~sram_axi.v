@@ -91,9 +91,11 @@ begin
         R_IDLE:
         begin
             if(d_rvalid) 
-                r_next_state = R_DADDR;
+                if(ar_ready) r_next_state = R_DDATA;
+                else r_next_state = R_DADDR;
             else if(i_rvalid)
-                r_next_state = R_IADDR;
+                if(ar_ready) r_next_state = R_IDATA;
+                else r_next_state = R_IADDR;
         end
         R_IADDR:
         begin
@@ -125,6 +127,7 @@ wire [479:0] rdata_buffer;
 shift_register#(.WIDTH(480)) OUTPUT_BUFFER(
     .clk(aclk),
     .rstn(aresetn),
+    .flush(r_valid & r_ready & r_last),
     .data_in(r_data),
     .data_out(rdata_buffer),
     .ready(r_ready & r_valid)
@@ -172,7 +175,7 @@ begin
         R_IDATA:
         begin
             r_ready = 1'b1;
-            if(r_last)
+            if(r_last & r_valid & r_ready)
             begin
                 i_rdata = {r_data, rdata_buffer};
                 i_rready = 1'b1;
@@ -187,7 +190,7 @@ begin
         R_DDATA:
         begin
             r_ready = 1'b1;
-            if (r_last)
+            if (r_last & r_valid & r_ready)
             begin
                 d_rdata = {r_data, rdata_buffer};
                 d_rready = 1'b1;
@@ -222,7 +225,8 @@ begin
         W_IDLE:
         begin
             if(d_wvalid) 
-                w_next_state = W_DADDR;
+                if (aw_ready) w_next_state = W_DDATA;
+                else w_next_state = W_DADDR;
         end
         W_DADDR:
         begin

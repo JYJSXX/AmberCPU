@@ -166,7 +166,7 @@ module core_top(
     wire         pred_taken;
     wire [31:0]  fetch_pc;
     //for tlb
-    wire         tlb_rvalid;
+    // wire         tlb_rvalid;
     wire [31:0]  tlb_raddr;
     wire [31:0]  cookie_in;
 
@@ -191,7 +191,7 @@ module core_top(
         .pred_pc             ( pred_pc             ),
         .pred_taken          ( pred_taken          ),
         .fetch_pc            ( fetch_pc            ),
-        .rvalid              ( tlb_rvalid          ),
+        // .rvalid              ( tlb_rvalid          ),
         .raddr               ( tlb_raddr           ),
         .cookie_in           ( cookie_in           ),
         .pc_next             ( pc_next             ),
@@ -207,7 +207,7 @@ module core_top(
 
     wire [31:0]        if0_if1_pc;
     wire [31:0]        if0_if1_pc_next;
-    wire               if0_if1_tlb_rvalid;
+    // wire               if0_if1_tlb_rvalid;
 
     IF0_IF1 u_IF0_IF1(
         .clk                    ( clk              ),
@@ -218,9 +218,6 @@ module core_top(
         .if1_allowin            ( if1_allowin      ),
         .flush                  ( flush_to_if0_if1 ),
         .flush_cause            ( 0                ),   // TODO: To be completed
-        .rready                 ( icache_rready    ),
-        .tlb_rvalid             ( tlb_rvalid       ),
-        .if0_if1_tlb_rvalid     ( if0_if1_tlb_rvalid),
         .fetch_pc               ( fetch_pc         ),
         .pc_next                ( pc_next          ),
         .if0_if1_pc             ( if0_if1_pc       ),
@@ -243,44 +240,6 @@ module core_top(
     wire [63:0]       icache_rdata;   //指令cache读数据
 
 
-    wire if1_rready;
-    wire [31:0]if1_pc;
-    wire [31:0]if1_pc_next;
-    wire [31:0]if1_badv;
-    wire [6:0] if1_exception;
-    wire [1:0] if1_excp_flag;//TODO :alert icache to pass this signal
-    wire [31:0]if1_cookie_out;
-    // wire     if1_cacop_ready;
-    // wire     if1_cacop_complete;
-    wire [31:0] if1_inst0;
-    wire [31:0] if1_inst1;
-    IF1 u_IF1(
-        .clk                ( clk                ),
-        .rstn               ( aresetn               ),
-        .if1_readygo        ( if1_readygo          ),
-        .if1_allowin        ( if1_allowin         ),
-        .if0_if1_pc         ( if0_if1_pc         ),
-        .rready             ( icache_rready             ),
-        .rdata              ( icache_rdata              ),
-        .pc_next            ( if0_if1_pc_next            ),
-        .badv               ( icache_badv               ),
-        .exception          ( icache_exception          ),
-        .excp_flag          ( icache_excp_flag          ),
-        .cookie_out         ( cookie_out         ),
-        // .cacop_ready        ( cacop_ready        ),
-        // .cacop_complete     ( cacop_complete     ),
-        .if1_rready         ( if1_rready         ),
-        // .if1_pc             ( if1_pc             ),
-        .if1_pc_next        ( if1_pc_next        ),
-        .if1_badv           ( if1_badv           ),
-        .if1_exception      ( if1_exception      ),
-        .if1_excp_flag      ( if1_excp_flag      ),
-        .if1_cookie_out     ( if1_cookie_out     ),
-        // .if1_cacop_ready    ( if1_cacop_ready    ),
-        // .if1_cacop_complete ( if1_cacop_complete ),
-        .if1_inst0          ( if1_inst0          ),
-        .if1_inst1          ( if1_inst1          )
-    );
 
     //hand shake signal
     wire               fetch_buf_full;
@@ -309,6 +268,7 @@ module core_top(
     wire  [6:0]     if1_fifo_icache_exception;
     wire  [1:0]     if1_fifo_icache_excp_flag;
     wire  [31:0]    if1_fifo_icache_cookie_out;
+    wire icache_rvalid;
     // wire            if1_fifo_cacop_ready;
     // wire            if1_fifo_cacop_complete;
     IF1_FIFO u_IF1_FIFO(
@@ -321,18 +281,19 @@ module core_top(
         .if1_allowin                ( if1_allowin                ),
         .fifo_allowin               ( fifo_allowin               ),
         .fifo_readygo               ( fifo_readygo               ),
-        .if1_rready                 ( if1_rready                 ),
-        .if0_if1_tlb_rvalid         ( if0_if1_tlb_rvalid         ),
-        .if1_pc                     ( if1_pc                     ),
-        .if1_pc_next                ( if1_pc_next                ),
-        .if1_badv                   ( if1_badv                   ),
-        .if1_exception              ( if1_exception              ),
-        .if1_excp_flag              ( if1_excp_flag              ),
-        .if1_cookie_out             ( if1_cookie_out             ),
-        .if1_inst0                  ( if1_inst0                  ),
-        .if1_inst1                  ( if1_inst1                  ),
+        .if1_rready                 ( icache_rready              ),
+        .icache_rvalid              ( icache_rvalid              ),
+        .fetch_pc                   ( fetch_pc                   ),
+        .if1_pc                     ( if0_if1_pc                 ),
+        .if1_pc_next                ( if0_if1_pc_next            ),
+        .if1_badv                   ( icache_badv                ),
+        .if1_exception              ( icache_exception           ),
+        .if1_excp_flag              ( icache_excp_flag           ),
+        .if1_cookie_out             ( cookie_out                 ),
+        .if1_inst0                  ( icache_rdata[31:0]         ),
+        .if1_inst1                  ( icache_rdata[63:32]        ),
         .ibar_flag                  ( ibar_flag                  ),
-        .ibar_flag_from_ex          ( ibar          ),
+        .ibar_flag_from_ex          ( ibar                       ),
         .csr_flag                   ( csr_flag                   ),
         .csr_flag_from_ex           ( csr_flag_from_ex           ),
         .tlb_flag                   ( tlb_flag                   ),
@@ -758,7 +719,38 @@ module core_top(
         .reg_ex_rd0              ( reg_ex_rd0              ),
         .reg_ex_rd1              ( reg_ex_rd1              )
         `ifdef DIFFTEST
-        , .reg_diff(reg_diff),
+        ,.reg_diff0(reg_diff[0]),
+    .reg_diff1(reg_diff[1]),
+    .reg_diff2(reg_diff[2]),
+    .reg_diff3(reg_diff[3]),
+    .reg_diff4(reg_diff[4]),
+    .reg_diff5(reg_diff[5]),
+    .reg_diff6(reg_diff[6]),
+    .reg_diff7(reg_diff[7]),
+    .reg_diff8(reg_diff[8]),
+    .reg_diff9(reg_diff[9]),
+    .reg_diff10(reg_diff[10]),
+    .reg_diff11(reg_diff[11]),
+    .reg_diff12(reg_diff[12]),
+    .reg_diff13(reg_diff[13]),
+    .reg_diff14(reg_diff[14]),
+    .reg_diff15(reg_diff[15]),
+    .reg_diff16(reg_diff[16]),
+    .reg_diff17(reg_diff[17]),
+    .reg_diff18(reg_diff[18]),
+    .reg_diff19(reg_diff[19]),
+    .reg_diff20(reg_diff[20]),
+    .reg_diff21(reg_diff[21]),
+    .reg_diff22(reg_diff[22]),
+    .reg_diff23(reg_diff[23]),
+    .reg_diff24(reg_diff[24]),
+    .reg_diff25(reg_diff[25]),
+    .reg_diff26(reg_diff[26]),
+    .reg_diff27(reg_diff[27]),
+    .reg_diff28(reg_diff[28]),
+    .reg_diff29(reg_diff[29]),
+    .reg_diff30(reg_diff[30]),
+    .reg_diff31(reg_diff[31]),
         .stable_counter(stable_counter),
         . stable_counter_diff(rf_stable_counter)
         `endif
@@ -1385,7 +1377,7 @@ module core_top(
     wire [31:0] PA_I, PA_D; //物理地址
     wire is_cached_I, is_cached_D; //是否经过cache
     wire [6:0] tlb_exception_code_i, tlb_exception_code_d; //tlb例外码
-    wire icache_rvalid;
+
     wire [31:0] icache_raddr, dcache_addr;
     wire SOL_D_OUT;
     
@@ -1423,11 +1415,7 @@ module core_top(
         .ibar              ( ibar              )
     );
 
-`ifdef DIFFTEST
-    wire [31:0] vaddr_diff;
-    wire [31:0] paddr_diff;
-    wire [31:0] data_diff;
-`endif
+
 
     dcache#(
         .INDEX_WIDTH                       ( 6 ),
@@ -1632,10 +1620,10 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
     reg [31:0]cmt_vaddr_diff;
     reg [31:0]cmt_paddr_diff;
     reg [31:0]cmt_data_diff;
+    wire ex_eu0_en;
     wire ex_eu1_en;
-    wire ex_eu2_en;
-    assign ex_eu1_en=debug0_valid;
-    assign ex_eu2_en=debug1_valid;
+    assign ex_eu0_en=debug0_valid;
+    assign ex_eu1_en=debug1_valid;
 
     always @(posedge clk)
         if(tlbfill_valid)
@@ -1660,16 +1648,18 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
                 cmt_valid1  <= 0;
             end else begin
                 //有异常时不置valid
-                cmt_valid0  <= ex_eu0_en&&!set_pc_from_WB;
+                cmt_valid0  <= ex_eu0_en&&!set_pc_from_WB && debug0_wb_inst[31:0]!=`INST_NOP 
+                && debug0_wb_pc != 0 && debug0_wb_inst[31:0] != 0;
                 cmt_pc0     <= debug0_wb_pc;
                 cmt_inst0   <= debug0_wb_inst;
                 cmt_wen0    <= debug0_wb_rf_wen!=0;
                 cmt_wdest0  <= debug0_wb_rf_wnum;
                 cmt_wdata0  <= debug0_wb_rf_wdata;
-                cmt_excp_valid<=set_pc_by_writeback;
+                cmt_excp_valid<=set_pc_from_WB;
                 cmt_ecode   <= ex2_wb_exception[5:0];
 
-                cmt_valid1  <= ex_eu1_en&&!set_pc_from_WB;
+                cmt_valid1  <= ex_eu1_en&&!set_pc_from_WB && debug1_wb_inst[31:0]!=`INST_NOP
+                && debug1_wb_pc != 0 && debug1_wb_inst[31:0] != 0;
                 cmt_pc1     <= debug1_wb_pc;
                 cmt_inst1   <= debug1_wb_inst;
                 cmt_wen1    <= debug1_wb_rf_wen!=0;
@@ -1687,7 +1677,8 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .coreid(0),
         .index(0),
         .valid(cmt_valid0),
-        .pc({32'd0,cmt_pc0}),
+        //.pc({32'd0,cmt_pc0}),
+        .pc(cmt_pc0),
         .instr(cmt_inst0),
         .skip(0),
         .is_TLBFILL(cmt_inst0[31:10]=='b0000011001001000001101),
@@ -1707,7 +1698,8 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .coreid(0),
         .index(1),
         .valid(cmt_valid1),
-        .pc({32'd0,cmt_pc1}),
+        //.pc({32'd0,cmt_pc1}),
+        .pc(cmt_pc1),
         .instr(cmt_inst1),
         .skip(0),
         .is_TLBFILL(0),
@@ -1732,18 +1724,7 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .exceptionPC({32'd0,cmt_pc0}),
         .exceptionInst(cmt_inst0)
     );
-    DifftestExcpEvent DifftestExcpEvent
-    (
-        .clock(aclk),
-        .coreid(0),
-        .excp_valid(cmt_excp_valid),
-        .eret(cmt_inst0=='b00000110010010000011100000000000),
-        .intrNo(csr_estat_diff[12:2]),
-        .cause(cmt_ecode),
-        .exceptionPC({32'd0,cmt_pc0}),
-        .exceptionInst(cmt_inst0)
-    );
-
+    
     DifftestTrapEvent DifftestTrapEvent
     (
         .clock(aclk),

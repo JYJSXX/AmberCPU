@@ -253,7 +253,7 @@ module csr
     assign csr_asid[`ASID_ASID] = asid_asid;
     assign csr_asid[`ASID_ZERO_0] = 0;
     assign csr_asid[`ASID_ZERO_1] = 0;
-    assign csr_asid[`ASID_ASIDBITS] = 'h10;
+    assign csr_asid[`ASID_ASIDBITS] = 'ha;
 
     //PGDL
     reg [`PGDL_BASE] pgdl_base;
@@ -469,7 +469,7 @@ always @(posedge clk)
     always @(posedge clk)
         if(~aresetn) begin
             llbctl_klo <= 0;
-            llbctl_rollb <= 0;
+            llbctl_rollb <= 1;
         end 
         else if(llbit_set) llbctl_rollb<=1;
         else if(ertn) begin 

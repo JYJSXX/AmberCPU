@@ -2,6 +2,7 @@
 module IF1 (
     input clk,
     input rstn,
+    input flush,
     //hand shake
     input if1_allowin,
     input if1_readygo,

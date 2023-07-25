@@ -126,7 +126,7 @@ always@(posedge aclk) begin
         id_reg_rj1  <= 0;
         id_reg_rk0  <= 0;
         id_reg_rk1  <= 0;
-    end else if(id_readygo && reg_allowin)begin
+    end else if(id_readygo && reg_allowin&&id_allowin)begin
         id_reg_pc0  <= fifo_id_pc0;
         id_reg_pc1  <= fifo_id_pc1;
         id_reg_pc_next<=fifo_id_pc_next;
@@ -157,7 +157,7 @@ always@(posedge aclk) begin
         id_reg_rk1  <= rk1;
     
     end
-    else if(~reg_allowin) begin
+    else if(~reg_allowin||~id_allowin) begin
         id_reg_pc0  <= id_reg_pc0;
         id_reg_pc1  <= id_reg_pc1;
         id_reg_pc_next<=id_reg_pc_next;

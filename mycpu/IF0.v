@@ -24,7 +24,7 @@ module IF0 (
     output [31:0] fetch_pc,
 
     //for TLB
-    output rvalid,
+    // output rvalid,
     output [31:0] raddr,
     output reg[31:0]cookie_in=114514,
 
@@ -38,18 +38,18 @@ module IF0 (
     
     assign pc_next      =   pred_taken?pred_pc:fetch_pc+8;
     assign fetch_pc     =   pc;
-    assign rvalid       =   if0_allowin;
+    // assign rvalid       =   if0_allowin;
     assign raddr        =   pc;
     assign pc_in_stall  =   !if0_allowin;
     assign if0_readygo  =   if0_allowin;
 
-    always @(posedge clk or negedge rstn) begin
+    always @(posedge clk) begin
         if (~rstn) begin
             pc<=`PC_RESET;
         end
-        else if(flush)begin
-            pc<=0;
-        end
+        // else if(flush)begin
+        //     pc<=0;
+        // end
         else if(set_pc_from_WB)begin
             pc<=pc_from_WB;
         end

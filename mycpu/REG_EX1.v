@@ -77,13 +77,44 @@ module  REG_EX1(
     output  reg [4:0] reg_ex_rd1
 
     `ifdef DIFFTEST
-    ,output [31:0] reg_diff [31:0],
+    ,output [31:0] reg_diff0,
+    ,output [31:0] reg_diff1,
+    ,output [31:0] reg_diff2,
+    ,output [31:0] reg_diff3,
+    ,output [31:0] reg_diff4,
+    ,output [31:0] reg_diff5,
+    ,output [31:0] reg_diff6,
+    ,output [31:0] reg_diff7,
+    ,output [31:0] reg_diff8,
+    ,output [31:0] reg_diff9,
+    ,output [31:0] reg_diff10,
+    ,output [31:0] reg_diff11,
+    ,output [31:0] reg_diff12,
+    ,output [31:0] reg_diff13,
+    ,output [31:0] reg_diff14,
+    ,output [31:0] reg_diff15,
+    ,output [31:0] reg_diff16,
+    ,output [31:0] reg_diff17,
+    ,output [31:0] reg_diff18,
+    ,output [31:0] reg_diff19,
+    ,output [31:0] reg_diff20,
+    ,output [31:0] reg_diff21,
+    ,output [31:0] reg_diff22,
+    ,output [31:0] reg_diff23,
+    ,output [31:0] reg_diff24,
+    ,output [31:0] reg_diff25,
+    ,output [31:0] reg_diff26,
+    ,output [31:0] reg_diff27,
+    ,output [31:0] reg_diff28,
+    ,output [31:0] reg_diff29,
+    ,output [31:0] reg_diff30,
+    ,output [31:0] reg_diff31,
     input  [63:0] stable_counter,
-    output [63:0] stable_counter_diff
+    output reg [63:0] stable_counter_diff
     `endif
 );
 `ifdef DIFFTEST
-assign reg_diff = register_file;
+
 always @(posedge clk) begin
     //if(!stall) stable_counter_diff<=stable_counter;
     stable_counter_diff<=stable_counter;
@@ -110,6 +141,40 @@ regfile regfile1( //内部自带写优先
     .rdata3(rk0_data),
     .raddr4(id_reg_rk1),
     .rdata4(rk1_data)
+    `ifdef DIFFTEST
+    ,.reg_diff0(reg_diff0),
+    .reg_diff1(reg_diff1),
+    .reg_diff2(reg_diff2),
+    .reg_diff3(reg_diff3),
+    .reg_diff4(reg_diff4),
+    .reg_diff5(reg_diff5),
+    .reg_diff6(reg_diff6),
+    .reg_diff7(reg_diff7),
+    .reg_diff8(reg_diff8),
+    .reg_diff9(reg_diff9),
+    .reg_diff10(reg_diff10),
+    .reg_diff11(reg_diff11),
+    .reg_diff12(reg_diff12),
+    .reg_diff13(reg_diff13),
+    .reg_diff14(reg_diff14),
+    .reg_diff15(reg_diff15),
+    .reg_diff16(reg_diff16),
+    .reg_diff17(reg_diff17),
+    .reg_diff18(reg_diff18),
+    .reg_diff19(reg_diff19),
+    .reg_diff20(reg_diff20),
+    .reg_diff21(reg_diff21),
+    .reg_diff22(reg_diff22),
+    .reg_diff23(reg_diff23),
+    .reg_diff24(reg_diff24),
+    .reg_diff25(reg_diff25),
+    .reg_diff26(reg_diff26),
+    .reg_diff27(reg_diff27),
+    .reg_diff28(reg_diff28),
+    .reg_diff29(reg_diff29),
+    .reg_diff30(reg_diff30),
+    .reg_diff31(reg_diff31)
+    `endif
 );
 always@(posedge clk)begin
     if(~aresetn | flush | (~reg_readygo & ex_allowin) ) begin
