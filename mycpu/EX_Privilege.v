@@ -1,5 +1,5 @@
 `include "define.vh"
-
+`timescale 1ns/1ps
 module EX_Privilege(
     input                               clk,
     input                               rstn,

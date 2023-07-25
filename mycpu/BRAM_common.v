@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module BRAM_common #(
     parameter DATA_WIDTH = 512,
               ADDR_WIDTH = 6
