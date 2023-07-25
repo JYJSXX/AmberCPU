@@ -292,7 +292,7 @@ module icache #(
     wire victim_sel;
     assign victim_sel = lru_sel[0] ? 0 : 1;
     wire victim_we;
-    assign victim_we = missbuf_we && valid[victim_sel];
+    assign victim_we = missbuf_we && valid_buf[victim_sel];
 
     victim_cache #(
         .CAPACITY(8)
