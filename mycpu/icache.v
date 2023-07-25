@@ -117,7 +117,7 @@ module icache #(
 
     /* request buffer: lock the read request addr */
     always @(posedge clk) begin
-        if(!rstn) begin
+        if(!rstn || flush) begin
             req_buf <= 0;
         end
         else if(req_buf_we) begin
@@ -369,7 +369,7 @@ module icache #(
                 else                    next_state = IDLE;
             end
             LOOKUP: begin
-                if((exception != 0) || ibar)      next_state = IDLE;
+                if((exception != 0) || ibar || flush)      next_state = IDLE;
                 else if(uncache_buf)    next_state = MISS;
                 else if(cacop_en)       next_state = CACOP;
                 else if(cache_hit) begin
@@ -384,9 +384,9 @@ module icache #(
                 else                    next_state = MISS;
             end
             REFILL: begin
-                if(ibar)                next_state = IDLE;
+                if(ibar || flush)           next_state = IDLE;
                 else if(cacop_en)       next_state = CACOP;
-                else if(rvalid)         next_state = LOOKUP;
+                else if(rvalid)          next_state = LOOKUP;
                 else                    next_state = IDLE;
             end
             CACOP: begin
