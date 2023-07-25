@@ -69,8 +69,8 @@ module IF1_FIFO(
     wire cache_idle;
     wire pc_fetch_ok;
     wire idle;
-    reg [31:0]     if1_fifo_inst0;
-    reg [31:0]     if1_fifo_inst1;
+    // reg [31:0]     if1_fifo_inst0;
+    // reg [31:0]     if1_fifo_inst1;
 
     reg [2:0]       stat;
     reg             tmp;//for last rready but fifo full
