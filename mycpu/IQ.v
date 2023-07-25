@@ -78,8 +78,9 @@ module IQ (
 
     reg         mod       = 0;//mod=0 initial mod=1 single-issue
     reg      single_en    = 0;
+    reg      id_reg_valid = 0;
 
-    assign reg_readygo    = 1;
+    assign reg_readygo    = id_reg_valid;
     assign id_allowin   =(!single_en||(mod&&single_en))&reg_allowin;
 
     always @(*) begin//logic for single_en
@@ -93,7 +94,13 @@ module IQ (
             single_en=1;
         end
     end
-
+    always @(posedge clk or negedge rstn) begin
+        if (!rstn) begin
+            id_reg_valid<=0;
+        end else if(!mod)begin
+            id_reg_valid<=id_readygo;
+        end
+    end
     always @(posedge clk) begin
         if((mod&&reg_allowin)||!rstn||flush)begin
             mod<=0;

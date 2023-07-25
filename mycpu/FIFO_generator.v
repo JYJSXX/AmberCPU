@@ -42,14 +42,22 @@ module FIFO_generator
       if (pop_en && !empty) begin
         // readDataReg <= mem[readPtr];
         readPtr <= readPtr + 1;
-        count <= count - 1;
+        // count <= count - 1;
       end
       
       // 写操作
       if (write_en && !full) begin
         mem[writePtr] <= din;
         writePtr<=writePtr+1;
-        count <= count + 1;
+        // count <= count + 1;
+      end
+
+      if(write_en&&pop_en)begin
+        count<=count;
+      end else if(write_en&&!full)begin
+        count<=count+1;
+      end else if(pop_en&&!empty)begin
+        count<=count-1;
       end
     end
   end
