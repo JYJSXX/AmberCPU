@@ -322,7 +322,7 @@ module core_top(
 
 
 
-    pre_decoder u_pre_decoder(
+    FIFO_predecoder u_pre_decoder(
         .if1_fifo_inst0 ( if1_fifo_inst0 ),
         .if1_fifo_inst1 ( if1_fifo_inst1 ),
         .if1_fifo_pc    ( if1_fifo_pc    ),

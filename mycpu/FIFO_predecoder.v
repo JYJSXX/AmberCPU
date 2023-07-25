@@ -1,4 +1,4 @@
-module pre_decoder (
+module FIFO_predecoder (
     input [31:0]        if1_fifo_inst0,
     input [31:0]        if1_fifo_inst1,
     input [31:0]        if1_fifo_pc,
