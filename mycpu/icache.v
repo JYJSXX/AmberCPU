@@ -98,9 +98,9 @@ module icache #(
     wire [1:0] tagv_way_sel;
     //wire [INDEX_WIDTH-1:0] tagv_index;
     wire store_tag, index_invalid, hit_invalid;
-    assign store_tag     = (cacop_code_buf == 2'b00);
-    assign index_invalid = (cacop_code_buf == 2'b01);
-    assign hit_invalid   = (cacop_code_buf == 2'b10);
+    assign store_tag     = cacop_en_buf ? (cacop_code_buf == 2'b00) : 0;
+    assign index_invalid = cacop_en_buf ? (cacop_code_buf == 2'b01) : 0;
+    assign hit_invalid   = cacop_en_buf ? (cacop_code_buf == 2'b10) : 0;
     assign tagv_way_sel      = req_buf[0] ? 2 : 1;
     //assign tagv_index        = req_buf[INDEX_WIDTH + BYTE_OFFSET_WIDTH - 1: BYTE_OFFSET_WIDTH];
 
