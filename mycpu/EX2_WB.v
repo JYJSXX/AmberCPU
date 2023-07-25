@@ -1,5 +1,6 @@
 `include "define.vh"
 `include "exception.vh"
+`timescale 1ns/1ps
 module EX2_WB(
     input clk,
     input aresetn,

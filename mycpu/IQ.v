@@ -4,6 +4,7 @@ we can issue 2 irrelative inst
 but any valid priv_flag makes iq only issues one inst for 2 cycles
 */
 `include "define.vh"
+`timescale 1ns/1ps
 module IQ (
     input clk,
     input rstn,
