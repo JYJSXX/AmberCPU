@@ -1,0 +1,76 @@
+[*]
+[*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
+[*] Tue Jul 25 08:39:20 2023
+[*]
+[dumpfile] "/home/yiran/Desktop/chiplab/sims/verilator/run_prog/log/func/func_lab3_log/simu_trace.fst"
+[dumpfile_mtime] "Tue Jul 25 08:31:47 2023"
+[dumpfile_size] 289338
+[savefile] "/home/yiran/Desktop/func3_dcache.gtkw"
+[timestart] 1
+[size] 1846 854
+[pos] -1 -1
+*-7.000000 363 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] TOP.
+[treeopen] TOP.simu_top.
+[treeopen] TOP.simu_top.soc.
+[treeopen] TOP.simu_top.soc.cpu.
+[treeopen] TOP.simu_top.soc.cpu.u_dcache.
+[treeopen] TOP.simu_top.soc.cpu.u_icache.
+[sst_width] 325
+[signals_width] 222
+[sst_expanded] 1
+[sst_vpaned_height] 492
+@28
+TOP.simu_top.soc.cpu.u_dcache.clk
+TOP.simu_top.soc.cpu.u_dcache.rstn
+@200
+-cpu
+@22
+TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+@28
+TOP.simu_top.soc.cpu.u_dcache.op
+TOP.simu_top.soc.cpu.u_dcache.uncache
+TOP.simu_top.soc.cpu.u_dcache.signed_ext
+TOP.simu_top.soc.cpu.u_dcache.idle
+TOP.simu_top.soc.cpu.u_dcache.flush
+@200
+-read
+@28
+TOP.simu_top.soc.cpu.u_dcache.rvalid
+TOP.simu_top.soc.cpu.u_dcache.rready
+@22
+TOP.simu_top.soc.cpu.u_dcache.rdata[31:0]
+@200
+-write
+@28
+TOP.simu_top.soc.cpu.u_dcache.wvalid
+TOP.simu_top.soc.cpu.u_dcache.wready
+@22
+TOP.simu_top.soc.cpu.u_dcache.wdata[31:0]
+TOP.simu_top.soc.cpu.u_dcache.wstrb[3:0]
+@200
+-内部信号
+@22
+TOP.simu_top.soc.cpu.u_dcache.state[3:0]
+@24
+TOP.simu_top.soc.cpu.u_dcache.wfsm_state[2:0]
+@28
+TOP.simu_top.soc.cpu.u_dcache.cache_hit
+@200
+-data_mem
+-tagv_mem
+-victim_cache
+@22
+TOP.simu_top.soc.cpu.u_icache.victim_cache.r_tag[25:0]
+TOP.simu_top.soc.cpu.u_icache.victim_cache.data_out[511:0]
+@28
+TOP.simu_top.soc.cpu.u_icache.victim_cache.hit_index[2:0]
+TOP.simu_top.soc.cpu.u_icache.victim_cache.victim_hit
+TOP.simu_top.soc.cpu.u_icache.victim_cache.we
+@29
+TOP.simu_top.soc.cpu.u_icache.victim_cache.counter[2:0]
+@22
+TOP.simu_top.soc.cpu.u_icache.victim_cache.w_tag[25:0]
+TOP.simu_top.soc.cpu.u_icache.victim_cache.data_in[511:0]
+[pattern_trace] 1
+[pattern_trace] 0
