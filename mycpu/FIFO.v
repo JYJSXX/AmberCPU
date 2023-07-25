@@ -59,8 +59,8 @@ module FIFO(
 
     assign  empty               =   fetch_buf_empty;
     assign  full                =   fetch_buf_full;
-    assign  write_en            =   fifo_readygo;                        
-    assign  pop_en              =   fifo_ready;
+    assign  write_en            =   fifo_readygo&&!full;                        
+    assign  pop_en              =   fifo_ready&&!empty;
     assign  inst_din            =   {if1_fifo_inst1[31:0],if1_fifo_inst0[31:0]};
     assign  fifo_pcAdd          =   fifo_pc+4;
     assign  pcbdv_din           =   {

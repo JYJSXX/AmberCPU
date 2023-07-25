@@ -225,7 +225,8 @@ always@(*) begin
         ex2_allowin=1;
     end
 
-    else if((ex2_wb_data_0_valid | ~(~dcache_ready && tlb_d_valid_reg)  | div_ready | csr_ready) && ex2_wb_data_1_valid) begin
+    //else if((ex2_wb_data_0_valid | ~(~dcache_ready && tlb_d_valid_reg)  | div_ready | csr_ready) && ex2_wb_data_1_valid) begin
+    else if( ~(~dcache_ready && tlb_d_valid_reg)  | div_ready | csr_ready)  begin
         ex2_allowin=1;
     end
 end

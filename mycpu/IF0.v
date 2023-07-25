@@ -34,6 +34,7 @@ module IF0 (
     
 );
     reg  [31:0] pc;//指令集手册P68
+    reg         branch_stat=0;//第一次跳转后置1,然后变0
     // wire [31:0] pc_next;
     
     assign pc_next      =   pred_taken?pred_pc:fetch_pc+8;
@@ -54,6 +55,9 @@ module IF0 (
             pc<=pc_from_WB;
         end
         else if(set_pc_from_EX)begin
+            if(pc_from_EX[2])begin
+                branch_stat<=1;
+            end
             pc<=pc_from_EX;
         end
         else if(set_pc_from_ID)begin
@@ -63,7 +67,14 @@ module IF0 (
             pc<=pc_from_PRIV;
         end
         else if (if0_readygo&&if0_allowin) begin
-            pc<=pc_next;
+            if(branch_stat)begin
+                pc<={pc_next[31:3],3'b000};
+            end else begin
+                pc<=pc_next;
+            end
+        end 
+        else begin
+            branch_stat<=0;
         end
     end
 endmodule
