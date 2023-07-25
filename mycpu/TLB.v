@@ -635,7 +635,7 @@ always @(posedge clk or negedge rstn) begin
         SOL_reg3 <= 0;
     end
     else begin
-        if (~stall_i) begin
+        //if (~stall_i) begin
             TLB_I_V_FINAL   <= |TLB_I_V_FINAL_0;
             TLB_I_D_FINAL   <= |TLB_I_D_FINAL_0;
             TLB_I_MAT_FINAL <= |TLB_I_MAT_FINAL_0;
@@ -644,7 +644,7 @@ always @(posedge clk or negedge rstn) begin
             VA_I_reg3 <= VA_I_reg2[`TLB_VPPN_LEN];
             en_i_reg3 <= en_i_reg2;
             TAG_OFFSET_I_reg3 <= TAG_OFFSET_I_reg2;
-        end
+        /*end
         else begin
             TLB_I_V_FINAL   <= TLB_I_V_FINAL;
             TLB_I_D_FINAL   <= TLB_I_D_FINAL;
@@ -655,7 +655,7 @@ always @(posedge clk or negedge rstn) begin
             en_i_reg3 <= en_i_reg3;
             TAG_OFFSET_I_reg3 <= TAG_OFFSET_I_reg3;
         end
-        if (~stall_d) begin
+        if (~stall_d) begin*/
             TLB_D_V_FINAL <= |TLB_D_V_FINAL_0;
             TLB_D_D_FINAL <= |TLB_D_D_FINAL_0;
             TLB_D_MAT_FINAL <= |TLB_D_MAT_FINAL_0;
@@ -665,7 +665,7 @@ always @(posedge clk or negedge rstn) begin
             en_d_reg3 <= en_d_reg2;
             TAG_OFFSET_D_reg3 <= TAG_OFFSET_D_reg2;
             SOL_reg3 <= SOL_reg2;
-        end
+        /*end
         else begin
             TLB_D_V_FINAL <= TLB_D_V_FINAL;
             TLB_D_D_FINAL <= TLB_D_D_FINAL;
@@ -676,7 +676,7 @@ always @(posedge clk or negedge rstn) begin
             en_d_reg3 <= en_d_reg3;
             TAG_OFFSET_D_reg3 <= TAG_OFFSET_D_reg3;
             SOL_reg3 <= SOL_reg3;
-        end
+        end*/
     end
 end
 
