@@ -395,7 +395,8 @@ module icache #(
             end
             MISS: begin
                 // if(i_rready && i_rlast) next_state = REFILL;
-                if(i_rready)       next_state = REFILL;
+                if(flush)               next_state = IDLE;
+                else if(i_rready)       next_state = REFILL;
                 else                    next_state = MISS;
             end
             REFILL: begin

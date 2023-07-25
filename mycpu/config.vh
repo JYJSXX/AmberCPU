@@ -1,7 +1,7 @@
 // -*- Verilog -*-
 
 
-// `define DIFFTEST
+`define DIFFTEST
 // `define BR_PROFILE
 // `define INST_PROFILE
 // `define AXI_PROFILE
