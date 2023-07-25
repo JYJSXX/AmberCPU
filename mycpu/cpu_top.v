@@ -1391,7 +1391,7 @@ idle_clk idle_clk1
     wire [6:0] tlb_exception_code_i, tlb_exception_code_d; //tlb例外码
 
     wire [31:0] icache_raddr, dcache_addr;
-    wire signed_ext, SOL_D_OUT;
+    wire signed_ext, is_atom_TLB, SOL_D_OUT;
     
     icache#(
         .INDEX_WIDTH       ( 6 ),
@@ -1470,7 +1470,7 @@ idle_clk idle_clk1
         .cacop_code                        ( cacop_ins_type                    ),
         .cacop_ready                       ( cacop_d_ready                     ),
         .cacop_complete                    ( cacop_d_done                      ),
-        .is_atom                           ( is_atom_dcache                    ),
+        .is_atom                           ( is_atom_TLB                       ),
         .llbit_set                         ( llbit_set                         ),
         .llbit                             ( llbit                             ),
         .llbit_clear                       ( llbit_clear                       ),
@@ -1504,6 +1504,8 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .VA_D           ( addr_dcache[31:12]           ),
         .signed_ext     (reg_ex_uop0[`UOP_SIGN] ),
         .signed_ext_out ( signed_ext    ),
+        .atom           ( is_atom_dcache),
+        .atom_out       ( is_atom_TLB   ),
         .TAG_OFFSET_I   ( fetch_pc[11:0] ),
         .TAG_OFFSET_D   (addr_dcache[11:0]),
         .PA_I           ( PA_I[31:12]           ),

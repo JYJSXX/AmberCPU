@@ -98,7 +98,7 @@ module ID_REG(
     reg [4:0] id_reg_rk1 ;
 //没考虑flush stall，之后再说
 always@(posedge aclk) begin
-    if(~aresetn | (~id_readygo && reg_allowin && reg_readygo)|flush) begin
+    if(~aresetn | (~id_readygo && reg_allowin && reg_readygo&&id_allowin)|flush) begin
         id_reg_pc0  <= 0;
         id_reg_pc1  <= 0;
         id_reg_pc_next<=0;

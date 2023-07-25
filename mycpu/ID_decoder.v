@@ -180,7 +180,7 @@ module ID_decoder
     wire type_invalid = type_==0&!is_ecall; //syscall和break不算非法指令，但也未出现在定义的11种指令类型中
 
     wire invtlb_invalid = is_invalid_tlb && inst[4:0]>5'h6; //INVTLB指令的op无效
-    
+    wire invalid_instruction;
     assign invalid_instruction=alu_op_invalid||type_invalid||br_invalid||inst[31]||invtlb_invalid;// ||exception!=0;
     //当IF段出现异常时，认为
 
@@ -194,7 +194,7 @@ module ID_decoder
         type_[`INS_MEM]&&uop[`UOP_MEM_WRITE]&&!uop[`UOP_MEM_ATM]||
         //除了jilr和bl之外的分支
         type_[`INS_BR]&&!is_jilr&&inst[29:26]!='b0101)?0: //这些不需要写寄存器的指令都向r0写，防止乱写
-            inst[30:26]==('b10101)?1: //bl 向r1写PC+4
+            inst[30:26]==(5'b10101) ? 1 : //bl 向r1写PC+4
             (inst[4:0]|{5{is_time}}&inst[9:5]); //time指令的rd是inst[9:5]，虽然指令编码写的是rj，但是是要向rj里面写
     
     //源地址1

@@ -15,9 +15,11 @@
 [treeopen] TOP.simu_top.soc.
 [treeopen] TOP.simu_top.soc.cpu.
 [treeopen] TOP.simu_top.soc.cpu.u_dcache.
+[treeopen] TOP.simu_top.soc.cpu.u_FIFO.
 [treeopen] TOP.simu_top.soc.cpu.u_icache.
+[treeopen] TOP.simu_top.soc.cpu.u_ID_REG.
 [sst_width] 325
-[signals_width] 266
+[signals_width] 367
 [sst_expanded] 1
 [sst_vpaned_height] 492
 @28
@@ -132,6 +134,35 @@ TOP.simu_top.soc.cpu.u_icache.paddr_buf[31:0]
 TOP.simu_top.soc.cpu.u_icache.hit[1:0]
 TOP.simu_top.soc.cpu.u_icache.flush_valid
 TOP.simu_top.soc.cpu.u_icache.uncache_buf
+@22
+TOP.simu_top.soc.cpu.u_FIFO.fetch_buf.din[63:0]
+@28
+TOP.simu_top.soc.cpu.u_FIFO.fetch_buf.write_en
+TOP.simu_top.soc.cpu.u_FIFO.fetch_buf.pop_en
+@22
+TOP.simu_top.soc.cpu.u_FIFO.fetch_buf.dout[63:0]
+TOP.simu_top.soc.cpu.u_FIFO_ID.fifo_inst0[31:0]
+TOP.simu_top.soc.cpu.u_FIFO_ID.fifo_inst1[31:0]
+TOP.simu_top.soc.cpu.u_ID_REG.u_IQ.iq_inst0[31:0]
+TOP.simu_top.soc.cpu.u_ID_REG.u_IQ.iq_inst1[31:0]
+TOP.simu_top.soc.cpu.u_ID_REG.u_IQ.id_reg_inst0[31:0]
+TOP.simu_top.soc.cpu.u_ID_REG.u_IQ.id_reg_pc0[31:0]
+TOP.simu_top.soc.cpu.u_ID_REG.u_IQ.id_reg_pc1[31:0]
+@28
+TOP.simu_top.soc.cpu.u_ID_REG.reg_allowin
+TOP.simu_top.soc.cpu.u_ID_REG.id_readygo
+@29
+TOP.simu_top.soc.cpu.u_ID_REG.id_allowin
+@28
+TOP.simu_top.soc.cpu.u_ID_REG.reg_readygo
+TOP.simu_top.soc.cpu.u_ID_REG.u_IQ.mod
+@22
+TOP.simu_top.soc.cpu.u_ID_REG.u_IQ.id_reg_inst1[31:0]
+@28
+TOP.simu_top.soc.cpu.u_ID_REG.u_IQ.id_reg_is_ALU_0
+TOP.simu_top.soc.cpu.u_ID_REG.u_IQ.id_reg_is_ALU_1
+TOP.simu_top.soc.cpu.u_ID_REG.u_IQ.iq_is_ALU_0
+TOP.simu_top.soc.cpu.u_ID_REG.u_IQ.iq_is_ALU_1
 TOP.simu_top.soc.cpu.u_icache.missbuf_we
 @c00028
 TOP.simu_top.soc.cpu.u_icache.lru_sel[1:0]
@@ -186,6 +217,18 @@ TOP.simu_top.soc.cpu.u_icache.victim_cache.w_tag[25:0]
 TOP.simu_top.soc.cpu.u_icache.victim_we
 @22
 TOP.simu_top.soc.cpu.u_icache.victim_data[511:0]
+@28
+TOP.simu_top.soc.cpu.DifftestInstrCommit0.valid
+@22
+TOP.simu_top.soc.cpu.DifftestInstrCommit0.pc[63:0]
+TOP.simu_top.soc.cpu.DifftestInstrCommit0.instr[31:0]
+@28
+TOP.simu_top.soc.cpu.DifftestInstrCommit1.valid
+@22
+TOP.simu_top.soc.cpu.DifftestInstrCommit1.pc[63:0]
+TOP.simu_top.soc.cpu.u_EX1.pc0[31:0]
+TOP.simu_top.soc.cpu.u_EX1.pc1[31:0]
+TOP.simu_top.soc.cpu.u_FIFO_ID.fifo_pc[31:0]
 @200
 -
 [pattern_trace] 1
