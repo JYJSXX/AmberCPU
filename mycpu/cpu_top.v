@@ -1177,7 +1177,7 @@ module core_top(
         .stall_divider       ( stall_divider       ),
         .div_ready           ( div_ready           ),
         .dcache_data         ( r_data_dcache         ),
-        .dcache_ready        ( rready_dcache        ),
+        .dcache_ready        ( wready_dcache | rready_dcache        ),
         .csr_data_in         ( csr_rd_data          ),
         .csr_ready           ( privilege_ready           ),
         .debug0_wb_pc        ( debug0_wb_pc        ),
