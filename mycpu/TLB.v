@@ -415,6 +415,8 @@ generate
         end
     end
 endgenerate
+
+//reg2
 reg [`TLB_NUM - 1:0]    TLB_I_V_TRANS_reg = 0;
 reg [`TLB_NUM - 1:0]    TLB_I_D_TRANS_reg = 0;
 reg [`TLB_NUM - 1:0]    TLB_I_MAT_TRANS_reg = 0;
@@ -559,8 +561,8 @@ wire [0:0] TLB_D_PPN_TRANS_FINAL [`TLB_PPN_LEN - 1:0];
 
 generate 
     for(i = 0; i < `TLB_PPN_LEN; i = i + 1)begin
-        assign TLB_I_PPN_TRANS_FINAL[i] = |TLB_I_PPN_TRANS[i];
-        assign TLB_D_PPN_TRANS_FINAL[i] = |TLB_D_PPN_TRANS[i];
+        assign TLB_I_PPN_TRANS_FINAL[i] = |TLB_I_PPN_TRANS_reg[i];
+        assign TLB_D_PPN_TRANS_FINAL[i] = |TLB_D_PPN_TRANS_reg[i];
     end
 endgenerate
 
