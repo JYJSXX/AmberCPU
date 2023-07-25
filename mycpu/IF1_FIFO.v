@@ -16,12 +16,13 @@ module IF1_FIFO(
     input               icache_rready,//icache rready makes reg update anytime
     input               icache_rvalid,
     input [31:0]        fetch_pc,
-    input [31:0]        if0_if1_pc,
-    input [31:0]        if0_if1_pc_next,
+    // input [31:0]        if0_if1_pc,
+    // input [31:0]        if0_if1_pc_next,
     input [31:0]        icache_badv,
     input [6:0]         icache_exception,
     input [1:0]         icache_excp_flag,
-    input [31:0]        icache_cookie_out,
+    input [31:0]        pc_out,
+    input [31:0]        icache_pc_next,
     input [31:0]        icache_inst0,
     input [31:0]        icache_inst1,
 
@@ -45,8 +46,8 @@ module IF1_FIFO(
     output reg[31:0]    if1_fifo_pc_next,
     output reg[31:0]    if1_fifo_inst0,
     output reg[31:0]    if1_fifo_inst1,
-    output wire[31:0]    p_if1_fifo_inst0,
-    output wire[31:0]    p_if1_fifo_inst1,
+    // output wire[31:0]    p_if1_fifo_inst0,
+    // output wire[31:0]    p_if1_fifo_inst1,
     output reg[31:0]    if1_fifo_icache_badv,
     output reg[6:0]     if1_fifo_icache_exception,
     output reg[1:0]     if1_fifo_icache_excp_flag,
@@ -83,7 +84,7 @@ module IF1_FIFO(
     reg [31:0]      tmp_inst0;
     reg [31:0]      tmp_inst1;
     reg [31:0]      tmp_icache_badv;
-    reg [31:0]      tmp_icache_exception;
+    reg [6:0]       tmp_icache_exception;
     reg [WIDTH*32-1:0] if1_fifo_pc_buf;
     reg [BUF_W:0]    icache_rvalid_buf;
     
@@ -91,8 +92,8 @@ module IF1_FIFO(
     reg [31:0]      tmp_icache_cookie_out;
     reg             tmp_cacop_ready;
     reg             tmp_cacop_complete;
-    assign p_if1_fifo_inst0  =  if0_if1_pc[2]? `INST_NOP:if1_fifo_inst0[31:0];
-    assign p_if1_fifo_inst1  =  priv_flag[0]?`INST_NOP:if1_fifo_inst1;
+    // assign p_if1_fifo_inst0  =  if0_if1_pc[2]? `INST_NOP:if1_fifo_inst0[31:0];
+    // assign p_if1_fifo_inst1  =  priv_flag[0]?`INST_NOP:if1_fifo_inst1;
     assign fifo_readygo =       if1_fifo_valid;
     wire critical_allowin;
     assign  critical_allowin=!icache_rvalid_buf[BUF_W-1]
@@ -130,7 +131,7 @@ module IF1_FIFO(
         end
         else if(if1_allowin)begin
             if1_fifo_pc_buf<={if1_fifo_pc_buf[(WIDTH-1)*32-1:0],fetch_pc[31:0]};
-            icache_rvalid_buf<={icache_rvalid_buf[BUF_W-2:0],if1_allowin};            
+            icache_rvalid_buf<={icache_rvalid_buf[BUF_W-1:0],if1_allowin};            
         end
     end
 
@@ -157,10 +158,10 @@ module IF1_FIFO(
     end
     always @(*) begin
         if (priv_flag[0]) begin
-            pc_after_priv=if0_if1_pc+4;
+            pc_after_priv=pc_out+4;
         end 
         else if(priv_flag[1])begin
-            pc_after_priv=if0_if1_pc+8;
+            pc_after_priv=pc_out+8;
         end else begin
             pc_after_priv=0;
         end
@@ -221,15 +222,15 @@ module IF1_FIFO(
         end
         else if (if1_readygo&&if1_allowin&&fifo_allowin) begin
             //update stage-stage reg
-            if1_fifo_pc     <=  if0_if1_pc;
-            if1_fifo_pc_next<=  if0_if1_pc_next;
-            // if1_fifo_inst0  <=  if0_if1_pc[2]? `INST_NOP:icache_inst0[31:0];
-            // if1_fifo_inst1  <=  priv_flag[0] ? `INST_NOP:icache_inst1[31:0];
-            if1_fifo_inst0  <=  icache_inst0[31:0];
-            if1_fifo_inst1  <=  icache_inst1[31:0];
+            if1_fifo_pc     <=  pc_out;
+            if1_fifo_pc_next<=  icache_pc_next;
+            if1_fifo_inst0  <=  pc_out[2]? `INST_NOP:icache_inst0[31:0];
+            if1_fifo_inst1  <=  priv_flag[0] ? `INST_NOP:icache_inst1[31:0];
+            // if1_fifo_inst0  <=  icache_inst0[31:0];
+            // if1_fifo_inst1  <=  icache_inst1[31:0];
 
             if1_fifo_icache_badv      <=icache_badv;
-            if1_fifo_icache_cookie_out<=icache_cookie_out;
+            if1_fifo_icache_cookie_out<=icache_pc_next;
             if1_fifo_icache_exception <=icache_exception;//did not replace,cope need to test excp_flag first!!
             if1_fifo_icache_excp_flag<=priv_flag[0]?2'b00:icache_excp_flag;
         end 
@@ -250,13 +251,13 @@ module IF1_FIFO(
             //hold stage-stage reg
             if(if1_readygo&&~tmp)begin
                 tmp<=1;
-                tmp_pc<=if0_if1_pc;
-                tmp_pc_next<=if0_if1_pc_next;
+                tmp_pc<=pc_out;
+                tmp_pc_next<=icache_pc_next;
                 tmp_inst0<=icache_inst0;
                 tmp_inst1<=priv_flag[0]?`INST_NOP:icache_inst1;
 
                 tmp_icache_badv      <=icache_badv;
-                tmp_icache_cookie_out<=icache_cookie_out;
+                tmp_icache_cookie_out<=icache_pc_next;
                 tmp_icache_exception <=icache_exception;
                 tmp_icache_excp_flag<=priv_flag[0]?2'b00:icache_excp_flag;
             end
