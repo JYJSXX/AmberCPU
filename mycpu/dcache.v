@@ -190,9 +190,9 @@ module dcache #(
     wire [1:0] tagv_way_sel;
     //wire [INDEX_WIDTH-1:0] tagv_index;
     wire store_tag, index_invalid, hit_invalid;
-    assign store_tag     = (cacop_code_buf == 2'b00);
-    assign index_invalid = (cacop_code_buf == 2'b01);
-    assign hit_invalid   = (cacop_code_buf == 2'b10);
+    assign store_tag     = cacop_en_buf ? (cacop_code_buf == 2'b00) : 0;
+    assign index_invalid = cacop_en_buf ? (cacop_code_buf == 2'b01) : 0;
+    assign hit_invalid   = cacop_en_buf ? (cacop_code_buf == 2'b10) : 0;
     assign tagv_way_sel      = req_buf[0] ? 2 : 1;
     //assign tagv_index        = req_buf[INDEX_WIDTH + BYTE_OFFSET_WIDTH - 1: BYTE_OFFSET_WIDTH];
 
@@ -227,7 +227,7 @@ module dcache #(
     /* request buffer : lock the read request addr */
     // [31:0] addr, [63:32] wdata [67:64] wstrb
     always @(posedge clk) begin
-        if(!rstn) begin
+        if(!rstn || flush) begin
             req_buf <= 0;
         end
         else if(req_buf_we) begin
@@ -362,15 +362,36 @@ module dcache #(
       .dout     (tag_rdata[1])
     );
 
+     /* victim cache */
+    wire victim_hit;
+    wire [511:0] victim_data;
+    wire victim_sel;
+    assign victim_sel = lru_sel[0] ? 0 : 1;
+    wire victim_we;
+    assign victim_we = mbuf_we && valid[victim_sel];
+
+    victim_cache #(
+        .CAPACITY(8)
+    ) victim_cache (
+        .clk        (clk),
+        .rstn       (rstn),
+        .r_tag      ({paddr_buf[31:12],req_buf[11:6]}),
+        .victim_hit (victim_hit),
+        .data_out   (victim_data),
+        .w_tag      ({tag_rdata[victim_sel],req_buf[11:6]}),
+        .we         (victim_we), // missbuf_we && valid[victim_sel] && victim_hit
+        .data_in    (mem_rdata[victim_sel])
+    );
+
     /* hit */
     assign tag          = p_addr[31:32-TAG_WIDTH];     // the tag of the request
     assign hit[0]       = valid[0] && (tag_rdata[0][TAG_WIDTH-1:0] == tag); // hit in way 0
     assign hit[1]       = valid[1] && (tag_rdata[1][TAG_WIDTH-1:0] == tag); // hit in way 1
-    assign cache_hit    = |hit;
+    assign cache_hit    = |hit || victim_hit;
     assign hit_way      = hit[0] ? 0 : 1; // 0 for way 0, 1 for way 1
     wire hit_way_valid;
-    assign hit_way_valid = cache_hit ? hit_way : 0;
-
+    assign hit_way_valid = cache_hit && ~victim_hit ? hit_way : 0;
+    
     /* write control */
     assign wdata_pipe_512 = ({{(BIT_NUM-32){1'b0}}, wdata_pipe} << address[1:0]) << {address[BYTE_OFFSET_WIDTH-1:2], 5'b0};
     assign wstrb_pipe_512 = {
@@ -389,7 +410,7 @@ module dcache #(
     // choose data from mem or return buffer 
     wire [BIT_NUM-1:0] o_rdata;
     reg [31:0]        rdata_cache;
-    assign o_rdata = data_from_mem ? mem_rdata[hit_way_valid] : ret_buf; 
+    assign o_rdata = victim_hit ? victim_data : data_from_mem ? mem_rdata[hit_way_valid] : ret_buf; 
     always @(*) begin
         case(req_buf[5:2])
         4'd0:  rdata_cache = o_rdata[31:0];
@@ -523,7 +544,7 @@ module dcache #(
     end
     
     /* memory visit settings*/
-    assign d_raddr  = uncache_buf ? paddr_buf : {paddr_buf[31:6], 6'b0};
+    assign d_raddr  = uncache_buf ? paddr_buf : {paddr_buf[31:12], req_buf[11:6],6'b0};
     assign d_waddr  = ibar_valid ? dirty_addr[dirty_way] : uncache_buf ? paddr_buf : m_buf;
     assign d_wdata  = wbuf;
 
@@ -576,7 +597,7 @@ module dcache #(
             end
         end
         LOOKUP: begin
-            if(exception_temp != 0)
+            if(exception_temp != 0 || flush)
                 next_state = IDLE;
             else if(ibar)
                 next_state = IBAR;
@@ -619,6 +640,8 @@ module dcache #(
                     next_state = IBAR;
                 else if(cacop_en)
                     next_state = CACOP;
+                else if(flush)
+                    next_state = IDLE;
                 else
                     next_state = (rvalid || wvalid) ? LOOKUP : IDLE;
             end
@@ -761,6 +784,7 @@ module dcache #(
             end
         end
         MISS: begin
+            mbuf_we = 1;
             d_rvalid = 1;
             if(uncache_buf) begin
                 d_rlen = 8'd0;

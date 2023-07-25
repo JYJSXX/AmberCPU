@@ -1646,7 +1646,8 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
                 cmt_valid1  <= 0;
             end else begin
                 //有异常时不置valid
-                cmt_valid0  <= ex_eu0_en&&!set_pc_from_WB;
+                cmt_valid0  <= ex_eu0_en&&!set_pc_from_WB && debug0_wb_inst[31:0]!=`INST_NOP 
+                && debug0_wb_pc != 0 && debug0_wb_inst[31:0] != 0;
                 cmt_pc0     <= debug0_wb_pc;
                 cmt_inst0   <= debug0_wb_inst;
                 cmt_wen0    <= debug0_wb_rf_wen!=0;
@@ -1655,7 +1656,8 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
                 cmt_excp_valid<=set_pc_from_WB;
                 cmt_ecode   <= ex2_wb_exception[5:0];
 
-                cmt_valid1  <= ex_eu1_en&&!set_pc_from_WB;
+                cmt_valid1  <= ex_eu1_en&&!set_pc_from_WB && debug1_wb_inst[31:0]!=`INST_NOP
+                && debug1_wb_pc != 0 && debug1_wb_inst[31:0] != 0;
                 cmt_pc1     <= debug1_wb_pc;
                 cmt_inst1   <= debug1_wb_inst;
                 cmt_wen1    <= debug1_wb_rf_wen!=0;
