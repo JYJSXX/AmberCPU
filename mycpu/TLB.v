@@ -443,7 +443,7 @@ reg                     SOL_reg2 = 0;
 assign en_VA_I_OUT = en_i_reg2;
 assign en_VA_D_OUT = en_d_reg2;
 assign VA_I_OUT = VA_I_reg2;
-assign VA_D_OUT = VA_D_reg2;
+assign VA_D_OUT = stall_d ? 0 : VA_D_reg2;
 assign VA_TAG_OFFSET_I_OUT = TAG_OFFSET_I_reg2;
 assign VA_TAG_OFFSET_D_OUT = TAG_OFFSET_D_reg2;
 
