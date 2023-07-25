@@ -131,7 +131,7 @@ module dcache #(
     reg                         data_from_mem;
 
     // LRU replace
-    reg  [INDEX_WIDTH-1:0]      lru; //0: way0, 1: way1
+    reg  [64-1:0]      lru; //0: way0, 1: way1
     wire [1:0]                  lru_sel;
     reg                         lru_we;
     //reg                         missbuf_we;
@@ -163,8 +163,8 @@ module dcache #(
     wire [5:0] dirty_index;
     wire way0, way1;
 
-    assign dirty_addr[0] = {tag_rdata[dirty_index][19:0], dirty_index, 6'b0};
-    assign dirty_addr[1] = {tag_rdata[dirty_index][19:0], dirty_index, 6'b0};
+    assign dirty_addr[0] = {tag_rdata[0][19:0], dirty_index, 6'b0};
+    assign dirty_addr[1] = {tag_rdata[1][19:0], dirty_index, 6'b0};
 
     /* op、 signed_ext、 is_atom、 llbit buffer */
     reg op_buf, signed_ext_buf, is_atom_buf, llbit_buf;
@@ -378,7 +378,7 @@ module dcache #(
         .r_tag      ({paddr_buf[31:12],req_buf[11:6]}),
         .victim_hit (victim_hit),
         .data_out   (victim_data),
-        .w_tag      ({tag_rdata[victim_sel],req_buf[11:6]}),
+        .w_tag      ({tag_rdata[victim_sel][TAG_WIDTH-1:0],req_buf[11:6]}),
         .we         (victim_we), // missbuf_we && valid[victim_sel] && victim_hit
         .data_in    (mem_rdata[victim_sel])
     );
@@ -433,7 +433,7 @@ module dcache #(
     end
     // uncached read
     wire [31:0] rdata_temp;
-    assign rdata_temp = uncache_buf ? ret_buf[511:448] : rdata_cache;
+    assign rdata_temp = uncache_buf ? ret_buf[511:480] : rdata_cache;
     // 根据掩码和符号位拓展，给出最终的读数据
     always @(*) begin
         case(wstrb_pipe)
@@ -529,7 +529,7 @@ module dcache #(
             m_buf <= 0;
         end
         else if(mbuf_we) begin
-            m_buf <= {tag_rdata[tag_index][19:0], w_index, 6'b0};
+            m_buf <= {tag_rdata[lru_sel[1]][19:0], w_index, 6'b0};
         end
     end
     always @(posedge clk) begin
@@ -852,6 +852,7 @@ module dcache #(
         end
         IBAR_WAIT: 
             wfsm_reset      = 1;
+        default:;
         endcase
     end
 
@@ -915,6 +916,7 @@ module dcache #(
         FINISH: begin
             wrt_finish = 1;
         end
+        default:;
         endcase
     end
 

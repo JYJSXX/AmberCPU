@@ -83,7 +83,12 @@ module EX2_WB(
 assign pc_from_WB = (tlb_exception) ? tlbrentry : eentry;
 reg tlb_d_valid_reg;
 always@(posedge clk )begin
-        tlb_d_valid_reg <= en_VA_D_OUT;
+        if(en_VA_D_OUT)
+            tlb_d_valid_reg <= en_VA_D_OUT;
+        else if(dcache_ready)
+            tlb_d_valid_reg<=0;
+        else 
+        tlb_d_valid_reg<=tlb_d_valid_reg;
     end
 
 assign flush_out_all = exception_flag_out;

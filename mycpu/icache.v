@@ -77,7 +77,7 @@ module icache #(
     wire    [TAG_WIDTH-1:0]     tag;
 
     // LRU
-    reg  [INDEX_WIDTH-1:0]      lru; //0: way0, 1: way1
+    reg  [63:0]                lru; //0: way0, 1: way1
     wire [1:0]                  lru_sel;
     reg                         lru_we;
     reg                         missbuf_we;

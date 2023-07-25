@@ -271,7 +271,7 @@ begin
         w_count <= w_count;
 end
 
-assign w_last = (w_count == d_wlen);
+assign w_last = (w_count == d_wlen[4:0]);
 assign w_strb = d_wstrb;
 
 always @(*)

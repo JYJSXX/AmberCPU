@@ -12,7 +12,7 @@ module EX_Privilege(
     output   reg                        done,           //特权指令握手ready信号
 
     //CSR
-    output  reg     [31:0]              csr_addr,       //csr 读写地址
+    output  reg     [13:0]              csr_addr,       //csr 读写地址
     output  reg     [31:0]              csr_wdata,      //csr 写数据
     output  reg                         csr_wen,        //csr 写使能
     output  reg                         csr_ren,        //csr 读使能
@@ -63,8 +63,8 @@ module EX_Privilege(
     wire                isxchg = |rj[4:1];
 
     assign cacop_ins_type = ins[4:3];
-    wire is_icache = cacop_ins_type == pr_type[`INS_CACHE] & (ins[2:0] == 3'b000);
-    wire is_dcache = cacop_ins_type == pr_type[`INS_CACHE] & (ins[2:0] == 3'b001);
+    wire is_icache = pr_type[`INS_CACHE] & (ins[2:0] == 3'b000);
+    wire is_dcache = pr_type[`INS_CACHE] & (ins[2:0] == 3'b001);
     wire [11:0] imm = ins[21:10];
     wire [31:0] imm_ext = {{20{imm[11]}}, imm};
     assign cacop_vaddr = rj_data + imm_ext;
@@ -199,7 +199,8 @@ module EX_Privilege(
                 else
                     PR_next_state = PR_TLBINV;
             end
-
+            default:
+                PR_next_state = PR_INIT;
         endcase
     end
 
@@ -288,7 +289,8 @@ module EX_Privilege(
             PR_TLBINV:
             if(invtlb_ready)
                 done=1;
-            
+            default:
+                done = 0;
         endcase
     end
 
@@ -334,6 +336,7 @@ module EX_Privilege(
                     cacop_i_en <= 0;
                     cacop_d_en <= 0;
                 end
+                default: ;
             endcase
         end
     end
