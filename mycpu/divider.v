@@ -57,7 +57,7 @@ module divider(
         end
         else
         begin
-            divisor_reg <= divisor_abs << (digit_dividend - digit_divisor + 1);
+            divisor_reg <= {32'b0, divisor_abs} << (digit_dividend - digit_divisor + 1);
             shift_count <= 0;
         end
     end
@@ -173,7 +173,7 @@ module divider(
                     begin
                         shift <= 0;
                         quotient <= 0;
-                        remainder <= sign & dividend_sign ? ~dividend_reg + 1 : dividend_reg;
+                        remainder <= (sign & dividend_sign) ? ~dividend_reg[31:0] + 1 : dividend_reg[31:0];
                     end
                     else
                     begin
@@ -188,7 +188,7 @@ module divider(
                     begin
                         shift <= 0;
                         quotient <= sign & (dividend_sign ^ divisor_sign) ? ~quotient_nxt + 1 : quotient_nxt;
-                        remainder <= (sign & dividend_sign) ? ~(minus[63] ? dividend_reg : minus) + 1 : (minus[63] ? dividend_reg : minus);
+                        remainder <= (sign & dividend_sign) ? ~(minus[63] ? dividend_reg[31:0] : minus[31:0]) + 1 : (minus[63] ? dividend_reg[31:0] : minus[31:0]);
                     end
 
                     else
