@@ -245,7 +245,8 @@ module icache #(
     assign w_tag = paddr_buf[31:32-TAG_WIDTH];
     assign tag_in = tagv_clear ? 0 : {1'b1, w_tag};
     wire [INDEX_WIDTH-1:0] tag_index;
-    assign tag_index = tagv_clear ? req_buf[INDEX_WIDTH+BYTE_OFFSET_WIDTH-1:BYTE_OFFSET_WIDTH] : paddr_buf[INDEX_WIDTH+BYTE_OFFSET_WIDTH-1:BYTE_OFFSET_WIDTH];
+    // assign tag_index = tagv_clear ? req_buf[INDEX_WIDTH+BYTE_OFFSET_WIDTH-1:BYTE_OFFSET_WIDTH] : paddr_buf[INDEX_WIDTH+BYTE_OFFSET_WIDTH-1:BYTE_OFFSET_WIDTH];
+    assign tag_index = w_index;
     BRAM_tagv #(
       .DATA_WIDTH(TAG_WIDTH+1),
       .ADDR_WIDTH (INDEX_WIDTH)
