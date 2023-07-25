@@ -1,6 +1,7 @@
 `include "define.vh"
 `include"exception.vh"
 `include "config.vh"
+`timescale 1ns/1ps
 module EX1(
     input   clk,
     input   aclk,
@@ -174,7 +175,7 @@ module EX1(
 );
 
 assign csr_flag_from_ex = uop0[`INS_CSR];
-assign tlb_flag_from_ex = uop0[`INS_TLB] && (inst0[11:10] == 2'b00 || inst0[11:0] ==2'b01 || inst0[15]);
+assign tlb_flag_from_ex = uop0[`INS_TLB] && (inst0[11:10] == 2'b00 || inst0[11:10] ==2'b01 || inst0[15]);
     reg [63:0] stable_counter_reg;
     assign flush=predict_addr_fail || predict_dir_fail || uop0[`INS_ERTN];
     always @(posedge aclk)
@@ -229,7 +230,7 @@ wire [3:0] cond1;
 wire [31:0] a_2;
 wire [31:0] b_2;
 wire [31:0] y_2;
-wire pc_add_4; //根据控制信号判断要写入pc+4还是y
+wire [31:0] pc_add_4; //根据控制信号判断要写入pc+4还是y
 assign pc_add_4 = pc0 + 4;
 assign cond0 = uop0[`UOP_COND];
 assign cond1 = uop1[`UOP_COND];

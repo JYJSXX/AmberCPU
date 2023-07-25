@@ -1,5 +1,6 @@
 `include "define.vh"
 `include "exception.vh"
+`timescale 1ns/1ps
 module EX2_WB(
     input clk,
     input aresetn,
@@ -239,10 +240,10 @@ always@(posedge clk)begin
 
 end
 //下面这些自带一个周期延迟，和上面的同步
-assign debug0_wb_rf_wen = ex2_wb_we0;
+assign debug0_wb_rf_wen = {3'b0,ex2_wb_we0};
 assign debug0_wb_rf_wnum = ex2_wb_rd0;
 assign debug0_wb_rf_wdata = ex2_wb_data_0;
-assign debug1_wb_rf_wen = ex2_wb_we1;
+assign debug1_wb_rf_wen = {3'b0,ex2_wb_we1};
 assign debug1_wb_rf_wnum = ex2_wb_rd1;
 assign debug1_wb_rf_wdata = ex2_wb_data_1;
 endmodule
