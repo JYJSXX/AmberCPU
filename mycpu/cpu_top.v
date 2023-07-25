@@ -205,6 +205,7 @@ module core_top(
     wire               if1_allowin;
     // wire               flush_cause; TODO:flush cause 
     wire               icache_rready;
+    wire [31:0]        icache_pc_next;
 
     wire [31:0]        if0_if1_pc;
     wire [31:0]        if0_if1_pc_next;
@@ -219,11 +220,11 @@ module core_top(
         .if1_readygo            ( if1_readygo      ),
         .if1_allowin            ( if1_allowin      ),
         .flush                  ( flush_to_if0_if1 ),
-        .flush_cause            ( 0                ),   // TODO: To be completed
-        .fetch_pc               ( fetch_pc         ),
-        .pc_next                ( pc_next          ),
-        .if0_if1_pc             ( if0_if1_pc       ),
-        .if0_if1_pc_next        ( if0_if1_pc_next  )
+        .flush_cause            ( 0                )   // TODO: To be completed
+        // .fetch_pc               ( fetch_pc         ),
+        // .pc_next                ( pc_next          ),
+        // .if0_if1_pc             ( if0_if1_pc       ),
+        // .if0_if1_pc_next        ( if0_if1_pc_next  )
     );
 
     
@@ -235,7 +236,7 @@ module core_top(
     wire [6:0] icache_exception;
     wire [6:0] dcache_exception;
     wire [1:0] icache_excp_flag;
-    wire [31:0] cookie_out;
+    // wire [31:0] cookie_out;
     // wire cacop_ready;
     // wire cacop_complete;
 
@@ -284,12 +285,13 @@ module core_top(
         .icache_rready              ( icache_rready              ),
         .icache_rvalid              ( icache_rvalid              ),
         .fetch_pc                   ( fetch_pc                   ),
-        .if0_if1_pc                 ( if0_if1_pc                 ),
-        .if0_if1_pc_next            ( if0_if1_pc_next            ),
+        .pc_out                     ( pc_out                     ),
+        // .if0_if1_pc                 ( if0_if1_pc                 ),
+        // .if0_if1_pc_next            ( if0_if1_pc_next            ),
         .icache_badv                ( icache_badv                ),
         .icache_exception           ( icache_exception           ),
         .icache_excp_flag           ( icache_excp_flag           ),
-        .icache_cookie_out          ( cookie_out                 ),
+        .icache_pc_next             ( icache_pc_next             ),
         .icache_inst0               ( icache_rdata[31:0]         ),
         .icache_inst1               ( icache_rdata[63:32]        ),
         .ibar_flag                  ( ibar_flag                  ),
@@ -308,10 +310,10 @@ module core_top(
         .tlb_done                   ( tlb_done                   ),
         .if1_fifo_pc                ( if1_fifo_pc                ),
         .if1_fifo_pc_next           ( if1_fifo_pc_next           ),
-        // .if1_fifo_inst0             ( if1_fifo_inst0             ),
-        // .if1_fifo_inst1             ( if1_fifo_inst1             ),
-        .p_if1_fifo_inst0             ( if1_fifo_inst0             ),
-        .p_if1_fifo_inst1             ( if1_fifo_inst1             ),
+        .if1_fifo_inst0             ( if1_fifo_inst0             ),
+        .if1_fifo_inst1             ( if1_fifo_inst1             ),
+        // .p_if1_fifo_inst0             ( if1_fifo_inst0             ),
+        // .p_if1_fifo_inst1             ( if1_fifo_inst1             ),
         .if1_fifo_icache_badv       ( if1_fifo_icache_badv       ),
         .if1_fifo_icache_exception  ( if1_fifo_icache_exception  ),
         .if1_fifo_icache_excp_flag  ( if1_fifo_icache_excp_flag  ),
@@ -1408,8 +1410,8 @@ module core_top(
         .i_exception_flag  ( icache_excp_flag  ),   
         .flush             ( flush_to_icache   ),
         .uncache           ( !is_cached_I      ),   
-        .cookie_in         ( cookie_in         ),
-        .cookie_out        ( cookie_out        ),
+        .cookie_in         ( pc_next         ),
+        .cookie_out        ( icache_pc_next        ),
         .cacop_en          ( cacop_i_en        ),
         .cacop_code        ( cacop_ins_type    ),
         .cacop_ready       ( cacop_i_ready     ),
