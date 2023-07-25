@@ -596,7 +596,7 @@ reg [11:0]                  TAG_OFFSET_I_reg3 = 0;
 reg [11:0]                  TAG_OFFSET_D_reg3 = 0;
 reg                         SOL_reg3 = 0;
 
-assign  SOL_D_OUT = SOL_reg3;
+assign  SOL_D_OUT = SOL_reg2;
 
 always @(posedge clk or negedge rstn) begin
     if(~rstn)begin
