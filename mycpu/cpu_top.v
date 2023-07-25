@@ -1,6 +1,7 @@
 `include "define.vh"
 `include "TLB.vh"
 `include "config.vh"
+`timescale 1ns/1ps
 module core_top(
     input           aclk,
     input           aresetn,
@@ -808,9 +809,9 @@ module core_top(
     //下面都是特权指令的
     wire privilege_ready;
     assign csr_done = privilege_ready & reg_ex_uop0[`INS_CSR];
-    assign tlb_done = privilege_ready & reg_ex_uop0[`INS_TLB] & (reg_ex_inst0[11:10] == 2'b00 || reg_ex_inst0[11:0] ==2'b01 || reg_ex_inst0[15]);
+    assign tlb_done = privilege_ready & reg_ex_uop0[`INS_TLB] & (reg_ex_inst0[11:10] == 2'b00 || reg_ex_inst0[11:10] ==2'b01 || reg_ex_inst0[15]);
     //给csr
-    wire [31:0] csr_addr;
+    wire [13:0] csr_addr;
     wire [31:0] csr_wdata;
     wire csr_wen;
     wire csr_ren;
@@ -1256,7 +1257,7 @@ module core_top(
         .aclk            ( aclk            ),
         .aresetn         ( aresetn         ),
         .software_en     ( csr_wen        ),
-        .addr            ( csr_addr[13:0]   ),
+        .addr            ( csr_addr       ),
         .rdata           ( csr_rdata           ),
         .wen             ( csr_wen             ),
         .wdata           ( csr_wdata           ),
