@@ -227,7 +227,7 @@ module dcache #(
     /* request buffer : lock the read request addr */
     // [31:0] addr, [63:32] wdata [67:64] wstrb
     always @(posedge clk) begin
-        if(!rstn || flush) begin
+        if(!rstn) begin
             req_buf <= 0;
         end
         else if(req_buf_we) begin
