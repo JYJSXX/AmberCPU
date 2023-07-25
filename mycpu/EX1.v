@@ -112,7 +112,7 @@ module EX1(
     //下面都是特权指令的
     output privilege_ready,
     //给csr
-    output [31:0] csr_addr,
+    output [13:0] csr_addr,
     output [31:0] csr_wdata,
     output csr_wen,
     output csr_ren,

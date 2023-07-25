@@ -33,7 +33,7 @@ module dirty_table(
             end
             dirty_num <= 0;
         end
-        else if(we) begin
+        else if(|we) begin
             if(we[0]) dirty_table[w_addr][0] <= w_data;
             if(we[1]) dirty_table[w_addr][1] <= w_data;
             if(w_data) dirty_num <= dirty_num + 1;

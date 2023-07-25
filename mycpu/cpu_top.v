@@ -1,6 +1,7 @@
 `include "define.vh"
 `include "TLB.vh"
 `include "config.vh"
+`timescale 1ns/1ps
 module core_top(
     input           aclk,
     input           aresetn,
@@ -275,23 +276,21 @@ module core_top(
         .clk                        ( clk                        ),
         .rstn                       ( aresetn                    ),
         .flush                      ( flush_to_if1_fifo          ),
-        // .flush_cause                ( flush_cause                ),
-        .fetch_buf_full             ( fetch_buf_full             ),
         .if1_readygo                ( if1_readygo                ),
         .if1_allowin                ( if1_allowin                ),
         .fifo_allowin               ( fifo_allowin               ),
         .fifo_readygo               ( fifo_readygo               ),
-        .if1_rready                 ( icache_rready              ),
+        .icache_rready              ( icache_rready              ),
         .icache_rvalid              ( icache_rvalid              ),
         .fetch_pc                   ( fetch_pc                   ),
-        .if1_pc                     ( if0_if1_pc                 ),
-        .if1_pc_next                ( if0_if1_pc_next            ),
-        .if1_badv                   ( icache_badv                ),
-        .if1_exception              ( icache_exception           ),
-        .if1_excp_flag              ( icache_excp_flag           ),
-        .if1_cookie_out             ( cookie_out                 ),
-        .if1_inst0                  ( icache_rdata[31:0]         ),
-        .if1_inst1                  ( icache_rdata[63:32]        ),
+        .if0_if1_pc                 ( if0_if1_pc                 ),
+        .if0_if1_pc_next            ( if0_if1_pc_next            ),
+        .icache_badv                ( icache_badv                ),
+        .icache_exception           ( icache_exception           ),
+        .icache_excp_flag           ( icache_excp_flag           ),
+        .icache_cookie_out          ( cookie_out                 ),
+        .icache_inst0               ( icache_rdata[31:0]         ),
+        .icache_inst1               ( icache_rdata[63:32]        ),
         .ibar_flag                  ( ibar_flag                  ),
         .ibar_flag_from_ex          ( ibar                       ),
         .csr_flag                   ( csr_flag                   ),
@@ -314,8 +313,6 @@ module core_top(
         .if1_fifo_icache_exception  ( if1_fifo_icache_exception  ),
         .if1_fifo_icache_excp_flag  ( if1_fifo_icache_excp_flag  ),
         .if1_fifo_icache_cookie_out ( if1_fifo_icache_cookie_out )
-        // .if1_fifo_cacop_ready       ( if1_fifo_cacop_ready       ),
-        // .if1_fifo_cacop_complete    ( if1_fifo_cacop_complete    )
     );
 
 
@@ -326,7 +323,7 @@ module core_top(
 
 
 
-    pre_decoder u_pre_decoder(
+    FIFO_predecoder u_pre_decoder(
         .if1_fifo_inst0 ( if1_fifo_inst0 ),
         .if1_fifo_inst1 ( if1_fifo_inst1 ),
         .if1_fifo_pc    ( if1_fifo_pc    ),
@@ -364,7 +361,7 @@ module core_top(
     wire   [1 :0] fifo_branch_flag;
     
 
-    wire  fetch_buf_empty;
+    wire  fifo_valid,fifo_ready;
 
 
     FIFO u_FIFO(
@@ -374,6 +371,8 @@ module core_top(
         .flush                      ( flush_to_fifo              ),
         .fifo_readygo               ( fifo_readygo               ),
         .fifo_allowin               ( fifo_allowin               ),
+        .fifo_valid                 ( fifo_valid                 ),
+        .fifo_ready                 ( fifo_ready                 ),
         .priv_flag                  ( priv_flag                  ),
         .if1_fifo_inst0             ( if1_fifo_inst0             ),
         .if1_fifo_inst1             ( if1_fifo_inst1             ),
@@ -393,9 +392,7 @@ module core_top(
         .fifo_exception             ( fifo_exception             ),
         .fifo_excp_flag             ( fifo_excp_flag             ),
         .fifo_priv_flag             ( fifo_priv_flag             ),
-        .fifo_branch_flag           ( fifo_branch_flag           ),
-        .fetch_buf_empty            ( fetch_buf_empty            ),
-        .fetch_buf_full             ( fetch_buf_full             )
+        .fifo_branch_flag           ( fifo_branch_flag           )
     );
 
 
@@ -412,6 +409,7 @@ module core_top(
     wire [1:0]  fifo_id_priv_flag;
     wire [1:0]  fifo_id_branch_flag;
     wire        id_allowin;
+    
 
     wire  id_readygo;//to decoder stage,tell id I'm valid
     FIFO_ID u_FIFO_ID(
@@ -421,8 +419,10 @@ module core_top(
         .fifo_id_flush_cause ( 0                   ),  // TODO: To be completed
         .id_allowin          ( id_allowin          ),
         .id_readygo          ( id_readygo          ),
-        .fifo_allowin        ( fifo_allowin        ),
-        .fifo_readygo        ( fifo_readygo        ),
+        // .fifo_allowin        ( fifo_allowin        ),
+        // .fifo_readygo        ( fifo_readygo        ),
+        .fifo_valid          ( fifo_valid          ),
+        .fifo_ready          ( fifo_ready          ),
         .fifo_inst0          ( fifo_inst0          ),
         .fifo_inst1          ( fifo_inst1          ),
         .fifo_pc             ( fifo_pc             ),
@@ -434,8 +434,6 @@ module core_top(
         .fifo_excp_flag      ( fifo_excp_flag      ),
         .fifo_priv_flag      ( fifo_priv_flag      ),
         .fifo_branch_flag    ( fifo_branch_flag    ),
-        .fetch_buf_empty     ( fetch_buf_empty     ),
-        .fetch_buf_full      ( fetch_buf_full      ),
         .fifo_id_inst0       ( fifo_id_inst0       ),
         .fifo_id_inst1       ( fifo_id_inst1       ),
         .fifo_id_pc          ( fifo_id_pc          ),
@@ -534,22 +532,23 @@ module core_top(
     wire [4:0]  iq_rk1 ;
     
     ID_REG u_ID_REG(
-        .aclk                 ( aclk                 ),
-        .aresetn              ( aresetn              ),
-        .id_readygo           ( id_readygo           ),
-        .id_allowin           ( id_allowin           ),
-        .reg_allowin          ( reg_allowin          ),
-        .reg_readygo          ( reg_readygo          ),
-        .fifo_id_inst0        ( fifo_id_inst0        ),
-        .fifo_id_inst1        ( fifo_id_inst1        ),
-        .fifo_id_pc0          ( fifo_id_pc          ),
-        .fifo_id_pc1          ( fifo_id_pcAdd          ),
-        .fifo_id_pc_next      ( fifo_id_pc_next      ),
-        .fifo_id_badv         ( fifo_id_badv         ),
-        .fifo_id_excp_flag    ( fifo_id_excp_flag    ),
-        .fifo_id_exception    ( fifo_id_exception    ),
-        .fifo_id_priv_flag    ( fifo_id_priv_flag    ),
-        .fifo_id_branch_flag  ( fifo_id_branch_flag  ),
+        .aclk                 ( aclk                    ),
+        .aresetn              ( aresetn                 ),
+        .flush                ( flush_to_id_reg         ),
+        .id_readygo           ( id_readygo              ),
+        .id_allowin           ( id_allowin              ),
+        .reg_allowin          ( reg_allowin             ),
+        .reg_readygo          ( reg_readygo             ),
+        .fifo_id_inst0        ( fifo_id_inst0           ),
+        .fifo_id_inst1        ( fifo_id_inst1           ),
+        .fifo_id_pc0          ( fifo_id_pc              ),
+        .fifo_id_pc1          ( fifo_id_pcAdd           ),
+        .fifo_id_pc_next      ( fifo_id_pc_next         ),
+        .fifo_id_badv         ( fifo_id_badv            ),
+        .fifo_id_excp_flag    ( fifo_id_excp_flag       ),
+        .fifo_id_exception    ( fifo_id_exception       ),
+        .fifo_id_priv_flag    ( fifo_id_priv_flag       ),
+        .fifo_id_branch_flag  ( fifo_id_branch_flag     ),
         .is_ALU_0             ( id_is_ALU_0             ),
         .is_ALU_1             ( id_is_ALU_1             ),
         .is_syscall_0         ( id_is_syscall_0         ),
@@ -568,33 +567,33 @@ module core_top(
         .rj1                  ( id_rj1                  ),
         .rk0                  ( id_rk0                  ),
         .rk1                  ( id_rk1                  ),
-        .iq_pc0               ( iq_pc0               ),
-        .iq_pc1               ( iq_pc1               ),
-        .iq_pc_next           ( iq_pc_next           ),
-        .iq_inst0             ( iq_inst0             ),
-        .iq_inst1             ( iq_inst1             ),
-        .iq_badv              ( iq_badv              ),
-        .iq_excp_flag         ( iq_excp_flag         ),
-        .iq_exception         ( iq_exception         ),
-        .iq_branch_flag       ( iq_branch_flag       ),
-        .iq_is_ALU_0          ( iq_is_ALU_0          ),
-        .iq_is_ALU_1          ( iq_is_ALU_1          ),
-        .iq_is_syscall_0      ( iq_is_syscall_0      ),
-        .iq_is_syscall_1      ( iq_is_syscall_1      ),
-        .iq_is_break_0        ( iq_is_break_0        ),
-        .iq_is_break_1        ( iq_is_break_1        ),
-        .iq_is_priviledged_0  ( iq_is_priviledged_0  ),
-        .iq_is_priviledged_1  ( iq_is_priviledged_1  ),
-        .iq_uop0              ( iq_uop0              ),
-        .iq_uop1              ( iq_uop1              ),
-        .iq_imm0              ( iq_imm0              ),
-        .iq_imm1              ( iq_imm1              ),
-        .iq_rd0               ( iq_rd0               ),
-        .iq_rd1               ( iq_rd1               ),
-        .iq_rj0               ( iq_rj0               ),
-        .iq_rj1               ( iq_rj1               ),
-        .iq_rk0               ( iq_rk0               ),
-        .iq_rk1               ( iq_rk1               )
+        .iq_pc0               ( iq_pc0                  ),
+        .iq_pc1               ( iq_pc1                  ),
+        .iq_pc_next           ( iq_pc_next              ),
+        .iq_inst0             ( iq_inst0                ),
+        .iq_inst1             ( iq_inst1                ),
+        .iq_badv              ( iq_badv                 ),
+        .iq_excp_flag         ( iq_excp_flag            ),
+        .iq_exception         ( iq_exception            ),
+        .iq_branch_flag       ( iq_branch_flag          ),
+        .iq_is_ALU_0          ( iq_is_ALU_0             ),
+        .iq_is_ALU_1          ( iq_is_ALU_1             ),
+        .iq_is_syscall_0      ( iq_is_syscall_0         ),
+        .iq_is_syscall_1      ( iq_is_syscall_1         ),
+        .iq_is_break_0        ( iq_is_break_0           ),
+        .iq_is_break_1        ( iq_is_break_1           ),
+        .iq_is_priviledged_0  ( iq_is_priviledged_0     ),
+        .iq_is_priviledged_1  ( iq_is_priviledged_1     ),
+        .iq_uop0              ( iq_uop0                 ),
+        .iq_uop1              ( iq_uop1                 ),
+        .iq_imm0              ( iq_imm0                 ),
+        .iq_imm1              ( iq_imm1                 ),
+        .iq_rd0               ( iq_rd0                  ),
+        .iq_rd1               ( iq_rd1                  ),
+        .iq_rj0               ( iq_rj0                  ),
+        .iq_rj1               ( iq_rj1                  ),
+        .iq_rk0               ( iq_rk0                  ),
+        .iq_rk1               ( iq_rk1                  )
     );
 
 
@@ -810,9 +809,9 @@ module core_top(
     //下面都是特权指令的
     wire privilege_ready;
     assign csr_done = privilege_ready & reg_ex_uop0[`INS_CSR];
-    assign tlb_done = privilege_ready & reg_ex_uop0[`INS_TLB] & (reg_ex_inst0[11:10] == 2'b00 || reg_ex_inst0[11:0] ==2'b01 || reg_ex_inst0[15]);
+    assign tlb_done = privilege_ready & reg_ex_uop0[`INS_TLB] & (reg_ex_inst0[11:10] == 2'b00 || reg_ex_inst0[11:10] ==2'b01 || reg_ex_inst0[15]);
     //给csr
-    wire [31:0] csr_addr;
+    wire [13:0] csr_addr;
     wire [31:0] csr_wdata;
     wire csr_wen;
     wire csr_ren;
@@ -1258,7 +1257,7 @@ module core_top(
         .aclk            ( aclk            ),
         .aresetn         ( aresetn         ),
         .software_en     ( csr_wen        ),
-        .addr            ( csr_addr[13:0]   ),
+        .addr            ( csr_addr       ),
         .rdata           ( csr_rdata           ),
         .wen             ( csr_wen             ),
         .wdata           ( csr_wdata           ),
@@ -1393,7 +1392,7 @@ module core_top(
         .raddr             ( icache_raddr      ),
         .p_addr            ( PA_I              ),
         .rdata             ( icache_rdata      ),
-        .pc_out            ( if1_pc            ),
+        .pc_out            ( if0_if1_pc        ),
         .idle              ( i_idle            ),
         .i_rvalid          ( i_rvalid          ),
         .i_rready          ( i_rready          ), 
@@ -1450,7 +1449,7 @@ module core_top(
         .d_wlen                            ( d_wlen                            ),
         .exception                         ( dcache_exception                  ),  
         .exception_flag                    ( reg_ex_excp_flag                  ),   
-        .d_exception_flag                  ( d_exception_flag                  ),  
+        .d_exception_flag                  ( /*d_exception_flag*/0             ),  
         .forward_exception                 ( reg_ex_exception                  ),  
         .tlb_exception                     ( tlb_exception_code_d              ),  
         .badv                              ( dcache_badv                       ),  

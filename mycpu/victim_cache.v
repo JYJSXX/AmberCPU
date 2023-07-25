@@ -49,6 +49,23 @@ module victim_cache#(
     assign hit_index = hit[0] ? 0 : (hit[1] ? 1 : (hit[2] ? 2 : (hit[3] ? 3 : (hit[4] ? 4 : (hit[5] ? 5 : (hit[6] ? 6 : (hit[7] ? 7 : 0)))))));
     assign data_out = data[hit_index];
 
+    //对we信号取边沿
+    reg we_pre;
+    reg we_now;
+    wire counter_we;
+    always @(posedge clk) begin
+        if(!rstn) begin
+            we_pre <= 0;
+            we_now <= 0;
+        end
+        else begin
+            we_pre <= we_now;
+            we_now <= we;
+        end
+    end
+
+    assign counter_we = we_now && !we_pre;
+
     //写，时序逻辑
     integer j;
     always @(posedge clk) begin
@@ -59,7 +76,7 @@ module victim_cache#(
                 data[j] <= 0;
             end
         end
-        else if(we) begin
+        else if(counter_we) begin
             counter <= counter + 1;
             tag[counter] <= {1'b1, w_tag};
             data[counter] <= data_in;

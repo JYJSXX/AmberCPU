@@ -45,7 +45,7 @@ module IF0_IF1 (
 
             pc_buf<=0;
             pc_next_buf<=0;
-        end else if (if0_readygo&&if1_allowin) begin
+        end else if (if0_readygo&&if1_allowin&&if0_allowin) begin
             //update stage-stage reg
             // if0_if1_pc<=fetch_pc;
             // if0_if1_pc_next<=pc_next;

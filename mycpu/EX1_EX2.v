@@ -123,7 +123,7 @@ always@(posedge clk) begin
         ex1_ex2_mul_stage1_res_lh<=0;
         ex1_ex2_mul_stage1_res_ll<=0;
         ex1_ex2_mul_compensate<=0;
-    end else if(ex1_readygo&&ex2_allowin)begin
+    end else if(ex1_readygo&&ex2_allowin&&ex1_allowin)begin
         ex1_ex2_pc0<=reg_ex1_pc0;
         ex1_ex2_pc1<=reg_ex1_pc1;
         ex1_ex2_inst0<=reg_ex1_inst0;

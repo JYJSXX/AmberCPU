@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 `include "TLB.vh"
 `include "csr.vh"
 module TLB(
@@ -376,13 +377,13 @@ generate
         assign TLB_I_D[i]      =   {TLB_I_HIT[i]} & (TLB_I_ODD[i] ? rd_TLB_D_2_reg[i] : rd_TLB_D_1_reg[i]);
         assign TLB_I_MAT[i]    =   {TLB_I_HIT[i]} & (TLB_I_ODD[i] ? rd_TLB_MAT_2_reg[i][0] : rd_TLB_MAT_1_reg[i][0]);
         assign TLB_I_PLV[i]    =   {TLB_I_HIT[i]} & (TLB_I_ODD[i] ? rd_TLB_PLV_2_reg[i][0] : rd_TLB_PLV_1_reg[i][0]);
-        assign TLB_I_PPN[i]    =   {(`TLB_PPN_LEN - 1){TLB_I_HIT[i] & TLB_D_V[i]}} & (TLB_I_ODD[i] ? rd_TLB_PPN_2_reg[i] : rd_TLB_PPN_1_reg[i]);
+        assign TLB_I_PPN[i]    =   {(`TLB_PPN_LEN){TLB_I_HIT[i] & TLB_D_V[i]}} & (TLB_I_ODD[i] ? rd_TLB_PPN_2_reg[i] : rd_TLB_PPN_1_reg[i]);
 
         assign TLB_D_V[i]      =   {TLB_D_HIT[i]} & (TLB_D_ODD[i] ? rd_TLB_V_2_reg[i] : rd_TLB_V_1_reg[i]);
         assign TLB_D_D[i]      =   {TLB_D_HIT[i]} & (TLB_D_ODD[i] ? rd_TLB_D_2_reg[i] : rd_TLB_D_1_reg[i]);
         assign TLB_D_MAT[i]    =   {TLB_D_HIT[i]} & (TLB_D_ODD[i] ? rd_TLB_MAT_2_reg[i][0] : rd_TLB_MAT_1_reg[i][0]);
         assign TLB_D_PLV[i]    =   {TLB_D_HIT[i]} & (TLB_D_ODD[i] ? rd_TLB_PLV_2_reg[i][0] : rd_TLB_PLV_1_reg[i][0]);
-        assign TLB_D_PPN[i]    =   {(`TLB_PPN_LEN - 1){TLB_D_HIT[i] & TLB_D_V[i]}} & (TLB_D_ODD[i] ? rd_TLB_PPN_2_reg[i] : rd_TLB_PPN_1_reg[i]);
+        assign TLB_D_PPN[i]    =   {(`TLB_PPN_LEN){TLB_D_HIT[i] & TLB_D_V[i]}} & (TLB_D_ODD[i] ? rd_TLB_PPN_2_reg[i] : rd_TLB_PPN_1_reg[i]);
     end
 endgenerate
 
@@ -415,6 +416,8 @@ generate
         end
     end
 endgenerate
+
+//reg2
 reg [`TLB_NUM - 1:0]    TLB_I_V_TRANS_reg = 0;
 reg [`TLB_NUM - 1:0]    TLB_I_D_TRANS_reg = 0;
 reg [`TLB_NUM - 1:0]    TLB_I_MAT_TRANS_reg = 0;
@@ -559,8 +562,8 @@ wire [0:0] TLB_D_PPN_TRANS_FINAL [`TLB_PPN_LEN - 1:0];
 
 generate 
     for(i = 0; i < `TLB_PPN_LEN; i = i + 1)begin
-        assign TLB_I_PPN_TRANS_FINAL[i] = |TLB_I_PPN_TRANS[i];
-        assign TLB_D_PPN_TRANS_FINAL[i] = |TLB_D_PPN_TRANS[i];
+        assign TLB_I_PPN_TRANS_FINAL[i] = |TLB_I_PPN_TRANS_reg[i];
+        assign TLB_D_PPN_TRANS_FINAL[i] = |TLB_D_PPN_TRANS_reg[i];
     end
 endgenerate
 
@@ -883,6 +886,7 @@ always @(posedge clk or negedge rstn)begin
                     if ((rd_TLB_G[j] | (rd_TLB_ASID[j] != TLBINVLD_ASID)) & (rd_TLB_VPPN[j] == TLBINVLD_VA)) tlb_cpr[j][`TLB_E] <= 0;
                 end
             end
+            default: ;
         endcase
     end
 end
