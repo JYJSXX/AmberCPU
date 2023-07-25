@@ -225,8 +225,9 @@ module IF1_FIFO(
             //update stage-stage reg
             if1_fifo_pc     <=  pc_out;
             if1_fifo_pc_next<=  icache_pc_next;
-            if1_fifo_inst0  <=  pc_out[2]? `INST_NOP:icache_inst0[31:0];
-            if1_fifo_inst1  <=  priv_flag[0] ? `INST_NOP:icache_inst1[31:0];
+            if1_fifo_inst0  <=  pc_out[2]? icache_inst1[31:0]:icache_inst0[31:0];
+            // if1_fifo_inst1  <=  priv_flag[0] ? `INST_NOP:icache_inst1[31:0];//TODO
+            if1_fifo_inst1  <=  pc_out[2]? `INST_NOP:icache_inst1[31:0];
             // if1_fifo_inst0  <=  icache_inst0[31:0];
             // if1_fifo_inst1  <=  icache_inst1[31:0];
 

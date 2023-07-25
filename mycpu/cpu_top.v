@@ -102,7 +102,7 @@ module core_top(
     assign {arlock, arcache, arprot, awlock, awcache, awprot} = 0;
     assign {awid, wid} = 8'hff;
     wire clk;
-    assign clk=aclk; //TODO:idle的时钟没写，暂时用clk代替
+    //assign clk=aclk; //TODO:idle的时钟没写，暂时用clk代替
 
     wire [31:0] debug0_wb_inst;
     wire debug0_valid;
@@ -111,6 +111,16 @@ module core_top(
 
     wire i_idle;
     wire d_idle;
+    wire block_clock;
+    wire idle_over;
+idle_clk idle_clk1
+(
+    .aclk(aclk),
+    .aresetn(aresetn),
+    . clk(clk),
+    .block_clock(block_clock),
+    .idle_over(idle_over)
+);
 
     /*
     TODO:
@@ -474,7 +484,7 @@ module core_top(
     wire  [4:0] id_rk1;
 
     id_stage u_id_stage(
-        .aclk             ( aclk             ),
+        .aclk             ( clk             ),
         .aresetn          ( aresetn          ),
         .inst0            ( fifo_id_inst0            ),
         .inst1            ( fifo_id_inst1            ),
@@ -537,7 +547,7 @@ module core_top(
     wire [4:0]  iq_rk1 ;
     
     ID_REG u_ID_REG(
-        .aclk                 ( aclk                    ),
+        .aclk                 ( clk                    ),
         .aresetn              ( aresetn                 ),
         .flush                ( flush_to_id_reg         ),
         .id_readygo           ( id_readygo              ),
@@ -836,7 +846,6 @@ module core_top(
     wire ertn_en;
     //idle
     wire block_cache;
-    wire block_clock;
     //TLB
     wire tlbsrch_ready;
     wire tlbsrch_valid;
@@ -1224,7 +1233,6 @@ module core_top(
     wire [31:0] dmw0;
     wire [31:0] dmw1;
     wire llbit;
-    wire idle_over;
     //TLB输出
     //待定
     wire PG;
@@ -1543,7 +1551,7 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
 
 
     sram_axi u_sram_axi(
-        .aclk     ( aclk     ),
+        .aclk     ( clk     ),
         .aresetn  ( aresetn  ),
         .ar_id    ( arid     ),
         .ar_addr  ( araddr   ),
