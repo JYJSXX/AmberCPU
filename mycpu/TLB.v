@@ -20,6 +20,7 @@ module TLB(
     input                               en_d,
     input       [`TLB_VPPN_LEN : 0]     VA_I,
     input       [`TLB_VPPN_LEN : 0]     VA_D,
+    input                               signed_ext,
     input       [11:0]                  TAG_OFFSET_I,
     input       [11:0]                  TAG_OFFSET_D,
     //TO CACHE
@@ -35,6 +36,7 @@ module TLB(
     output      [11:0]                  VA_TAG_OFFSET_D_OUT,
     output      [11:0]                  PA_TAG_OFFSET_I_OUT,
     output      [11:0]                  PA_TAG_OFFSET_D_OUT,
+    output                              signed_ext_out,
     output                              SOL_D_OUT,
 
     //Priv      
@@ -171,6 +173,7 @@ reg     [`TLB_VPPN_LEN : 0]     VA_D_reg                            ;
 reg     [`TLB_VPPN_LEN : 0]     VA_I_reg                            ;
 reg     [11:0]                  TAG_OFFSET_I_reg                    ;
 reg     [11:0]                  TAG_OFFSET_D_reg                    ;
+reg                             signed_ext_reg                      ;
 reg                             SOL_reg                             ;
 
 initial begin
@@ -184,6 +187,7 @@ initial begin
     VA_D_reg = 0;
     TAG_OFFSET_I_reg = 0;
     TAG_OFFSET_D_reg = 0;
+    signed_ext_reg = 0;
     SOL_reg = 0;
     for (j = 0; j < `TLB_NUM; j = j + 1)begin
         TLB_I_HIT_4K_OUT[j] = 0;
@@ -220,6 +224,7 @@ always @(posedge clk or negedge rstn) begin
         VA_D_reg <= 0;
         TAG_OFFSET_I_reg <= 0;
         TAG_OFFSET_D_reg <= 0;
+        signed_ext_reg <= 0;
         SOL_reg <= 0;
         for(j = 0; j < `TLB_NUM; j = j + 1)begin
             TLB_PS_EQUAL_4K[j]  <= 0;
@@ -254,6 +259,7 @@ always @(posedge clk or negedge rstn) begin
         VA_D_reg <= 0;
         TAG_OFFSET_I_reg <= 0;
         TAG_OFFSET_D_reg <= 0;
+        signed_ext_reg <= 0;
         SOL_reg <= 0;
         for(j = 0; j < `TLB_NUM; j = j + 1)begin
             TLB_PS_EQUAL_4K[j]  <= 0;
@@ -310,6 +316,7 @@ always @(posedge clk or negedge rstn) begin
                 VA_D_reg <= VA_D;
                 en_d_reg <= en_d;
                 TAG_OFFSET_D_reg <= TAG_OFFSET_D;
+                signed_ext_reg <= signed_ext;
                 SOL_reg <= store_or_load;
             end
             else begin
@@ -320,6 +327,7 @@ always @(posedge clk or negedge rstn) begin
                 VA_D_reg <= VA_D_reg;
                 en_d_reg <= en_d_reg;
                 TAG_OFFSET_D_reg <= TAG_OFFSET_D_reg;
+                signed_ext_reg <= signed_ext_reg;
                 SOL_reg <= SOL_reg;
             end
             TLB_PS_EQUAL_4K[j]  <= (rd_TLB_PS[j] == 12);
@@ -438,6 +446,7 @@ reg                     en_i_reg2 = 0;
 reg                     en_d_reg2 = 0;
 reg [11:0]              TAG_OFFSET_I_reg2 = 0;
 reg [11:0]              TAG_OFFSET_D_reg2 = 0;
+reg                     signed_ext_reg2 = 0;
 reg                     SOL_reg2 = 0;
 
 assign en_VA_I_OUT = en_i_reg2;
@@ -446,6 +455,7 @@ assign VA_I_OUT = VA_I_reg2;
 assign VA_D_OUT = VA_D_reg2;
 assign VA_TAG_OFFSET_I_OUT = TAG_OFFSET_I_reg2;
 assign VA_TAG_OFFSET_D_OUT = TAG_OFFSET_D_reg2;
+assign signed_ext_out = signed_ext_reg2;
 
 initial begin
     for(j = 0; j < `TLB_PPN_LEN; j = j + 1)begin
@@ -474,6 +484,7 @@ always @(posedge clk or negedge rstn)begin
         en_d_reg2 <= 0;
         TAG_OFFSET_I_reg2 <= 0;
         TAG_OFFSET_D_reg2 <= 0;
+        signed_ext_reg2 <= 0;
         SOL_reg2 <= 0;
         for(j = 0; j < `TLB_PPN_LEN; j = j + 1)begin
             TLB_I_PPN_TRANS_reg[j] <= 0;
@@ -499,6 +510,7 @@ always @(posedge clk or negedge rstn)begin
         en_d_reg2 <= 0;
         TAG_OFFSET_I_reg2 <= 0;
         TAG_OFFSET_D_reg2 <= 0;
+        signed_ext_reg2 <= 0;
         SOL_reg2 <= 0;
         for(j = 0; j < `TLB_PPN_LEN; j = j + 1)begin
             TLB_I_PPN_TRANS_reg[j] <= 0;
@@ -532,6 +544,7 @@ always @(posedge clk or negedge rstn)begin
             VA_D_reg2 <= VA_D_reg;
             en_d_reg2 <= en_d_reg;
             TAG_OFFSET_D_reg2 <= TAG_OFFSET_D_reg;
+            signed_ext_reg2 <= signed_ext_reg;
             SOL_reg2 <= SOL_reg;
         end
         else begin
@@ -542,6 +555,7 @@ always @(posedge clk or negedge rstn)begin
             VA_D_reg2 <= VA_D_reg2;
             en_d_reg2 <= en_d_reg2;
             TAG_OFFSET_D_reg2 <= TAG_OFFSET_D_reg2;
+            signed_ext_reg2 <= signed_ext_reg2;
             SOL_reg2 <= SOL_reg2;
         end
         // CSR_PG_reg2 <= CSR_PG_reg;
@@ -560,7 +574,7 @@ end
 wire [0:0] TLB_I_PPN_TRANS_FINAL [`TLB_PPN_LEN - 1:0];
 wire [0:0] TLB_D_PPN_TRANS_FINAL [`TLB_PPN_LEN - 1:0];
 
-generate 
+generate
     for(i = 0; i < `TLB_PPN_LEN; i = i + 1)begin
         assign TLB_I_PPN_TRANS_FINAL[i] = |TLB_I_PPN_TRANS_reg[i];
         assign TLB_D_PPN_TRANS_FINAL[i] = |TLB_D_PPN_TRANS_reg[i];
