@@ -1383,7 +1383,7 @@ module core_top(
     wire [6:0] tlb_exception_code_i, tlb_exception_code_d; //tlb例外码
 
     wire [31:0] icache_raddr, dcache_addr;
-    wire SOL_D_OUT;
+    wire signed_ext, SOL_D_OUT;
     
     icache#(
         .INDEX_WIDTH       ( 6 ),
@@ -1438,7 +1438,7 @@ module core_top(
         .wstrb                             ( write_type                        ),   
         .op                                ( SOL_D_OUT                         ),
         .uncache                           ( !is_cached_D                      ),  
-        .signed_ext                        ( reg_ex_uop0[`UOP_SIGN]            ),
+        .signed_ext                        ( signed_ext                        ),
         .idle                              ( d_idle                            ),
         .flush                             ( flush_to_dcache                   ),
         .d_rvalid                          ( d_rvalid                          ),
@@ -1494,6 +1494,8 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .en_d           ( reg_ex_uop0[`INS_MEM]        ),
         .VA_I           ( fetch_pc[31:12]   ),
         .VA_D           ( addr_dcache[31:12]           ),
+        .signed_ext     (reg_ex_uop0[`UOP_SIGN] ),
+        .signed_ext_out ( signed_ext    ),
         .TAG_OFFSET_I   ( fetch_pc[11:0] ),
         .TAG_OFFSET_D   (addr_dcache[11:0]),
         .PA_I           ( PA_I[31:12]           ),
