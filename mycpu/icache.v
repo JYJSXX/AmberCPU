@@ -270,6 +270,27 @@ module icache #(
       .ibar     (ibar),
       .dout     (tag_rdata[1])
     );
+
+    /* victim cache */
+    wire victim_hit;
+    wire [511:0] victim_data;
+    wire victim_sel;
+    assign victim_sel = lru_sel[0] ? 0 : 1;
+    wire victim_we;
+    assign victim_we = missbuf_we && valid[victim_sel];
+
+    victim_cache #(
+        .CAPACITY(8)
+    ) victim_cache (
+        .clk        (clk),
+        .rstn       (rstn),
+        .r_tag      ({paddr_buf[31:12],req_buf[11:6]}),
+        .victim_hit (victim_hit),
+        .data_out   (victim_data),
+        .w_tag      ({tag_rdata[victim_sel],req_buf[11:6]}),
+        .we         (victim_we), // missbuf_we && valid[victim_sel] && victim_hit
+        .data_in    (mem_rdata[victim_sel])
+    );
     
     /* settings of miss request */
     //assign i_rsize  = 3'h2;                                                         // 2 ^ 2 = 4 bytes per beat
@@ -280,10 +301,10 @@ module icache #(
     assign hit[0]       = valid[0] && (tag_rdata[0][TAG_WIDTH-1:0] == tag); // hit in way 0
     assign hit[1]       = valid[1] && (tag_rdata[1][TAG_WIDTH-1:0] == tag); // hit in way 1
     assign hit_way      = hit[0] ? 0 : 1;           
-    assign cache_hit    = |hit;
+    assign cache_hit    = |hit || victim_hit;
     // only when cache_hit, hit_way is valid
     wire hit_way_valid;
-    assign hit_way_valid = cache_hit ? hit_way : 0;
+    assign hit_way_valid = cache_hit && ~victim_hit ? hit_way : 0;
     
 
     /* read control */
@@ -291,7 +312,7 @@ module icache #(
     // 双发射因此一次读取64位
     wire [BIT_NUM-1:0] o_rdata;
     reg [63:0]        rdata_cache;
-    assign o_rdata = data_from_mem ? mem_rdata[hit_way_valid] : ret_buf; 
+    assign o_rdata = victim_hit ? victim_data : data_from_mem ? mem_rdata[hit_way_valid] : ret_buf; 
     always @(*) begin
         case(req_buf[5:3])
         3'd0: rdata_cache = o_rdata[63:0];
