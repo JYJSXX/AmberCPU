@@ -113,7 +113,8 @@ module FIFO(
         .DEPTH      (   BUF_DEPTH  )  
     )fetch_buf(
         .clk                        ( clk      ),
-        .rstn                       ( rstn&!flush     ),
+        .rstn                       ( rstn    ),
+        .flush                      ( flush         ),
         .pop_en                     ( pop_en  ),
         .din                        ( inst_din  ),
         .write_en                   ( write_en ),
@@ -128,6 +129,7 @@ module FIFO(
     )co_pcbdvbuf(
         .clk        ( clk        ),
         .rstn       ( rstn&!flush       ),
+        .flush                      ( flush         ),
         .pop_en     ( pop_en     ),
         .din        ( pcbdv_din        ),
         .write_en   ( write_en   ),
@@ -142,6 +144,7 @@ module FIFO(
     )co_statbuf(
         .clk        ( clk        ),
         .rstn       ( rstn &!flush      ),
+        .flush                      ( flush         ),
         .pop_en     ( pop_en     ),
         .din        ( stat_din       ),
         .write_en   ( write_en   ),

@@ -4,6 +4,7 @@ module FIFO_generator
     parameter DEPTH = 16)
   (input wire clk,
    input wire rstn,
+   input wire flush,
    input wire pop_en,
    input wire [DATA_WIDTH-1:0] din,
    input wire write_en,
@@ -27,7 +28,16 @@ module FIFO_generator
         mem[i] <= 0;
       end
       // readDataReg <= 0;
-    end else begin
+    end else if (flush) begin
+      readPtr <= 0;
+      writePtr <= 0;
+      count <= 0;
+      for (i = 0; i < DEPTH; i = i + 1) begin
+        mem[i] <= 0;
+      end
+      // readDataReg <= 0;
+    end 
+    else begin
       // 读操作
       if (pop_en && !empty) begin
         // readDataReg <= mem[readPtr];

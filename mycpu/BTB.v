@@ -71,7 +71,7 @@ module BTB #(
     assign pred_valid=MASK[INDEX];
     assign pred_pc=pred_valid?_pred_pc:fetch_pc+8;
     assign hit = !predict_dir_fail;
-    assign flag=BPOS[{7'b0,{(inst_bpos&inst_btype[0])}}<<FACT_INDEX];
+    assign flag=(inst_bpos&inst_btype[0])&BPOS[FACT_INDEX];
     assign BPOS_MISS=BPOS!=0&!(flag);
     assign pred_taken=flag|taken;
     
