@@ -1431,7 +1431,7 @@ module core_top(
         .wready                            ( wready_dcache                     ),
         .wdata                             ( w_data_dcache                     ),
         .wstrb                             ( write_type                        ),   
-        .op                                ( op_dcache                         ),
+        .op                                ( SOL_D_OUT                         ),
         .uncache                           ( !is_cached_D                      ),  
         .signed_ext                        ( reg_ex_uop0[`UOP_SIGN]            ),
         .idle                              ( d_idle                            ),
