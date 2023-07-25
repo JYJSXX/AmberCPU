@@ -123,7 +123,7 @@ module IQ (
             iq_is_priviledged_0=id_reg_is_priviledged_1;
             iq_is_priviledged_1=0;
             iq_uop0=id_reg_uop1;
-            iq_uop1=59'h0000_0000_0000_0000_0000;
+            iq_uop1='h0000_0000_0000_0000_0000;
             iq_imm0=id_reg_imm1;
             iq_imm1=0;
             iq_rd0 = id_reg_rd1;
@@ -169,7 +169,7 @@ module IQ (
                 iq_is_syscall_1=1'b0;
                 iq_is_break_1=1'b0;
                 iq_is_priviledged_1=0;
-                iq_uop1=59'h0000_0000_0000_0000_0000;
+                iq_uop1='h0000_0000_0000_0000_0000;
                 iq_imm1=0;
                 iq_rd1 = 0;
                 iq_rj1 = 0;

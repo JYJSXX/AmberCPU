@@ -315,8 +315,8 @@ module csr
     reg [`TICLR_CLR] tlclr_clr; 
     assign csr_ticlr[`TICLR_CLR] = 0;
     assign csr_ticlr[`TICLR_ZERO] = 0;
-assign cpu_interrupt=crmd_ie&&(ecfg_lie&csr_estat)!=0; //全局中断允许且（局部中断使能位与例外状态位）不为0
-assign idle_over= csr_estat[12:0]; //各种中断，无论软件硬件，无论是否使能，只有有例外就结束idle(马哥这样实现的)
+assign cpu_interrupt=crmd_ie&&(ecfg_lie&csr_estat[12:0])!=0; //全局中断允许且（局部中断使能位与例外状态位）不为0
+assign idle_over= |csr_estat[12:0]; //各种中断，无论软件硬件，无论是否使能，只有有例外就结束idle(马哥这样实现的)
 wire pg_next;
 wire da_next;
 assign pg_next = wen?wdata[4]:crmd_pg;
@@ -489,19 +489,19 @@ always @(posedge clk)
         end else if(software_en&&addr==`CSR_TLBRENTRY) begin
             if(wen) tlbrentry_pa[`TLBRENTRY_PA]<=wdata[`TLBRENTRY_PA];
         end
-    wire vppn_in;
-    wire ps_in;
+    wire [18:0] vppn_in;
+    wire [5:0] ps_in;
     wire g_in;
-    wire asid_in;
+    wire [9:0] asid_in;
     wire e_in;
-    wire ppn0_in;
-    wire plv0_in;
-    wire mat0_in;
+    wire [19:0] ppn0_in;
+    wire [1:0] plv0_in;
+    wire [1:0] mat0_in;
     wire d0_in;
     wire v0_in;
-    wire ppn1_in;
-    wire plv1_in;
-    wire mat1_in;
+    wire [19:0] ppn1_in;
+    wire [1:0] plv1_in;
+    wire [1:0] mat1_in;
     wire d1_in;
     wire v1_in;
 
