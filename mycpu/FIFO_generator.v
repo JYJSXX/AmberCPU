@@ -1,5 +1,5 @@
 `include "define.vh"
-module fifo_generator
+module FIFO_generator
   #(parameter DATA_WIDTH = 8,
     parameter DEPTH = 16)
   (input wire clk,
@@ -11,7 +11,7 @@ module fifo_generator
    output wire full,
    output wire empty);
 
-  reg [DATA_WIDTH-1:0] mem [0:DEPTH-1];
+  reg [DATA_WIDTH-1:0] mem [DEPTH-1:0];
   // reg [DATA_WIDTH-1:0] readDataReg;
   reg [DEPTH-1:0] readPtr;
   reg [DEPTH-1:0] writePtr;

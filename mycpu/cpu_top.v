@@ -1391,7 +1391,7 @@ module core_top(
         .raddr             ( icache_raddr      ),
         .p_addr            ( PA_I              ),
         .rdata             ( icache_rdata      ),
-        .pc_out            ( if1_pc            ),
+        .pc_out            ( if0_if1_pc        ),
         .idle              ( i_idle            ),
         .i_rvalid          ( i_rvalid          ),
         .i_rready          ( i_rready          ), 

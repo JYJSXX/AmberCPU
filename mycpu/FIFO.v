@@ -108,12 +108,12 @@ module FIFO(
     end 
 
 
-    fifo_generator #(
+    FIFO_generator #(
         .DATA_WIDTH (   64 ),
         .DEPTH      (   BUF_DEPTH  )  
     )fetch_buf(
         .clk                        ( clk      ),
-        .rstn                       ( rstn|flush     ),
+        .rstn                       ( rstn&!flush     ),
         .pop_en                     ( pop_en  ),
         .din                        ( inst_din  ),
         .write_en                   ( write_en ),
@@ -122,12 +122,12 @@ module FIFO(
         .empty                      ( fetch_buf_empty    )
     );
 
-    fifo_generator#(
+    FIFO_generator#(
         .DATA_WIDTH ( 96 ),
         .DEPTH      ( BUF_DEPTH ) 
     )co_pcbdvbuf(
         .clk        ( clk        ),
-        .rstn       ( rstn|flush       ),
+        .rstn       ( rstn&!flush       ),
         .pop_en     ( pop_en     ),
         .din        ( pcbdv_din        ),
         .write_en   ( write_en   ),
@@ -136,12 +136,12 @@ module FIFO(
         .empty      ( pcbdv_empty      )
     );
 
-    fifo_generator#(
+    FIFO_generator#(
         .DATA_WIDTH ( 45 ),
         .DEPTH      ( BUF_DEPTH )
     )co_statbuf(
         .clk        ( clk        ),
-        .rstn       ( rstn |flush      ),
+        .rstn       ( rstn &!flush      ),
         .pop_en     ( pop_en     ),
         .din        ( stat_din       ),
         .write_en   ( write_en   ),
