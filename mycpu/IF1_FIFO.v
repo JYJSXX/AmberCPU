@@ -149,11 +149,12 @@ module IF1_FIFO(
         if(!idle)begin
             if1_fifo_valid<=0;
         end else begin
-            if(!if1_fifo_valid)begin
-                if1_fifo_valid<=icache_rready;
-            end else if(if1_readygo&&if1_allowin&&fifo_allowin) begin
-                if1_fifo_valid<=icache_rready;
-            end
+            // if(!if1_fifo_valid)begin
+            //     if1_fifo_valid<=icache_rready;
+            // end else if(if1_readygo&&if1_allowin&&fifo_allowin) begin
+            //     if1_fifo_valid<=icache_rready;
+            // end
+            if1_fifo_valid<=icache_rready;
         end
     end
     always @(*) begin
