@@ -55,7 +55,7 @@ module dcache #(
     input             [6:0] forward_exception,
     input             [6:0] tlb_exception,
     output           [31:0] badv,
-    output                  d_exception_flag,
+    //output                  d_exception_flag,
 
     // cacop
     input             [1:0] cacop_code,
@@ -215,7 +215,7 @@ module dcache #(
     assign exception_temp  = exception_flag ? forward_exception : ({7{!((cacop_en_buf && hit_invalid) || (op_buf && is_atom_buf && !llbit_buf))}} 
                             & (tlb_exception == `EXP_ADEM ? tlb_exception : (exception_cache == 0 ? tlb_exception : exception_cache)));
     assign exception_obuf = {7{((rready || wready) || cacop_en_buf)}} & (exception_sel ? exception_buf : exception_temp);
-    assign d_exception_flag = exception_flag ? 1 : exception_obuf != 0;
+    //assign d_exception_flag = exception_flag ? 1 : exception_obuf != 0;
     reg  [6:0] exception_old;
     wire [6:0] exception_new;
     assign exception_new = exception_obuf;
@@ -329,9 +329,23 @@ module dcache #(
 
     /* 2-way tagv memory */
     wire valid[1:0];
+    reg  valid_buf[1:0];
     wire [TAG_WIDTH:0] tag_in;
     assign valid[0] = tag_rdata[0][TAG_WIDTH];
     assign valid[1] = tag_rdata[1][TAG_WIDTH];
+    always @(*)begin
+        if(!rstn) begin
+            valid_buf[0] = 0;
+            valid_buf[1] = 0;
+        end
+        else if(req_buf_we) begin
+            valid_buf[0] = valid[0];
+            valid_buf[1] = valid[1];
+        end
+        else
+            valid_buf[0] = valid_buf[0];
+            valid_buf[1] = valid_buf[1];
+    end
     // the tag ready to be written to tagv table
     assign w_tag = paddr_buf[31:32-TAG_WIDTH];
     assign tag_in = tagv_clear ? 0 : {1'b1, w_tag};
@@ -368,7 +382,7 @@ module dcache #(
     wire victim_sel;
     assign victim_sel = lru_sel[0] ? 0 : 1;
     wire victim_we;
-    assign victim_we = mbuf_we && valid[victim_sel];
+    assign victim_we = mbuf_we && valid_buf[victim_sel];
 
     victim_cache #(
         .CAPACITY(8)

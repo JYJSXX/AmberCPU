@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module BRAM_tagv #(
     parameter DATA_WIDTH = 21,
               ADDR_WIDTH = 6
