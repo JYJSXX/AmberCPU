@@ -208,6 +208,7 @@ module core_top(
 
     wire [31:0]        if0_if1_pc;
     wire [31:0]        if0_if1_pc_next;
+    wire [31:0]        pc_out;
     // wire               if0_if1_tlb_rvalid;
 
     IF0_IF1 u_IF0_IF1(
@@ -1392,7 +1393,7 @@ module core_top(
         .raddr             ( icache_raddr      ),
         .p_addr            ( PA_I              ),
         .rdata             ( icache_rdata      ),
-        .pc_out            ( if0_if1_pc        ),
+        .pc_out            ( pc_out        ),
         .idle              ( i_idle            ),
         .i_rvalid          ( i_rvalid          ),
         .i_rready          ( i_rready          ), 

@@ -58,8 +58,10 @@ module BTB #(
     wire [31:0] _pred_pc;
     wire       hit;
     wire [PC_INDEX_WIDTH-1:0]       INDEX;
-    wire [PC_INDEX_WIDTH-1:0]  FACT_INDEX;
-    wire                       BPOS_MISS;
+    wire [PC_INDEX_WIDTH-1:0]       FACT_INDEX;
+    wire                            BPOS_MISS;
+    wire                            pred_valid;
+    wire                            flag;
 
 
 
@@ -69,8 +71,8 @@ module BTB #(
     assign pred_valid=MASK[INDEX];
     assign pred_pc=pred_valid?_pred_pc:fetch_pc+8;
     assign hit = !predict_dir_fail;
-    assign flag=BPOS[(inst_bpos&inst_btype[0])<<FACT_INDEX];
-    assign BPOS_MISS=BPOS&&!(flag);
+    assign flag=BPOS[{7'b0,{(inst_bpos&inst_btype[0])}}<<FACT_INDEX];
+    assign BPOS_MISS=BPOS!=0&!(flag);
     assign pred_taken=flag|taken;
     
     // TODO unimplemented
@@ -132,7 +134,7 @@ module BTB #(
             BPOS<=0;
         end else begin
             if(BPOS_MISS)BPOS<=0;
-            else BPOS<=BPOS|((inst_bpos&inst_btype[0])<<FACT_INDEX);
+            else BPOS<=BPOS|(({128'b0,inst_bpos}&{128'b0,inst_btype[0]})<<FACT_INDEX);
         end
     end
     //pred_taken todo
