@@ -1,6 +1,7 @@
 `include "define.vh"
 module EX_BRANCH(
     input [31:0] pc,
+    input [31:0] inst,
     input predict_to_branch,
     input [31:0] pc_predict, //预测器输出，预测器认为不跳转就
     input [31:0] imm,
@@ -27,7 +28,7 @@ parameter  BGEU = 'b1011;
     wire ready_to_branch;
 
     wire [31:0] pc_real_branch;
-    assign pc_real_branch = pc+{imm[29:0],2'b00};
+    assign pc_real_branch = inst[29:26] == 'b0011 ? {imm[29:0],2'b00}:pc+{imm[29:0],2'b00};
 
     wire br_sr1_eq_sr2;
     wire br_sr1_lt_sr2_unsign;

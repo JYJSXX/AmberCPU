@@ -317,6 +317,7 @@ EX_ALU ex_alu2(
 
 EX_BRANCH ex_branch(
     .pc(pc0),
+    .inst(inst0),
     .predict_to_branch(predict_to_branch),
     .pc_predict(pc0_predict),
     .imm(imm0),
