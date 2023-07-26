@@ -4,7 +4,7 @@ taken/not taken 由两种2bit预测器通过计分来选择，预留了一种策
 跳转PC如果有历史记录就提供pred_pc，否则就返回not taken,这时的pred_pc=fetch_pc+8
 预测表中的内容直到fact_tpc来更新
 */
-
+`include "config.vh"
 
 module BTB #(
     parameter DEPTH=16
@@ -53,6 +53,8 @@ module BTB #(
     reg [1<<(PC_INDEX_WIDTH-1):0]   BPOS;
     reg [1:0]  SCORE=0;
     reg taken=0;
+
+
 
     wire we;
     wire [31:0] _pred_pc;
