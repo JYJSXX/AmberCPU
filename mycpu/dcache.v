@@ -160,6 +160,8 @@ module dcache #(
     wire                        ibar_complete;
     reg                         dirty_way;
     reg                         hit2_flag;
+    wire                        ibar_state;
+    assign ibar_state = (state==IBAR) && (state == IBAR_EXTRA) && (state == IBAR_WAIT);
     wire [5:0] dirty_index;
     wire way0, way1;
 
@@ -310,7 +312,7 @@ module dcache #(
     `endif
 
     /* 2-way data memory */
-    assign r_index = (way0 || way1) ? dirty_index :addr[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
+    assign r_index = ((way0 || way1)&&ibar_state) ? dirty_index :addr[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
     assign w_index = address[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
 
     BRAM_bytewrite #(
