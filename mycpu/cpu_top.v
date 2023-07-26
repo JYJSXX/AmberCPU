@@ -801,9 +801,9 @@ idle_clk idle_clk1
     wire cpu_d_rvalid;
     wire cpu_d_wvalid;
     wire op_dcache; //0读1写
-    wire [3:0] write_type; //写入类型;0b0001为byte;0b0011为half;0b1111为word
+    wire [3:0] write_type_tlb, write_type_dcache; //写入类型;0b0001为byte;0b0011为half;0b1111为word
     wire [31:0] addr_dcache;
-    wire [31:0] w_data_dcache;
+    wire [31:0] w_data_dcache, w_data_tlb;
     wire  is_atom_dcache;
    // output uncache, 由csr负责
     
@@ -940,9 +940,9 @@ idle_clk idle_clk1
         .rvalid_dcache        ( cpu_d_rvalid             ),
         .wvalid_dcache        ( cpu_d_wvalid       ),
         .op_dcache            ( op_dcache            ),
-        .write_type_dcache    ( write_type              ),
+        .write_type_dcache    ( write_type_tlb    ),
         .addr_dcache          ( addr_dcache          ),
-        .w_data_dcache        ( w_data_dcache        ),
+        .w_data_dcache        ( w_data_tlb           ),
         .is_atom_dcache       ( is_atom_dcache       ),
         .mul_stage1_res_hh    ( mul_stage1_res_hh    ),
         .mul_stage1_res_hl    ( mul_stage1_res_hl    ),
@@ -1443,7 +1443,7 @@ idle_clk idle_clk1
         .wvalid                            ( dcache_valid & SOL_D_OUT          ),
         .wready                            ( wready_dcache                     ),
         .wdata                             ( w_data_dcache                     ),
-        .wstrb                             ( write_type                        ),   
+        .wstrb                             ( write_type_dcache                    ),   
         .op                                ( SOL_D_OUT                         ),
         .uncache                           ( !is_cached_D                      ),  
         .signed_ext                        ( signed_ext                        ),
@@ -1506,6 +1506,10 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .signed_ext_out ( signed_ext    ),
         .atom           ( is_atom_dcache),
         .atom_out       ( is_atom_TLB   ),
+        .WDATA_D           ( w_data_tlb),
+        .WDATA_D_OUT       ( w_data_dcache),
+        .WSTRB_D           ( write_type_tlb),
+        .WSTRB_D_OUT       ( write_type_dcache),
         .TAG_OFFSET_I   ( fetch_pc[11:0] ),
         .TAG_OFFSET_D   (addr_dcache[11:0]),
         .PA_I           ( PA_I[31:12]           ),
