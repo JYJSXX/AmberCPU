@@ -1,0 +1,76 @@
+[*]
+[*] GTKWave Analyzer v3.3.114 (w)1999-2023 BSI
+[*] Wed Jul 26 08:45:13 2023
+[*]
+[dumpfile] "/home/yuri/LoongArc/chiplab/sims/verilator/run_prog/log/func/func_lab3_log/simu_trace.fst"
+[dumpfile_mtime] "Wed Jul 26 08:32:54 2023"
+[dumpfile_size] 1349114
+[savefile] "/home/yuri/Desktop/func3.gtkw"
+[timestart] 14544
+[size] 1850 1006
+[pos] -38 -38
+*-2.424230 14562 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] TOP.
+[treeopen] TOP.simu_top.
+[treeopen] TOP.simu_top.soc.
+[treeopen] TOP.simu_top.soc.cpu.
+[treeopen] TOP.simu_top.soc.cpu.u_FIFO.
+[treeopen] TOP.simu_top.soc.cpu.u_ID_REG.
+[treeopen] TOP.simu_top.soc.cpu.u_IF0.
+[treeopen] TOP.simu_top.soc.cpu.u_IF1_FIFO.
+[treeopen] TOP.simu_top.soc.cpu.u_REG_EX1.
+[sst_width] 372
+[signals_width] 293
+[sst_expanded] 1
+[sst_vpaned_height] 649
+@28
+TOP.simu_top.soc.cpu.DifftestInstrCommit0.clock
+@22
+TOP.simu_top.soc.cpu.DifftestInstrCommit0.pc[63:0]
+TOP.simu_top.soc.cpu.DifftestInstrCommit0.instr[31:0]
+@28
+TOP.simu_top.soc.cpu.DifftestInstrCommit0.valid
+@22
+TOP.simu_top.soc.cpu.DifftestInstrCommit1.pc[63:0]
+TOP.simu_top.soc.cpu.DifftestInstrCommit1.instr[31:0]
+@28
+TOP.simu_top.soc.cpu.DifftestInstrCommit1.valid
+TOP.simu_top.soc.cpu.u_IF0.clk
+@22
+TOP.simu_top.soc.cpu.u_IF0.fetch_pc[31:0]
+@28
+TOP.simu_top.soc.cpu.u_IF1_FIFO.critical_allowin
+TOP.simu_top.soc.cpu.u_FIFO.fetch_buf.full
+@200
+-ICACHE
+@28
+TOP.simu_top.soc.cpu.u_IF0.pc_in_stall
+TOP.simu_top.soc.cpu.u_icache.rvalid
+TOP.simu_top.soc.cpu.u_icache.rready
+@22
+[color] 1
++{TOP.simu_top.soc.cpu.u_icache.pc_out[31:0]} TOP.simu_top.soc.cpu.u_icache.pc_out[31:0]
+TOP.simu_top.soc.cpu.u_IF1_FIFO.icache_inst0[31:0]
+TOP.simu_top.soc.cpu.u_IF1_FIFO.icache_inst1[31:0]
+@28
+[color] 7
+TOP.simu_top.soc.cpu.u_IF1_FIFO.if1_fifo_valid
+TOP.simu_top.soc.cpu.u_IF1_FIFO.if1_allowin
+TOP.simu_top.soc.cpu.u_IF1_FIFO.if1_readygo
+TOP.simu_top.soc.cpu.u_FIFO.fifo_allowin
+@22
+TOP.simu_top.soc.cpu.u_IF1_FIFO.if1_fifo_pc[31:0]
+TOP.simu_top.soc.cpu.u_IF1_FIFO.if1_fifo_inst0[31:0]
+TOP.simu_top.soc.cpu.u_IF1_FIFO.if1_fifo_inst1[31:0]
+TOP.simu_top.soc.cpu.u_FIFO.fifo_pc[31:0]
+TOP.simu_top.soc.cpu.u_FIFO.fifo_pcAdd[31:0]
+TOP.simu_top.soc.cpu.u_FIFO.fifo_inst0[31:0]
+TOP.simu_top.soc.cpu.u_FIFO.fifo_inst1[31:0]
+TOP.simu_top.soc.cpu.u_ID_REG.u_IQ.iq_pc0[31:0]
+TOP.simu_top.soc.cpu.u_ID_REG.u_IQ.iq_pc1[31:0]
+TOP.simu_top.soc.cpu.u_ID_REG.u_IQ.iq_inst0[31:0]
+TOP.simu_top.soc.cpu.u_ID_REG.u_IQ.iq_inst1[31:0]
+@28
+TOP.simu_top.soc.cpu.u_ID_REG.u_IQ.mod
+[pattern_trace] 1
+[pattern_trace] 0
