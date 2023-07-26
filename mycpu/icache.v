@@ -355,6 +355,18 @@ module icache #(
         end
     end
     assign lru_sel = (store_tag || index_invalid) ? tagv_way_sel : (hit_invalid) ? hit : lru[w_index] ? 1 : 2;
+    /* miss_flush counter */
+    wire miss_flush_counter_new;
+    assign miss_flush_counter_new = missbuf_we ? (raddr != 0) : 0;
+    reg miss_flush_counter_old;
+    always @(posedge clk) begin
+        if(!rstn || flush) begin
+            miss_flush_counter_old <= 0;
+        end
+        else begin
+            miss_flush_counter_old <= miss_flush_counter_new;
+        end
+    end
 
     /* main FSM */
     localparam [2:0] 
@@ -363,7 +375,8 @@ module icache #(
         MISS    = 3'b010, 
         REFILL  = 3'b011,
         //extra
-        CACOP   = 3'b100;
+        CACOP   = 3'b100,
+        MISS_FLUSH = 3'b101;
     reg [2:0] state, next_state;
     assign idle = (state == IDLE);
     // stage 1
@@ -395,9 +408,13 @@ module icache #(
             end
             MISS: begin
                 // if(i_rready && i_rlast) next_state = REFILL;
-                //if(flush)               next_state = IDLE;
-                if(i_rready)            next_state = REFILL;
+                if(flush)               next_state = MISS_FLUSH;
+                else if(i_rready)            next_state = REFILL;
                 else                    next_state = MISS;
+            end
+            MISS_FLUSH: begin
+                if(i_rready)            next_state = LOOKUP;
+                else                    next_state = MISS_FLUSH;
             end
             REFILL: begin
                 if(ibar || flush)           next_state = IDLE;
@@ -462,6 +479,16 @@ module icache #(
         MISS: begin
             missbuf_we = 1;
             i_rvalid        = 1;
+            if(uncache_buf) begin
+                i_rlen = 8'd1;
+            end
+        end
+        MISS_FLUSH: begin
+            missbuf_we = 1;
+            i_rvalid        = 1;
+            if(miss_flush_counter_new && !miss_flush_counter_old) begin
+                req_buf_we     = 1;
+            end
             if(uncache_buf) begin
                 i_rlen = 8'd1;
             end
