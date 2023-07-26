@@ -42,7 +42,24 @@ module FIFO(
     output reg [1 :0] fifo_branch_flag
     
 );
-    localparam BUF_DEPTH = 8;
+    localparam      BUF_DEPTH = 2,
+                    LOG_BUF_DEPTH = 1;
+    /*
+            fifo_space=1:inst=3
+            fifo_space=2:inst=57
+            fifo_space=3:inst=8
+            fifo_space=4:inst=35189
+            fifo_space=5:inst=12
+            fifo_space=6,inst=14
+            fifo_space=7,inst=16
+            fifo_space=8,inst=99833
+            fifo_space=16,inst=99833
+            fifo_space=32,inst=99833
+
+            2,1:57
+            4,2 35189
+
+        */
     //if1_fifo_x->x_din->x_dout->fifo_x
     wire fetch_buf_empty;
     wire fetch_buf_full;
@@ -109,48 +126,51 @@ module FIFO(
 
 
     FIFO_generator #(
-        .DATA_WIDTH (   64 ),
-        .DEPTH      (   BUF_DEPTH  )  
+        .DATA_WIDTH         (   64 ),
+        .DEPTH              (   BUF_DEPTH  ),
+        .LOG_DEPTH          (   LOG_BUF_DEPTH)
     )fetch_buf(
-        .clk                        ( clk      ),
-        .rstn                       ( rstn    ),
-        .flush                      ( flush         ),
-        .pop_en                     ( pop_en  ),
-        .din                        ( inst_din  ),
-        .write_en                   ( write_en ),
-        .dout                       ( inst_dout ),
+        .clk                        ( clk                ),
+        .rstn                       ( rstn               ),
+        .flush                      ( flush              ),
+        .pop_en                     ( pop_en             ),
+        .din                        ( inst_din           ),
+        .write_en                   ( write_en           ),
+        .dout                       ( inst_dout          ),
         .full                       ( fetch_buf_full     ),
         .empty                      ( fetch_buf_empty    )
     );
 
     FIFO_generator#(
-        .DATA_WIDTH ( 96 ),
-        .DEPTH      ( BUF_DEPTH ) 
+        .DATA_WIDTH         (   96              ),
+        .DEPTH              (   BUF_DEPTH       ),
+        .LOG_DEPTH          (   LOG_BUF_DEPTH)
     )co_pcbdvbuf(
-        .clk        ( clk        ),
-        .rstn       ( rstn&!flush       ),
-        .flush                      ( flush         ),
-        .pop_en     ( pop_en     ),
+        .clk        ( clk              ),
+        .rstn       ( rstn      ),
+        .flush      ( flush            ),
+        .pop_en     ( pop_en           ),
         .din        ( pcbdv_din        ),
-        .write_en   ( write_en   ),
+        .write_en   ( write_en         ),
         .dout       ( pcbdv_dout       ),
         .full       ( pcbdv_full       ),
         .empty      ( pcbdv_empty      )
     );
 
     FIFO_generator#(
-        .DATA_WIDTH ( 45 ),
-        .DEPTH      ( BUF_DEPTH )
+        .DATA_WIDTH         (   45           ),
+        .DEPTH              (   BUF_DEPTH    ),
+        .LOG_DEPTH          (   LOG_BUF_DEPTH)
     )co_statbuf(
-        .clk        ( clk        ),
-        .rstn       ( rstn &!flush      ),
-        .flush                      ( flush         ),
-        .pop_en     ( pop_en     ),
-        .din        ( stat_din       ),
-        .write_en   ( write_en   ),
-        .dout       ( stat_dout      ),
-        .full       ( stat_full       ),
-        .empty      ( stat_empty      )
+        .clk        ( clk               ),
+        .rstn       ( rstn       ),
+        .flush      ( flush             ),
+        .pop_en     ( pop_en            ),
+        .din        ( stat_din          ),
+        .write_en   ( write_en          ),
+        .dout       ( stat_dout         ),
+        .full       ( stat_full         ),
+        .empty      ( stat_empty        )
     );
 
 endmodule
