@@ -203,7 +203,7 @@ module icache #(
         if(flush || !rstn) begin
             flush_valid <= 0;
         end
-        else if(req_buf_we) begin
+        else if((req_buf_we && (state != MISS_FLUSH))|| i_rready) begin
             flush_valid <= rvalid;
         end
 
