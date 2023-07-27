@@ -59,6 +59,10 @@ module FIFO(
 
             2,1:57
             4,2 35189
+            1024:10:92851
+            8:3:99833
+            32:5:99833
+            16:4:99833
 
         */
     //if1_fifo_x->x_din->x_dout->fifo_x
@@ -102,7 +106,7 @@ module FIFO(
                                         if1_fifo_icache_cookie_out[31:0]
                                     };
     assign  fifo_valid          =   !fetch_buf_empty;
-    assign  fifo_allowin        =   !fetch_buf_nearly_full&&!fetch_buf_full;
+    assign  fifo_allowin        =   !fetch_buf_full;
 
 
     always @(*) begin

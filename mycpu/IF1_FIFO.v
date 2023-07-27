@@ -71,6 +71,7 @@ module IF1_FIFO(
     wire cache_idle;
     wire pc_fetch_ok;
     wire idle;
+    wire pushable;
     // reg [31:0]     if1_fifo_inst0;
     // reg [31:0]     if1_fifo_inst1;
 
@@ -111,14 +112,13 @@ module IF1_FIFO(
                                 )&&
                                 (//icache_rready->tlb_rvalid
                                     (stat==IDLE)||(next_stat==IDLE)
-                                )
-                                &&
-                                !nearly_full;
+                                );
     assign idle         = stat==IDLE;
     assign cache_idle = icache_idle&dcache_idle;
     // assign pc_fetch_ok= if0_if1_pc==pc_after_priv;
     assign set_pc_from_PRIV = stat!=IDLE;
     assign pc_from_PRIV = pc_after_priv;
+    // assign pushable     =   
 
 
     always @(posedge clk) begin
