@@ -1,7 +1,9 @@
 `include "define.vh"
 module FIFO_generator
   #(parameter DATA_WIDTH = 8,
-    parameter DEPTH = 16)
+    parameter DEPTH = 16,
+    parameter LOG_DEPTH= 4
+  )
   (input wire clk,
    input wire rstn,
    input wire flush,
@@ -9,21 +11,23 @@ module FIFO_generator
    input wire [DATA_WIDTH-1:0] din,
    input wire write_en,
    output wire [DATA_WIDTH-1:0] dout,
+   output wire nearly_full,
    output wire full,
+   output wire nearly_empty,
    output wire empty);
 
   reg [DATA_WIDTH-1:0] mem [DEPTH-1:0];
   // reg [DATA_WIDTH-1:0] readDataReg;
-  reg [DEPTH-1:0] readPtr;
-  reg [DEPTH-1:0] writePtr;
-  reg [DEPTH-1:0] count;
+  reg [LOG_DEPTH-1:0] readPtr;
+  reg [LOG_DEPTH-1:0] writePtr;
+  reg [LOG_DEPTH:0] count;
   integer i;
 
   always @(posedge clk or negedge rstn) begin
     if (~rstn) begin
       readPtr <= 0;
       writePtr <= 0;
-      count <= 0;
+      // count <= 0;
       for (i = 0; i < DEPTH; i = i + 1) begin
         mem[i] <= 0;
       end
@@ -31,7 +35,7 @@ module FIFO_generator
     end else if (flush) begin
       readPtr <= 0;
       writePtr <= 0;
-      count <= 0;
+      // count <= 0;
       for (i = 0; i < DEPTH; i = i + 1) begin
         mem[i] <= 0;
       end
@@ -52,19 +56,37 @@ module FIFO_generator
         // count <= count + 1;
       end
 
-      if(write_en&&pop_en)begin
-        count<=count;
-      end else if(write_en&&!full)begin
-        count<=count+1;
-      end else if(pop_en&&!empty)begin
-        count<=count-1;
-      end
+      // if(write_en&&pop_en)begin
+      //   count<=count;
+      // end else if(write_en&&!full)begin
+      //   count<=count+1;
+      // end else if(pop_en&&!empty)begin
+      //   count<=count-1;
+      // end
     end
+  end
+  always @(posedge clk or negedge rstn) begin
+      if(~rstn)begin
+        count<=0;
+      end else if(flush)begin
+        count<=0;
+      end else begin
+        if(pop_en==write_en)begin
+          count<=count;
+        end else if(pop_en&&!empty)begin
+          count<=count-1;
+        end else if(write_en&&!full)begin
+          count<=count+1;
+        end
+      end
   end
 
 
   assign full = (count == DEPTH);
+  assign nearly_full=(count==DEPTH-1);
   assign empty = (count == 0);
+  assign nearly_empty=(count==1);
   assign dout = empty?`INST_NOP:mem[readPtr];
+  // assign dout = empty?0:mem[readPtr];
 
 endmodule

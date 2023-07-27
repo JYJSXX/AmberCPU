@@ -12,7 +12,7 @@ module BTB #(
     input               rstn,
     input               clk,
     //00 not branch;01 unconditinonal branch
-    //10 PC relative 11 indirect
+    //10 PC relative 11 indirect(uncondition too)
     //from predecoder
     input   [1:0]       inst_btype,
     input               inst_bpos,
@@ -70,10 +70,10 @@ module BTB #(
     assign we = fact_taken&&predict_add_fail;
     assign INDEX=fetch_pc[PC_INDEX_WIDTH+2:3];
     assign FACT_INDEX=fact_pc[PC_INDEX_WIDTH+2:3];
-    assign pred_valid=MASK[INDEX];
+    assign pred_valid=MASK[INDEX];//MASK controls BTB valid
     assign pred_pc=pred_valid?_pred_pc:fetch_pc+8;
     assign hit = !predict_dir_fail;
-    assign flag=(inst_bpos&inst_btype[0])&BPOS[FACT_INDEX];
+    assign flag=(inst_bpos&inst_btype[0])&BPOS[FACT_INDEX];//unconditional hit means ASID change?
     assign BPOS_MISS=BPOS!=0&!(flag);
     assign pred_taken=flag|taken;
     
@@ -81,9 +81,33 @@ module BTB #(
     wire [31:0]  pred_pc_hang;
     assign pred_pc_hang=0;
 
+    // `ifdef BTB_LOG
+    //     reg [31:0] suc_cnt=0;
+    //     reg [31:0] tot_cnt=0;
+    //     reg [31:0] fal_dir_cnt=0;
+    //     reg [31:0] fal_add_cnt=0;
+
+    //     reg [31:0] last_pc;
+    //     always @(posedge clk or negedge rstn) begin
+    //         last_pc<=fetch_pc;
+    //         if(!rstn)begin
+    //             suc_cnt<=0;
+    //             tot_cnt<=0;
+    //             fal_add_cnt<=0;
+    //             fal_dir_cnt<=0;
+    //             last_pc<=0;
+    //         end else if(last_pc!=fetch_pc)begin
+    //             tot_cnt<=tot_cnt+1;
+    //             fal_add_cnt<=predict_add_fail?fal_add_cnt+1:fal_add_cnt;
+    //             fal_dir_cnt<=predict_dir_fail?fal_dir_cnt+1:fal_dir_cnt;
+
+    //         end
+    //     end
+
+    // `endif
     
-    
-    DualPortRAM#(//write after read,for conditional branch(btype =10)
+    DualPortRAM #(
+        //write after read,for conditional branch(btype =10)
         .DATA_WIDTH  ( 32 ),
         .ADDR_WIDTH  ( PC_INDEX_WIDTH )
     )u_DualPortRAM(
