@@ -1160,7 +1160,7 @@ idle_clk idle_clk1
     wire [4:0]  rd_dcache_in;
     wire [4:0]  rd_dcache_out;
     wire [31:0] pc_dcache_in;
-    wire [31:0] pc_dcache_out;
+    wire [31:0] pc_dcache_out; // TODO 没做
     wire [31:0] inst_dcache_in;
     wire [31:0] inst_dcache_out;
     EX2_WB u_EX2_WB(
@@ -1177,9 +1177,9 @@ idle_clk idle_clk1
         .uop1                ( ex1_ex2_uop1                ),
         .ex2_result0         ( ex2_rd0_data         ),
         .ex2_result1         ( ex2_rd1_data         ),
-        .pc_dcache_out       ( pc_dcache_out       ),
-        .inst_dcache_out     ( inst_dcache_out     ),
-        .inst_dcache_in      ( inst_dcache_in      ),
+        // .pc_dcache_out       ( pc_dcache_out       ), // TODO 没做
+        // .inst_dcache_out     ( inst_dcache_out     ),
+        // .inst_dcache_in      ( inst_dcache_in      ),
         .ex_rd0              ( ex1_ex2_rd0              ),
         .ex_rd1              ( ex1_ex2_rd1              ),
         .ex2_result0_valid   ( ex2_data0_valid   ),
