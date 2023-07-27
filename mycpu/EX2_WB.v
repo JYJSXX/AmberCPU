@@ -6,6 +6,7 @@ module EX2_WB(
     input aresetn,
     input flush_in,
     output flush_out_all,
+    input flush_to_tlb,
     //input ex2_valid, 这个信号不要了，由下面一堆valid/div_ready/dcache_ready来代替
     output reg ex2_allowin,
     input [31:0] pc0,
@@ -84,7 +85,7 @@ module EX2_WB(
 assign pc_from_WB = (tlb_exception) ? tlbrentry : eentry;
 reg tlb_d_valid_reg;
 always@(*)begin
-        tlb_d_valid_reg = en_VA_D_OUT;
+        tlb_d_valid_reg = en_VA_D_OUT & (~flush_to_tlb);
     end
 
 assign flush_out_all = exception_flag_out;

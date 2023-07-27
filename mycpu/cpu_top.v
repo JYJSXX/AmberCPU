@@ -1161,6 +1161,7 @@ idle_clk idle_clk1
         .clk                 ( clk                 ),
         .aresetn             ( aresetn             ),
         .flush_in            ( flush_to_ex2_wb            ),
+        .flush_to_tlb        ( flush_to_tlb        ),
         .flush_out_all       ( flush_from_wb       ),
         .ex2_allowin         ( ex2_allowin         ),
         .pc0                 ( ex1_ex2_pc0                 ),
