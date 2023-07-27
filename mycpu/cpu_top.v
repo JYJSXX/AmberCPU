@@ -282,6 +282,7 @@ idle_clk idle_clk1
     wire  [1:0]     if1_fifo_icache_excp_flag;
     wire  [31:0]    if1_fifo_icache_cookie_out;
     wire icache_rvalid;
+    wire nearly_full;
     // wire            if1_fifo_cacop_ready;
     // wire            if1_fifo_cacop_complete;
     IF1_FIFO u_IF1_FIFO(
@@ -294,6 +295,7 @@ idle_clk idle_clk1
         .fifo_readygo               ( fifo_readygo               ),
         .icache_rready              ( icache_rready              ),
         .icache_rvalid              ( icache_rvalid              ),
+        .nearly_full                ( nearly_full                ),
         .fetch_pc                   ( fetch_pc                   ),
         .pc_out                     ( pc_out                     ),
         // .if0_if1_pc                 ( if0_if1_pc                 ),
@@ -388,6 +390,7 @@ idle_clk idle_clk1
         .fifo_allowin               ( fifo_allowin               ),
         .fifo_valid                 ( fifo_valid                 ),
         .fifo_ready                 ( fifo_ready                 ),
+        .nearly_full                (nearly_full                 ),
         .priv_flag                  ( priv_flag                  ),
         .if1_fifo_inst0             ( if1_fifo_inst0             ),
         .if1_fifo_inst1             ( if1_fifo_inst1             ),

@@ -12,6 +12,7 @@ module IF1_FIFO(
     output  wire        if1_allowin,
     input               fifo_allowin,
     output  wire        fifo_readygo,
+    input               nearly_full,
 
     input               icache_rready,//icache rready makes reg update anytime
     input               icache_rvalid,
@@ -98,7 +99,7 @@ module IF1_FIFO(
     wire critical_allowin;
     assign  critical_allowin=!icache_rvalid_buf[BUF_W-1]
                                     ||icache_rready;
-    assign if1_allowin  =       fifo_allowin&&
+    assign if1_allowin  =       (fifo_allowin)&&
                                 (//correct_pc->rready,consider plus 5 stage cache
                                     // !if0_if1_tlb_rvalid||
                                     // !(if1_fifo_pc_buf[WIDTH*32-1:(WIDTH-1)*32]==if0_if1_pc)
@@ -112,7 +113,7 @@ module IF1_FIFO(
                                     (stat==IDLE)||(next_stat==IDLE)
                                 )
                                 &&
-                                tmp==0;
+                                !nearly_full;
     assign idle         = stat==IDLE;
     assign cache_idle = icache_idle&dcache_idle;
     // assign pc_fetch_ok= if0_if1_pc==pc_after_priv;
@@ -208,7 +209,7 @@ module IF1_FIFO(
     end
 
     always @ (posedge clk) begin
-        if (~rstn || flush||(!if1_readygo&&fifo_allowin&&fifo_readygo)||(!idle)) begin
+        if (~rstn || flush||(!icache_rready&&fifo_allowin&&fifo_readygo)||(!idle)) begin
             //clear stage-stage reg
             if1_fifo_pc     <=  `PC_RESET;
 
@@ -221,7 +222,7 @@ module IF1_FIFO(
             if1_fifo_icache_excp_flag<=0;
             if1_fifo_icache_cookie_out<=`zero;
         end
-        else if (if1_readygo&&if1_allowin&&fifo_allowin) begin
+        else if (icache_rready&&if1_allowin&&fifo_allowin) begin
             //update stage-stage reg
             if1_fifo_pc     <=  pc_out;
             if1_fifo_pc_next<=  icache_pc_next;
@@ -236,37 +237,33 @@ module IF1_FIFO(
             if1_fifo_icache_exception <=icache_exception;//did not replace,cope need to test excp_flag first!!
             if1_fifo_icache_excp_flag<=priv_flag[0]?2'b00:icache_excp_flag;
         end 
-        else if (tmp) begin
-            tmp<=(~fifo_allowin||~if1_allowin)?1:0;
-            if1_fifo_pc     <=  tmp_pc;
-            if1_fifo_pc_next<=  tmp_pc_next;
-            if1_fifo_inst0  <=  tmp_inst0;
-            if1_fifo_inst1  <=  tmp_inst1;
+        // else if (tmp) begin
+        //     tmp<=0;
+        //     if1_fifo_pc     <=  tmp_pc;
+        //     if1_fifo_pc_next<=  tmp_pc_next;
+        //     if1_fifo_inst0  <=  tmp_inst0;
+        //     if1_fifo_inst1  <=  tmp_inst1;
 
-            if1_fifo_icache_badv<=tmp_icache_badv;
-            if1_fifo_icache_cookie_out<=tmp_icache_cookie_out;
-            if1_fifo_icache_exception<=tmp_icache_exception;
-            if1_fifo_icache_excp_flag<=tmp_icache_excp_flag;
+        //     if1_fifo_icache_badv<=tmp_icache_badv;
+        //     if1_fifo_icache_cookie_out<=tmp_icache_cookie_out;
+        //     if1_fifo_icache_exception<=tmp_icache_exception;
+        //     if1_fifo_icache_excp_flag<=tmp_icache_excp_flag;
 
-        
-        end//without tmp:273141  with tmp:273141;;;fifo_space=1:
-        
-        if(~fifo_allowin||~if1_allowin)begin
+        // end
+        else if(~fifo_allowin||~if1_allowin)begin
             //hold stage-stage reg
-            if(if1_readygo&&~tmp)begin
-            // if(if1_readygo)begin
-                tmp<=1;
-                tmp_pc<=pc_out;
-                tmp_pc_next<=icache_pc_next;
-                tmp_inst0  <=  pc_out[2]? icache_inst1[31:0]:icache_inst0[31:0];
-                // if1_fifo_inst1  <=  priv_flag[0] ? `INST_NOP:icache_inst1[31:0];//TODO
-                tmp_inst1  <=  pc_out[2]? `INST_NOP:icache_inst1[31:0];
+            // if(if1_readygo&&~tmp)begin
+            //     tmp<=1;
+            //     tmp_pc<=pc_out;
+            //     tmp_pc_next<=icache_pc_next;
+            //     tmp_inst0<=icache_inst0;
+            //     tmp_inst1<=priv_flag[0]?`INST_NOP:icache_inst1;
 
-                tmp_icache_badv      <=icache_badv;
-                tmp_icache_cookie_out<=icache_pc_next;
-                tmp_icache_exception <=icache_exception;
-                tmp_icache_excp_flag<=priv_flag[0]?2'b00:icache_excp_flag;
-            end
+            //     tmp_icache_badv      <=icache_badv;
+            //     tmp_icache_cookie_out<=icache_pc_next;
+            //     tmp_icache_exception <=icache_exception;
+            //     tmp_icache_excp_flag<=priv_flag[0]?2'b00:icache_excp_flag;
+            // end
         end
     end
 

@@ -80,7 +80,7 @@ module IQ (
     reg      single_en    = 0;
     reg      id_reg_valid = 0;
 
-    assign reg_readygo    = id_reg_valid;
+    assign reg_readygo    = id_reg_valid;//!!!!
     assign id_allowin   =(!single_en||(mod&&single_en))&reg_allowin;
 
     always @(*) begin//logic for single_en
