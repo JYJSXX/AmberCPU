@@ -15,10 +15,13 @@ module EX1_FORWARD(
     //从ex2_wb段间输入
     input [4:0] ex2_wb_rd0,
     input [4:0] ex2_wb_rd1,
+    input [4:0] ex2_wb_rd2,
     input ex2_wb_data_0_valid,
     input ex2_wb_data_1_valid,
+    input ex2_wb_data_2_valid,
     input [31:0] ex2_wb_data_0,
     input [31:0] ex2_wb_data_1,
+    input [31:0] ex2_wb_data_2,
     //向ex1段输出
     output reg [31:0] ex1_rj_data_o,
     output reg [31:0] ex1_rk_data_o,
@@ -45,7 +48,6 @@ module EX1_FORWARD(
             end else begin
                 forward_stall=1;
             end
-        
         end else if(ex1_rj==ex2_wb_rd1) begin
             if(ex2_wb_data_1_valid)begin
                 forward_stall=0;
@@ -60,7 +62,14 @@ module EX1_FORWARD(
             end else begin
                 forward_stall=1;
             end
-        end 
+        end else if(ex1_rj==ex2_wb_rd2) begin
+            if(ex2_wb_data_2_valid)begin
+                forward_stall=0;
+                ex1_rj_data_o=ex2_wb_data_2;
+            end else begin
+                forward_stall=1;
+            end
+        end
         end
 
         if(ex1_rk!=0)begin
@@ -91,6 +100,14 @@ module EX1_FORWARD(
             if(ex2_wb_data_0_valid)begin
                 forward_stall=0;
                 ex1_rk_data_o=ex2_wb_data_0;
+            end else begin
+                forward_stall=1;
+            end
+        end
+        else if(ex1_rk==ex2_wb_rd2) begin
+            if(ex2_wb_data_2_valid)begin
+                forward_stall=0;
+                ex1_rk_data_o=ex2_wb_data_2;
             end else begin
                 forward_stall=1;
             end

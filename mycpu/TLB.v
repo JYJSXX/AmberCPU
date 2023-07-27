@@ -144,7 +144,6 @@ wire [0:0] TLB_I_HIT_4M_IN [`TLB_NUM - 1:0];
 wire [0:0] TLB_D_HIT_4M_IN [`TLB_NUM - 1:0];
 
 
-
 generate
     for(i = 0; i < `TLB_NUM; i = i + 1)begin
         assign TLB_I_HIT_4K_IN[i] = rd_TLB_E[i] & (rd_TLB_G[i] | (rd_TLB_ASID[i] == CSR_ASID)) & (rd_TLB_VPPN[i] == VA_I[`TLB_VPPN_LEN:1]);
@@ -191,7 +190,6 @@ reg     [11:0]                  TAG_OFFSET_I_reg                    ;
 reg     [11:0]                  TAG_OFFSET_D_reg                    ;
 reg                             signed_ext_reg                      ;
 reg                             atom_reg                            ;
-reg     [4:0]                   rd_reg                                      ;
 reg                             SOL_reg                             ;
 reg     [31 : 0]               WDATA_D_reg                         ;
 reg     [3 : 0]                 WSTRB_D_reg                         ;
@@ -587,9 +585,8 @@ always @(posedge clk or negedge rstn)begin
             atom_reg2 <= atom_reg;
             rd_reg2 <= rd;
             SOL_reg2 <= SOL_reg;
-            WDATA_D_reg2 <= WDATA_D_reg;
-            WSTRB_D_reg2 <= WSTRB_D_reg;
-            rd_reg2 <= rd_reg;
+            WDATA_D_reg2 <= WDATA_D;
+            WSTRB_D_reg2 <= WSTRB_D;
             tlb_cookie_reg2 <= tlb_cookie_reg;
         end
         else begin
@@ -602,7 +599,6 @@ always @(posedge clk or negedge rstn)begin
             TAG_OFFSET_D_reg2 <= TAG_OFFSET_D_reg2;
             signed_ext_reg2 <= signed_ext_reg2;
             atom_reg2 <= atom_reg2;
-            rd_reg2 <= rd_reg2;
             SOL_reg2 <= SOL_reg2;
             WDATA_D_reg2 <= WDATA_D_reg2;
             WSTRB_D_reg2 <= WSTRB_D_reg2;

@@ -32,10 +32,13 @@ module  REG_EX1(
     input   [31:0] id_reg_imm1,
     input   [4:0] wb_rd0,
     input   [4:0] wb_rd1,
+    input   [4:0] wb_rd2,
     input   we_0,
     input   we_1,
+    input   we_2,
     input  [31:0] rd0_data,
     input  [31:0] rd1_data,
+    input  [31:0] rd2_data,
     input   [4:0] id_reg_rj0,
     input   [4:0] id_reg_rj1,
     input   [4:0] id_reg_rk0,
@@ -110,7 +113,8 @@ module  REG_EX1(
     ,output [31:0] reg_diff30,
     ,output [31:0] reg_diff31,
     input  [63:0] stable_counter,
-    output reg [63:0] stable_counter_diff
+    output reg [63:0] stable_counter_diff,
+    input [31:0] debug0_wb_inst
     `endif
 );
 `ifdef DIFFTEST
@@ -140,7 +144,10 @@ regfile regfile1( //内部自带写优先
     .raddr3(id_reg_rk0),
     .rdata3(rk0_data),
     .raddr4(id_reg_rk1),
-    .rdata4(rk1_data)
+    .rdata4(rk1_data),
+    .we3(we_2),
+    .waddr3(wb_rd2),
+    .wdata3(rd2_data)
     `ifdef DIFFTEST
     ,.reg_diff0(reg_diff0),
     .reg_diff1(reg_diff1),
@@ -173,7 +180,8 @@ regfile regfile1( //内部自带写优先
     .reg_diff28(reg_diff28),
     .reg_diff29(reg_diff29),
     .reg_diff30(reg_diff30),
-    .reg_diff31(reg_diff31)
+    .reg_diff31(reg_diff31),
+    .debug0_wb_inst(debug0_wb_inst)
     `endif
 );
 always@(posedge clk)begin

@@ -620,6 +620,7 @@ idle_clk idle_clk1
     wire  ex_readygo;
     wire  we_0;
     wire  we_1;
+    wire  we_2;
 
     wire [31:0] reg_ex_pc0;
     wire [31:0] reg_ex_pc1;
@@ -654,8 +655,10 @@ idle_clk idle_clk1
     wire [4:0]  reg_ex_rd1;
     wire [4:0] ex2_wb_rd0;
     wire [4:0] ex2_wb_rd1;
+    wire [4:0] ex2_wb_rd2;
     wire [31:0] ex2_wb_data_0;
     wire [31:0] ex2_wb_data_1;
+    wire [31:0] ex2_wb_data_2;
 
     wire        forward_stall ;
     
@@ -694,10 +697,14 @@ idle_clk idle_clk1
         .id_reg_imm1             ( iq_imm1             ),
         .wb_rd0                  ( ex2_wb_rd0          ),
         .wb_rd1                  ( ex2_wb_rd1          ),
+        .wb_rd2                  ( ex2_wb_rd2          ),
         .we_0                    ( we_0                    ),
+        .debug0_wb_inst          ( debug0_wb_inst          ),
         .we_1                    ( we_1                    ),
+        .we_2                    ( we_2                    ),
         .rd0_data                ( ex2_wb_data_0               ),
         .rd1_data                ( ex2_wb_data_1               ),
+        .rd2_data                ( ex2_wb_data_2               ),
         .id_reg_rj0              ( iq_rj0              ),
         .id_reg_rj1              ( iq_rj1              ),
         .id_reg_rk0              ( iq_rk0              ),
@@ -792,6 +799,7 @@ idle_clk idle_clk1
 
     wire ex2_wb_data_0_valid;
     wire ex2_wb_data_1_valid;
+    wire ex2_wb_data_2_valid;
     //csrfact_pc; //分支指令的pc
     //wire [31:0] fact;
     wire [31:0] tid; //读时钟id的指令RDCNTID用到
@@ -927,10 +935,13 @@ idle_clk idle_clk1
         .ex1_ex2_data_1_valid ( ex1_ex2_data_1_valid ),
         .ex2_wb_rd0           ( ex2_wb_rd0           ),
         .ex2_wb_rd1           ( ex2_wb_rd1           ),
+        .ex2_wb_rd2           ( ex2_wb_rd2           ),
         .ex2_wb_data_0        ( ex2_wb_data_0        ),
         .ex2_wb_data_1        ( ex2_wb_data_1        ),
+        .ex2_wb_data_2        ( ex2_wb_data_2        ),
         .ex2_wb_data_0_valid  ( ex2_wb_data_0_valid  ),
         .ex2_wb_data_1_valid  ( ex2_wb_data_1_valid  ),
+        .ex2_wb_data_2_valid  ( ex2_wb_data_2_valid         ),
         .forward_stall        ( forward_stall        ),
         .tid                  ( tid                  ),
         .predict_to_branch    ( reg_ex_branch_flag       ),
@@ -1188,13 +1199,17 @@ idle_clk idle_clk1
         .en_VA_D_OUT         ( dcache_valid        ), 
         .ex2_wb_data_0       ( ex2_wb_data_0       ),
         .ex2_wb_data_1       ( ex2_wb_data_1       ),
+        .ex2_wb_data_2       ( ex2_wb_data_2       ),
         .ex2_wb_data_0_valid ( ex2_wb_data_0_valid ),
         .ex2_wb_data_1_valid ( ex2_wb_data_1_valid ),
+        .ex2_wb_data_2_valid ( ex2_wb_data_2_valid ),
         .ex2_wb_rd0          ( ex2_wb_rd0          ),
         .rd_dcache_out       ( rd_dcache_out       ),
         .ex2_wb_rd1          ( ex2_wb_rd1          ),
+        .ex2_wb_rd2          ( ex2_wb_rd2          ),
         .ex2_wb_we0          ( we_0          ),
         .ex2_wb_we1          ( we_1          ),
+        .ex2_wb_we2          ( we_2          ),
         .quotient            ( quotient            ),
         .remainder           ( remainder           ),
         .stall_divider       ( stall_divider       ),
@@ -1794,7 +1809,7 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
                                         ({cmt_paddr_diff[15:0],16'b0})):
                                     (cmt_data_diff));
 
-    wire [7:0] store_en_diff = {4'b0, csr_llbctl_diff && (cmt_inst0[31:24] == 8'b00100001), cmt_inst0[31:22] == 10'b0010100110, 
+    wire [7:0] store_en_diff = {4'b0, csr_llbctl_diff[0] && (cmt_inst0[31:24] == 8'b00100001), cmt_inst0[31:22] == 10'b0010100110, 
                 cmt_inst0[31:22] == 10'b0010100101, cmt_inst0[31:22] == 10'b0010100100};
     wire [7:0] load_en_diff = {2'b0, cmt_inst0[31:24] == 8'b00100000, cmt_inst0[31:22] == 10'b0010100010, 
                 cmt_inst0[31:22] == 10'b0010101001, cmt_inst0[31:22] == 10'b0010100001,
