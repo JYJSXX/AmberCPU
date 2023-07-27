@@ -1,26 +1,29 @@
 [*]
 [*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
-[*] Thu Jul 27 03:56:11 2023
+[*] Thu Jul 27 11:39:01 2023
 [*]
 [dumpfile] "/home/yiran/Desktop/chiplab/sims/verilator/run_prog/log/func/func_lab3_log/simu_trace.fst"
-[dumpfile_mtime] "Thu Jul 27 03:55:27 2023"
-[dumpfile_size] 101189
+[dumpfile_mtime] "Thu Jul 27 11:38:35 2023"
+[dumpfile_size] 44832437
 [savefile] "/home/yiran/Desktop/AmberCPU/sim/func3_dcache.gtkw"
-[timestart] 427
+[timestart] 547343
 [size] 1846 854
-[pos] -89 -89
-*-2.000000 437 546597 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[pos] -51 -51
+*-2.000000 547347 546597 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] TOP.
 [treeopen] TOP.simu_top.
 [treeopen] TOP.simu_top.soc.
 [treeopen] TOP.simu_top.soc.cpu.
 [treeopen] TOP.simu_top.soc.cpu.u_dcache.
+[treeopen] TOP.simu_top.soc.cpu.u_EX1.
+[treeopen] TOP.simu_top.soc.cpu.u_EX2_WB.
 [treeopen] TOP.simu_top.soc.cpu.u_FIFO.
 [treeopen] TOP.simu_top.soc.cpu.u_icache.
 [treeopen] TOP.simu_top.soc.cpu.u_ID_REG.
 [treeopen] TOP.simu_top.soc.cpu.u_IF0.
 [treeopen] TOP.simu_top.soc.cpu.u_IF1_FIFO.
 [treeopen] TOP.simu_top.soc.cpu.u_REG_EX1.
+[treeopen] TOP.simu_top.soc.cpu.u_REG_EX1.regfile1.
 [sst_width] 325
 [signals_width] 557
 [sst_expanded] 1
@@ -44,12 +47,62 @@ TOP.simu_top.soc.cpu.u_dcache.flush
 -read
 @28
 TOP.simu_top.soc.cpu.u_dcache.clk
+[color] 2
+TOP.simu_top.soc.cpu.u_dcache.rready
+@800022
+TOP.simu_top.soc.cpu.u_EX2_WB.uop0[24:0]
+@28
+(16)TOP.simu_top.soc.cpu.u_EX2_WB.uop0[24:0]
+(16)TOP.simu_top.soc.cpu.u_EX2_WB.uop0_reg[24:0]
+@1001200
+-group_end
+@28
+(1)TOP.simu_top.soc.cpu.u_EX2_WB.cond0[3:0]
+TOP.simu_top.soc.cpu.u_EX2_WB.dcache_w_ready
+[color] 3
+TOP.simu_top.soc.cpu.u_dcache.wvalid
 [color] 3
 TOP.simu_top.soc.cpu.u_dcache.rvalid
-TOP.simu_top.soc.cpu.u_dcache.rready
 @22
 TOP.simu_top.soc.cpu.u_dcache.rdata[31:0]
+@c00022
 TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+@28
+(0)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+(1)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+(2)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+(3)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+(4)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+(5)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+(6)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+(7)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+(8)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+(9)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+(10)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+(11)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+(12)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+(13)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+(14)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+(15)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+(16)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+(17)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+(18)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+(19)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+(20)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+(21)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+(22)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+(23)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+(24)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+(25)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+(26)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+(27)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+(28)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+(29)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+(30)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+(31)TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
+@1401200
+-group_end
+@22
 TOP.simu_top.soc.cpu.u_REG_EX1.rd0_data[31:0]
 @28
 TOP.simu_top.soc.cpu.u_REG_EX1.we_0
@@ -57,33 +110,64 @@ TOP.simu_top.soc.cpu.u_REG_EX1.we_0
 TOP.simu_top.soc.cpu.u_REG_EX1.reg_ex_rd0[4:0]
 TOP.simu_top.soc.cpu.DifftestInstrCommit0.instr[31:0]
 TOP.simu_top.soc.cpu.DifftestInstrCommit0.pc[63:0]
-@23
 TOP.simu_top.soc.cpu.debug0_wb_pc[31:0]
-@22
 TOP.simu_top.soc.cpu.pc_dcache_out[31:0]
 TOP.simu_top.soc.cpu.u_EX2_WB.pc0[31:0]
-@28
-TOP.simu_top.soc.cpu.u_EX2_WB.mem_flag
-@22
+@23
 TOP.simu_top.soc.cpu.reg_ex_pc0[31:0]
 @28
 TOP.simu_top.soc.cpu.DifftestInstrCommit0.valid
 @22
 TOP.simu_top.soc.cpu.u_REG_EX1.regfile1.regs[10][31:0]
 TOP.simu_top.soc.cpu.DifftestGRegState.gpr_10[63:0]
+TOP.simu_top.soc.cpu.u_REG_EX1.regfile1.reg_diff6[31:0]
+TOP.simu_top.soc.cpu.reg_diff[10][31:0]
+TOP.simu_top.soc.cpu.u_REG_EX1.regfile1.debug0_wb_inst[31:0]
+@28
+TOP.simu_top.soc.cpu.u_EX2_WB.ex2_allowin
+@22
+TOP.simu_top.soc.cpu.u_REG_EX1.regfile1.waddr1[4:0]
+TOP.simu_top.soc.cpu.u_dcache.cookie_out[68:0]
+TOP.simu_top.soc.cpu.u_EX2_WB.rd_dcache_out[4:0]
+TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_rd0[4:0]
+@28
+TOP.simu_top.soc.cpu.u_EX2_WB.ex2_result0_valid
+TOP.simu_top.soc.cpu.u_EX1_EX2.ex1_ex2_data_0_valid
+TOP.simu_top.soc.cpu.u_EX1_EX2.alu_result0_valid
+TOP.simu_top.soc.cpu.u_EX1.alu_result0_valid
+@22
+TOP.simu_top.soc.cpu.u_EX1.inst0[31:0]
+TOP.simu_top.soc.cpu.u_EX1.ex1_ex2_rd0[4:0]
+TOP.simu_top.soc.cpu.u_EX1_EX2.reg_ex1_rd0[4:0]
+TOP.simu_top.soc.cpu.u_TLB.rd[4:0]
+TOP.simu_top.soc.cpu.u_TLB.rd_out[4:0]
+@28
+TOP.simu_top.soc.cpu.u_REG_EX1.regfile1.we1
+TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_we1
+@22
+TOP.simu_top.soc.cpu.u_REG_EX1.regfile1.wdata1[31:0]
+@28
+TOP.simu_top.soc.cpu.u_REG_EX1.regfile1.we2
+@22
+TOP.simu_top.soc.cpu.u_REG_EX1.regfile1.waddr2[4:0]
+TOP.simu_top.soc.cpu.u_REG_EX1.regfile1.wdata2[31:0]
 @28
 TOP.simu_top.soc.cpu.u_REG_EX1.we_0
 @22
 TOP.simu_top.soc.cpu.u_REG_EX1.wb_rd0[4:0]
+TOP.simu_top.soc.cpu.u_EX1_EX2.ex1_ex2_rd0[4:0]
 @200
 -write
 @28
 [color] 3
-TOP.simu_top.soc.cpu.u_dcache.wvalid
 TOP.simu_top.soc.cpu.u_dcache.wready
 @22
 TOP.simu_top.soc.cpu.u_dcache.wdata[31:0]
 TOP.simu_top.soc.cpu.u_dcache.wstrb[3:0]
+TOP.simu_top.soc.cpu.u_TLB.rd[4:0]
+TOP.simu_top.soc.cpu.u_TLB.rd_out[4:0]
+TOP.simu_top.soc.cpu.rd_dcache_in[4:0]
+TOP.simu_top.soc.cpu.u_EX2_WB.rd_dcache_out[4:0]
 @200
 -内部信号
 @22
@@ -113,6 +197,7 @@ TOP.simu_top.soc.cpu.u_dcache.mem_we[1][63:0]
 TOP.simu_top.soc.cpu.u_dcache.mem_rdata[0][511:0]
 [color] 2
 TOP.simu_top.soc.cpu.u_dcache.mem_rdata[1][511:0]
+TOP.simu_top.soc.cpu.u_dcache.wdata_pipe_512[511:0]
 TOP.simu_top.soc.cpu.u_dcache.mem_wdata[511:0]
 @200
 -tagv_mem

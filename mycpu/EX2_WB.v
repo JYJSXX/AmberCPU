@@ -24,13 +24,17 @@ module EX2_WB(
     input en_VA_D_OUT,
     output reg [31:0] ex2_wb_data_0,
     output reg [31:0] ex2_wb_data_1,
+    output reg [31:0] ex2_wb_data_2,
     output reg ex2_wb_data_0_valid,
     output reg ex2_wb_data_1_valid,
+    output reg ex2_wb_data_2_valid,
     output reg [4:0] ex2_wb_rd0,
     output reg [4:0] ex2_wb_rd1,
+    output reg [4:0] ex2_wb_rd2,
     input        [4:0] rd_dcache_out,
     output reg ex2_wb_we0,
     output reg ex2_wb_we1,
+    output reg ex2_wb_we2,
 
     //除法
     input [31:0] quotient,
@@ -130,21 +134,29 @@ always@(posedge clk)begin
 
 end
 
-
+reg [`WIDTH_UOP-1:0] uop0_reg=0;
+reg [`WIDTH_UOP-1:0] uop1_reg=0;
+always@(posedge clk) begin
+    uop0_reg <= uop0;
+    uop1_reg <= uop1;
+end
 wire [3:0] cond0;
 wire [3:0] cond1;
-assign cond0 = uop0[`UOP_COND];
-assign cond1 = uop1[`UOP_COND];
+assign cond0 = uop0_reg[`UOP_COND];
+assign cond1 = uop1_reg[`UOP_COND];
     always@(posedge clk or negedge aresetn)begin
         if(~aresetn)begin
             ex2_wb_data_0 <= 0;
             ex2_wb_data_1 <= 0;
             ex2_wb_data_0_valid <= 0;
             ex2_wb_data_1_valid <= 0;
+            ex2_wb_data_2_valid <= 0;
             ex2_wb_rd0 <= 0;
             ex2_wb_rd1 <= 0;
+            ex2_wb_rd2 <= 0;
             ex2_wb_we0 <= 0;
             ex2_wb_we1 <= 0;
+            ex2_wb_we2 <= 0;
         end
         else begin
             if(ex2_result0_valid) begin
@@ -174,14 +186,7 @@ assign cond1 = uop1[`UOP_COND];
                     ex2_wb_we0 <= div_ready;
                 end
             end
-            else if(uop0[`INS_MEM] && ~cond0[2]) begin //cond[2]为0是ld
-            if(dcache_w_ready)begin
-                    ex2_wb_data_0 <= dcache_data;
-                    ex2_wb_rd0 <= rd_dcache_out;
-            end
-                    ex2_wb_data_0_valid <= dcache_w_ready;
-                    ex2_wb_we0 <= dcache_w_ready;
-            end
+            
             else begin
                 ex2_wb_data_0 <= 0;
                 ex2_wb_data_0_valid <= 0;
@@ -210,17 +215,22 @@ assign cond1 = uop1[`UOP_COND];
                     ex2_wb_we1 <= div_ready;
                 end
             end
-            else if(uop1[`INS_MEM] && ~cond1[2]) begin //cond[2]为0是ld
-                    ex2_wb_data_1 <= dcache_data;
-                    ex2_wb_data_1_valid <= dcache_ready;
-                    ex2_wb_rd1 <= ex_rd1;
-                    ex2_wb_we1 <= dcache_ready;
-            end
+            
             else begin
                 ex2_wb_data_1 <= 0;
                 ex2_wb_data_1_valid <= 0;
                 ex2_wb_rd1 <= 0;
                 ex2_wb_we1 <= 0;
+            end
+            
+            if(uop0_reg[`INS_MEM] && ~cond0[2]) begin //cond[2]为0是ld
+            if(dcache_w_ready)begin
+                    ex2_wb_data_2 <= dcache_data;
+                    ex2_wb_rd2 <= rd_dcache_out;
+                    ex2_wb_data_2_valid <= dcache_w_ready;
+            end
+                    ex2_wb_data_2_valid <= dcache_w_ready;
+                    ex2_wb_we2 <= dcache_w_ready;
             end
         end
 
