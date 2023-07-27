@@ -699,7 +699,7 @@ idle_clk idle_clk1
         .wb_rd1                  ( ex2_wb_rd1          ),
         .wb_rd2                  ( ex2_wb_rd2          ),
         .we_0                    ( we_0                    ),
-        .debug0_wb_inst          ( debug0_wb_inst          ),
+        
         .we_1                    ( we_1                    ),
         .we_2                    ( we_2                    ),
         .rd0_data                ( ex2_wb_data_0               ),
@@ -775,6 +775,7 @@ idle_clk idle_clk1
     .reg_diff29(reg_diff[29]),
     .reg_diff30(reg_diff[30]),
     .reg_diff31(reg_diff[31]),
+    .debug0_wb_inst          ( debug0_wb_inst          ),
         .stable_counter(stable_counter),
         . stable_counter_diff(rf_stable_counter)
         `endif
