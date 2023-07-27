@@ -1408,7 +1408,7 @@ idle_clk idle_clk1
         .raddr             ( icache_raddr      ),
         .p_addr            ( PA_I              ),
         .rdata             ( icache_rdata      ),
-        .pc_out            ( pc_out        ),
+        .pc_out            ( pc_out            ),
         .idle              ( i_idle            ),
         .i_rvalid          ( i_rvalid          ),
         .i_rready          ( i_rready          ), 

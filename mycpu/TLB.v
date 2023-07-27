@@ -179,177 +179,177 @@ reg                             signed_ext_reg                      ;
 reg                             atom_reg                            ;
 reg                             SOL_reg                             ;
 
-initial begin
-    en_i_reg = 0;
-    en_d_reg = 0;
-    // CSR_PG_reg = 0;
-    // CSR_CRMD_reg = 0;
-    // CSR_DMW0_reg = 0;
-    // CSR_DMW1_reg = 0;
-    VA_I_reg = 0;
-    VA_D_reg = 0;
-    TAG_OFFSET_I_reg = 0;
-    TAG_OFFSET_D_reg = 0;
-    signed_ext_reg = 0;
-    SOL_reg = 0;
-    for (j = 0; j < `TLB_NUM; j = j + 1)begin
-        TLB_I_HIT_4K_OUT[j] = 0;
-        TLB_D_HIT_4K_OUT[j] = 0;
-        TLB_I_HIT_4M_OUT[j] = 0;
-        TLB_D_HIT_4M_OUT[j] = 0;
-        TLB_PS_EQUAL_4K[j]  = 0;
-        TLB_D_VA_12_ODD[j]  = 0;
-        TLB_I_VA_12_ODD[j]  = 0;
-        TLB_D_VA_21_ODD[j]  = 0;
-        TLB_I_VA_21_ODD[j]  = 0;
-        rd_TLB_V_1_reg[j]   = 0;
-        rd_TLB_D_1_reg[j]   = 0;
-        rd_TLB_MAT_1_reg[j] = 0;
-        rd_TLB_PLV_1_reg[j] = 0;
-        rd_TLB_PPN_1_reg[j] = 0;
-        rd_TLB_V_2_reg[j]   = 0;
-        rd_TLB_D_2_reg[j]   = 0;
-        rd_TLB_MAT_2_reg[j] = 0;
-        rd_TLB_PLV_2_reg[j] = 0;
-        rd_TLB_PPN_2_reg[j] = 0;
-    end
-end
+// initial begin
+//     en_i_reg = 0;
+//     en_d_reg = 0;
+//     // CSR_PG_reg = 0;
+//     // CSR_CRMD_reg = 0;
+//     // CSR_DMW0_reg = 0;
+//     // CSR_DMW1_reg = 0;
+//     VA_I_reg = 0;
+//     VA_D_reg = 0;
+//     TAG_OFFSET_I_reg = 0;
+//     TAG_OFFSET_D_reg = 0;
+//     signed_ext_reg = 0;
+//     SOL_reg = 0;
+//     for (j = 0; j < `TLB_NUM; j = j + 1)begin
+//         TLB_I_HIT_4K_OUT[j] = 0;
+//         TLB_D_HIT_4K_OUT[j] = 0;
+//         TLB_I_HIT_4M_OUT[j] = 0;
+//         TLB_D_HIT_4M_OUT[j] = 0;
+//         TLB_PS_EQUAL_4K[j]  = 0;
+//         TLB_D_VA_12_ODD[j]  = 0;
+//         TLB_I_VA_12_ODD[j]  = 0;
+//         TLB_D_VA_21_ODD[j]  = 0;
+//         TLB_I_VA_21_ODD[j]  = 0;
+//         rd_TLB_V_1_reg[j]   = 0;
+//         rd_TLB_D_1_reg[j]   = 0;
+//         rd_TLB_MAT_1_reg[j] = 0;
+//         rd_TLB_PLV_1_reg[j] = 0;
+//         rd_TLB_PPN_1_reg[j] = 0;
+//         rd_TLB_V_2_reg[j]   = 0;
+//         rd_TLB_D_2_reg[j]   = 0;
+//         rd_TLB_MAT_2_reg[j] = 0;
+//         rd_TLB_PLV_2_reg[j] = 0;
+//         rd_TLB_PPN_2_reg[j] = 0;
+//     end
+// end
 
-always @(posedge clk or negedge rstn) begin
-    if (~rstn)begin
-        en_i_reg <= 0;
-        en_d_reg <= 0;
-        // CSR_PG_reg <= 0;
-        // CSR_CRMD_reg <= 0;
-        // CSR_DMW0_reg <= 0;
-        // CSR_DMW1_reg <= 0;
-        VA_I_reg <= 0;
-        VA_D_reg <= 0;
-        TAG_OFFSET_I_reg <= 0;
-        TAG_OFFSET_D_reg <= 0;
-        signed_ext_reg <= 0;
-        SOL_reg <= 0;
-        for(j = 0; j < `TLB_NUM; j = j + 1)begin
-            TLB_PS_EQUAL_4K[j]  <= 0;
-            TLB_I_HIT_4K_OUT[j] <= 0;
-            TLB_I_HIT_4M_OUT[j] <= 0;
-            TLB_I_VA_12_ODD[j]  <= 0;
-            TLB_I_VA_21_ODD[j]  <= 0;
-            TLB_D_HIT_4K_OUT[j] <= 0;
-            TLB_D_HIT_4M_OUT[j] <= 0;
-            TLB_D_VA_12_ODD[j]  <= 0;
-            TLB_D_VA_21_ODD[j]  <= 0;
-            rd_TLB_V_1_reg[j]   <= 0;
-            rd_TLB_D_1_reg[j]   <= 0;
-            rd_TLB_MAT_1_reg[j] <= 0;
-            rd_TLB_PLV_1_reg[j] <= 0;
-            rd_TLB_PPN_1_reg[j] <= 0;
-            rd_TLB_V_2_reg[j]   <= 0;
-            rd_TLB_D_2_reg[j]   <= 0;
-            rd_TLB_MAT_2_reg[j] <= 0;
-            rd_TLB_PLV_2_reg[j] <= 0;
-            rd_TLB_PPN_2_reg[j] <= 0;
-        end
-    end
-    else if (flush) begin
-        en_i_reg <= 0;
-        en_d_reg <= 0;
-        // CSR_PG_reg <= 0;
-        // CSR_CRMD_reg <= 0;
-        // CSR_DMW0_reg <= 0;
-        // CSR_DMW1_reg <= 0;
-        VA_I_reg <= 0;
-        VA_D_reg <= 0;
-        TAG_OFFSET_I_reg <= 0;
-        TAG_OFFSET_D_reg <= 0;
-        signed_ext_reg <= 0;
-        atom_reg <= 0;
-        SOL_reg <= 0;
-        for(j = 0; j < `TLB_NUM; j = j + 1)begin
-            TLB_PS_EQUAL_4K[j]  <= 0;
-            TLB_I_HIT_4K_OUT[j] <= 0;
-            TLB_I_HIT_4M_OUT[j] <= 0;
-            TLB_I_VA_12_ODD[j]  <= 0;
-            TLB_I_VA_21_ODD[j]  <= 0;
-            TLB_D_HIT_4K_OUT[j] <= 0;
-            TLB_D_HIT_4M_OUT[j] <= 0;
-            TLB_D_VA_12_ODD[j]  <= 0;
-            TLB_D_VA_21_ODD[j]  <= 0;
-            rd_TLB_V_1_reg[j]   <= 0;
-            rd_TLB_D_1_reg[j]   <= 0;
-            rd_TLB_MAT_1_reg[j] <= 0;
-            rd_TLB_PLV_1_reg[j] <= 0;
-            rd_TLB_PPN_1_reg[j] <= 0;
-            rd_TLB_V_2_reg[j]   <= 0;
-            rd_TLB_D_2_reg[j]   <= 0;
-            rd_TLB_MAT_2_reg[j] <= 0;
-            rd_TLB_PLV_2_reg[j] <= 0;
-            rd_TLB_PPN_2_reg[j] <= 0;
-        end
-    end
-    else begin
+// always @(posedge clk or negedge rstn) begin
+//     if (~rstn)begin
+//         en_i_reg <= 0;
+//         en_d_reg <= 0;
+//         // CSR_PG_reg <= 0;
+//         // CSR_CRMD_reg <= 0;
+//         // CSR_DMW0_reg <= 0;
+//         // CSR_DMW1_reg <= 0;
+//         VA_I_reg <= 0;
+//         VA_D_reg <= 0;
+//         TAG_OFFSET_I_reg <= 0;
+//         TAG_OFFSET_D_reg <= 0;
+//         signed_ext_reg <= 0;
+//         SOL_reg <= 0;
+//         for(j = 0; j < `TLB_NUM; j = j + 1)begin
+//             TLB_PS_EQUAL_4K[j]  <= 0;
+//             TLB_I_HIT_4K_OUT[j] <= 0;
+//             TLB_I_HIT_4M_OUT[j] <= 0;
+//             TLB_I_VA_12_ODD[j]  <= 0;
+//             TLB_I_VA_21_ODD[j]  <= 0;
+//             TLB_D_HIT_4K_OUT[j] <= 0;
+//             TLB_D_HIT_4M_OUT[j] <= 0;
+//             TLB_D_VA_12_ODD[j]  <= 0;
+//             TLB_D_VA_21_ODD[j]  <= 0;
+//             rd_TLB_V_1_reg[j]   <= 0;
+//             rd_TLB_D_1_reg[j]   <= 0;
+//             rd_TLB_MAT_1_reg[j] <= 0;
+//             rd_TLB_PLV_1_reg[j] <= 0;
+//             rd_TLB_PPN_1_reg[j] <= 0;
+//             rd_TLB_V_2_reg[j]   <= 0;
+//             rd_TLB_D_2_reg[j]   <= 0;
+//             rd_TLB_MAT_2_reg[j] <= 0;
+//             rd_TLB_PLV_2_reg[j] <= 0;
+//             rd_TLB_PPN_2_reg[j] <= 0;
+//         end
+//     end
+//     else if (flush) begin
+//         en_i_reg <= 0;
+//         en_d_reg <= 0;
+//         // CSR_PG_reg <= 0;
+//         // CSR_CRMD_reg <= 0;
+//         // CSR_DMW0_reg <= 0;
+//         // CSR_DMW1_reg <= 0;
+//         VA_I_reg <= 0;
+//         VA_D_reg <= 0;
+//         TAG_OFFSET_I_reg <= 0;
+//         TAG_OFFSET_D_reg <= 0;
+//         signed_ext_reg <= 0;
+//         atom_reg <= 0;
+//         SOL_reg <= 0;
+//         for(j = 0; j < `TLB_NUM; j = j + 1)begin
+//             TLB_PS_EQUAL_4K[j]  <= 0;
+//             TLB_I_HIT_4K_OUT[j] <= 0;
+//             TLB_I_HIT_4M_OUT[j] <= 0;
+//             TLB_I_VA_12_ODD[j]  <= 0;
+//             TLB_I_VA_21_ODD[j]  <= 0;
+//             TLB_D_HIT_4K_OUT[j] <= 0;
+//             TLB_D_HIT_4M_OUT[j] <= 0;
+//             TLB_D_VA_12_ODD[j]  <= 0;
+//             TLB_D_VA_21_ODD[j]  <= 0;
+//             rd_TLB_V_1_reg[j]   <= 0;
+//             rd_TLB_D_1_reg[j]   <= 0;
+//             rd_TLB_MAT_1_reg[j] <= 0;
+//             rd_TLB_PLV_1_reg[j] <= 0;
+//             rd_TLB_PPN_1_reg[j] <= 0;
+//             rd_TLB_V_2_reg[j]   <= 0;
+//             rd_TLB_D_2_reg[j]   <= 0;
+//             rd_TLB_MAT_2_reg[j] <= 0;
+//             rd_TLB_PLV_2_reg[j] <= 0;
+//             rd_TLB_PPN_2_reg[j] <= 0;
+//         end
+//     end
+//     else begin
         // CSR_PG_reg <= CSR_PG;
         // CSR_CRMD_reg <= CSR_CRMD;
         // CSR_DMW0_reg <= CSR_DMW0;
         // CSR_DMW1_reg <= CSR_DMW1;
-
+    always @(*)begin
         for(j = 0; j < `TLB_NUM; j = j + 1)begin
-            if(~stall_i) begin
-                TLB_I_HIT_4K_OUT[j] <= TLB_I_HIT_4K_IN[j];
-                TLB_I_HIT_4M_OUT[j] <= TLB_I_HIT_4M_IN[j];
-                TLB_I_VA_12_ODD[j]  <= VA_I[0];
-                TLB_I_VA_21_ODD[j]  <= VA_I[9];
-                VA_I_reg <= VA_I;
-                en_i_reg <= 1;
-                TAG_OFFSET_I_reg <= TAG_OFFSET_I;
-            end
-            else begin
-                TLB_I_HIT_4K_OUT[j] <= TLB_I_HIT_4K_OUT[j];
-                TLB_I_HIT_4M_OUT[j] <= TLB_I_HIT_4M_OUT[j];
-                TLB_I_VA_12_ODD[j]  <= TLB_I_VA_12_ODD[j];
-                TLB_I_VA_21_ODD[j]  <= TLB_I_VA_21_ODD[j];
-                VA_I_reg <= VA_I_reg;
-                en_i_reg <= en_i_reg;
-                TAG_OFFSET_I_reg <= TAG_OFFSET_I_reg;
-            end
-            if(~stall_d) begin
-                TLB_D_HIT_4K_OUT[j] <= TLB_D_HIT_4K_IN[j];
-                TLB_D_HIT_4M_OUT[j] <= TLB_D_HIT_4M_IN[j];
-                TLB_D_VA_12_ODD[j]  <= VA_D[0];
-                TLB_D_VA_21_ODD[j]  <= VA_D[9];
-                VA_D_reg <= VA_D;
-                en_d_reg <= en_d;
-                TAG_OFFSET_D_reg <= TAG_OFFSET_D;
-                signed_ext_reg <= signed_ext;
-                atom_reg <= atom;
-                SOL_reg <= store_or_load;
-            end
-            else begin
-                TLB_D_HIT_4K_OUT[j] <= TLB_D_HIT_4K_OUT[j];
-                TLB_D_HIT_4M_OUT[j] <= TLB_D_HIT_4M_OUT[j];
-                TLB_D_VA_12_ODD[j]  <= TLB_D_VA_12_ODD[j];
-                TLB_D_VA_21_ODD[j]  <= TLB_D_VA_21_ODD[j];
-                VA_D_reg <= VA_D_reg;
-                en_d_reg <= en_d_reg;
-                TAG_OFFSET_D_reg <= TAG_OFFSET_D_reg;
-                signed_ext_reg <= signed_ext_reg;
-                atom_reg <= atom_reg;
-                SOL_reg <= SOL_reg;
-            end
-            TLB_PS_EQUAL_4K[j]  <= (rd_TLB_PS[j] == 12);
-            rd_TLB_V_1_reg[j]   <= rd_TLB_V_1[j];
-            rd_TLB_D_1_reg[j]   <= rd_TLB_D_1[j];
-            rd_TLB_MAT_1_reg[j] <= rd_TLB_MAT_1[j];
-            rd_TLB_PLV_1_reg[j] <= rd_TLB_PLV_1[j];
-            rd_TLB_PPN_1_reg[j] <= rd_TLB_PPN_1[j];
-            rd_TLB_V_2_reg[j]   <= rd_TLB_V_2[j];
-            rd_TLB_D_2_reg[j]   <= rd_TLB_D_2[j];
-            rd_TLB_MAT_2_reg[j] <= rd_TLB_MAT_2[j];
-            rd_TLB_PLV_2_reg[j] <= rd_TLB_PLV_2[j];
-            rd_TLB_PPN_2_reg[j] <= rd_TLB_PPN_2[j];
+            // if(~stall_i) begin
+                TLB_I_HIT_4K_OUT[j] = TLB_I_HIT_4K_IN[j];
+                TLB_I_HIT_4M_OUT[j] = TLB_I_HIT_4M_IN[j];
+                TLB_I_VA_12_ODD[j]  = VA_I[0];
+                TLB_I_VA_21_ODD[j]  = VA_I[9];
+                VA_I_reg = VA_I;
+                en_i_reg = 1;
+                TAG_OFFSET_I_reg = TAG_OFFSET_I;
+            // end
+            // else begin
+            //     TLB_I_HIT_4K_OUT[j] = TLB_I_HIT_4K_OUT[j];
+            //     TLB_I_HIT_4M_OUT[j] = TLB_I_HIT_4M_OUT[j];
+            //     TLB_I_VA_12_ODD[j]  = TLB_I_VA_12_ODD[j];
+            //     TLB_I_VA_21_ODD[j]  = TLB_I_VA_21_ODD[j];
+            //     VA_I_reg = VA_I_reg;
+            //     en_i_reg = en_i_reg;
+            //     TAG_OFFSET_I_reg = TAG_OFFSET_I_reg;
+            // end
+            // if(~stall_d) begin
+                TLB_D_HIT_4K_OUT[j] = TLB_D_HIT_4K_IN[j];
+                TLB_D_HIT_4M_OUT[j] = TLB_D_HIT_4M_IN[j];
+                TLB_D_VA_12_ODD[j]  = VA_D[0];
+                TLB_D_VA_21_ODD[j]  = VA_D[9];
+                VA_D_reg = VA_D;
+                en_d_reg = en_d;
+                TAG_OFFSET_D_reg = TAG_OFFSET_D;
+                signed_ext_reg = signed_ext;
+                atom_reg = atom;
+                SOL_reg = store_or_load;
+            // end
+            // else begin
+            //     TLB_D_HIT_4K_OUT[j] = TLB_D_HIT_4K_OUT[j];
+            //     TLB_D_HIT_4M_OUT[j] = TLB_D_HIT_4M_OUT[j];
+            //     TLB_D_VA_12_ODD[j]  = TLB_D_VA_12_ODD[j];
+            //     TLB_D_VA_21_ODD[j]  = TLB_D_VA_21_ODD[j];
+            //     VA_D_reg = VA_D_reg;
+            //     en_d_reg = en_d_reg;
+            //     TAG_OFFSET_D_reg = TAG_OFFSET_D_reg;
+            //     signed_ext_reg = signed_ext_reg;
+            //     atom_reg = atom_reg;
+            //     SOL_reg = SOL_reg;
+            // end
+            TLB_PS_EQUAL_4K[j]  = (rd_TLB_PS[j] == 12);
+            rd_TLB_V_1_reg[j]   = rd_TLB_V_1[j];
+            rd_TLB_D_1_reg[j]   = rd_TLB_D_1[j];
+            rd_TLB_MAT_1_reg[j] = rd_TLB_MAT_1[j];
+            rd_TLB_PLV_1_reg[j] = rd_TLB_PLV_1[j];
+            rd_TLB_PPN_1_reg[j] = rd_TLB_PPN_1[j];
+            rd_TLB_V_2_reg[j]   = rd_TLB_V_2[j];
+            rd_TLB_D_2_reg[j]   = rd_TLB_D_2[j];
+            rd_TLB_MAT_2_reg[j] = rd_TLB_MAT_2[j];
+            rd_TLB_PLV_2_reg[j] = rd_TLB_PLV_2[j];
+            rd_TLB_PPN_2_reg[j] = rd_TLB_PPN_2[j];
         end
     end
-end
+// end
 
 //下面这两个wire型变量可用于检测例外
 wire [`TLB_NUM - 1:0] TLB_I_HIT;

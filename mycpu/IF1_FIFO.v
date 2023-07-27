@@ -64,14 +64,15 @@ module IF1_FIFO(
                     WAIT_TLB_OK     =   3'b101;
                     // WAIT_FETCH      =   3'b110;
 
-    localparam      WIDTH = 3,
-                    BUF_W = 3;
+    localparam      WIDTH = 2,
+                    BUF_W = 2;
 
 
     wire cache_idle;
     wire pc_fetch_ok;
     wire idle;
     wire pushable;
+    wire miss_inst=!fifo_allowin&&icache_rready;
     // reg [31:0]     if1_fifo_inst0;
     // reg [31:0]     if1_fifo_inst1;
 
