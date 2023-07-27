@@ -27,6 +27,7 @@ module EX2_WB(
     output reg ex2_wb_data_1_valid,
     output reg [4:0] ex2_wb_rd0,
     output reg [4:0] ex2_wb_rd1,
+    input        [4:0] rd_dcache_out,
     output reg ex2_wb_we0,
     output reg ex2_wb_we1,
 
@@ -39,6 +40,7 @@ module EX2_WB(
     //dcache
     input [31:0] dcache_data,
     input dcache_ready,
+    input dcache_w_ready,
 
     //csr 三条读写csr的指令都要写
     input [31:0] csr_data_in,
@@ -172,10 +174,12 @@ assign cond1 = uop1[`UOP_COND];
                 end
             end
             else if(uop0[`INS_MEM] && ~cond0[2]) begin //cond[2]为0是ld
+            if(dcache_w_ready)begin
                     ex2_wb_data_0 <= dcache_data;
-                    ex2_wb_data_0_valid <= dcache_ready;
-                    ex2_wb_rd0 <= ex_rd0;
-                    ex2_wb_we0 <= dcache_ready;
+                    ex2_wb_rd0 <= rd_dcache_out;
+            end
+                    ex2_wb_data_0_valid <= dcache_w_ready;
+                    ex2_wb_we0 <= dcache_w_ready;
             end
             else begin
                 ex2_wb_data_0 <= 0;

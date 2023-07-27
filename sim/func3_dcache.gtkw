@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
-[*] Wed Jul 26 12:25:21 2023
+[*] Thu Jul 27 01:50:04 2023
 [*]
 [dumpfile] "/home/yiran/Desktop/chiplab/sims/verilator/run_prog/log/func/func_lab3_log/simu_trace.fst"
-[dumpfile_mtime] "Wed Jul 26 11:38:38 2023"
-[dumpfile_size] 44704422
+[dumpfile_mtime] "Thu Jul 27 01:42:45 2023"
+[dumpfile_size] 44890824
 [savefile] "/home/yiran/Desktop/AmberCPU/sim/func3_dcache.gtkw"
-[timestart] 504
+[timestart] 546528
 [size] 1846 854
-[pos] -51 -51
-*-4.000000 511 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[pos] -39 -39
+*-4.000000 546601 546597 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] TOP.
 [treeopen] TOP.simu_top.
 [treeopen] TOP.simu_top.soc.
@@ -45,8 +45,10 @@ TOP.simu_top.soc.cpu.u_dcache.rready
 TOP.simu_top.soc.cpu.u_dcache.rdata[31:0]
 @200
 -write
-@28
+@29
+[color] 3
 TOP.simu_top.soc.cpu.u_dcache.wvalid
+@28
 TOP.simu_top.soc.cpu.u_dcache.wready
 @22
 TOP.simu_top.soc.cpu.u_dcache.wdata[31:0]
@@ -121,9 +123,7 @@ TOP.simu_top.soc.cpu.u_dcache.way0
 TOP.simu_top.soc.cpu.u_dcache.way1
 @22
 TOP.simu_top.soc.cpu.u_dcache.dirty_index[5:0]
-@23
 TOP.simu_top.soc.cpu.u_dcache.diety_table.dirty_num[6:0]
-@22
 TOP.simu_top.soc.cpu.u_dcache.diety_table.crt_num[6:0]
 @28
 TOP.simu_top.soc.cpu.u_dcache.diety_table.we[1:0]

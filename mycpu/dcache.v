@@ -4,7 +4,8 @@
 
 module dcache #(
     parameter INDEX_WIDTH       = 6,
-    parameter WORD_OFFSET_WIDTH = 4
+    parameter WORD_OFFSET_WIDTH = 4,
+    parameter COOKIE_WIDTH = 5
 )(
     input                   clk,
     input                   rstn,
@@ -25,7 +26,9 @@ module dcache #(
     input                   uncache,            // indicate whether the request is an uncache request
     input                   signed_ext,         // indicate whether the request is a signed extension request
     output                  idle,               // indicate whether the cache is idle
-    input                   flush,              // TODO 还没接入
+    input                   flush,              // TODO 和icache的flush处理同步一下
+    input [COOKIE_WIDTH-1 : 0]       cookie_in,
+    input [COOKIE_WIDTH-1 : 0]       cookie_out,
     /* from AXI arbiter */
     // read
     output reg              d_rvalid,           // valid signal of read request to main memory
@@ -167,6 +170,18 @@ module dcache #(
 
     assign dirty_addr[0] = {tag_rdata[0][19:0], dirty_index, 6'b0};
     assign dirty_addr[1] = {tag_rdata[1][19:0], dirty_index, 6'b0};
+
+    /* cookie */ 
+    reg [COOKIE_WIDTH-1 : 0] cookie_buf;
+    always @(posedge clk) begin
+        if(!rstn) begin
+            cookie_buf <= 0;
+        end
+        else if(req_buf_we) begin
+            cookie_buf <= cookie_in;
+        end
+    end
+    assign cookie_buf = cookie_out;
 
     /* op、 signed_ext、 is_atom、 llbit buffer */
     reg op_buf, signed_ext_buf, is_atom_buf, llbit_buf;
@@ -667,10 +682,11 @@ module dcache #(
                     next_state = IBAR;
                 else if(cacop_en)
                     next_state = CACOP;
-                else if(flush)
-                    next_state = IDLE;
+                // else if(flush)
                 else
-                    next_state = (rvalid || wvalid) ? LOOKUP : IDLE;
+                    next_state = IDLE;
+                // else
+                //     next_state = (rvalid || wvalid) ? LOOKUP : IDLE;
             end
             else begin
                 next_state = WAIT_WRITE;
