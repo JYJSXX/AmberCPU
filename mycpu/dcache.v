@@ -28,7 +28,7 @@ module dcache #(
     output                  idle,               // indicate whether the cache is idle
     input                   flush,              // TODO 和icache的flush处理同步一下
     input [COOKIE_WIDTH-1 : 0]       cookie_in,
-    input [COOKIE_WIDTH-1 : 0]       cookie_out,
+    output [COOKIE_WIDTH-1 : 0]       cookie_out,
     /* from AXI arbiter */
     // read
     output reg              d_rvalid,           // valid signal of read request to main memory
@@ -181,7 +181,7 @@ module dcache #(
             cookie_buf <= cookie_in;
         end
     end
-    assign cookie_buf = cookie_out;
+    assign cookie_out = cookie_buf;
 
     /* op、 signed_ext、 is_atom、 llbit buffer */
     reg op_buf, signed_ext_buf, is_atom_buf, llbit_buf;

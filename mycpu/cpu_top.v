@@ -1156,6 +1156,10 @@ idle_clk idle_clk1
     wire [31:0] tlbrentry;
     wire [4:0]  rd_dcache_in;
     wire [4:0]  rd_dcache_out;
+    wire [31:0] pc_dcache_in;
+    wire [31:0] pc_dcache_out;
+    wire [31:0] inst_dcache_in;
+    wire [31:0] inst_dcache_out;
     EX2_WB u_EX2_WB(
         .clk                 ( clk                 ),
         .aresetn             ( aresetn             ),
@@ -1170,6 +1174,9 @@ idle_clk idle_clk1
         .uop1                ( ex1_ex2_uop1                ),
         .ex2_result0         ( ex2_rd0_data         ),
         .ex2_result1         ( ex2_rd1_data         ),
+        .pc_dcache_out       ( pc_dcache_out       ),
+        .inst_dcache_out     ( inst_dcache_out     ),
+        .inst_dcache_in      ( inst_dcache_in      ),
         .ex_rd0              ( ex1_ex2_rd0              ),
         .ex_rd1              ( ex1_ex2_rd1              ),
         .ex2_result0_valid   ( ex2_data0_valid   ),
@@ -1436,7 +1443,7 @@ idle_clk idle_clk1
     dcache#(
         .INDEX_WIDTH                       ( 6 ),
         .WORD_OFFSET_WIDTH                 ( 4 ),
-        .COOKIE_WIDTH                      ( 5 )
+        .COOKIE_WIDTH                      ( 5+64 )
     )u_dcache(
         .clk                               ( clk                               ),
         .rstn                              ( aresetn                           ),
@@ -1454,8 +1461,8 @@ idle_clk idle_clk1
         .signed_ext                        ( signed_ext                        ),
         .idle                              ( d_idle                            ),
         .flush                             ( flush_to_dcache                   ),
-        .cookie_in                        ( {rd_dcache_in}                          ),
-        .cookie_out                      ( {rd_dcache_out}                  ),
+        .cookie_in                        ( {rd_dcache_in,pc_dcache_in,inst_dcache_in}                          ),
+        .cookie_out                      ( {rd_dcache_out,pc_dcache_out,inst_dcache_out}                  ),
         .d_rvalid                          ( d_rvalid                          ),
         .d_rready                          ( d_rready                          ),
         .d_raddr                           ( d_raddr                           ),
@@ -1492,7 +1499,9 @@ idle_clk idle_clk1
 wire [3:0]reg_ex_cond0;
 
 assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
-    TLB u_TLB(
+    TLB#(
+        .TLB_COOKIE_WIDTH (64)
+        ) u_TLB(
         .clk            ( clk            ),
         .rstn           ( aresetn           ),
         .flush          ( flush_to_tlb      ),
@@ -1513,6 +1522,8 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .signed_ext_out ( signed_ext    ),
         .atom           ( is_atom_dcache),
         .atom_out       ( is_atom_TLB   ),
+        .tlb_cookie_in  ({reg_ex_pc0, reg_ex_inst0}),
+        .tlb_cookie_out ({pc_dcache_in, inst_dcache_in}),
         .rd                 (reg_ex_rd0),
         .rd_out             (rd_dcache_in),
         .WDATA_D           ( w_data_tlb),

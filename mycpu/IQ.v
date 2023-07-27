@@ -97,7 +97,7 @@ module IQ (
     always @(posedge clk or negedge rstn) begin
         if (!rstn) begin
             id_reg_valid<=0;
-        end else if(!mod)begin
+        end else if(id_allowin && !mod)begin
             id_reg_valid<=id_readygo;
         end
     end
