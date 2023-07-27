@@ -37,11 +37,11 @@ module dirty_table(
             if(we[0]) dirty_table[w_addr][0] <= w_data;
             if(we[1]) dirty_table[w_addr][1] <= w_data;
             if(w_data) dirty_num <= dirty_num + 1;
-            if(!w_data) dirty_num <= dirty_num - 1;
+            if(!w_data && (dirty_num != 0)) dirty_num <= dirty_num - 1;
         end
         else begin
             dirty_table[w_addr] <= dirty_table[w_addr];
-            dirty_num <= crt_num;
+            dirty_num <= (csr == DONE) ? crt_num : dirty_num;
         end
     end
 

@@ -203,13 +203,13 @@ module icache #(
         if(flush || !rstn) begin
             flush_valid <= 0;
         end
-        else if(req_buf_we && (state != MISS_FLUSH) || i_rready) begin
+        else if((req_buf_we && (state != MISS_FLUSH))|| i_rready) begin
             flush_valid <= rvalid;
         end
 
     /* 2-way data memory */
     // read index
-    assign r_index = state == MISS_FLUSH ? w_index : raddr[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
+    assign r_index = (state == MISS_FLUSH) ? w_index : raddr[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
     
     // write index 
     assign w_index = req_buf[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];

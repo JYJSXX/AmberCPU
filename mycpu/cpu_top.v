@@ -804,9 +804,9 @@ idle_clk idle_clk1
     wire cpu_d_rvalid;
     wire cpu_d_wvalid;
     wire op_dcache; //0读1写
-    wire [3:0] write_type; //写入类型;0b0001为byte;0b0011为half;0b1111为word
+    wire [3:0] write_type_tlb, write_type_dcache; //写入类型;0b0001为byte;0b0011为half;0b1111为word
     wire [31:0] addr_dcache;
-    wire [31:0] w_data_dcache;
+    wire [31:0] w_data_dcache, w_data_tlb;
     wire  is_atom_dcache;
    // output uncache, 由csr负责
     
@@ -943,9 +943,9 @@ idle_clk idle_clk1
         .rvalid_dcache        ( cpu_d_rvalid             ),
         .wvalid_dcache        ( cpu_d_wvalid       ),
         .op_dcache            ( op_dcache            ),
-        .write_type_dcache    ( write_type              ),
+        .write_type_dcache    ( write_type_tlb    ),
         .addr_dcache          ( addr_dcache          ),
-        .w_data_dcache        ( w_data_dcache        ),
+        .w_data_dcache        ( w_data_tlb           ),
         .is_atom_dcache       ( is_atom_dcache       ),
         .mul_stage1_res_hh    ( mul_stage1_res_hh    ),
         .mul_stage1_res_hl    ( mul_stage1_res_hl    ),
@@ -1157,6 +1157,12 @@ idle_clk idle_clk1
     
     wire [31:0] eentry;
     wire [31:0] tlbrentry;
+    wire [4:0]  rd_dcache_in;
+    wire [4:0]  rd_dcache_out;
+    wire [31:0] pc_dcache_in;
+    wire [31:0] pc_dcache_out; // TODO 没做
+    wire [31:0] inst_dcache_in;
+    wire [31:0] inst_dcache_out;
     EX2_WB u_EX2_WB(
         .clk                 ( clk                 ),
         .aresetn             ( aresetn             ),
@@ -1172,6 +1178,9 @@ idle_clk idle_clk1
         .uop1                ( ex1_ex2_uop1                ),
         .ex2_result0         ( ex2_rd0_data         ),
         .ex2_result1         ( ex2_rd1_data         ),
+        // .pc_dcache_out       ( pc_dcache_out       ), // TODO 没做
+        // .inst_dcache_out     ( inst_dcache_out     ),
+        // .inst_dcache_in      ( inst_dcache_in      ),
         .ex_rd0              ( ex1_ex2_rd0              ),
         .ex_rd1              ( ex1_ex2_rd1              ),
         .ex2_result0_valid   ( ex2_data0_valid   ),
@@ -1182,6 +1191,7 @@ idle_clk idle_clk1
         .ex2_wb_data_0_valid ( ex2_wb_data_0_valid ),
         .ex2_wb_data_1_valid ( ex2_wb_data_1_valid ),
         .ex2_wb_rd0          ( ex2_wb_rd0          ),
+        .rd_dcache_out       ( rd_dcache_out       ),
         .ex2_wb_rd1          ( ex2_wb_rd1          ),
         .ex2_wb_we0          ( we_0          ),
         .ex2_wb_we1          ( we_1          ),
@@ -1191,6 +1201,7 @@ idle_clk idle_clk1
         .div_ready           ( div_ready           ),
         .dcache_data         ( r_data_dcache         ),
         .dcache_ready        ( wready_dcache | rready_dcache        ),
+        .dcache_w_ready      ( rready_dcache        ),
         .csr_data_in         ( csr_rd_data          ),
         .csr_ready           ( privilege_ready           ),
         .debug0_wb_pc        ( debug0_wb_pc        ),
@@ -1435,7 +1446,8 @@ idle_clk idle_clk1
 
     dcache#(
         .INDEX_WIDTH                       ( 6 ),
-        .WORD_OFFSET_WIDTH                 ( 4 )
+        .WORD_OFFSET_WIDTH                 ( 4 ),
+        .COOKIE_WIDTH                      ( 5+64 )
     )u_dcache(
         .clk                               ( clk                               ),
         .rstn                              ( aresetn                           ),
@@ -1447,12 +1459,14 @@ idle_clk idle_clk1
         .wvalid                            ( dcache_valid & SOL_D_OUT          ),
         .wready                            ( wready_dcache                     ),
         .wdata                             ( w_data_dcache                     ),
-        .wstrb                             ( write_type                        ),   
+        .wstrb                             ( write_type_dcache                    ),   
         .op                                ( SOL_D_OUT                         ),
         .uncache                           ( !is_cached_D                      ),  
         .signed_ext                        ( signed_ext                        ),
         .idle                              ( d_idle                            ),
         .flush                             ( flush_to_dcache                   ),
+        .cookie_in                        ( {rd_dcache_in,pc_dcache_in,inst_dcache_in}                          ),
+        .cookie_out                      ( {rd_dcache_out,pc_dcache_out,inst_dcache_out}                  ),
         .d_rvalid                          ( d_rvalid                          ),
         .d_rready                          ( d_rready                          ),
         .d_raddr                           ( d_raddr                           ),
@@ -1489,7 +1503,9 @@ idle_clk idle_clk1
 wire [3:0]reg_ex_cond0;
 
 assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
-    TLB u_TLB(
+    TLB#(
+        .TLB_COOKIE_WIDTH (64)
+        ) u_TLB(
         .clk            ( clk            ),
         .rstn           ( aresetn           ),
         .flush          ( flush_to_tlb      ),
@@ -1510,6 +1526,14 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .signed_ext_out ( signed_ext    ),
         .atom           ( is_atom_dcache),
         .atom_out       ( is_atom_TLB   ),
+        .tlb_cookie_in  ({reg_ex_pc0, reg_ex_inst0}),
+        .tlb_cookie_out ({pc_dcache_in, inst_dcache_in}),
+        .rd                 (reg_ex_rd0),
+        .rd_out             (rd_dcache_in),
+        .WDATA_D           ( w_data_tlb),
+        .WDATA_D_OUT       ( w_data_dcache),
+        .WSTRB_D           ( write_type_tlb),
+        .WSTRB_D_OUT       ( write_type_dcache),
         .TAG_OFFSET_I   ( fetch_pc[11:0] ),
         .TAG_OFFSET_D   (addr_dcache[11:0]),
         .PA_I           ( PA_I[31:12]           ),

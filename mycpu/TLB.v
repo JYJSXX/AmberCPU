@@ -1,7 +1,9 @@
 `timescale 1ns/1ps
 `include "TLB.vh"
 `include "csr.vh"
-module TLB(
+module TLB#(
+    parameter TLB_COOKIE_WIDTH = 64
+    )(
     input                               clk,
     input                               rstn,
     input                               flush,
@@ -20,9 +22,13 @@ module TLB(
     input                               en_d,
     input       [`TLB_VPPN_LEN : 0]     VA_I,
     input       [`TLB_VPPN_LEN : 0]     VA_D,
+    input       [31 : 0]                  WDATA_D,
+    input       [3 : 0]                    WSTRB_D,
     input                               signed_ext,
     input                               atom,
-    input                               rd,
+    input       [TLB_COOKIE_WIDTH-1:0]   tlb_cookie_in,
+    output     [TLB_COOKIE_WIDTH-1:0]   tlb_cookie_out,
+    input       [4:0]                   rd,
     input       [11:0]                  TAG_OFFSET_I,
     input       [11:0]                  TAG_OFFSET_D,
     //TO CACHE
@@ -34,13 +40,15 @@ module TLB(
     output                              en_VA_D_OUT,
     output      [`TLB_VPPN_LEN : 0]     VA_I_OUT,
     output      [`TLB_VPPN_LEN : 0]     VA_D_OUT,
+    output      [31:0]                  WDATA_D_OUT,
+    output      [3:0]                   WSTRB_D_OUT,
     output      [11:0]                  VA_TAG_OFFSET_I_OUT,
     output      [11:0]                  VA_TAG_OFFSET_D_OUT,
     output      [11:0]                  PA_TAG_OFFSET_I_OUT,
     output      [11:0]                  PA_TAG_OFFSET_D_OUT,
     output                              signed_ext_out,
     output                              atom_out,
-    output reg                          rd_out,
+    output      [4:0]                   rd_out,
     output                              SOL_D_OUT,
 
     //Priv      
@@ -146,6 +154,9 @@ generate
     end
 endgenerate
 
+reg [TLB_COOKIE_WIDTH-1:0] tlb_cookie_reg, tlb_cookie_reg2;
+
+
 // reg:HIT UNHIT_EXCEPRION
 
 reg     [0:0]                   TLB_I_HIT_4K_OUT    [`TLB_NUM - 1:0];
@@ -180,7 +191,10 @@ reg     [11:0]                  TAG_OFFSET_I_reg                    ;
 reg     [11:0]                  TAG_OFFSET_D_reg                    ;
 reg                             signed_ext_reg                      ;
 reg                             atom_reg                            ;
+reg     [4:0]                   rd_reg                                      ;
 reg                             SOL_reg                             ;
+reg     [31 : 0]               WDATA_D_reg                         ;
+reg     [3 : 0]                 WSTRB_D_reg                         ;
 
 // initial begin
 //     en_i_reg = 0;
@@ -457,8 +471,11 @@ reg [11:0]              TAG_OFFSET_I_reg2 = 0;
 reg [11:0]              TAG_OFFSET_D_reg2 = 0;
 reg                     signed_ext_reg2 = 0;
 reg                     atom_reg2 = 0;
-reg                     rd_reg2 = 0;
+// reg                     rd_reg2 = 0;
 reg                     SOL_reg2 = 0;
+reg      [31 : 0]       WDATA_D_reg2 = 0;
+reg      [3 : 0]        WSTRB_D_reg2 = 0;
+reg [4 : 0]             rd_reg2 = 0;
 
 assign en_VA_I_OUT = en_i_reg2;
 assign en_VA_D_OUT = en_d_reg2;
@@ -499,7 +516,10 @@ always @(posedge clk or negedge rstn)begin
         signed_ext_reg2 <= 0;
         atom_reg2 <= 0;
         SOL_reg2 <= 0;
+        WDATA_D_reg2 <= 0;
+        WSTRB_D_reg2 <= 0;
         rd_reg2 <= 0;
+        tlb_cookie_reg2 <= 0;
         for(j = 0; j < `TLB_PPN_LEN; j = j + 1)begin
             TLB_I_PPN_TRANS_reg[j] <= 0;
             TLB_D_PPN_TRANS_reg[j] <= 0;
@@ -527,7 +547,10 @@ always @(posedge clk or negedge rstn)begin
         signed_ext_reg2 <= 0;
         atom_reg2 <= 0;
         SOL_reg2 <= 0;
+        WDATA_D_reg2 <= 0;
+        WSTRB_D_reg2 <= 0;
         rd_reg2 <= 0;
+        tlb_cookie_reg2 <= 0;
         for(j = 0; j < `TLB_PPN_LEN; j = j + 1)begin
             TLB_I_PPN_TRANS_reg[j] <= 0;
             TLB_D_PPN_TRANS_reg[j] <= 0;
@@ -564,6 +587,10 @@ always @(posedge clk or negedge rstn)begin
             atom_reg2 <= atom_reg;
             rd_reg2 <= rd;
             SOL_reg2 <= SOL_reg;
+            WDATA_D_reg2 <= WDATA_D_reg;
+            WSTRB_D_reg2 <= WSTRB_D_reg;
+            rd_reg2 <= rd_reg;
+            tlb_cookie_reg2 <= tlb_cookie_reg;
         end
         else begin
             TLB_D_V_TRANS_reg <= TLB_D_V_TRANS_reg;
@@ -577,6 +604,10 @@ always @(posedge clk or negedge rstn)begin
             atom_reg2 <= atom_reg2;
             rd_reg2 <= rd_reg2;
             SOL_reg2 <= SOL_reg2;
+            WDATA_D_reg2 <= WDATA_D_reg2;
+            WSTRB_D_reg2 <= WSTRB_D_reg2;
+            rd_reg2 <= rd_reg2;
+            tlb_cookie_reg2 <= tlb_cookie_reg2;
         end
         // CSR_PG_reg2 <= CSR_PG_reg;
         // CSR_CRMD_reg2 <= CSR_CRMD_reg;
@@ -631,7 +662,10 @@ reg [11:0]                  TAG_OFFSET_D_reg3 = 0;
 reg                         SOL_reg3 = 0;
 
 assign  SOL_D_OUT = SOL_reg2;
+assign  WDATA_D_OUT = WDATA_D_reg2;
+assign  WSTRB_D_OUT = WSTRB_D_reg2;
 assign  rd_out = rd_reg2;
+assign  tlb_cookie_out = tlb_cookie_reg2;
 
 always @(posedge clk or negedge rstn) begin
     if(~rstn)begin
