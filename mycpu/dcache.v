@@ -153,6 +153,47 @@ module dcache #(
     reg     [31:0]              m_buf;
     reg                         mbuf_we;
 
+    // statistics
+    reg     [63:0]              total_time;
+    reg     [63:0]              total_hit;
+    reg     [63:0]              total_request;
+    reg     [63:0]              miss_time;
+    reg     [63:0]              write_time;
+    always @(posedge clk) begin
+        if(!rstn) begin
+            total_time <= 0;
+            total_hit <= 0;
+            total_request <= 0;
+            miss_time <= 0;
+        end
+        else if(state == LOOKUP) begin
+            total_hit <= total_hit + {63'b0, cache_hit};
+            total_time <= total_time + 1;
+            total_request <= total_request +1;
+            miss_time <= miss_time ;
+        end
+        else if(state == MISS || state == WAIT_WRITE) begin
+            total_time <= total_time + 1;
+            total_hit <= total_hit ;
+            miss_time <= miss_time +1;
+        end
+        else begin
+            total_time <= state == IDLE ? total_time +1 : total_time;
+            total_hit <= total_hit ;
+            miss_time <= miss_time ;
+        end
+    end
+
+    always @(posedge clk) begin
+        if(!rstn) begin
+            write_time <= 0;
+        end
+        else if(wfsm_state == WRITE)
+            write_time <= write_time +1;
+        else
+            write_time <= write_time;
+    end
+
     // communication between write fsm and main fsm
     reg                         wfsm_en, wfsm_reset, wrt_finish;
 

@@ -91,6 +91,34 @@ module icache #(
     reg                         rready_temp;
     assign rready = rready_temp & flush_valid;
 
+    // statistics
+    reg     [63:0]              total_time;
+    reg     [63:0]              total_request;
+    reg     [63:0]              total_hit;
+    reg     [64:0]              miss_time;
+    always @(posedge clk) begin
+        if(!rstn) begin
+            total_time <= 0;
+            total_hit <= 0;
+            miss_time <= 0;
+            total_request <= 0;
+        end
+        else if(state == LOOKUP) begin
+            total_hit <= total_hit + {63'b0, cache_hit};
+            total_request <= total_request +1;
+            total_time <= total_time + 1;
+        end
+        else if(state == MISS || state == MISS_FLUSH) begin
+            total_time <= total_time + 1;
+            miss_time <= miss_time +1;
+        end
+        else begin
+            total_time <= state == IDLE ? total_time +1 : total_time;
+            total_hit <= total_hit ;
+            miss_time <= miss_time ;
+        end
+    end
+
     // cache operation
     reg tagv_clear;
     reg [1:0] cacop_code_buf;
