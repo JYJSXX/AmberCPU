@@ -232,6 +232,11 @@ assign cond1 = uop1_reg[`UOP_COND];
                     ex2_wb_data_2_valid <= dcache_w_ready;
                     ex2_wb_we2 <= dcache_w_ready;
             end
+            else begin 
+                ex2_wb_we2 <= 0;
+                ex2_wb_data_2_valid <= 0;
+                ex2_wb_rd2 <= 0;
+            end
         end
 
     end
