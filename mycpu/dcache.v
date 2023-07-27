@@ -723,11 +723,11 @@ module dcache #(
                     next_state = IBAR;
                 else if(cacop_en)
                     next_state = CACOP;
-                // else if(flush)
-                else
-                    next_state = IDLE;
+                else if(flush)
                 // else
-                //     next_state = (rvalid || wvalid) ? LOOKUP : IDLE;
+                    next_state = IDLE;
+                else
+                    next_state = (rvalid || wvalid) ? LOOKUP : IDLE;
             end
             else begin
                 next_state = WAIT_WRITE;
@@ -889,8 +889,8 @@ module dcache #(
             wfsm_reset      = 1;
             exception_sel   = 1;
             cacop_ready     = 1;
-            rready          = wrt_finish & !we_pipe;
-            wready          = wrt_finish & we_pipe;
+            rready          = wrt_finish && !op_buf;
+            wready          = wrt_finish && op_buf;
             data_from_mem   = 0;
             req_buf_we      = wrt_finish & (rvalid || wvalid);
             if(cacop_en_buf && wrt_finish)
