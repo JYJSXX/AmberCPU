@@ -321,7 +321,23 @@ module icache #(
     wire victim_sel;
     assign victim_sel = lru_sel[0] ? 0 : 1;
     wire victim_we;
-    assign victim_we = missbuf_we && valid[victim_sel] && flush_valid;
+    assign victim_we = missbuf_we && valid[victim_sel] && flush_valid;  //&& !miss_flush_flag
+    reg [25:0] victim_w_tag_buf;
+    reg        victim_flush_miss;
+    wire [25:0] victim_w_tag;
+    assign victim_w_tag = {tag_rdata[victim_sel][TAG_WIDTH-1:0], req_buf[11:6]};
+    always@(posedge clk) begin
+        if(!rstn) begin
+            victim_w_tag_buf <= 0;
+            victim_flush_miss <= 0;
+        end
+        else begin
+            victim_w_tag_buf <= victim_w_tag;
+            victim_flush_miss <= miss_flush_flag;
+        end
+    end
+
+    //TODO: victim cache问题
 
     victim_cache #(
         .CAPACITY(8)
@@ -331,7 +347,7 @@ module icache #(
         .r_tag      ({paddr_buf[31:12],req_buf[11:6]}),
         .victim_hit (victim_hit),
         .data_out   (victim_data),
-        .w_tag      ({tag_rdata[victim_sel][TAG_WIDTH-1:0], req_buf[11:6]}),
+        .w_tag      (victim_flush_miss? victim_w_tag_buf : victim_w_tag),
         .we         (victim_we), // missbuf_we && valid[victim_sel] && victim_hit
         .data_in    (mem_rdata[victim_sel])
     );

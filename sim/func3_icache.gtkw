@@ -1,27 +1,29 @@
 [*]
 [*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
-[*] Thu Jul 27 13:40:31 2023
+[*] Thu Jul 27 14:58:38 2023
 [*]
 [dumpfile] "/home/yiran/Desktop/chiplab/sims/verilator/run_prog/log/func/func_lab3_log/simu_trace.fst"
-[dumpfile_mtime] "Thu Jul 27 13:36:13 2023"
-[dumpfile_size] 81159
+[dumpfile_mtime] "Thu Jul 27 14:50:56 2023"
+[dumpfile_size] 98830849
 [savefile] "/home/yiran/Desktop/AmberCPU/sim/func3_icache.gtkw"
-[timestart] 776286
+[timestart] 1173170
 [size] 1848 1016
-[pos] -89 -100
-*-6.000000 776548 14405 776492 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[pos] -39 -39
+*-3.000000 1173190 14405 776492 1173188 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] TOP.
 [treeopen] TOP.simu_top.
 [treeopen] TOP.simu_top.soc.
 [treeopen] TOP.simu_top.soc.cpu.
 [treeopen] TOP.simu_top.soc.cpu.u_dcache.
 [treeopen] TOP.simu_top.soc.cpu.u_EX1.
+[treeopen] TOP.simu_top.soc.cpu.u_EX2_WB.
 [treeopen] TOP.simu_top.soc.cpu.u_FIFO.
 [treeopen] TOP.simu_top.soc.cpu.u_icache.
 [treeopen] TOP.simu_top.soc.cpu.u_ID_REG.
 [treeopen] TOP.simu_top.soc.cpu.u_IF0.
 [treeopen] TOP.simu_top.soc.cpu.u_IF1_FIFO.
 [treeopen] TOP.simu_top.soc.cpu.u_REG_EX1.
+[treeopen] TOP.simu_top.soc.cpu.u_REG_EX1.regfile1.
 [sst_width] 325
 [signals_width] 367
 [sst_expanded] 1
@@ -52,16 +54,13 @@ TOP.simu_top.soc.cpu.u_REG_EX1.reg_ex_pc1[31:0]
 TOP.simu_top.soc.cpu.u_REG_EX1.reg_ex_rd1[4:0]
 TOP.simu_top.soc.cpu.u_REG_EX1.id_reg_pc0[31:0]
 TOP.simu_top.soc.cpu.u_REG_EX1.id_reg_rd0[4:0]
-TOP.simu_top.soc.cpu.u_REG_EX1.id_reg_pc1[31:0]
 TOP.simu_top.soc.cpu.u_REG_EX1.id_reg_rd1[4:0]
+TOP.simu_top.soc.cpu.u_REG_EX1.id_reg_pc1[31:0]
 TOP.simu_top.soc.cpu.u_ID_REG.iq_inst0[31:0]
 TOP.simu_top.soc.cpu.u_ID_REG.iq_inst1[31:0]
 TOP.simu_top.soc.cpu.u_ID_REG.iq_pc0[31:0]
 TOP.simu_top.soc.cpu.u_ID_REG.iq_pc1[31:0]
 TOP.simu_top.soc.cpu.u_FIFO.fetch_buf.count[4:0]
-@28
-TOP.simu_top.soc.cpu.DifftestInstrCommit0.clock
-@22
 TOP.simu_top.soc.cpu.u_icache.total_hit[63:0]
 TOP.simu_top.soc.cpu.u_icache.total_request[63:0]
 TOP.simu_top.soc.cpu.u_icache.miss_time[64:0]
@@ -120,11 +119,13 @@ TOP.simu_top.soc.cpu.pc_in_stall
 TOP.simu_top.soc.cpu.u_icache.rvalid
 [color] 3
 TOP.simu_top.soc.cpu.u_icache.rready
-@22
+@23
 TOP.simu_top.soc.cpu.u_icache.raddr[31:0]
+@22
 TOP.simu_top.soc.cpu.u_icache.p_addr[31:0]
 [color] 3
 TOP.simu_top.soc.cpu.u_icache.rdata[63:0]
+TOP.simu_top.soc.cpu.u_icache.rdata_cache[63:0]
 TOP.simu_top.soc.cpu.u_icache.pc_out[31:0]
 @28
 TOP.simu_top.soc.cpu.u_icache.idle
@@ -224,13 +225,14 @@ TOP.simu_top.soc.cpu.u_icache.paddr_buf[31:0]
 @28
 TOP.simu_top.soc.cpu.u_icache.miss_flush_counter_new
 TOP.simu_top.soc.cpu.u_icache.miss_flush_counter_old
-@29
 TOP.simu_top.soc.cpu.u_icache.miss_flush_counter_old_buf
-@28
 TOP.simu_top.soc.cpu.u_icache.hit[1:0]
+[color] 3
 TOP.simu_top.soc.cpu.u_icache.flush_valid
 TOP.simu_top.soc.cpu.u_icache.uncache_buf
+[color] 3
 TOP.simu_top.soc.cpu.u_icache.missbuf_we
+TOP.simu_top.soc.cpu.u_icache.miss_flush_flag
 @22
 TOP.simu_top.soc.cpu.u_icache.ret_buf[511:0]
 @c00028
@@ -256,8 +258,18 @@ TOP.simu_top.soc.cpu.u_icache.mem_we[1:0]
 -group_end
 @200
 -tagv_mem
-@24
+@c00024
 TOP.simu_top.soc.cpu.u_icache.r_index[5:0]
+@28
+(0)TOP.simu_top.soc.cpu.u_icache.r_index[5:0]
+(1)TOP.simu_top.soc.cpu.u_icache.r_index[5:0]
+(2)TOP.simu_top.soc.cpu.u_icache.r_index[5:0]
+(3)TOP.simu_top.soc.cpu.u_icache.r_index[5:0]
+(4)TOP.simu_top.soc.cpu.u_icache.r_index[5:0]
+(5)TOP.simu_top.soc.cpu.u_icache.r_index[5:0]
+@1401200
+-group_end
+@24
 TOP.simu_top.soc.cpu.u_icache.tag_index[5:0]
 @22
 TOP.simu_top.soc.cpu.u_icache.tag_in[20:0]
@@ -279,13 +291,19 @@ TOP.simu_top.soc.cpu.u_icache.valid[1]
 TOP.simu_top.soc.cpu.u_icache.victim_cache.r_tag[25:0]
 @28
 TOP.simu_top.soc.cpu.u_icache.victim_hit
+@24
+TOP.simu_top.soc.cpu.u_icache.victim_cache.hit_index[2:0]
+@28
 TOP.simu_top.soc.cpu.u_icache.victim_sel
 @22
 TOP.simu_top.soc.cpu.u_icache.victim_cache.w_tag[25:0]
 @28
-TOP.simu_top.soc.cpu.u_icache.victim_we
+TOP.simu_top.soc.cpu.DifftestInstrCommit0.clock
 @24
 TOP.simu_top.soc.cpu.u_icache.victim_cache.counter[2:0]
+@28
+TOP.simu_top.soc.cpu.u_icache.victim_we
+TOP.simu_top.soc.cpu.u_icache.victim_cache.counter_we
 @22
 TOP.simu_top.soc.cpu.u_icache.victim_data[511:0]
 TOP.simu_top.soc.cpu.u_EX1.pc0[31:0]
