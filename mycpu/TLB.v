@@ -22,6 +22,7 @@ module TLB(
     input       [`TLB_VPPN_LEN : 0]     VA_D,
     input                               signed_ext,
     input                               atom,
+    input                               rd,
     input       [11:0]                  TAG_OFFSET_I,
     input       [11:0]                  TAG_OFFSET_D,
     //TO CACHE
@@ -39,6 +40,7 @@ module TLB(
     output      [11:0]                  PA_TAG_OFFSET_D_OUT,
     output                              signed_ext_out,
     output                              atom_out,
+    output reg                          rd_out,
     output                              SOL_D_OUT,
 
     //Priv      
@@ -132,6 +134,7 @@ wire [0:0] TLB_I_HIT_4K_IN [`TLB_NUM - 1:0];
 wire [0:0] TLB_D_HIT_4K_IN [`TLB_NUM - 1:0];
 wire [0:0] TLB_I_HIT_4M_IN [`TLB_NUM - 1:0];
 wire [0:0] TLB_D_HIT_4M_IN [`TLB_NUM - 1:0];
+
 
 
 generate
@@ -454,6 +457,7 @@ reg [11:0]              TAG_OFFSET_I_reg2 = 0;
 reg [11:0]              TAG_OFFSET_D_reg2 = 0;
 reg                     signed_ext_reg2 = 0;
 reg                     atom_reg2 = 0;
+reg                     rd_reg2 = 0;
 reg                     SOL_reg2 = 0;
 
 assign en_VA_I_OUT = en_i_reg2;
@@ -495,6 +499,7 @@ always @(posedge clk or negedge rstn)begin
         signed_ext_reg2 <= 0;
         atom_reg2 <= 0;
         SOL_reg2 <= 0;
+        rd_reg2 <= 0;
         for(j = 0; j < `TLB_PPN_LEN; j = j + 1)begin
             TLB_I_PPN_TRANS_reg[j] <= 0;
             TLB_D_PPN_TRANS_reg[j] <= 0;
@@ -522,6 +527,7 @@ always @(posedge clk or negedge rstn)begin
         signed_ext_reg2 <= 0;
         atom_reg2 <= 0;
         SOL_reg2 <= 0;
+        rd_reg2 <= 0;
         for(j = 0; j < `TLB_PPN_LEN; j = j + 1)begin
             TLB_I_PPN_TRANS_reg[j] <= 0;
             TLB_D_PPN_TRANS_reg[j] <= 0;
@@ -556,6 +562,7 @@ always @(posedge clk or negedge rstn)begin
             TAG_OFFSET_D_reg2 <= TAG_OFFSET_D_reg;
             signed_ext_reg2 <= signed_ext_reg;
             atom_reg2 <= atom_reg;
+            rd_reg2 <= rd;
             SOL_reg2 <= SOL_reg;
         end
         else begin
@@ -568,6 +575,7 @@ always @(posedge clk or negedge rstn)begin
             TAG_OFFSET_D_reg2 <= TAG_OFFSET_D_reg2;
             signed_ext_reg2 <= signed_ext_reg2;
             atom_reg2 <= atom_reg2;
+            rd_reg2 <= rd_reg2;
             SOL_reg2 <= SOL_reg2;
         end
         // CSR_PG_reg2 <= CSR_PG_reg;
@@ -623,6 +631,7 @@ reg [11:0]                  TAG_OFFSET_D_reg3 = 0;
 reg                         SOL_reg3 = 0;
 
 assign  SOL_D_OUT = SOL_reg2;
+assign  rd_out = rd_reg2;
 
 always @(posedge clk or negedge rstn) begin
     if(~rstn)begin
