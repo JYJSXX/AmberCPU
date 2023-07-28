@@ -1,0 +1,76 @@
+[*]
+[*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
+[*] Fri Jul 28 10:00:44 2023
+[*]
+[dumpfile] "/home/yiran/Desktop/chiplab/sims/verilator/run_prog/log/func/func_lab4_log/simu_trace.fst"
+[dumpfile_mtime] "Fri Jul 28 09:51:53 2023"
+[dumpfile_size] 50709068
+[savefile] "/home/yiran/Desktop/AmberCPU/sim/BTB.gtkw"
+[timestart] 508366
+[size] 1848 1016
+[pos] -1 -1
+*-7.000000 508875 546597 879716 155258 508758 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] TOP.
+[treeopen] TOP.simu_top.
+[treeopen] TOP.simu_top.soc.
+[treeopen] TOP.simu_top.soc.cpu.
+[treeopen] TOP.simu_top.soc.cpu.u_dcache.
+[treeopen] TOP.simu_top.soc.cpu.u_EX1.
+[treeopen] TOP.simu_top.soc.cpu.u_EX1.divider1.
+[treeopen] TOP.simu_top.soc.cpu.u_EX2_WB.
+[treeopen] TOP.simu_top.soc.cpu.u_FIFO.
+[treeopen] TOP.simu_top.soc.cpu.u_icache.
+[treeopen] TOP.simu_top.soc.cpu.u_ID_REG.
+[treeopen] TOP.simu_top.soc.cpu.u_IF0.
+[treeopen] TOP.simu_top.soc.cpu.u_IF1_FIFO.
+[treeopen] TOP.simu_top.soc.cpu.u_REG_EX1.
+[treeopen] TOP.simu_top.soc.cpu.u_REG_EX1.regfile1.
+[treeopen] TOP.simu_top.soc.cpu.u_TLB.
+[sst_width] 325
+[signals_width] 458
+[sst_expanded] 1
+[sst_vpaned_height] 264
+@200
+-icache_in
+@22
+TOP.simu_top.soc.cpu.pc_next[31:0]
+@29
+TOP.simu_top.soc.cpu.pc_taken
+@200
+-if1_fifo_in
+@22
+TOP.simu_top.soc.cpu.icache_pc_next[31:0]
+@28
+TOP.simu_top.soc.cpu.pc_taken_out
+@200
+-FIFO_in
+@22
+TOP.simu_top.soc.cpu.if1_fifo_pc_next[31:0]
+@28
+TOP.simu_top.soc.cpu.if1_fifo_pc_taken
+@200
+-FIFO_ID_IN
+@22
+TOP.simu_top.soc.cpu.fifo_pc_next[31:0]
+@28
+TOP.simu_top.soc.cpu.fifo_pc_taken
+@200
+-ID_REG_IN
+@22
+TOP.simu_top.soc.cpu.fifo_id_pc_next[31:0]
+@28
+TOP.simu_top.soc.cpu.fifo_pc_taken
+@200
+-REG_EX1_IN
+@22
+TOP.simu_top.soc.cpu.iq_pc_next[31:0]
+@28
+TOP.simu_top.soc.cpu.iq_pc_taken
+@200
+-EX1_IN
+@22
+TOP.simu_top.soc.cpu.reg_ex_pc_next[31:0]
+@28
+TOP.simu_top.soc.cpu.reg_ex_pc_taken
+[pattern_trace] 1
+[pattern_trace] 0
