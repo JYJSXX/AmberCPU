@@ -14,6 +14,7 @@ module ID_REG(
     input [31:0] fifo_id_pc0,
     input [31:0] fifo_id_pc1,
     input [31:0] fifo_id_pc_next,
+    input         fifo_id_pc_taken,
     input [31:0] fifo_id_badv,
     input [1:0]  fifo_id_excp_flag,
     input [6:0]  fifo_id_exception,
@@ -42,6 +43,7 @@ module ID_REG(
     output  [31:0] iq_pc0,
     output  [31:0] iq_pc1,
     output  [31:0] iq_pc_next,
+    output          iq_pc_taken,
     output  [31:0] iq_inst0,
     output  [31:0] iq_inst1,
     output  [31:0] iq_badv,
@@ -71,6 +73,7 @@ module ID_REG(
     reg [31:0] id_reg_pc0;
     reg [31:0] id_reg_pc1;
     reg [31:0] id_reg_pc_next;
+    reg id_reg_pc_taken;
     reg [31:0] id_reg_inst0;
     reg [31:0] id_reg_inst1;
     reg [31:0] id_reg_badv;
@@ -102,6 +105,7 @@ always@(posedge aclk) begin
         id_reg_pc0  <= 0;
         id_reg_pc1  <= 0;
         id_reg_pc_next<=0;
+        id_reg_pc_taken<=0;
         id_reg_inst0  <= `INST_NOP;
         id_reg_inst1  <= `INST_NOP;
         id_reg_badv  <= 0;
@@ -131,6 +135,7 @@ always@(posedge aclk) begin
         id_reg_pc0  <= fifo_id_pc0;
         id_reg_pc1  <= fifo_id_pc1;
         id_reg_pc_next<=fifo_id_pc_next;
+        id_reg_pc_taken<=fifo_id_pc_taken;
         id_reg_inst0  <= fifo_id_inst0;
         id_reg_inst1  <= fifo_id_inst1;
         id_reg_badv  <= fifo_id_badv;
@@ -162,6 +167,7 @@ always@(posedge aclk) begin
         id_reg_pc0  <= id_reg_pc0;
         id_reg_pc1  <= id_reg_pc1;
         id_reg_pc_next<=id_reg_pc_next;
+        id_reg_pc_taken<=id_reg_pc_taken;
         id_reg_inst0  <= id_reg_inst0;
         id_reg_inst1  <= id_reg_inst1;
         id_reg_badv  <= id_reg_badv;
@@ -202,6 +208,7 @@ end
         .id_reg_pc0               ( id_reg_pc0               ),
         .id_reg_pc1               ( id_reg_pc1               ),
         .id_reg_pc_next           ( id_reg_pc_next           ),
+        .id_reg_pc_taken          ( id_reg_pc_taken          ),
         .id_reg_inst0             ( id_reg_inst0             ),
         .id_reg_inst1             ( id_reg_inst1             ),
         .id_reg_badv              ( id_reg_badv              ),
@@ -230,6 +237,7 @@ end
         .iq_pc0                   ( iq_pc0                   ),
         .iq_pc1                   ( iq_pc1                   ),
         .iq_pc_next               ( iq_pc_next               ),
+        .iq_pc_taken              ( iq_pc_taken              ),
         .iq_inst0                 ( iq_inst0                 ),
         .iq_inst1                 ( iq_inst1                 ),
         .iq_badv                  ( iq_badv                  ),

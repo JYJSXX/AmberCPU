@@ -30,6 +30,7 @@ module IF0 (
 
     //other
     output [31:0] pc_next,
+    output         pc_taken,
     output pc_in_stall
     
 );

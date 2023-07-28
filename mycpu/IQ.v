@@ -19,6 +19,7 @@ module IQ (
     input  [31:0] id_reg_pc0,
     input  [31:0] id_reg_pc1,
     input  [31:0] id_reg_pc_next,
+    input         id_reg_pc_taken,
     input  [31:0] id_reg_inst0,
     input  [31:0] id_reg_inst1,
     input  [31:0] id_reg_badv,
@@ -48,6 +49,7 @@ module IQ (
     output  reg [31:0] iq_pc0,
     output  reg [31:0] iq_pc1,
     output  reg [31:0] iq_pc_next,
+    output  reg         iq_pc_taken,
     output  reg [31:0] iq_inst0,
     output  reg [31:0] iq_inst1,
     output  reg [31:0] iq_badv,
@@ -115,6 +117,7 @@ module IQ (
             iq_pc0=id_reg_pc1;
             iq_pc1=`PC_RESET;
             iq_pc_next=id_reg_pc_next;
+            iq_pc_taken=id_reg_pc_taken;
             iq_inst0=id_reg_inst1;
             iq_inst1=`INST_NOP;
             iq_badv=id_reg_badv;
@@ -142,6 +145,7 @@ module IQ (
         end else begin
             iq_pc0  = id_reg_pc0;
             iq_pc_next=id_reg_pc_next;
+            iq_pc_taken=id_reg_pc_taken;
             // iq_reg_pc1  = id_reg_pc1;
             iq_inst0  = id_reg_inst0;
             // iq_reg_inst1  = id_reg_inst1;

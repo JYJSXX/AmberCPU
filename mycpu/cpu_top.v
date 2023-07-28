@@ -183,6 +183,8 @@ idle_clk idle_clk1
 
     
     wire [31:0]  pc_next;//rready control logic : use a tmp to store inst temporarily
+    wire    pc_taken_out;
+    wire    pc_taken;
     wire         pc_in_stall;
     wire ex2_wb_excp_flag; 
     IF0 u_IF0(
@@ -190,6 +192,7 @@ idle_clk idle_clk1
         .rstn                ( aresetn             ),
         .if0_readygo         ( if0_readygo         ),
         .if0_allowin         ( if0_allowin         ),
+        .pc_taken           ( pc_taken        ),
         .flush               ( flush_to_if0        ),
         .set_pc_from_ID      ( set_pc_from_ID      ),
         .pc_from_ID          ( pc_from_ID          ),
@@ -280,7 +283,8 @@ idle_clk idle_clk1
     wire  [31:0]    if1_fifo_icache_badv;
     wire  [6:0]     if1_fifo_icache_exception;
     wire  [1:0]     if1_fifo_icache_excp_flag;
-    wire  [31:0]    if1_fifo_icache_cookie_out;
+    wire  [31+3:0]    if1_fifo_icache_cookie_out;
+    wire            if1_fifo_pc_taken;
     wire icache_rvalid;
     wire nearly_full;
     // wire            if1_fifo_cacop_ready;
@@ -298,6 +302,8 @@ idle_clk idle_clk1
         .nearly_full                ( nearly_full                ),
         .fetch_pc                   ( fetch_pc                   ),
         .pc_out                     ( pc_out                     ),
+        .pc_taken_out               ( pc_taken_out             ), 
+        .if1_fifo_pc_taken           ( if1_fifo_pc_taken         ),
         // .if0_if1_pc                 ( if0_if1_pc                 ),
         // .if0_if1_pc_next            ( if0_if1_pc_next            ),
         .icache_badv                ( icache_badv                ),
@@ -331,7 +337,6 @@ idle_clk idle_clk1
         .if1_fifo_icache_excp_flag  ( if1_fifo_icache_excp_flag  ),
         .if1_fifo_icache_cookie_out ( if1_fifo_icache_cookie_out )
     );
-
 
     
     wire    [1 :0]      inst_btype;
@@ -379,6 +384,7 @@ idle_clk idle_clk1
     
 
     wire  fifo_valid,fifo_ready;
+    wire fifo_pc_taken;
 
 
     FIFO u_FIFO(
@@ -396,6 +402,7 @@ idle_clk idle_clk1
         .if1_fifo_inst1             ( if1_fifo_inst1             ),
         .if1_fifo_pc                ( if1_fifo_pc                ),
         .if1_fifo_pc_next           ( if1_fifo_pc_next           ),
+        .if1_fifo_pc_taken          ( if1_fifo_pc_taken ),
         .if1_fifo_icache_badv       ( if1_fifo_icache_badv       ),
         .if1_fifo_icache_cookie_out ( if1_fifo_icache_cookie_out ),
         .if1_fifo_icache_exception  ( if1_fifo_icache_exception  ),
@@ -405,6 +412,7 @@ idle_clk idle_clk1
         .fifo_pc                    ( fifo_pc                    ),
         .fifo_pcAdd                 ( fifo_pcAdd                 ),
         .fifo_pc_next               ( fifo_pc_next               ),
+        .fifo_pc_taken              ( fifo_pc_taken              ),
         .fifo_badv                  ( fifo_badv                  ),
         .fifo_cookie_out            ( fifo_cookie_out            ),
         .fifo_exception             ( fifo_exception             ),
@@ -430,6 +438,7 @@ idle_clk idle_clk1
     
 
     wire  id_readygo;//to decoder stage,tell id I'm valid
+    wire fifo_id_pc_taken;
     FIFO_ID u_FIFO_ID(
         .clk                 ( clk                 ),
         .rstn                ( aresetn             ),
@@ -446,6 +455,7 @@ idle_clk idle_clk1
         .fifo_pc             ( fifo_pc             ),
         .fifo_pc_next        ( fifo_pc_next        ),
         .fifo_pcAdd          ( fifo_pcAdd          ),
+        .fifo_pc_taken       ( fifo_pc_taken       ),
         .fifo_badv           ( fifo_badv           ),
         .fifo_cookie_out     ( fifo_cookie_out     ),
         .fifo_exception      ( fifo_exception      ),
@@ -457,6 +467,7 @@ idle_clk idle_clk1
         .fifo_id_pc          ( fifo_id_pc          ),
         .fifo_id_pcAdd       ( fifo_id_pcAdd       ),
         .fifo_id_pc_next     ( fifo_id_pc_next     ),
+        .fifo_id_pc_taken    ( fifo_id_pc_taken    ),
         .fifo_id_badv        ( fifo_id_badv        ),
         .fifo_id_cookie_out  ( fifo_id_cookie_out  ),
         .fifo_id_exception   ( fifo_id_exception   ),
@@ -524,6 +535,7 @@ idle_clk idle_clk1
     wire [31:0] iq_pc0;
     wire [31:0] iq_pc1;
     wire [31:0] iq_pc_next;
+    wire iq_pc_taken;
     wire [31:0] iq_inst0;
     wire [31:0] iq_inst1;
     wire [31:0] iq_badv;
@@ -562,6 +574,7 @@ idle_clk idle_clk1
         .fifo_id_pc0          ( fifo_id_pc              ),
         .fifo_id_pc1          ( fifo_id_pcAdd           ),
         .fifo_id_pc_next      ( fifo_id_pc_next         ),
+        .fifo_id_pc_taken     ( fifo_id_pc_taken        ),
         .fifo_id_badv         ( fifo_id_badv            ),
         .fifo_id_excp_flag    ( fifo_id_excp_flag       ),
         .fifo_id_exception    ( fifo_id_exception       ),
@@ -588,6 +601,7 @@ idle_clk idle_clk1
         .iq_pc0               ( iq_pc0                  ),
         .iq_pc1               ( iq_pc1                  ),
         .iq_pc_next           ( iq_pc_next              ),
+        .iq_pc_taken          ( iq_pc_taken             ),
         .iq_inst0             ( iq_inst0                ),
         .iq_inst1             ( iq_inst1                ),
         .iq_badv              ( iq_badv                 ),
@@ -625,6 +639,7 @@ idle_clk idle_clk1
     wire [31:0] reg_ex_pc0;
     wire [31:0] reg_ex_pc1;
     wire [31:0] reg_ex_pc_next;
+    wire         reg_ex_pc_taken;
     wire [31:0] reg_ex_inst0;
     wire [31:0] reg_ex_inst1;
     wire reg_ex_branch_flag;
@@ -685,6 +700,7 @@ idle_clk idle_clk1
         .id_reg_pc0              ( iq_pc0              ),
         .id_reg_pc1              ( iq_pc1              ),
         .id_reg_pc_next          ( iq_pc_next          ),
+        .id_reg_pc_taken         ( iq_pc_taken         ),
         .id_reg_inst0            ( iq_inst0            ),
         .id_reg_inst1            ( iq_inst1            ),
         .id_reg_exception        ( iq_exception        ),
@@ -731,6 +747,7 @@ idle_clk idle_clk1
         .reg_ex_pc0              ( reg_ex_pc0              ),
         .reg_ex_pc1              ( reg_ex_pc1              ),
         .reg_ex_pc_next          ( reg_ex_pc_next          ),
+        .reg_ex_pc_taken         ( reg_ex_pc_taken         ),
         .reg_ex_inst0            ( reg_ex_inst0            ),
         .reg_ex_inst1            ( reg_ex_inst1            ),
         .reg_ex_branch_flag      ( reg_ex_branch_flag      ),
@@ -970,7 +987,7 @@ idle_clk idle_clk1
         .ex2_wb_data_2_valid  ( ex2_wb_data_2_valid         ),
         .forward_stall        ( forward_stall        ),
         .tid                  ( tid                  ),
-        .predict_to_branch    ( reg_ex_branch_flag       ),
+        .predict_to_branch    ( reg_ex_pc_taken       ),
         .pc0_predict          ( reg_ex_pc_next          ),
         .predict_dir_fail     ( predict_dir_fail     ),
         .predict_addr_fail    ( predict_add_fail     ),
@@ -1222,7 +1239,7 @@ idle_clk idle_clk1
         .ex_rd1              ( ex1_ex2_rd1              ),
         .ex2_result0_valid   ( ex2_data0_valid   ),
         .ex2_result1_valid   ( ex2_data1_valid   ),
-        .en_VA_D_OUT         ( dcache_valid        ), 
+        .EN_VA_D         (  reg_ex_uop0[`INS_MEM]         ), 
         .ex2_wb_data_0       ( ex2_wb_data_0       ),
         .ex2_wb_data_1       ( ex2_wb_data_1       ),
         .ex2_wb_data_2       ( ex2_wb_data_2       ),
@@ -1452,7 +1469,7 @@ idle_clk idle_clk1
     icache#(
         .INDEX_WIDTH       ( 6 ),
         .WORD_OFFSET_WIDTH ( 4 ),
-        .COOKIE_WIDTH      ( 32 )
+        .COOKIE_WIDTH      ( 32+3 )
     )u_icache(
         .clk               ( clk               ),
         .rstn              ( aresetn           ),
@@ -1474,8 +1491,8 @@ idle_clk idle_clk1
         .i_exception_flag  ( icache_excp_flag  ),   
         .flush             ( flush_to_icache   ),
         .uncache           ( !is_cached_I      ),   
-        .cookie_in         ( pc_next         ),
-        .cookie_out        ( icache_pc_next        ),
+        .cookie_in         ( {pc_next, pc_taken}         ),
+        .cookie_out        ( {icache_pc_next, pc_taken_out}        ),
         .cacop_en          ( cacop_i_en        ),
         .cacop_code        ( cacop_ins_type    ),
         .cacop_ready       ( cacop_i_ready     ),
@@ -1505,7 +1522,8 @@ idle_clk idle_clk1
         .uncache                           ( !is_cached_D                      ),  
         .signed_ext                        ( signed_ext                        ),
         .idle                              ( d_idle                            ),
-        .flush                             ( flush_to_dcache                   ),
+        //.flush                             ( flush_to_dcache                   ),//TODO 逻辑有问题
+        .flush                             ( 0                  ),
         .cookie_in                        ( {rd_dcache_in,pc_dcache_in,inst_dcache_in}                          ),
         .cookie_out                      ( {rd_dcache_out,pc_dcache_out,inst_dcache_out}                  ),
         .d_rvalid                          ( d_rvalid                          ),

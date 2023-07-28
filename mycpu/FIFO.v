@@ -21,6 +21,7 @@ module FIFO(
     input [31:0] if1_fifo_inst1,
     input [31:0] if1_fifo_pc,
     input [31:0] if1_fifo_pc_next,
+    input        if1_fifo_pc_taken,
 
     input [31:0] if1_fifo_icache_badv,
     input [31:0] if1_fifo_icache_cookie_out,
@@ -34,6 +35,7 @@ module FIFO(
     output reg [31:0] fifo_pc,//co pc with fifo_inst0 
     output wire[31:0] fifo_pcAdd,
     output reg [31:0] fifo_pc_next,
+    output reg         fifo_pc_taken,
     output reg [31:0] fifo_badv,
 
     output reg [31:0] fifo_cookie_out,
@@ -81,7 +83,7 @@ module FIFO(
     wire stat_em1,stat_fu1;
     wire [63:0] inst_din,inst_dout;
     wire [95:0] pcbdv_din,pcbdv_dout;
-    wire [44:0] stat_din,stat_dout;
+    wire [45:0] stat_din,stat_dout;
     //[31:0]cookie  [38:32]exception [40:39]excp_flag [42:41]ibar_flag
     //[43:43]cacop_ready  [44:44]cacop_complete
 
@@ -99,6 +101,7 @@ module FIFO(
                                         if1_fifo_icache_badv[31:0]
                                     };
     assign  stat_din            =   {
+                                        if1_fifo_pc_taken,
                                         branch_flag[1:0],
                                         priv_flag[1:0],
                                         if1_fifo_icache_excp_flag[1:0],
@@ -122,6 +125,7 @@ module FIFO(
             fifo_excp_flag=stat_dout[40:39];
             fifo_priv_flag=stat_dout[42:41];
             fifo_branch_flag=stat_dout[44:43];
+            fifo_pc_taken=stat_dout[45];
         end else begin
             fifo_inst0=`INST_NOP;
             fifo_inst1=`INST_NOP;
@@ -134,6 +138,7 @@ module FIFO(
             fifo_excp_flag=2'b00;
             fifo_priv_flag=2'b00;
             fifo_branch_flag=2'b00;
+            fifo_pc_taken=1'b0;
         end
     end 
 
@@ -175,7 +180,7 @@ module FIFO(
     );
 
     FIFO_generator#(
-        .DATA_WIDTH         (   45           ),
+        .DATA_WIDTH         (   46           ),
         .DEPTH              (   BUF_DEPTH    ),
         .LOG_DEPTH          (   LOG_BUF_DEPTH)
     )co_statbuf(

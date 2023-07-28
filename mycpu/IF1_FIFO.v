@@ -17,6 +17,8 @@ module IF1_FIFO(
     input               icache_rready,//icache rready makes reg update anytime
     input               icache_rvalid,
     input [31:0]        fetch_pc,
+    input               pc_taken_out,
+    output  reg       if1_fifo_pc_taken,
     // input [31:0]        if0_if1_pc,
     // input [31:0]        if0_if1_pc_next,
     input [31:0]        icache_badv,
@@ -52,7 +54,7 @@ module IF1_FIFO(
     output reg[31:0]    if1_fifo_icache_badv,
     output reg[6:0]     if1_fifo_icache_exception,
     output reg[1:0]     if1_fifo_icache_excp_flag,
-    output reg[31:0]    if1_fifo_icache_cookie_out
+    output reg[31+3:0]    if1_fifo_icache_cookie_out
     );
     
     localparam      IDLE            =   3'b000,
@@ -215,6 +217,7 @@ module IF1_FIFO(
             if1_fifo_pc     <=  `PC_RESET;
 
             if1_fifo_pc_next<=  `PC_RESET+4;
+            if1_fifo_pc_taken<=0;
             if1_fifo_inst0  <=  `INST_NOP;
             if1_fifo_inst1  <=  `INST_NOP; 
 
@@ -227,6 +230,7 @@ module IF1_FIFO(
             //update stage-stage reg
             if1_fifo_pc     <=  pc_out;
             if1_fifo_pc_next<=  icache_pc_next;
+            if1_fifo_pc_taken<=  pc_taken_out;
             if1_fifo_inst0  <=  pc_out[2]? icache_inst1[31:0]:icache_inst0[31:0];
             // if1_fifo_inst1  <=  priv_flag[0] ? `INST_NOP:icache_inst1[31:0];//TODO
             if1_fifo_inst1  <=  pc_out[2]? `INST_NOP:icache_inst1[31:0];

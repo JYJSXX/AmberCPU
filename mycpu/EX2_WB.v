@@ -1,5 +1,6 @@
 `include "define.vh"
 `include "exception.vh"
+`include "config.vh"
 `timescale 1ns/1ps
 module EX2_WB(
     input clk,
@@ -21,7 +22,7 @@ module EX2_WB(
     input [4:0] ex_rd1,
     input ex2_result0_valid,
     input ex2_result1_valid,
-    input en_VA_D_OUT,
+    input EN_VA_D,
     output reg [31:0] ex2_wb_data_0,
     output reg [31:0] ex2_wb_data_1,
     output reg [31:0] ex2_wb_data_2,
@@ -91,7 +92,7 @@ module EX2_WB(
 assign pc_from_WB = (tlb_exception) ? tlbrentry : eentry;
 reg tlb_d_valid_reg;
 always@(*)begin
-        tlb_d_valid_reg = en_VA_D_OUT & (~flush_to_tlb);
+        tlb_d_valid_reg = EN_VA_D & (~flush_to_tlb);
     end
 
 assign flush_out_all = exception_flag_out;
@@ -240,17 +241,31 @@ assign cond1 = uop1_reg[`UOP_COND];
         end
 
     end
+
+    reg [2:0]    dcache_valid_buf;
+        always @(posedge clk) begin
+        if(!aresetn)begin
+            dcache_valid_buf<=0;
+        end 
+        else if(ex2_allowin)begin
+            dcache_valid_buf<={dcache_valid_buf[1:0],ex2_allowin & tlb_d_valid_reg };            
+        end
+        
+    end
 always@(*) begin
     ex2_allowin=0;
     if(ex1_ex2_inst0==0 && ex1_ex2_inst1==0) begin
         ex2_allowin=1;
     end
-
     //else if((ex2_wb_data_0_valid | ~(~dcache_ready && tlb_d_valid_reg)  | div_ready | csr_ready) && ex2_wb_data_1_valid) begin
-    else if( ~(~dcache_ready && tlb_d_valid_reg)  | div_ready | csr_ready)  begin
+    else if( div_ready | csr_ready)  begin
         ex2_allowin=1;
     end
+    else if(!dcache_valid_buf[1]  || dcache_ready) 
+        ex2_allowin=1;
 end
+
+
 
 always@(posedge clk)begin
     debug0_wb_pc <= pc0;
