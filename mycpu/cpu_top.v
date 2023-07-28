@@ -921,6 +921,7 @@ idle_clk idle_clk1
     wire [31:0] ex_paddr_diff;
     wire [31:0] ex_data_diff;
 `endif
+
     EX1 u_EX1(
         .clk                  ( clk                  ),
         .aclk                 ( aclk                 ),

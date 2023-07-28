@@ -210,27 +210,27 @@ stall
 */
 
 reg stall;
-reg [9:0] rd_shift = 0;
+reg [9:0] rj_shift = 0;
 wire is_load;
 wire [3:0] cond;
 assign cond=reg_ex_uop0[`UOP_COND];
 assign is_load = cond[2] & reg_ex_uop0[`INS_MEM];
-// always @ (posedge clk )begin
-//     if(~aresetn) rd_shift <= 0;
-//     if()
-//     else
-//         rd_shift <= {rd_shift[4:0], {{5{is_load}} & reg_ex_rd0}};
-// end
+always @ (posedge clk or negedge aresetn)begin
+    if(~aresetn) rj_shift <= 0;
+    else if (ex_allowin & ex_readygo) rj_shift <= {rj_shift[4:0], {5{is_load}} & reg_ex_rd0};
+    else if(dcache_rready) rj_shift <= {5'b0, rj_shift[4:0]};
+    
+end
 
-wire [4:0] rd_error1 = rd_shift[9:5];
-wire [4:0] rd_error2 = rd_shift[4:0];
+wire [4:0] rd_error1 = rj_shift[9:5];
+wire [4:0] rd_error2 = rj_shift[4:0];
 
-// always@(*)begin
-//     if ((|rd_error1) & ((id_reg_rj0 == rd_error1) || (id_reg_rj1 == rd_error1) || (id_reg_rk0 == rd_error1) || (id_reg_rk1 == rd_error1))) stall = 1;
-//     else if ((|rd_error2) & ((id_reg_rj0 == rd_error2) || (id_reg_rj1 == rd_error2) || (id_reg_rk0 == rd_error2) || (id_reg_rk1 == rd_error2))) stall = 1;
-//     else if ((({5{is_load}} & reg_ex_rd0) == id_reg_rj0) || (({5{is_load}} & reg_ex_rd0) == id_reg_rj1) || (({5{is_load}} & reg_ex_rd0) == id_reg_rk0) || (({5{is_load}} & reg_ex_rd0) == id_reg_rk1)) stall = 1;
-//     else stall = 0;
-// end
+always@(*)begin
+    if ((|rd_error1) && ((id_reg_rj0 == rd_error1) || (id_reg_rj1 == rd_error1) || (id_reg_rk0 == rd_error1) || (id_reg_rk1 == rd_error1))) stall = 1;
+    else if ((|rd_error2) && ((id_reg_rj0 == rd_error2) || (id_reg_rj1 == rd_error2) || (id_reg_rk0 == rd_error2) || (id_reg_rk1 == rd_error2))) stall = 1;
+    else if (is_load && ((({5{is_load}} & reg_ex_rd0) == id_reg_rj0) || (({5{is_load}} & reg_ex_rd0) == id_reg_rj1) || (({5{is_load}} & reg_ex_rd0) == id_reg_rk0) || (({5{is_load}} & reg_ex_rd0) == id_reg_rk1))) stall = 1;
+    else stall = 0;
+end
 
 reg forward_flag_j0_ps;
 reg forward_flag_j1_ps;
