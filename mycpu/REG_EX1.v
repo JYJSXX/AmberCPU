@@ -55,6 +55,7 @@ module  REG_EX1(
     input [31:0] forward_data_k0,
     input [31:0] forward_data_j1,
     input [31:0] forward_data_k1,
+    input         dcache_rready,
 
     output  reg [31:0] reg_ex_pc0,
     output  reg [31:0] reg_ex_pc1,
@@ -195,6 +196,39 @@ regfile regfile1( //内部自带写优先
     .debug0_wb_inst(debug0_wb_inst)
     `endif
 );
+
+/*
+reg_ex_rd0
+id_reg_rj0
+id_reg_rj1
+id_reg_rk0
+id_reg_rk1
+
+dcache_rready //TODO:
+
+stall
+*/
+
+reg stall;
+reg [9:0] rj_shift = 0;
+wire is_load;
+wire [3:0] cond;
+assign cond=reg_ex_uop0[`UOP_COND];
+assign is_load = cond[2] & reg_ex_uop0[`INS_MEM];
+always @ (posedge clk or negedge aresetn)begin
+    if(~aresetn) rj_shift <= 0;
+    else if(dcache_rready) rj_shift <= {rj_shift[4:0], {5{is_load}} & reg_ex_rd0};
+end
+
+wire [4:0] rd_error1 = rj_shift[9:5];
+wire [4:0] rd_error2 = rj_shift[4:0];
+
+always@(*)begin
+    if ((|rd_error1) & ((id_reg_rj0 == rd_error1) || (id_reg_rj1 == rd_error1) || (id_reg_rk0 == rd_error1) || (id_reg_rk1 == rd_error1))) stall = 1;
+    else if ((|rd_error2) & ((id_reg_rj0 == rd_error2) || (id_reg_rj1 == rd_error2) || (id_reg_rk0 == rd_error2) || (id_reg_rk1 == rd_error2))) stall = 1;
+    else if ((({5{is_load}} & reg_ex_rd0) == id_reg_rj0) || (({5{is_load}} & reg_ex_rd0) == id_reg_rj1) || (({5{is_load}} & reg_ex_rd0) == id_reg_rk0) || (({5{is_load}} & reg_ex_rd0) == id_reg_rk1)) stall = 1;
+    else stall = 0;
+end
 
 reg forward_flag_j0_ps;
 reg forward_flag_j1_ps;
@@ -345,8 +379,9 @@ always@(posedge clk)begin
     
 
 end
+
 always@(*)begin
-    ex_readygo = ~forward_stall; 
-    reg_allowin=ex_allowin;
+    ex_readygo = ~forward_stall & ~stall ; 
+    reg_allowin=ex_allowin & (~forward_stall) & ~stall;
 end
 endmodule

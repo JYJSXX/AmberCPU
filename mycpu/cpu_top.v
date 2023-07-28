@@ -720,6 +720,7 @@ idle_clk idle_clk1
         .wb_rd0                  ( ex2_wb_rd0          ),
         .wb_rd1                  ( ex2_wb_rd1          ),
         .wb_rd2                  ( ex2_wb_rd2          ),
+        .dcache_rready           ( rready_dcache           ),
         .we_0                    ( we_0                    ),
         
         .we_1                    ( we_1                    ),
@@ -920,7 +921,6 @@ idle_clk idle_clk1
     wire [31:0] ex_paddr_diff;
     wire [31:0] ex_data_diff;
 `endif
-
     EX1 u_EX1(
         .clk                  ( clk                  ),
         .aclk                 ( aclk                 ),

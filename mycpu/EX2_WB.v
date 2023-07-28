@@ -248,10 +248,14 @@ assign cond1 = uop1_reg[`UOP_COND];
             dcache_valid_buf<=0;
         end 
         else if(ex2_allowin)begin
-            dcache_valid_buf<={dcache_valid_buf[1:0],ex2_allowin & tlb_d_valid_reg };            
+            dcache_valid_buf<={dcache_valid_buf[1:0], tlb_d_valid_reg };            
         end
         
     end
+    wire temp = (ex1_ex2_inst0==0 && ex1_ex2_inst1==0) || ( div_ready | csr_ready) || (!dcache_valid_buf[1]  || dcache_ready);
+    wire temp1 = (ex1_ex2_inst0==0 && ex1_ex2_inst1==0);
+    wire temp2 = ( div_ready | csr_ready);
+    wire temp3 = (!dcache_valid_buf[1]  || dcache_ready);
 always@(*) begin
     ex2_allowin=0;
     if(ex1_ex2_inst0==0 && ex1_ex2_inst1==0) begin
@@ -261,7 +265,7 @@ always@(*) begin
     else if( div_ready | csr_ready)  begin
         ex2_allowin=1;
     end
-    else if(!dcache_valid_buf[1] && !(uop0[`INS_DIV] | uop0[`INS_CSR]) || dcache_ready) 
+else if(!dcache_valid_buf[1] && !(uop0[`INS_DIV] | uop0[`INS_CSR]) || dcache_ready) 
         ex2_allowin=1;
 end
 
