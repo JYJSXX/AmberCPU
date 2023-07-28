@@ -300,14 +300,14 @@ idle_clk idle_clk1
         .nearly_full                ( nearly_full                ),
         .fetch_pc                   ( fetch_pc                   ),
         .pc_out                     ( pc_out                     ),
-        .pc_taken_out               ( pc_taken_out             ), 
-        .if1_fifo_pc_taken           ( if1_fifo_pc_taken         ),
+        .pc_taken_out               ( pc_taken_out             ),  // ?
+        .if1_fifo_pc_taken           ( if1_fifo_pc_taken         ), // OUT
         // .if0_if1_pc                 ( if0_if1_pc                 ),
         // .if0_if1_pc_next            ( if0_if1_pc_next            ),
         .icache_badv                ( icache_badv                ),
         .icache_exception           ( icache_exception           ),
         .icache_excp_flag           ( icache_excp_flag           ),
-        .icache_pc_next             ( icache_pc_next             ),
+        .icache_pc_next             ( icache_pc_next             ), // ?
         .icache_inst0               ( icache_rdata[31:0]         ),
         .icache_inst1               ( icache_rdata[63:32]        ),
         .ibar_flag                  ( ibar_flag                  ),
@@ -325,7 +325,7 @@ idle_clk idle_clk1
         .csr_done                   ( csr_done                   ),
         .tlb_done                   ( tlb_done                   ),
         .if1_fifo_pc                ( if1_fifo_pc                ),
-        .if1_fifo_pc_next           ( if1_fifo_pc_next           ),
+        .if1_fifo_pc_next           ( if1_fifo_pc_next           ), // OUTPUT
         .if1_fifo_inst0             ( if1_fifo_inst0             ),
         .if1_fifo_inst1             ( if1_fifo_inst1             ),
         // .p_if1_fifo_inst0             ( if1_fifo_inst0             ),
@@ -399,8 +399,8 @@ idle_clk idle_clk1
         .if1_fifo_inst0             ( if1_fifo_inst0             ),
         .if1_fifo_inst1             ( if1_fifo_inst1             ),
         .if1_fifo_pc                ( if1_fifo_pc                ),
-        .if1_fifo_pc_next           ( if1_fifo_pc_next           ),
-        .if1_fifo_pc_taken          ( if1_fifo_pc_taken ),
+        .if1_fifo_pc_next           ( if1_fifo_pc_next           ), //input
+        .if1_fifo_pc_taken          ( if1_fifo_pc_taken ),  // input
         .if1_fifo_icache_badv       ( if1_fifo_icache_badv       ),
         .if1_fifo_icache_cookie_out ( if1_fifo_icache_cookie_out ),
         .if1_fifo_icache_exception  ( if1_fifo_icache_exception  ),
