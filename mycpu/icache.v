@@ -356,7 +356,7 @@ module icache #(
     //assign i_rsize  = 3'h2;                                                         // 2 ^ 2 = 4 bytes per beat
     assign i_raddr  = uncache_buf ? {paddr_buf[31:3], 3'b0} : {paddr_buf[31:12], req_buf[11:6],6'b0};
 
-    /* hit */
+    /* hit TODO:*/
     assign tag          = p_addr[31:32-TAG_WIDTH]; // the tag of the request
     assign hit[0]       = valid[0] && (tag_rdata[0][TAG_WIDTH-1:0] == tag); // hit in way 0
     assign hit[1]       = valid[1] && (tag_rdata[1][TAG_WIDTH-1:0] == tag); // hit in way 1
