@@ -238,9 +238,7 @@ idle_clk idle_clk1
     );
 
     
-    //hand shake
-    wire if1_valid;
-    wire if1_ready ;     
+    //hand shake  
     wire [31:0] icache_badv;
     wire [31:0] dcache_badv;
     wire [6:0] icache_exception;
@@ -783,10 +781,7 @@ idle_clk idle_clk1
 
 
 
-    wire [31:0] ex1_alu_result0;
-    wire [31:0] ex1_alu_result1;
-    wire        ex1_alu_result0_valid;
-    wire        ex1_alu_result1_valid;
+
 
     //前递用到的信号
     //从ex1_ex2段间输入
