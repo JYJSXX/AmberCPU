@@ -158,12 +158,29 @@ assign reg_diff31 = (we3 && (waddr3 == 31)) ? wdata3 : (debug0_wb_inst[30:28] ==
         end else if (raddr1 == 5'h0) begin
             rdata1 = `zero;
         end else begin
-            case ({we2, we1})
-			 2'b01: rdata1 = (raddr1 == waddr1) ? wdata1 : regs[raddr1];
-			 2'b10: rdata1 = (raddr1 == waddr2) ? wdata2 : regs[raddr1];
-			 2'b11: begin
+            case ({we2, we1, we3})
+			 3'b010: rdata1 = (raddr1 == waddr1) ? wdata1 : regs[raddr1];
+			 3'b100: rdata1 = (raddr1 == waddr2) ? wdata2 : regs[raddr1];
+			 3'b001: rdata1 = (raddr1 == waddr3) ? wdata3 : regs[raddr1];
+			 3'b110: begin
 			     if (raddr1 == waddr2) rdata1 = wdata2;
 			     else if (raddr1 == waddr1) rdata1 = wdata1;
+			     else rdata1 = regs[raddr1];
+			 end
+			 3'b101: begin
+			     if (raddr1 == waddr1) rdata1 = wdata1;
+			     else if (raddr1 == waddr3) rdata1 = wdata3;
+			     else rdata1 = regs[raddr1];
+			 end
+			 3'b011: begin
+			     if (raddr1 == waddr2) rdata1 = wdata2;
+			     else if (raddr1 == waddr3) rdata1 = wdata3;
+			     else rdata1 = regs[raddr1];
+			 end
+			 3'b111: begin
+			     if (raddr1 == waddr1) rdata1 = wdata1;
+			     else if (raddr1 == waddr2) rdata1 = wdata2;
+			     else if (raddr1 == waddr3) rdata1 = wdata3;
 			     else rdata1 = regs[raddr1];
 			 end
 			 default: rdata1 = regs[raddr1];
@@ -177,14 +194,32 @@ assign reg_diff31 = (we3 && (waddr3 == 31)) ? wdata3 : (debug0_wb_inst[30:28] ==
         end else if (raddr2 == 5'h0) begin
             rdata2 = `zero;
         end else begin
-            case ({we2, we1})
-			 2'b01: rdata2 = (raddr2 == waddr1) ? wdata1 : regs[raddr2];
-			 2'b10: rdata2 = (raddr2 == waddr2) ? wdata2 : regs[raddr2];
-			 2'b11: begin
+            case ({we2, we1, we3})
+			 3'b010: rdata2 = (raddr2 == waddr1) ? wdata1 : regs[raddr2];
+			 3'b100: rdata2 = (raddr2 == waddr2) ? wdata2 : regs[raddr2];
+			 3'b001: rdata2 = (raddr2 == waddr3) ? wdata3 : regs[raddr2];
+			 3'b110: begin
 			     if (raddr2 == waddr2) rdata2 = wdata2;
 			     else if (raddr2 == waddr1) rdata2 = wdata1;
 			     else rdata2 = regs[raddr2];
 			 end
+			 3'b011: begin
+			     if (raddr2 == waddr2) rdata2 = wdata2;
+			     else if (raddr2 == waddr3) rdata2 = wdata3;
+			     else rdata2 = regs[raddr2];
+			 end
+			 3'b101: begin
+			     if (raddr2 == waddr1) rdata2 = wdata1;
+			     else if (raddr2 == waddr3) rdata2 = wdata3;
+			     else rdata2 = regs[raddr2];
+			 end
+			 3'b111: begin
+			     if (raddr2 == waddr1) rdata2 = wdata1;
+			     else if (raddr2 == waddr2) rdata2 = wdata2;
+			     else if (raddr2 == waddr3) rdata2 = wdata3;
+			     else rdata2 = regs[raddr2];
+			 end
+
 			 default: rdata2 = regs[raddr2];
             endcase
         end
@@ -196,12 +231,29 @@ assign reg_diff31 = (we3 && (waddr3 == 31)) ? wdata3 : (debug0_wb_inst[30:28] ==
         end else if (raddr3 == 5'h0) begin
             rdata3 = `zero;
         end else begin
-            case ({we2, we1})
-			 2'b01: rdata3 = (raddr3 == waddr1) ? wdata1 : regs[raddr3];
-			 2'b10: rdata3 = (raddr3 == waddr2) ? wdata2 : regs[raddr3];
-			 2'b11: begin
+            case ({we2, we1, we3})
+			 3'b010: rdata3 = (raddr3 == waddr1) ? wdata1 : regs[raddr3];
+			 3'b100: rdata3 = (raddr3 == waddr2) ? wdata2 : regs[raddr3];
+			 3'b001: rdata3 = (raddr3 == waddr3) ? wdata3 : regs[raddr3];
+			 3'b110: begin
 			     if (raddr3 == waddr2) rdata3 = wdata2;
 			     else if (raddr3 == waddr1) rdata3 = wdata1;
+			     else rdata3 = regs[raddr3];
+			 end
+			 3'b011: begin
+			     if (raddr3 == waddr2) rdata3 = wdata2;
+			     else if (raddr3 == waddr3) rdata3 = wdata3;
+			     else rdata3 = regs[raddr3];
+			 end
+			 3'b101: begin
+			     if (raddr3 == waddr1) rdata3 = wdata1;
+			     else if (raddr3 == waddr3) rdata3 = wdata3;
+			     else rdata3 = regs[raddr3];
+			 end
+			 3'b111: begin
+			     if (raddr3 == waddr2) rdata3 = wdata2;
+			     else if (raddr3 == waddr1) rdata3 = wdata1;
+			     else if (raddr3 == waddr3) rdata3 = wdata3;
 			     else rdata3 = regs[raddr3];
 			 end
 			 default: rdata3 = regs[raddr3];
@@ -215,12 +267,29 @@ assign reg_diff31 = (we3 && (waddr3 == 31)) ? wdata3 : (debug0_wb_inst[30:28] ==
         end else if (raddr4 == 5'h0) begin
             rdata4 = `zero;
         end else begin
-            case ({we2, we1})
-			 2'b01: rdata4 = (raddr4 == waddr1) ? wdata1 : regs[raddr4];
-			 2'b10: rdata4 = (raddr4 == waddr2) ? wdata2 : regs[raddr4];
-			 2'b11: begin
+            case ({we2, we1, we3})
+			 3'b010: rdata4 = (raddr4 == waddr1) ? wdata1 : regs[raddr4];
+			 3'b100: rdata4 = (raddr4 == waddr2) ? wdata2 : regs[raddr4];
+			 3'b001: rdata4 = (raddr4 == waddr3) ? wdata3 : regs[raddr4];
+			 3'b110: begin
 			     if (raddr4 == waddr2) rdata4 = wdata2;
 			     else if (raddr4 == waddr1) rdata4 = wdata1;
+			     else rdata4 = regs[raddr4];
+			 end
+			 3'b011: begin
+			     if (raddr4 == waddr2) rdata4 = wdata2;
+			     else if (raddr4 == waddr3) rdata4 = wdata3;
+			     else rdata4 = regs[raddr4];
+			 end
+			 3'b101: begin
+			     if (raddr4 == waddr1) rdata4 = wdata1;
+			     else if (raddr4 == waddr3) rdata4 = wdata3;
+			     else rdata4 = regs[raddr4];
+			 end
+			 3'b111: begin
+			     if (raddr4 == waddr2) rdata4 = wdata2;
+			     else if (raddr4 == waddr1) rdata4 = wdata1;
+			     else if (raddr4 == waddr3) rdata4 = wdata3;
 			     else rdata4 = regs[raddr4];
 			 end
 			 default: rdata4 = regs[raddr4];

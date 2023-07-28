@@ -663,6 +663,14 @@ idle_clk idle_clk1
     `ifdef DIFFTEST
     wire [31:0] reg_diff[31:0];
     `endif
+    wire forward_flag_j0;
+    wire forward_flag_j1;
+    wire forward_flag_k0;
+    wire forward_flag_k1;
+    wire [31:0] forward_data_j0;
+    wire [31:0] forward_data_j1;
+    wire [31:0] forward_data_k0;
+    wire [31:0] forward_data_k1;
     REG_EX1 u_REG_EX1(
         .clk                     ( clk                     ),
         .aresetn                 ( aresetn                 ),
@@ -709,6 +717,15 @@ idle_clk idle_clk1
         .id_reg_rk1              ( iq_rk1              ),
         .id_reg_rd0              ( iq_rd0              ),
         .id_reg_rd1              ( iq_rd1              ),
+        .stall_D                 ( ~ex2_allowin                 ),
+        .forward_flag_j0         ( forward_flag_j0     ),
+        .forward_flag_j1         ( forward_flag_j1     ),
+        .forward_flag_k0         ( forward_flag_k0     ),
+        .forward_flag_k1         ( forward_flag_k1     ),
+        .forward_data_j0        ( forward_data_j0     ),
+        .forward_data_j1        ( forward_data_j1     ),
+        .forward_data_k0        ( forward_data_k0     ),
+        .forward_data_k1        ( forward_data_k1     ),
         .reg_ex_pc0              ( reg_ex_pc0              ),
         .reg_ex_pc1              ( reg_ex_pc1              ),
         .reg_ex_pc_next          ( reg_ex_pc_next          ),
@@ -892,6 +909,14 @@ idle_clk idle_clk1
         .aclk                 ( aclk                 ),
         .aresetn              ( aresetn              ),
         .flush                ( flush_from_ex1              ),
+        .forward_flag_j0         ( forward_flag_j0     ),
+        .forward_flag_j1         ( forward_flag_j1     ),
+        .forward_flag_k0         ( forward_flag_k0     ),
+        .forward_flag_k1         ( forward_flag_k1     ),
+        .forward_data_j0        ( forward_data_j0     ),
+        .forward_data_j1        ( forward_data_j1     ),
+        .forward_data_k0        ( forward_data_k0     ),
+        .forward_data_k1        ( forward_data_k1     ),
         .pc0                  ( reg_ex_pc0                  ),
         .pc1                  ( reg_ex_pc1                  ),
         .inst0                ( reg_ex_inst0                ),
