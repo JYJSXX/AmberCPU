@@ -4,7 +4,8 @@
 
 module dcache #(
     parameter INDEX_WIDTH       = 6,
-    parameter WORD_OFFSET_WIDTH = 4
+    parameter WORD_OFFSET_WIDTH = 4,
+    parameter COOKIE_WIDTH = 5
 )(
     input                   clk,
     input                   rstn,
@@ -25,7 +26,9 @@ module dcache #(
     input                   uncache,            // indicate whether the request is an uncache request
     input                   signed_ext,         // indicate whether the request is a signed extension request
     output                  idle,               // indicate whether the cache is idle
-    input                   flush,              // TODO 还没接入
+    input                   flush,              // TODO 和icache的flush处理同步一下
+    input [COOKIE_WIDTH-1 : 0]       cookie_in,
+    output [COOKIE_WIDTH-1 : 0]       cookie_out,
     /* from AXI arbiter */
     // read
     output reg              d_rvalid,           // valid signal of read request to main memory
@@ -150,6 +153,47 @@ module dcache #(
     reg     [31:0]              m_buf;
     reg                         mbuf_we;
 
+    // statistics
+    reg     [63:0]              total_time;
+    reg     [63:0]              total_hit;
+    reg     [63:0]              total_request;
+    reg     [63:0]              miss_time;
+    reg     [63:0]              write_time;
+    always @(posedge clk) begin
+        if(!rstn) begin
+            total_time <= 0;
+            total_hit <= 0;
+            total_request <= 0;
+            miss_time <= 0;
+        end
+        else if(state == LOOKUP) begin
+            total_hit <= total_hit + {63'b0, cache_hit};
+            total_time <= total_time + 1;
+            total_request <= total_request +1;
+            miss_time <= miss_time ;
+        end
+        else if(state == MISS || state == WAIT_WRITE) begin
+            total_time <= total_time + 1;
+            total_hit <= total_hit ;
+            miss_time <= miss_time +1;
+        end
+        else begin
+            total_time <= state == IDLE ? total_time +1 : total_time;
+            total_hit <= total_hit ;
+            miss_time <= miss_time ;
+        end
+    end
+
+    always @(posedge clk) begin
+        if(!rstn) begin
+            write_time <= 0;
+        end
+        else if(wfsm_state == WRITE)
+            write_time <= write_time +1;
+        else
+            write_time <= write_time;
+    end
+
     // communication between write fsm and main fsm
     reg                         wfsm_en, wfsm_reset, wrt_finish;
 
@@ -160,11 +204,25 @@ module dcache #(
     wire                        ibar_complete;
     reg                         dirty_way;
     reg                         hit2_flag;
+    wire                        ibar_state;
+    assign ibar_state = (state==IBAR) && (state == IBAR_EXTRA) && (state == IBAR_WAIT);
     wire [5:0] dirty_index;
     wire way0, way1;
 
     assign dirty_addr[0] = {tag_rdata[0][19:0], dirty_index, 6'b0};
     assign dirty_addr[1] = {tag_rdata[1][19:0], dirty_index, 6'b0};
+
+    /* cookie */ 
+    reg [COOKIE_WIDTH-1 : 0] cookie_buf;
+    always @(posedge clk) begin
+        if(!rstn) begin
+            cookie_buf <= 0;
+        end
+        else if(req_buf_we) begin
+            cookie_buf <= cookie_in;
+        end
+    end
+    assign cookie_out = cookie_buf;
 
     /* op、 signed_ext、 is_atom、 llbit buffer */
     reg op_buf, signed_ext_buf, is_atom_buf, llbit_buf;
@@ -310,7 +368,7 @@ module dcache #(
     `endif
 
     /* 2-way data memory */
-    assign r_index = (way0 || way1) ? dirty_index :addr[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
+    assign r_index = ((way0 || way1)&&ibar_state) ? dirty_index :addr[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
     assign w_index = address[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
 
     BRAM_bytewrite #(
@@ -666,6 +724,7 @@ module dcache #(
                 else if(cacop_en)
                     next_state = CACOP;
                 else if(flush)
+                // else
                     next_state = IDLE;
                 else
                     next_state = (rvalid || wvalid) ? LOOKUP : IDLE;
@@ -830,8 +889,8 @@ module dcache #(
             wfsm_reset      = 1;
             exception_sel   = 1;
             cacop_ready     = 1;
-            rready          = wrt_finish & !we_pipe;
-            wready          = wrt_finish & we_pipe;
+            rready          = wrt_finish && !op_buf;
+            wready          = wrt_finish && op_buf;
             data_from_mem   = 0;
             req_buf_we      = wrt_finish & (rvalid || wvalid);
             if(cacop_en_buf && wrt_finish)

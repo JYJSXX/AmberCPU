@@ -91,6 +91,34 @@ module icache #(
     reg                         rready_temp;
     assign rready = rready_temp & flush_valid;
 
+    // statistics
+    reg     [63:0]              total_time;
+    reg     [63:0]              total_request;
+    reg     [63:0]              total_hit;
+    reg     [64:0]              miss_time;
+    always @(posedge clk) begin
+        if(!rstn) begin
+            total_time <= 0;
+            total_hit <= 0;
+            miss_time <= 0;
+            total_request <= 0;
+        end
+        else if(state == LOOKUP) begin
+            total_hit <= total_hit + {63'b0, cache_hit};
+            total_request <= total_request +1;
+            total_time <= total_time + 1;
+        end
+        else if(state == MISS || state == MISS_FLUSH) begin
+            total_time <= total_time + 1;
+            miss_time <= miss_time +1;
+        end
+        else begin
+            total_time <= state == IDLE ? total_time +1 : total_time;
+            total_hit <= total_hit ;
+            miss_time <= miss_time ;
+        end
+    end
+
     // cache operation
     reg tagv_clear;
     reg [1:0] cacop_code_buf;
@@ -203,13 +231,14 @@ module icache #(
         if(flush || !rstn) begin
             flush_valid <= 0;
         end
-        else if(req_buf_we) begin
+        else if((req_buf_we && (state != MISS_FLUSH))|| i_rready) begin
             flush_valid <= rvalid;
         end
 
     /* 2-way data memory */
     // read index
-    assign r_index = raddr[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
+    assign r_index = (state == MISS_FLUSH) ? w_index : raddr[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
+    
     // write index 
     assign w_index = req_buf[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
 
@@ -292,7 +321,23 @@ module icache #(
     wire victim_sel;
     assign victim_sel = lru_sel[0] ? 0 : 1;
     wire victim_we;
-    assign victim_we = missbuf_we && valid[victim_sel] && flush_valid;
+    assign victim_we = missbuf_we && valid[victim_sel] && flush_valid;  //&& !miss_flush_flag
+    reg [25:0] victim_w_tag_buf;
+    reg        victim_flush_miss;
+    wire [25:0] victim_w_tag;
+    assign victim_w_tag = {tag_rdata[victim_sel][TAG_WIDTH-1:0], req_buf[11:6]};
+    always@(posedge clk) begin
+        if(!rstn) begin
+            victim_w_tag_buf <= 0;
+            victim_flush_miss <= 0;
+        end
+        else begin
+            victim_w_tag_buf <= victim_w_tag;
+            victim_flush_miss <= miss_flush_flag;
+        end
+    end
+
+    //TODO: victim cache问题
 
     victim_cache #(
         .CAPACITY(8)
@@ -302,7 +347,7 @@ module icache #(
         .r_tag      ({paddr_buf[31:12],req_buf[11:6]}),
         .victim_hit (victim_hit),
         .data_out   (victim_data),
-        .w_tag      ({tag_rdata[victim_sel][TAG_WIDTH-1:0], req_buf[11:6]}),
+        .w_tag      (victim_flush_miss? victim_w_tag_buf : victim_w_tag),
         .we         (victim_we), // missbuf_we && valid[victim_sel] && victim_hit
         .data_in    (mem_rdata[victim_sel])
     );
@@ -359,12 +404,15 @@ module icache #(
     wire miss_flush_counter_new;
     assign miss_flush_counter_new = missbuf_we ? (raddr != 0) : 0;
     reg miss_flush_counter_old;
+    reg miss_flush_counter_old_buf;
     always @(posedge clk) begin
         if(!rstn || flush) begin
             miss_flush_counter_old <= 0;
+            miss_flush_counter_old_buf <= 0;
         end
         else begin
             miss_flush_counter_old <= miss_flush_counter_new;
+            miss_flush_counter_old_buf <= miss_flush_counter_old;
         end
     end
 
@@ -412,7 +460,7 @@ module icache #(
                 else if(i_rready)            next_state = REFILL;
                 else                    next_state = MISS;
             end
-            MISS_FLUSH: begin
+            MISS_FLUSH: begin   //TODO flush掉的miss块充填到cache中
                 if(i_rready)            next_state = LOOKUP;
                 else                    next_state = MISS_FLUSH;
             end
@@ -431,6 +479,14 @@ module icache #(
         endcase
     end
     // stage 2: output
+    reg miss_flush_flag;
+    always @(posedge clk) begin
+        if(!rstn)
+            miss_flush_flag <= 0;
+        else
+            miss_flush_flag <= (state == MISS_FLUSH);
+    end
+
     always @(*) begin
         req_buf_we              = 0;
         i_rvalid                = 0;
@@ -462,7 +518,7 @@ module icache #(
         end
         LOOKUP: begin
             if(exception == 0)begin
-                pbuf_we                 = 1;
+                pbuf_we                = (miss_flush_flag && !cache_hit) ? 0 : 1;
                 lru_we                  = 0;
                 if(cacop_en)
                     cacop_ready         = 1;
@@ -488,6 +544,9 @@ module icache #(
             i_rvalid        = 1;
             if(miss_flush_counter_new && !miss_flush_counter_old) begin
                 req_buf_we     = 1;
+            end
+            if(miss_flush_counter_old && !miss_flush_counter_old_buf) begin
+                pbuf_we         = 1;
             end
             if(uncache_buf) begin
                 i_rlen = 8'd1;

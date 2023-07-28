@@ -11,7 +11,9 @@ module FIFO_generator
    input wire [DATA_WIDTH-1:0] din,
    input wire write_en,
    output wire [DATA_WIDTH-1:0] dout,
+   output wire nearly_full,
    output wire full,
+   output wire nearly_empty,
    output wire empty);
 
   reg [DATA_WIDTH-1:0] mem [DEPTH-1:0];
@@ -81,7 +83,9 @@ module FIFO_generator
 
 
   assign full = (count == DEPTH);
+  assign nearly_full=(count==DEPTH-1);
   assign empty = (count == 0);
+  assign nearly_empty=(count==1);
   assign dout = empty?`INST_NOP:mem[readPtr];
   // assign dout = empty?0:mem[readPtr];
 

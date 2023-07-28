@@ -31,9 +31,16 @@ module EX1(
     input   [4:0] ex_rj1,
     input   [4:0] ex_rk0,
     input   [4:0] ex_rk1,
-    // input   [4:0] ex_rd0,
-    // input   [4:0] ex_rd1,
-
+    //input   [4:0] ex_rd0,
+    //input   [4:0] ex_rd1,
+    output forward_flag_j0,
+    output forward_flag_k0,
+    output forward_flag_j1,
+    output forward_flag_k1,
+    output [31:0] forward_data_j0,
+    output [31:0] forward_data_k0,
+    output [31:0] forward_data_j1,
+    output [31:0] forward_data_k1,
     output [31:0] alu_result0,
     output [31:0] alu_result1,
     output alu_result0_valid,
@@ -52,10 +59,13 @@ module EX1(
     //从ex2_wb段间输入
     input [4:0] ex2_wb_rd0,
     input [4:0] ex2_wb_rd1,
+    input [4:0] ex2_wb_rd2,
     input [31:0] ex2_wb_data_0,
     input [31:0] ex2_wb_data_1,
+    input [31:0] ex2_wb_data_2,
     input ex2_wb_data_0_valid,
     input ex2_wb_data_1_valid,
+    input ex2_wb_data_2_valid,
     output forward_stall, //需要前递，但还没算出来，给段间寄存器ready信号用
     //csr
     input [31:0] tid, //读时钟id的指令RDCNTID用到
@@ -177,7 +187,7 @@ module EX1(
 assign csr_flag_from_ex = uop0[`INS_CSR];
 assign tlb_flag_from_ex = uop0[`INS_TLB] && (inst0[11:10] == 2'b00 || inst0[11:10] ==2'b01 || inst0[15]);
     reg [63:0] stable_counter_reg;
-    assign flush=predict_addr_fail || predict_dir_fail || uop0[`INS_ERTN];
+    assign flush=  predict_addr_fail || predict_dir_fail || uop0[`INS_ERTN];
     always @(posedge aclk)
         if(~aresetn) stable_counter_reg<=0;
         else stable_counter_reg <= stable_counter_reg+1;
@@ -255,15 +265,22 @@ EX1_FORWARD ex1_forward1(
     .ex1_ex2_rd1(ex1_ex2_rd1),
     .ex2_wb_data_0_valid(ex2_wb_data_0_valid),
     .ex2_wb_data_1_valid(ex2_wb_data_1_valid),
+    .ex2_wb_data_2_valid(ex2_wb_data_2_valid),
     .ex2_wb_data_0(ex2_wb_data_0),
     .ex2_wb_data_1(ex2_wb_data_1),
+    .ex2_wb_data_2(ex2_wb_data_2),
     .ex2_wb_rd0(ex2_wb_rd0),
     .ex2_wb_rd1(ex2_wb_rd1),
+    .ex2_wb_rd2(ex2_wb_rd2),
     .ex1_rj_data(rj0_data),
     .ex1_rk_data(rk0_data),
     .ex1_rj_data_o(rj0_data_o),
     .ex1_rk_data_o(rk0_data_o),
-    .forward_stall(forward_stall1)
+    .forward_stall(forward_stall1),
+    .forward_flag_j(forward_flag_j0),
+    .forward_data_j(forward_data_j0),
+    .forward_flag_k(forward_flag_k0),
+    .forward_data_k(forward_data_k0)
 );
 
 assign a_1 = uop0[`UOP_SRC1] == `CTRL_SRC1_RF ? rj0_data_o : 
@@ -291,16 +308,22 @@ EX1_FORWARD ex1_forward2(
     .ex1_ex2_rd1(ex1_ex2_rd1),
     .ex2_wb_data_0_valid(ex2_wb_data_0_valid),
     .ex2_wb_data_1_valid(ex2_wb_data_1_valid),
+    .ex2_wb_data_2_valid(ex2_wb_data_2_valid),
     .ex2_wb_data_0(ex2_wb_data_0),
     .ex2_wb_data_1(ex2_wb_data_1),
+    .ex2_wb_data_2(ex2_wb_data_2),
     .ex2_wb_rd0(ex2_wb_rd0),
     .ex2_wb_rd1(ex2_wb_rd1),
+    .ex2_wb_rd2(ex2_wb_rd2),
     .ex1_rj_data(rj1_data),
     .ex1_rk_data(rk1_data),
     .ex1_rj_data_o(rj1_data_o),
     .ex1_rk_data_o(rk1_data_o),
-    .forward_stall(forward_stall2)
-
+    .forward_stall(forward_stall2),
+    .forward_flag_j(forward_flag_j1),
+    .forward_data_j(forward_data_j1),
+    .forward_flag_k(forward_flag_k1),
+    .forward_data_k(forward_data_k1)
 );
 assign a_2 = uop1[`UOP_SRC1] == `CTRL_SRC1_RF ? rj1_data_o : 
             uop1[`UOP_SRC1] == `CTRL_SRC1_PC ? pc1 :
