@@ -1464,7 +1464,7 @@ idle_clk idle_clk1
     icache#(
         .INDEX_WIDTH       ( 6 ),
         .WORD_OFFSET_WIDTH ( 4 ),
-        .COOKIE_WIDTH      ( 32+3 )
+        .COOKIE_WIDTH      ( 32+1 )
     )u_icache(
         .clk               ( clk               ),
         .rstn              ( aresetn           ),

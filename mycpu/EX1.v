@@ -187,7 +187,7 @@ module EX1(
 assign csr_flag_from_ex = uop0[`INS_CSR];
 assign tlb_flag_from_ex = uop0[`INS_TLB] && (inst0[11:10] == 2'b00 || inst0[11:10] ==2'b01 || inst0[15]);
     reg [63:0] stable_counter_reg;
-    assign flush=predict_addr_fail || predict_dir_fail || uop0[`INS_ERTN];
+    assign flush=  predict_addr_fail || predict_dir_fail || uop0[`INS_ERTN];
     always @(posedge aclk)
         if(~aresetn) stable_counter_reg<=0;
         else stable_counter_reg <= stable_counter_reg+1;
