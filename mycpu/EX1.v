@@ -33,7 +33,14 @@ module EX1(
     input   [4:0] ex_rk1,
     //input   [4:0] ex_rd0,
     //input   [4:0] ex_rd1,
-
+    output forward_flag_j0,
+    output forward_flag_k0,
+    output forward_flag_j1,
+    output forward_flag_k1,
+    output [31:0] forward_data_j0,
+    output [31:0] forward_data_k0,
+    output [31:0] forward_data_j1,
+    output [31:0] forward_data_k1,
     output [31:0] alu_result0,
     output [31:0] alu_result1,
     output alu_result0_valid,
@@ -269,7 +276,11 @@ EX1_FORWARD ex1_forward1(
     .ex1_rk_data(rk0_data),
     .ex1_rj_data_o(rj0_data_o),
     .ex1_rk_data_o(rk0_data_o),
-    .forward_stall(forward_stall1)
+    .forward_stall(forward_stall1),
+    .forward_flag_j(forward_flag_j0),
+    .forward_data_j(forward_data_j0),
+    .forward_flag_k(forward_flag_k0),
+    .forward_data_k(forward_data_k0)
 );
 
 assign a_1 = uop0[`UOP_SRC1] == `CTRL_SRC1_RF ? rj0_data_o : 
@@ -308,8 +319,11 @@ EX1_FORWARD ex1_forward2(
     .ex1_rk_data(rk1_data),
     .ex1_rj_data_o(rj1_data_o),
     .ex1_rk_data_o(rk1_data_o),
-    .forward_stall(forward_stall2)
-
+    .forward_stall(forward_stall2),
+    .forward_flag_j(forward_flag_j1),
+    .forward_data_j(forward_data_j1),
+    .forward_flag_k(forward_flag_k1),
+    .forward_data_k(forward_data_k1)
 );
 assign a_2 = uop1[`UOP_SRC1] == `CTRL_SRC1_RF ? rj1_data_o : 
             uop1[`UOP_SRC1] == `CTRL_SRC1_PC ? pc1 :

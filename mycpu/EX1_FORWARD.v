@@ -26,17 +26,52 @@ module EX1_FORWARD(
     output reg [31:0] ex1_rj_data_o,
     output reg [31:0] ex1_rk_data_o,
 
-    output reg forward_stall
+    output reg forward_stall,
+    output      forward_flag_j,
+    output      forward_flag_k,
+    output      [31:0] forward_data_j,
+    output      [31:0] forward_data_k
 );
+    wire [4:0] forward_case_j;
+    assign forward_case_j[0] = (ex1_rj==ex1_ex2_rd1);
+    assign forward_case_j[1] = (ex1_rj==ex1_ex2_rd0);
+    assign forward_case_j[2] = (ex1_rj==ex2_wb_rd1);
+    assign forward_case_j[3] = (ex1_rj==ex2_wb_rd0);
+    assign forward_case_j[4] = (ex1_rj==ex2_wb_rd2);
+    assign forward_flag_j = |forward_case_j;
+    assign forward_data_j = (forward_case_j[0])?ex1_ex2_data_1:
+                                (forward_case_j[1])?ex1_ex2_data_0:
+                                (forward_case_j[2])?ex2_wb_data_1:
+                                (forward_case_j[3])?ex2_wb_data_0:
+                                (forward_case_j[4])?ex2_wb_data_2:0;
+    
+    wire [4:0] forward_case_k;
+    assign forward_case_k[0] = (ex1_rk==ex1_ex2_rd1);
+    assign forward_case_k[1] = (ex1_rk==ex1_ex2_rd0);
+    assign forward_case_k[2] = (ex1_rk==ex2_wb_rd1);
+    assign forward_case_k[3] = (ex1_rk==ex2_wb_rd0);
+    assign forward_case_k[4] = (ex1_rk==ex2_wb_rd2);
+    assign forward_flag_k = |forward_case_k;
+    assign forward_data_k = (forward_case_k[0])?ex1_ex2_data_1:
+                                (forward_case_k[1])?ex1_ex2_data_0:
+                                (forward_case_k[2])?ex2_wb_data_1:
+                                (forward_case_k[3])?ex2_wb_data_0:
+                                (forward_case_k[4])?ex2_wb_data_2:0;
+
+    
     always@(*)begin
         ex1_rj_data_o=ex1_rj_data;
         ex1_rk_data_o=ex1_rk_data;
         forward_stall=0;
+        // forward_flag=1;
+        // forward_data=0;
         if(ex1_rj!=0)begin
         if(ex1_rj==ex1_ex2_rd1) begin
             if(ex1_ex2_data_1_valid) begin
                 forward_stall=0;
                 ex1_rj_data_o=ex1_ex2_data_1;
+                // forward_flag=1;
+                // forward_data=ex1_ex2_data_1;
             end else begin
                 forward_stall=1;
             end
@@ -45,6 +80,8 @@ module EX1_FORWARD(
             if(ex1_ex2_data_0_valid) begin
                 forward_stall=0;
                 ex1_rj_data_o=ex1_ex2_data_0;
+                // forward_flag=1;
+                // forward_data=ex1_ex2_data_0;
             end else begin
                 forward_stall=1;
             end
@@ -52,6 +89,8 @@ module EX1_FORWARD(
             if(ex2_wb_data_1_valid)begin
                 forward_stall=0;
                 ex1_rj_data_o=ex2_wb_data_1;
+                // forward_flag=1;
+                // forward_data=ex2_wb_data_1;
             end else begin
                 forward_stall=1;
             end
@@ -59,6 +98,8 @@ module EX1_FORWARD(
             if(ex2_wb_data_0_valid)begin
                 forward_stall=0;
                 ex1_rj_data_o=ex2_wb_data_0;
+                // forward_flag=1;
+                // forward_data=ex2_wb_data_0;
             end else begin
                 forward_stall=1;
             end
@@ -66,11 +107,14 @@ module EX1_FORWARD(
             if(ex2_wb_data_2_valid)begin
                 forward_stall=0;
                 ex1_rj_data_o=ex2_wb_data_2;
+                // forward_flag=1;
+                // forward_data=ex2_wb_data_2;
             end else begin
                 forward_stall=1;
             end
         end
         end
+        // else forward_flag=0;
 
         if(ex1_rk!=0)begin
         if(ex1_rk==ex1_ex2_rd1 ) begin
