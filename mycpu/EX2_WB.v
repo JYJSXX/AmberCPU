@@ -261,7 +261,7 @@ always@(*) begin
     else if( div_ready | csr_ready)  begin
         ex2_allowin=1;
     end
-    else if(!dcache_valid_buf[1]  || dcache_ready) 
+    else if(!dcache_valid_buf[1] && !(uop0[`INS_DIV] | uop0[`INS_CSR]) || dcache_ready) 
         ex2_allowin=1;
 end
 

@@ -27,6 +27,7 @@ module divider(
     reg             dividend_sign = 0;                                      //记录被除数的符号
     reg             divisor_sign = 0;                                       //记录除数的符号
     reg     [5:0]   shift_count = 0;
+    reg             sign_reg = 0;
     wire    [31:0]  quotient_nxt = {quotient[30:0], ~minus[63]};              //商的下一个值
 
     clog2 dividend_clog2(
@@ -122,6 +123,7 @@ module divider(
             quotient <= 0;
             remainder <= 0;
             shift <= 0;
+            sign_reg <= 0;
         end
 
         else if (flush_exception)
@@ -134,6 +136,7 @@ module divider(
             quotient <= 0;
             remainder <= 0;
             shift <= 0;
+            sign_reg <= 0;
         end
 
         else
@@ -146,6 +149,7 @@ module divider(
                     begin
                         digit_dividend_reg <= digit_dividend;
                         digit_divisor_reg <= digit_divisor;
+                        sign_reg <= sign;
                         dividend_reg <= {32'b0, dividend_abs};
                         dividend_sign <= dividend[31];
                         divisor_sign <= divisor[31];
@@ -156,6 +160,7 @@ module divider(
                     begin
                         digit_dividend_reg <= 0;
                         digit_divisor_reg <= 0;
+                        sign_reg <= 0;
                         dividend_reg <= 0;
                         dividend_sign <= 0;
                         divisor_sign <= 0;
@@ -166,6 +171,7 @@ module divider(
                 begin
                     digit_dividend_reg <= digit_dividend_reg;
                     digit_divisor_reg <= digit_divisor_reg;
+                    sign_reg <= sign_reg;
                     dividend_reg <= dividend_reg;
                     dividend_sign <= dividend_sign;
                     divisor_sign <= divisor_sign;
@@ -173,7 +179,7 @@ module divider(
                     begin
                         shift <= 0;
                         quotient <= 0;
-                        remainder <= (sign & dividend_sign) ? ~dividend_reg[31:0] + 1 : dividend_reg[31:0];
+                        remainder <= (sign_reg & dividend_sign) ? ~dividend_reg[31:0] + 1 : dividend_reg[31:0];
                     end
                     else
                     begin
@@ -187,8 +193,8 @@ module divider(
                     if(shift_count == digit_dividend_reg - digit_divisor_reg + 1)
                     begin
                         shift <= 0;
-                        quotient <= sign & (dividend_sign ^ divisor_sign) ? ~quotient_nxt + 1 : quotient_nxt;
-                        remainder <= (sign & dividend_sign) ? ~(minus[63] ? dividend_reg[31:0] : minus[31:0]) + 1 : (minus[63] ? dividend_reg[31:0] : minus[31:0]);
+                        quotient <= sign_reg & (dividend_sign ^ divisor_sign) ? ~quotient_nxt + 1 : quotient_nxt;
+                        remainder <= (sign_reg & dividend_sign) ? ~(minus[63] ? dividend_reg[31:0] : minus[31:0]) + 1 : (minus[63] ? dividend_reg[31:0] : minus[31:0]);
                     end
 
                     else
@@ -216,6 +222,7 @@ module divider(
                     quotient <= 0;
                     remainder <= 0;
                     digit_dividend_reg <= 0;
+                    sign_reg <= 0;
                     digit_divisor_reg <= 0;
                     dividend_reg <= 0;
                     dividend_sign <= 0;
