@@ -17,15 +17,15 @@ module IF1_FIFO(
     input               icache_rready,//icache rready makes reg update anytime
     input               icache_rvalid,
     input [31:0]        fetch_pc,
-    input               pc_taken_out,
-    output  reg       if1_fifo_pc_taken,
+    input               pc_taken_out,   //?
+    output  reg       if1_fifo_pc_taken,    //?
     // input [31:0]        if0_if1_pc,
     // input [31:0]        if0_if1_pc_next,
     input [31:0]        icache_badv,
     input [6:0]         icache_exception,
     input [1:0]         icache_excp_flag,
     input [31:0]        pc_out,
-    input [31:0]        icache_pc_next,
+    input [31:0]        icache_pc_next, //?
     input [31:0]        icache_inst0,
     input [31:0]        icache_inst1,
 
@@ -46,7 +46,7 @@ module IF1_FIFO(
     input               tlb_done,
 
     output reg[31:0]    if1_fifo_pc,
-    output reg[31:0]    if1_fifo_pc_next,
+    output reg[31:0]    if1_fifo_pc_next,   //?
     output reg[31:0]    if1_fifo_inst0,
     output reg[31:0]    if1_fifo_inst1,
     // output wire[31:0]    p_if1_fifo_inst0,
