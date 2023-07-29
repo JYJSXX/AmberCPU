@@ -260,7 +260,7 @@ module EX_Privilege(
         endcase
     end
 
-    always @(posedge clk or negedge rstn)
+    always @(posedge clk)
     begin
         case(PR_state)
             PR_INIT:
