@@ -269,16 +269,19 @@ module EX_Privilege(
                 begin
                     done <= 1;
                 end
+                else done <= 0;
             end
             PR_CACOP_I_WAIT:
             begin
                 if (cacop_i_done)
                     done <= 1;
+                else done <= 0;
             end
             PR_CACOP_D_WAIT:
             begin
                 if (cacop_d_done)
                     done <= 1;
+                else done <= 0;
             end
             PR_IDLE:
             begin
@@ -289,18 +292,23 @@ module EX_Privilege(
             PR_TLBSRCH:
             if (tlbsrch_ready)
                 done<=1;
+                else done<=0;
             PR_TLBRD:
             if(tlbrd_ready)
                 done<=1;
+            else done <= 0;
             PR_TLBWR:
             if(tlbwr_ready)
                 done<=1;
+                else done <= 0;
             PR_TLBFILL:
             if(tlbfill_ready)
                 done<=1;
+                else done <= 0;
             PR_TLBINV:
             if(invtlb_ready)
                 done<=1;
+                else done <= 0;
             default:
                 done <= 0;
         endcase
