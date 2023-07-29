@@ -220,7 +220,7 @@ always@(*)begin
             excp_flag_out = 1;
             badv_out = pc0;
         end
-        else if(is_priviledged_0 && plv) begin
+        else if(is_priviledged_0 && plv && ~(uop0[`INS_ERTN] && privilege_ready)) begin
             exception_out = `EXP_IPE;
             excp_flag_out = 1;
             badv_out = pc0;

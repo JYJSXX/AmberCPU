@@ -9,6 +9,7 @@ module csr
 
     output [31:0] rdata,
 
+    
     input wen_in,
     input [13:0] addr_in,
     input [31:0] wdata_in,
@@ -425,14 +426,15 @@ always @(posedge clk)
             estat_ecode <= 0;
             estat_subecode <= 0;
         end
-        else if(~(|hardware_interrupt))begin
-            estat_ecode <= 0;
-            estat_subecode <= 0;
-        
-        end else if(wen_expcode) begin
+        else if(wen_expcode | exception) begin
             estat_ecode <= expcode_in[5:0];
             estat_subecode <= expcode_in[5:0]==0 ? 0:{8'b0,expcode_in[6]};
-        end else if(wen&&addr==`CSR_ESTAT) begin
+        end
+        // else if(~(|hardware_interrupt))begin
+        //     estat_ecode <= 0;
+        //     estat_subecode <= 0;
+        // end
+        else if(wen&&addr==`CSR_ESTAT) begin
             if(wen) estat_is_soft[`ESTAT_IS_SOFT]<=wdata[`ESTAT_IS_SOFT];
         end
     always@(*) estat_is_hard[`ESTAT_IS_HARD] = hardware_interrupt;
@@ -887,11 +889,12 @@ assign rdata[31:0] = {32{addr_in==`CSR_CRMD}} & csr_crmd |
             `ifdef DIFFTEST
     wire [32*26-1:0] csr_diff =  
     {
-    wen&&addr==`CSR_CRMD ? wdata :csr_crmd,
-    wen&&addr==`CSR_PRMD ? wdata :csr_prmd,
+    wen&&addr==`CSR_CRMD ?  wdata : exception ? {csr_crmd[31:3], 3'b000} :
+                     ertn ? {csr_crmd[31:3],csr_prmd[2:0]}: csr_crmd,
+    wen&&addr==`CSR_PRMD ? wdata : exception ? {csr_prmd[31:3],csr_crmd[2:0]}:csr_prmd,
     wen&&addr==`CSR_ECFG ? wdata :csr_ecfg,
-    wen&&addr==`CSR_ESTAT ? wdata :csr_estat,
-    wen&&addr==`CSR_ERA ? wdata :csr_era,
+    wen&&addr==`CSR_ESTAT ? wdata : exception ? {csr_estat[31:23], expcode_in[6:0], csr_estat[15:0]} :csr_estat,
+    wen&&addr==`CSR_ERA ? wdata : exception ? era_in : csr_era,
     wen&&addr==`CSR_BADV ? wdata :csr_badv,
     wen&&(addr==`CSR_EENTRY) ? wdata :csr_eentry,
     wen&&addr==`CSR_TLBIDX ? wdata :csr_tlbidx,
@@ -909,7 +912,7 @@ assign rdata[31:0] = {32{addr_in==`CSR_CRMD}} & csr_crmd |
     wen&&addr==`CSR_TCFG ? wdata :csr_tcfg,
     wen&&addr==`CSR_TVAL ? wdata :csr_tval,
     wen&&addr==`CSR_TICLR ? wdata :csr_ticlr,
-    wen&&addr==`CSR_LLBCTL ? wdata :csr_llbctl,
+    wen&&addr==`CSR_LLBCTL ? wdata : ertn ? {csr_llbctl[31:1], csr_llbctl[2]} :csr_llbctl,
     wen&&addr==`CSR_TLBRENTRY ? wdata :csr_tlbrentry,
     wen&&addr==`CSR_DMW0 ? wdata :csr_dmw0,
     wen&&addr==`CSR_DMW1 ? wdata :csr_dmw1};

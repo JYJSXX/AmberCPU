@@ -11,6 +11,7 @@ module EX2_WB(
     //input ex2_valid, 这个信号不要了，由下面一堆valid/div_ready/dcache_ready来代替
     input wen_csr,
     output reg ex2_allowin,
+    input csr_ren_ex2,
     input [31:0] pc0,
     input [31:0] pc1,
     input [31:0] ex1_ex2_inst0,
@@ -85,6 +86,7 @@ module EX2_WB(
     output reg tlb_exception, //决定是否回到直接地址翻译
     input [31:0] era_in,
     input cpu_interrupt,
+    input [31:0] csr_era,
     output reg [31:0] era_out,
     output reg wen_era,
     output reg [18:0] vppn_out,
@@ -95,7 +97,7 @@ module EX2_WB(
     input  [31:0] eentry,
     input  [31:0] tlbrentry
 );
-assign pc_from_WB = csr_ready ? reg_ex1_pc0 +4 : (tlb_exception) ? tlbrentry : eentry;
+assign pc_from_WB = (tlb_exception) ? tlbrentry : (exception_flag_out ? eentry : (uop0[`INS_ERTN] ? csr_era : (csr_ready ? reg_ex1_pc0 +4 : pc0)));
 assign set_by_priv = csr_ready;
 
 reg tlb_d_valid_reg;
@@ -154,7 +156,7 @@ wire [3:0] cond0;
 wire [3:0] cond1;
 assign cond0 = uop0_reg[`UOP_COND];
 assign cond1 = uop1_reg[`UOP_COND];
-    always@(posedge clk or negedge aresetn)begin
+    always@(posedge clk)begin
         if(~aresetn)begin
             ex2_wb_data_0 <= 0;
             ex2_wb_data_1 <= 0;
@@ -188,6 +190,12 @@ assign cond1 = uop1_reg[`UOP_COND];
                 ex2_wb_rd0 <= ex_rd0;
                 ex2_wb_we0 <= 1;
 
+            end
+            else if (csr_ren_ex2)begin
+                ex2_wb_data_0 <= csr_data_in;
+                ex2_wb_data_0_valid <= 1;
+                ex2_wb_rd0 <= ex_rd0;
+                ex2_wb_we0 <= 1;
             end
             else if(uop0[`INS_DIV]) begin
                 if(cond0[0]) begin
@@ -291,12 +299,22 @@ end
 
 
 always@(posedge clk)begin
-    debug0_wb_pc <= pc0;
-    debug0_wb_inst <= ex1_ex2_inst0;
-    debug1_wb_pc <= pc1;
-    debug1_wb_inst <= ex1_ex2_inst1;
-    debug0_valid <= ex2_allowin;
-    debug1_valid <= ex2_allowin;
+    if (flush_out_all)begin
+        debug0_wb_pc <= 0;
+        debug0_wb_inst <= 0;
+        debug1_wb_pc <= 0;
+        debug1_wb_inst <= 0;
+        debug0_valid <= 0;
+        debug1_valid <= 0;
+    end
+    else begin
+        debug0_wb_pc <= pc0;
+        debug0_wb_inst <= ex1_ex2_inst0;
+        debug1_wb_pc <= pc1;
+        debug1_wb_inst <= ex1_ex2_inst1;
+        debug0_valid <= ex2_allowin;
+        debug1_valid <= ex2_allowin;
+    end
 
 end
 //下面这些自带一个周期延迟，和上面的同步

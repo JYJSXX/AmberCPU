@@ -10,7 +10,8 @@ module EX1_EX2(
     output  reg ex2_readygo,
     //input   forward_stall,
 
-
+    input   csr_ren_ex1, 
+    output reg csr_ren_ex2,
     input   [31:0] reg_ex1_pc0,//这些信号直接从REG_EX1中接入
     input   [31:0] reg_ex1_pc1,
     input   [31:0] reg_ex1_inst0,
@@ -94,6 +95,7 @@ always@(posedge clk) begin
         ex1_ex2_pc0<=0;
         ex1_ex2_pc1<=0;
         ex1_ex2_inst0<=0;
+        csr_ren_ex2<=0;
         // ex1_ex2_inst1<=0;
         // ex1_ex2_is_syscall_0<=0;
         // ex1_ex2_is_syscall_1<=0;
@@ -128,6 +130,7 @@ always@(posedge clk) begin
         ex1_ex2_pc1<=reg_ex1_pc1;
         ex1_ex2_inst0<=reg_ex1_inst0;
         ex1_ex2_inst1<=reg_ex1_inst1;
+        csr_ren_ex2<=csr_ren_ex1;
         // ex1_ex2_is_syscall_0<=reg_ex1_is_syscall_0;
         // ex1_ex2_is_syscall_1<=reg_ex1_is_syscall_1;
         // ex1_ex2_is_break_0<=reg_ex1_is_break_0;

@@ -1097,6 +1097,7 @@ idle_clk idle_clk1
     wire   [6:0] ex1_ex2_exception; 
     wire ex1_ex2_is_priviledged_0 ;
     wire ex1_ex2_is_priviledged_1 ;
+    wire csr_ren_ex2;
 
     EX1_EX2 u_EX1_EX2(
         .clk                       ( clk                       ),
@@ -1110,6 +1111,8 @@ idle_clk idle_clk1
         .reg_ex1_pc1               ( reg_ex_pc1               ),
         .reg_ex1_inst0             ( reg_ex_inst0             ),
         .reg_ex1_inst1             ( reg_ex_inst1             ),
+        .csr_ren_ex1               ( csr_ren                   ),
+        .csr_ren_ex2               ( csr_ren_ex2               ),
         .reg_ex1_uop0              ( reg_ex_uop0              ),
         .reg_ex1_uop1              ( reg_ex_uop1              ),
         .reg_ex1_imm0              ( reg_ex_imm0              ),
@@ -1229,6 +1232,7 @@ idle_clk idle_clk1
         .flush_to_tlb        ( flush_to_tlb        ),
         .flush_out_all       ( flush_from_wb       ),
         .ex2_allowin         ( ex2_allowin         ),
+        .csr_ren_ex2         ( csr_ren_ex2         ),
         .pc0                 ( ex1_ex2_pc0                 ),
         .pc1                 ( ex1_ex2_pc1                 ),
         .ex1_ex2_inst0       ( ex1_ex2_inst0       ),
@@ -1295,6 +1299,7 @@ idle_clk idle_clk1
         .badv_out            ( ex2_wb_badv           ),
         .wen_badv            ( wen_badv            ),
         .tlb_exception       ( tlb_exception       ),
+        .csr_era                  (csr_era),
         .era_in              ( ex1_ex2_pc0         ),
         .cpu_interrupt        ( cpu_interrupt        ),
         .era_out             ( era_out             ),

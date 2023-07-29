@@ -269,6 +269,7 @@ module EX_Privilege(
                 begin
                     done <= 1;
                 end
+                else if (en & pr_type[`INS_ERTN]) done <= 1;
                 else done <= 0;
             end
             PR_CACOP_I_WAIT:
