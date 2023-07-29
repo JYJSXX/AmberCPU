@@ -98,7 +98,7 @@ module EX2_WB(
     input  [31:0] tlbrentry
 );
 assign pc_from_WB = (tlb_exception) ? tlbrentry : (exception_flag_out ? eentry : (uop0[`INS_ERTN] ? csr_era : (csr_ready ? reg_ex1_pc0 +4 : pc0)));
-assign set_by_priv = csr_ready;
+assign set_by_priv = csr_ready | tlb_exception | exception_flag_out | uop0[`INS_ERTN];
 
 reg tlb_d_valid_reg;
 always@(*)begin
@@ -106,7 +106,7 @@ always@(*)begin
     end
 
 assign flush_out_all = exception_flag_out;
-assign flush_by_priv = csr_ready;
+assign flush_by_priv = set_by_priv;
 //wire csr_crmd_ie;
 //assign csr_crmd_ie = csr_crmd[2];
 //wire [12:0] csr_estat_is;
