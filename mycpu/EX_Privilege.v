@@ -83,7 +83,9 @@ module EX_Privilege(
         PR_TLBRD = 10,
         PR_TLBWR = 11,
         PR_TLBFILL = 12,
-        PR_TLBINV = 13;
+        PR_TLBINV = 13,
+        PR_CACOP_D_DONE = 14,
+        PR_CACOP_I_DONE = 15;
 
     reg [4:0] PR_state = PR_INIT, PR_next_state = PR_INIT;
 
@@ -139,8 +141,9 @@ module EX_Privilege(
             PR_CACOP_I_WAIT:
             begin
                 if(cacop_i_done)
-                    PR_next_state = PR_INIT;
+                    PR_next_state = PR_CACOP_I_DONE;
             end
+            PR_CACOP_I_DONE : PR_next_state = PR_INIT;
             PR_CACOP_D_CALL:
             begin
                 if(cacop_d_ready)
@@ -149,8 +152,9 @@ module EX_Privilege(
             PR_CACOP_D_WAIT:
             begin
                 if(cacop_d_done)
-                    PR_next_state = PR_INIT;
+                    PR_next_state = PR_CACOP_D_DONE;
             end
+            PR_CACOP_D_DONE: PR_next_state = PR_INIT;
             PR_ERTN:
             begin
                 PR_next_state = PR_INIT;
