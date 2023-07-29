@@ -446,13 +446,13 @@ module icache #(
             end
             LOOKUP: begin
                 if((exception != 0) || ibar || flush)      next_state = IDLE;
-                else if(uncache_buf)    next_state = MISS;
+                else if(uncache_buf)    next_state = flush || ~flush_valid ? MISS_FLUSH : MISS;
                 else if(cacop_en)       next_state = CACOP;
                 else if(cache_hit) begin
                     if(rvalid)          next_state = LOOKUP;
                     else                next_state = IDLE;
                 end
-                else                    next_state = MISS;
+                else                    next_state = flush || ~flush_valid ? MISS_FLUSH : MISS; 
             end
             MISS: begin
                 // if(i_rready && i_rlast) next_state = REFILL;
