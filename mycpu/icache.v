@@ -528,8 +528,6 @@ module icache #(
             lru_we          = 0;
             if(cacop_en)
                 cacop_ready     = 1;
-            if(cacop_en_buf)
-                cacop_complete  = 1;
         end
         LOOKUP: begin
             if(exception == 0)begin
