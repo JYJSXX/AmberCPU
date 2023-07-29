@@ -20,8 +20,22 @@ module victim_cache#(
     input we,
     input [511:0] data_in
 );
+    wire [5:0] windex;
+    wire [19:0] wtag;
+    wire victim_valid;
+    // assign victim_valid = w_tag[25];
+    assign wtag = w_tag[25:6];
+    assign windex = w_tag[5:0];
+
+    wire [5:0] rindex;
+    wire [19:0] rtag;
+    assign rtag = r_tag[25:6];
+    assign rindex = r_tag[5:0];
+
+
     //tag寄存器，最高位为有效位
     reg [26:0] tag [0:CAPACITY-1];
+    
     //数据寄存器
     reg [511:0] data [0:CAPACITY-1];
     //有效位

@@ -285,8 +285,6 @@ module EX_Privilege(
             end
             PR_IDLE:
             begin
-                block_clock = 1;
-                block_cache = 1;
                 done <= 1;
             end
             PR_TLBSRCH:

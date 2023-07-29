@@ -1,0 +1,74 @@
+[*]
+[*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
+[*] Sat Jul 29 06:27:44 2023
+[*]
+[dumpfile] "/home/vmware/Desktop/chiplab/sims/verilator/run_prog/log/func/func_lab3_log/simu_trace.fst"
+[dumpfile_mtime] "Sat Jul 29 06:21:18 2023"
+[dumpfile_size] 47054123
+[savefile] "/home/vmware/Desktop/AmberCPU/sim/tlb.gtkw"
+[timestart] 546761
+[size] 1846 814
+[pos] -139 -139
+*-3.000000 546776 546597 879716 155258 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] TOP.
+[treeopen] TOP.simu_top.
+[treeopen] TOP.simu_top.soc.
+[treeopen] TOP.simu_top.soc.cpu.
+[treeopen] TOP.simu_top.soc.cpu.u_dcache.
+[treeopen] TOP.simu_top.soc.cpu.u_EX1.
+[treeopen] TOP.simu_top.soc.cpu.u_EX1.divider1.
+[treeopen] TOP.simu_top.soc.cpu.u_EX2_WB.
+[treeopen] TOP.simu_top.soc.cpu.u_FIFO.
+[treeopen] TOP.simu_top.soc.cpu.u_icache.
+[treeopen] TOP.simu_top.soc.cpu.u_ID_REG.
+[treeopen] TOP.simu_top.soc.cpu.u_IF0.
+[treeopen] TOP.simu_top.soc.cpu.u_IF1_FIFO.
+[treeopen] TOP.simu_top.soc.cpu.u_REG_EX1.
+[treeopen] TOP.simu_top.soc.cpu.u_REG_EX1.regfile1.
+[treeopen] TOP.simu_top.soc.cpu.u_TLB.
+[sst_width] 325
+[signals_width] 458
+[sst_expanded] 1
+[sst_vpaned_height] 296
+@22
+TOP.simu_top.soc.cpu.u_TLB.PA_D[19:0]
+TOP.simu_top.soc.cpu.u_TLB.PA_I[19:0]
+TOP.simu_top.soc.cpu.u_TLB.VA_TAG_OFFSET_D_OUT[11:0]
+TOP.simu_top.soc.cpu.u_TLB.VA_TAG_OFFSET_I_OUT[11:0]
+TOP.simu_top.soc.cpu.u_TLB.PA_TAG_OFFSET_D_OUT[11:0]
+TOP.simu_top.soc.cpu.u_TLB.PA_TAG_OFFSET_I_OUT[11:0]
+@28
+TOP.simu_top.soc.cpu.u_TLB.SOL_D_OUT
+TOP.simu_top.soc.cpu.u_TLB.TLBFILL_ready
+TOP.simu_top.soc.cpu.u_TLB.TLBINVLD_ready
+TOP.simu_top.soc.cpu.u_TLB.TLBRD_hit
+TOP.simu_top.soc.cpu.u_TLB.TLBRD_ready
+@22
+TOP.simu_top.soc.cpu.u_TLB.TLBSRCH_INDEX[4:0]
+@28
+TOP.simu_top.soc.cpu.u_TLB.TLBSRCH_hit
+TOP.simu_top.soc.cpu.u_TLB.TLBSRCH_ready
+TOP.simu_top.soc.cpu.u_TLB.TLBWR_ready
+@22
+TOP.simu_top.soc.cpu.u_TLB.TLB_CPR[36:0]
+TOP.simu_top.soc.cpu.u_TLB.TLB_TRANS_1[25:0]
+TOP.simu_top.soc.cpu.u_TLB.TLB_TRANS_2[25:0]
+TOP.simu_top.soc.cpu.u_TLB.VA_I_OUT[19:0]
+TOP.simu_top.soc.cpu.u_TLB.WDATA_D_OUT[31:0]
+TOP.simu_top.soc.cpu.u_TLB.WSTRB_D_OUT[3:0]
+@28
+TOP.simu_top.soc.cpu.u_TLB.atom_out
+TOP.simu_top.soc.cpu.u_TLB.en_VA_D_OUT
+TOP.simu_top.soc.cpu.u_TLB.en_VA_I_OUT
+TOP.simu_top.soc.cpu.u_TLB.is_cached_D
+TOP.simu_top.soc.cpu.u_TLB.is_cached_I
+@22
+TOP.simu_top.soc.cpu.u_TLB.rd_out[4:0]
+@28
+TOP.simu_top.soc.cpu.u_TLB.signed_ext_out
+@22
+TOP.simu_top.soc.cpu.u_TLB.tlb_cookie_out[63:0]
+TOP.simu_top.soc.cpu.u_TLB.tlb_exception_code_d[6:0]
+TOP.simu_top.soc.cpu.u_TLB.tlb_exception_code_i[6:0]
+[pattern_trace] 1
+[pattern_trace] 0
