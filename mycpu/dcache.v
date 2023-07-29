@@ -458,7 +458,7 @@ module dcache #(
     ) victim_cache (
         .clk        (clk),
         .rstn       (rstn),
-        .r_tag      ({paddr_buf[31:12],req_buf[11:6]}),
+        .r_tag      ({tag,req_buf[11:6]}),
         .victim_hit (victim_hit),
         .data_out   (victim_data),
         .w_tag      ({tag_rdata[victim_sel][TAG_WIDTH-1:0],req_buf[11:6]}),
