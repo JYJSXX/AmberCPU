@@ -87,8 +87,8 @@ module ID_REG(
     reg id_reg_is_syscall_1 ;
     reg id_reg_is_break_0 ;
     reg id_reg_is_break_1 ;
-    reg id_reg_is_priviledged_0 ;
-    reg id_reg_is_priviledged_1 ;
+    reg id_reg_is_priviledged_0 = 0 ;
+    reg id_reg_is_priviledged_1 = 0 ;
     reg [`WIDTH_UOP-1:0] id_reg_uop0 ;
     reg [`WIDTH_UOP-1:0] id_reg_uop1 ;
     reg [31:0] id_reg_imm0 ;
@@ -194,6 +194,10 @@ always@(posedge aclk) begin
         id_reg_rk0  <= id_reg_rk0;
         id_reg_rk1  <= id_reg_rk1;
 
+    end
+    else begin
+        id_reg_is_priviledged_0  <= 0;
+        id_reg_is_priviledged_1  <= 0;
     end
 
 end

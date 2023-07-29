@@ -23,6 +23,8 @@ module EX2_WB(
     input ex2_result0_valid,
     input ex2_result1_valid,
     input EN_VA_D,
+    input ex1_ex2_is_priviledged_0,
+    input ex1_ex2_is_priviledged_1,
     output reg [31:0] ex2_wb_data_0,
     output reg [31:0] ex2_wb_data_1,
     output reg [31:0] ex2_wb_data_2,
@@ -167,11 +169,11 @@ assign cond1 = uop1_reg[`UOP_COND];
                 ex2_wb_rd0 <= ex_rd0;
                 ex2_wb_we0 <= 1;
             end
-            else if(uop0[`INS_CSR]) begin
+            else if(ex1_ex2_is_priviledged_0 ) begin
                 ex2_wb_data_0 <= csr_data_in;
-                ex2_wb_data_0_valid <= csr_ready & uop0[`INS_CSR];
+                ex2_wb_data_0_valid <= csr_ready & ex1_ex2_is_priviledged_0;
                 ex2_wb_rd0 <= ex_rd0;
-                ex2_wb_we0 <= csr_ready & uop0[`INS_CSR];
+                ex2_wb_we0 <= csr_ready & ex1_ex2_is_priviledged_0;
             end
             else if(uop0[`INS_DIV]) begin
                 if(cond0[0]) begin
@@ -265,7 +267,7 @@ always@(*) begin
     else if( div_ready | csr_ready)  begin
         ex2_allowin=1;
     end
-else if(!dcache_valid_buf[1] && !(uop0[`INS_DIV] | uop0[`INS_CSR]) || dcache_ready) 
+else if(!dcache_valid_buf[1] && !(uop0[`INS_DIV] | ex1_ex2_is_priviledged_0) || dcache_ready) 
         ex2_allowin=1;
 end
 

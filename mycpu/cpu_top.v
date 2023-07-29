@@ -1090,6 +1090,8 @@ idle_clk idle_clk1
     wire   [31:0] ex1_ex2_badv;      
     wire   ex1_ex2_excp_flag; 
     wire   [6:0] ex1_ex2_exception; 
+    wire ex1_ex2_is_priviledged_0 ;
+    wire ex1_ex2_is_priviledged_1 ;
 
     EX1_EX2 u_EX1_EX2(
         .clk                       ( clk                       ),
@@ -1107,6 +1109,8 @@ idle_clk idle_clk1
         .reg_ex1_uop1              ( reg_ex_uop1              ),
         .reg_ex1_imm0              ( reg_ex_imm0              ),
         .reg_ex1_imm1              ( reg_ex_imm1              ),
+        .reg_ex1_is_priviledged_0  ( reg_ex_is_priviledged_0  ),
+        .reg_ex1_is_priviledged_1  ( reg_ex_is_priviledged_1  ),
         .reg_ex1_rj0               ( reg_ex_rj0               ),
         .reg_ex1_rj1               ( reg_ex_rj1               ),
         .reg_ex1_rk0               ( reg_ex_rk0               ),
@@ -1132,6 +1136,8 @@ idle_clk idle_clk1
         .ex1_ex2_rk1               ( ex1_ex2_rk1               ),
         .ex1_ex2_rd0               ( ex1_ex2_rd0               ),
         .ex1_ex2_rd1               ( ex1_ex2_rd1               ),
+        .ex1_ex2_is_priviledged_0  ( ex1_ex2_is_priviledged_0  ),
+        .ex1_ex2_is_priviledged_1  ( ex1_ex2_is_priviledged_1  ),
         .ex1_ex2_mul_stage1_res_hh ( ex1_ex2_mul_stage1_res_hh ),
         .ex1_ex2_mul_stage1_res_hl ( ex1_ex2_mul_stage1_res_hl ),
         .ex1_ex2_mul_stage1_res_lh ( ex1_ex2_mul_stage1_res_lh ),
@@ -1228,6 +1234,8 @@ idle_clk idle_clk1
         .uop1                ( ex1_ex2_uop1                ),
         .ex2_result0         ( ex2_rd0_data         ),
         .ex2_result1         ( ex2_rd1_data         ),
+        .ex1_ex2_is_priviledged_0 ( ex1_ex2_is_priviledged_0 ),
+        .ex1_ex2_is_priviledged_1 ( ex1_ex2_is_priviledged_1 ),
         // .pc_dcache_out       ( pc_dcache_out       ), // TODO 没做
         // .inst_dcache_out     ( inst_dcache_out     ),
         // .inst_dcache_in      ( inst_dcache_in      ),

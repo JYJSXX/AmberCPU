@@ -901,23 +901,23 @@ module dcache #(
             else if(store_tag || index_invalid) begin
                 tagv_clear = 1;
                 tagv_we    = tagv_way_sel;
+                wfsm_en = 1;
                 if(index_invalid && dirty_rdata)begin
                     dirty_we   = tagv_way_sel;
                     dirty_wdata= 0;
                     wbuf_we = 1;
                     mbuf_we = 1;
-                    wfsm_en = 1;
                 end
             end
             else if(hit_invalid && cache_hit) begin
                 tagv_clear = 1;
                 tagv_we    = hit;
+                wfsm_en = 1;
                 if(dirty_rdata)begin
                     dirty_we   = tagv_way_sel;
                     dirty_wdata= 0;
                     wbuf_we = 1;
                     mbuf_we = 1;
-                    wfsm_en = 1;
                 end
             end
         end
