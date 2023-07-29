@@ -837,8 +837,6 @@ module dcache #(
             lru_we     = 1;
             if(cacop_en)
                 cacop_ready = 1;
-            if(cacop_en_buf)
-                cacop_complete  = 1;
         end
         LOOKUP: begin
             if(exception_temp == 0) begin
@@ -907,8 +905,8 @@ module dcache #(
             wfsm_reset      = 1;
             exception_sel   = 1;
             cacop_ready     = 1;
-            rready          = wrt_finish && !op_buf;
-            wready          = wrt_finish && op_buf;
+            rready          = wrt_finish && !op_buf && !cacop_en_buf;
+            wready          = wrt_finish && op_buf && !cacop_en_buf;
             data_from_mem   = 0;
             req_buf_we      = wrt_finish & (rvalid || wvalid);
             if(cacop_en_buf && wrt_finish)
