@@ -9,6 +9,7 @@ module EX2_WB(
     output flush_out_all,
     input flush_to_tlb,
     //input ex2_valid, 这个信号不要了，由下面一堆valid/div_ready/dcache_ready来代替
+    input wen_csr,
     output reg ex2_allowin,
     input [31:0] pc0,
     input [31:0] pc1,
@@ -25,6 +26,7 @@ module EX2_WB(
     input EN_VA_D,
     input ex1_ex2_is_priviledged_0,
     input ex1_ex2_is_priviledged_1,
+    input [31:0] reg_ex1_pc0,
     output reg [31:0] ex2_wb_data_0,
     output reg [31:0] ex2_wb_data_1,
     output reg [31:0] ex2_wb_data_2,
@@ -88,16 +90,21 @@ module EX2_WB(
     output reg [18:0] vppn_out,
     output reg wen_vppn,
     output  [31:0] pc_from_WB,
+    output set_by_priv,
+    output flush_by_priv,
     input  [31:0] eentry,
     input  [31:0] tlbrentry
 );
-assign pc_from_WB = (tlb_exception) ? tlbrentry : eentry;
+assign pc_from_WB = csr_ready ? reg_ex1_pc0 +4 : (tlb_exception) ? tlbrentry : eentry;
+assign set_by_priv = csr_ready;
+
 reg tlb_d_valid_reg;
 always@(*)begin
         tlb_d_valid_reg = EN_VA_D & (~flush_to_tlb);
     end
 
 assign flush_out_all = exception_flag_out;
+assign flush_by_priv = csr_ready;
 //wire csr_crmd_ie;
 //assign csr_crmd_ie = csr_crmd[2];
 //wire [12:0] csr_estat_is;
@@ -174,6 +181,13 @@ assign cond1 = uop1_reg[`UOP_COND];
                 ex2_wb_data_0_valid <= csr_ready & ex1_ex2_is_priviledged_0;
                 ex2_wb_rd0 <= ex_rd0;
                 ex2_wb_we0 <= csr_ready & ex1_ex2_is_priviledged_0;
+            end
+            else if(wen_csr) begin
+                ex2_wb_data_0 <= csr_data_in;
+                ex2_wb_data_0_valid <= 1;
+                ex2_wb_rd0 <= ex_rd0;
+                ex2_wb_we0 <= 1;
+
             end
             else if(uop0[`INS_DIV]) begin
                 if(cond0[0]) begin
@@ -260,11 +274,14 @@ assign cond1 = uop1_reg[`UOP_COND];
     wire temp3 = (!dcache_valid_buf[1]  || dcache_ready);
 always@(*) begin
     ex2_allowin=0;
-    if(ex1_ex2_inst0==0 && ex1_ex2_inst1==0) begin
+    if(ex1_ex2_inst0==0 && ex1_ex2_inst1==0 && !(uop0[`INS_DIV] | ex1_ex2_is_priviledged_0)) begin
         ex2_allowin=1;
     end
     //else if((ex2_wb_data_0_valid | ~(~dcache_ready && tlb_d_valid_reg)  | div_ready | csr_ready) && ex2_wb_data_1_valid) begin
-    else if( div_ready | csr_ready)  begin
+    else if( csr_ready)  begin
+        ex2_allowin=1;
+    end
+    else if(div_ready ) begin
         ex2_allowin=1;
     end
 else if(!dcache_valid_buf[1] && !(uop0[`INS_DIV] | ex1_ex2_is_priviledged_0) || dcache_ready) 

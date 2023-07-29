@@ -7,11 +7,12 @@ module csr
     input aclk,
     input aresetn,
 
-    input software_en,
-    input [13:0] addr,
     output [31:0] rdata,
-    input wen,
-    input [31:0] wdata,
+
+    input wen_in,
+    input [13:0] addr_in,
+    input [31:0] wdata_in,
+    input d_idle,
 
     output [31:0] crmd, //当前模式信息，包含privilege
     output [31:0] estat,    //例外状态 idle_interrupt, 
@@ -24,6 +25,7 @@ module csr
     output [31:0] dmw1,
     output llbit,
     output idle_over,
+    output wen_csr,
     //TLB输出
     //待定
     output PG,
@@ -131,6 +133,37 @@ module csr
     wire [31:0] csr_ticlr ;
     reg [31:0] csr_ctag ;
 
+reg wen_reg = 0;
+reg [31:0] wdata_reg = 0;
+reg [13:0] waddr_reg = 0;
+reg [1:0]  count = 0;
+always @(posedge clk)begin
+    if(~aresetn) count <= 0;
+    else if (d_idle && wen_reg) 
+        if (count < 1) count <= count + 1;
+        else count <= 0;
+end
+assign wen_csr = d_idle && wen_reg && ~|count;
+always @(posedge clk)begin
+    if (~aresetn)begin
+        wen_reg <= 0;
+        wdata_reg <= 0;
+        waddr_reg <= 0;
+    end
+    else if (wen_in)begin
+        wen_reg <= 1;
+        wdata_reg <= wdata_in;
+        waddr_reg <= addr_in;
+    end
+    else if (count == 1)begin
+        wen_reg <= 0;
+        wdata_reg <= 0;
+        waddr_reg <= 0;
+    end
+end
+wire  wen = (count == 1);
+wire [31:0] wdata = wdata_reg;
+wire [13:0] addr = waddr_reg;
 
 //CRMD
     reg [`CRMD_PLV]     crmd_plv;
@@ -343,7 +376,7 @@ always @(posedge clk)
             end
             crmd_plv <= 0;
             crmd_ie <= 0;
-        end else if(software_en&&addr==`CSR_CRMD) begin
+        end else if(wen&&addr==`CSR_CRMD) begin
             if(wen) crmd_plv[`CRMD_PLV]  <= wdata[`CRMD_PLV];
             if(wen) crmd_ie[`CRMD_IE]   <= wdata[`CRMD_IE];
             if(wen) crmd_datf[`CRMD_DATF] <= wdata[`CRMD_DATF];
@@ -363,7 +396,7 @@ always @(posedge clk)
         end else if(exception) begin
             prmd_pplv <= crmd_plv;
             prmd_pie  <= crmd_ie;
-        end else if(software_en&&addr==`CSR_PRMD) begin
+        end else if(wen&&addr==`CSR_PRMD) begin
             if(wen) prmd_pplv[`PRMD_PPLV]<=wdata[`PRMD_PPLV];
             if(wen) prmd_pie[`PRMD_PIE] <=wdata[`PRMD_PIE];
         end
@@ -371,7 +404,7 @@ always @(posedge clk)
     always @(posedge clk)
         if(~aresetn) begin
             euen_fpe <= 0;
-        end else if(software_en&&addr==`CSR_EUEN) begin
+        end else if(wen&&addr==`CSR_EUEN) begin
             if(wen) euen_fpe[0]<=wdata[0];
         end
 
@@ -379,7 +412,7 @@ always @(posedge clk)
     always @(posedge clk)
         if(~aresetn) begin
             ecfg_lie <= 0;
-        end else if(software_en&&addr==`CSR_ECFG) begin
+        end else if(wen&&addr==`CSR_ECFG) begin
            if(wen) ecfg_lie[`ECFG_LIE]<=wdata[`ECFG_LIE];
 
         end
@@ -399,7 +432,7 @@ always @(posedge clk)
         end else if(wen_expcode) begin
             estat_ecode <= expcode_in[5:0];
             estat_subecode <= expcode_in[5:0]==0 ? 0:{8'b0,expcode_in[6]};
-        end else if(software_en&&addr==`CSR_ESTAT) begin
+        end else if(wen&&addr==`CSR_ESTAT) begin
             if(wen) estat_is_soft[`ESTAT_IS_SOFT]<=wdata[`ESTAT_IS_SOFT];
         end
     always@(*) estat_is_hard[`ESTAT_IS_HARD] = hardware_interrupt;
@@ -409,7 +442,7 @@ always @(posedge clk)
             csr_era <= 0;
         end else if(wen_era) begin
             csr_era <= era_in;
-        end else if(software_en&&addr==`CSR_ERA) begin
+        end else if(wen&&addr==`CSR_ERA) begin
             if(wen) csr_era[ 31:0]<=wdata[ 31:0];
             
         end
@@ -420,7 +453,7 @@ always @(posedge clk)
             csr_badv <= 0;
         end else if(wen_badv) begin
             csr_badv <= badv_in;
-        end else if(software_en&&addr==`CSR_BADV) begin
+        end else if(wen&&addr==`CSR_BADV) begin
             if(wen) csr_badv[31:0]<=wdata[31:0];
         end
 
@@ -428,7 +461,7 @@ always @(posedge clk)
     always @(posedge clk)
         if(~aresetn) begin
             eentry_va <= 0;
-        end else if(software_en&&addr==`CSR_EENTRY) begin
+        end else if(wen&&addr==`CSR_EENTRY) begin
             if(wen) eentry_va[`EENTRY_VA]<=wdata[`EENTRY_VA];
         end
 
@@ -440,28 +473,28 @@ always @(posedge clk)
     always @(posedge clk)
         if(~aresetn) begin
             csr_save0 <= 0;
-        end else if(software_en&&addr==`CSR_SAVE0) begin
+        end else if(wen&&addr==`CSR_SAVE0) begin
             if(wen) csr_save0[31:0]<=wdata[31:0];
         end
 
     always @(posedge clk)
         if(~aresetn) begin
             csr_save1 <= 0;
-        end else if(software_en&&addr==`CSR_SAVE1) begin
+        end else if(wen&&addr==`CSR_SAVE1) begin
             if(wen) csr_save1[31:0]<=wdata[31:0];
         end
 
     always @(posedge clk)
         if(~aresetn) begin
             csr_save2 <= 0;
-        end else if(software_en&&addr==`CSR_SAVE2) begin
+        end else if(wen&&addr==`CSR_SAVE2) begin
             if(wen) csr_save2[31:0]<=wdata[31:0];
         end
 
     always @(posedge clk)
         if(~aresetn) begin
             csr_save3 <= 0;
-        end else if(software_en&&addr==`CSR_SAVE3) begin
+        end else if(wen&&addr==`CSR_SAVE3) begin
             if(wen) csr_save3[31:0]<=wdata[31:0];
         end
 
@@ -477,7 +510,7 @@ always @(posedge clk)
             llbctl_klo<=0;
         end 
         else if(llbit_clear) llbctl_rollb<=0;
-        else if(software_en&&addr==`CSR_LLBCTL) begin
+        else if(wen&&addr==`CSR_LLBCTL) begin
             if(wen&&wdata[1]) llbctl_rollb<=0;
             if(wen) llbctl_klo<=wdata[2];
         end
@@ -486,7 +519,7 @@ always @(posedge clk)
     always @(posedge clk)
         if(~aresetn) begin
             tlbrentry_pa <= 0;
-        end else if(software_en&&addr==`CSR_TLBRENTRY) begin
+        end else if(wen&&addr==`CSR_TLBRENTRY) begin
             if(wen) tlbrentry_pa[`TLBRENTRY_PA]<=wdata[`TLBRENTRY_PA];
         end
     wire [18:0] vppn_in;
@@ -547,7 +580,7 @@ always @(posedge clk)
             tlbidx_ps<=0;
             tlbidx_ne<=0;
         end
-        else if(software_en&&addr==`CSR_TLBIDX) begin
+        else if(wen&&addr==`CSR_TLBIDX) begin
             if(wen) tlbidx_index[4:0]<=wdata[4:0];
             if(wen) tlbidx_ps[`TLBIDX_PS]<=wdata[`TLBIDX_PS];
             if(wen) tlbidx_ne[`TLBIDX_NE]<=wdata[`TLBIDX_NE];
@@ -578,7 +611,7 @@ always @(posedge clk)
     always@(posedge clk)begin
         if(~aresetn)
             tlbehi_vppn<=0;
-        else if(software_en&&addr==`CSR_TLBEHI) begin
+        else if(wen&&addr==`CSR_TLBEHI) begin
             if(wen) tlbehi_vppn[`TLBEHI_VPPN]<=wdata[`TLBEHI_VPPN];
         end else if(tlbrd_ready) begin
             if(tlbrd_hit) begin
@@ -601,7 +634,7 @@ always @(posedge clk)
             tlbelo0_v<=0;
 
         end
-        else if(software_en&& addr==`CSR_TLBELO0) begin
+        else if(wen&& addr==`CSR_TLBELO0) begin
             if(wen) begin
                 tlbelo0_d[`TLBELO_D]<=wdata[`TLBELO_D];
                 tlbelo0_g[`TLBELO_G]<=wdata[`TLBELO_G];
@@ -644,7 +677,7 @@ always @(posedge clk)
             tlbelo1_ppn<=0;
             tlbelo1_v<=0;
         end
-        else if(software_en&&addr==`CSR_TLBELO1) begin
+        else if(wen&&addr==`CSR_TLBELO1) begin
             if(wen) begin
                 tlbelo1_d[`TLBELO_D]<=wdata[`TLBELO_D];
                 tlbelo1_g[`TLBELO_G]<=wdata[`TLBELO_G];
@@ -679,7 +712,7 @@ always @(posedge clk)
     always @(posedge clk)
         if(~aresetn)
             asid_asid <= 0;
-        else if(software_en&&addr==`CSR_ASID) begin
+        else if(wen&&addr==`CSR_ASID) begin
             if(wen) asid_asid[`ASID_ASID]<=wdata[`ASID_ASID];
         end
          else if(tlbrd_ready) begin
@@ -695,7 +728,7 @@ always @(posedge clk)
     always @(posedge clk)
         if(~aresetn) begin
             pgdl_base <= 0;
-        end else if(software_en&&addr==`CSR_PGDL) begin
+        end else if(wen&&addr==`CSR_PGDL) begin
             if(wen) pgdl_base[`PGDL_BASE] <= wdata[`PGDL_BASE];
         end
 
@@ -703,7 +736,7 @@ always @(posedge clk)
     always @(posedge clk)
         if(~aresetn) begin
             pgdh_base <= 0;
-        end else if(software_en&&addr==`CSR_PGDH) begin
+        end else if(wen&&addr==`CSR_PGDH) begin
             if(wen) pgdh_base[`PGDH_BASE] <= wdata[`PGDH_BASE];
         end
 
@@ -718,7 +751,7 @@ always @(posedge clk)
             dmw0_mat<=0;
             dmw0_pseg<=0;
             dmw0_vseg<=0;
-        end else if(software_en&&addr==`CSR_DMW0) begin
+        end else if(wen&&addr==`CSR_DMW0) begin
             if(wen) dmw0_plv0[`DMW0_PLV0]<=wdata[`DMW0_PLV0];
             if(wen) dmw0_plv3[`DMW0_PLV3]<=wdata[`DMW0_PLV3];
             if(wen) dmw0_mat[`DMW0_MAT]<=wdata[`DMW0_MAT];
@@ -733,7 +766,7 @@ always @(posedge clk)
             dmw1_mat<=0;
             dmw1_pseg<=0;
             dmw1_vseg<=0;
-        end else if(software_en&&addr==`CSR_DMW1) begin
+        end else if(wen&&addr==`CSR_DMW1) begin
             if(wen) dmw1_plv0[`DMW1_PLV0]<=wdata[`DMW1_PLV0];
             if(wen) dmw1_plv3[`DMW1_PLV3]<=wdata[`DMW1_PLV3];
             if(wen) dmw1_mat[`DMW1_MAT]<=wdata[`DMW1_MAT];
@@ -745,7 +778,7 @@ always @(posedge clk)
         always @(posedge clk)
         if(~aresetn) begin
             csr_tid <= 0;
-        end else if(software_en&&addr==`CSR_TID) begin
+        end else if(wen&&addr==`CSR_TID) begin
             if(wen) csr_tid[31:0]<=wdata[31:0];
         end
     //TCFG
@@ -754,7 +787,7 @@ always @(posedge clk)
             tcfg_en <= 0;
             tcfg_initval <= 0;
             tcfg_periodic<=0;
-        end else if(software_en&&addr==`CSR_TCFG) begin
+        end else if(wen&&addr==`CSR_TCFG) begin
             if(wen) tcfg_en[`TCFG_EN]<=wdata[`TCFG_EN];
             if(wen) tcfg_periodic[`TCFG_PERIODIC]<=wdata[`TCFG_PERIODIC];
             if(wen) tcfg_initval[`TCFG_INITVAL]<=wdata[`TCFG_INITVAL];
@@ -763,7 +796,7 @@ always @(posedge clk)
     reg  set_timer;
     always @(posedge clk)
         if(~aresetn)  set_timer<=0;
-        else if(software_en&&addr==`CSR_TCFG&&wen!=0)
+        else if(wen&&addr==`CSR_TCFG&&wen!=0)
              set_timer<=1;
         else  set_timer<=0;
 
@@ -786,7 +819,7 @@ always @(posedge clk)
 
     //TICLR
     always @(posedge aclk)
-        if(~aresetn||software_en&&addr==`CSR_TICLR&&wen)
+        if(~aresetn||wen&&addr==`CSR_TICLR&&wen)
             estat_is_ti <= 0;
         else if(time_out)
             estat_is_ti <= 1;
@@ -795,41 +828,41 @@ always @(posedge clk)
     always @(posedge clk)
         if(~aresetn) begin
             csr_ctag <= 0;
-        end else if(software_en&&addr==`CSR_CTAG) begin
+        end else if(wen&&addr==`CSR_CTAG) begin
             if(wen) csr_ctag[31:0]<=wdata[31:0];
         end
 
-assign rdata[31:0] = {32{addr==`CSR_CRMD}} & csr_crmd |
-                    {32{addr==`CSR_PRMD}} & csr_prmd |
-                    {32{addr==`CSR_EUEN}} & csr_euen |
-                    {32{addr==`CSR_ECFG}} & csr_ecfg | 
-                    {32{addr==`CSR_ESTAT}} & csr_estat |
-                    {32{addr==`CSR_ERA}} & csr_era |
-                    {32{addr==`CSR_BADV}} & csr_badv |
-                    {32{addr==`CSR_EENTRY}} & csr_eentry |
-                    {32{addr==`CSR_CPUID}} & csr_cpuid |
-                    {32{addr==`CSR_SAVE0}} & csr_save0 |
-                    {32{addr==`CSR_SAVE1}} & csr_save1 |
-                    {32{addr==`CSR_SAVE2}} & csr_save2 |
-                    {32{addr==`CSR_SAVE3}} & csr_save3 |
-                    {32{addr==`CSR_LLBCTL}} & csr_llbctl |
-                    {32{addr==`CSR_TLBIDX}} & csr_tlbidx |
-                    {32{addr==`CSR_TLBEHI}} & csr_tlbehi |
-                    {32{addr==`CSR_TLBELO0}} & csr_tlbelo0 |
-                    {32{addr==`CSR_TLBELO1}} & csr_tlbelo1 |
-                    {32{addr==`CSR_ASID}} & csr_asid |
-                    {32{addr==`CSR_PGDL}} & csr_pgdl |
-                    {32{addr==`CSR_PGDH}} & csr_pgdh |
-                    {32{addr==`CSR_PGD && csr_badv[31]}} & csr_pgdh |
-                    {32{addr==`CSR_PGD && ~csr_badv[31]}} & csr_pgdl |
-                    {32{addr==`CSR_TLBRENTRY}} & csr_tlbrentry |
-                    {32{addr==`CSR_DMW0}} & csr_dmw0 |
-                    {32{addr==`CSR_DMW1}} & csr_dmw1 |
-                    {32{addr==`CSR_TID}} & csr_tid |
-                    {32{addr==`CSR_TCFG}} & csr_tcfg |
-                    {32{addr==`CSR_TVAL}} & csr_tval |
-                    {32{addr==`CSR_TICLR}} & csr_ticlr |
-                    {32{addr==`CSR_CTAG}} & csr_ctag;
+assign rdata[31:0] = {32{addr_in==`CSR_CRMD}} & csr_crmd |
+                    {32{addr_in==`CSR_PRMD}} & csr_prmd |
+                    {32{addr_in==`CSR_EUEN}} & csr_euen |
+                    {32{addr_in==`CSR_ECFG}} & csr_ecfg | 
+                    {32{addr_in==`CSR_ESTAT}} & csr_estat |
+                    {32{addr_in==`CSR_ERA}} & csr_era |
+                    {32{addr_in==`CSR_BADV}} & csr_badv |
+                    {32{addr_in==`CSR_EENTRY}} & csr_eentry |
+                    {32{addr_in==`CSR_CPUID}} & csr_cpuid |
+                    {32{addr_in==`CSR_SAVE0}} & csr_save0 |
+                    {32{addr_in==`CSR_SAVE1}} & csr_save1 |
+                    {32{addr_in==`CSR_SAVE2}} & csr_save2 |
+                    {32{addr_in==`CSR_SAVE3}} & csr_save3 |
+                    {32{addr_in==`CSR_LLBCTL}} & csr_llbctl |
+                    {32{addr_in==`CSR_TLBIDX}} & csr_tlbidx |
+                    {32{addr_in==`CSR_TLBEHI}} & csr_tlbehi |
+                    {32{addr_in==`CSR_TLBELO0}} & csr_tlbelo0 |
+                    {32{addr_in==`CSR_TLBELO1}} & csr_tlbelo1 |
+                    {32{addr_in==`CSR_ASID}} & csr_asid |
+                    {32{addr_in==`CSR_PGDL}} & csr_pgdl |
+                    {32{addr_in==`CSR_PGDH}} & csr_pgdh |
+                    {32{addr_in==`CSR_PGD && csr_badv[31]}} & csr_pgdh |
+                    {32{addr_in==`CSR_PGD && ~csr_badv[31]}} & csr_pgdl |
+                    {32{addr_in==`CSR_TLBRENTRY}} & csr_tlbrentry |
+                    {32{addr_in==`CSR_DMW0}} & csr_dmw0 |
+                    {32{addr_in==`CSR_DMW1}} & csr_dmw1 |
+                    {32{addr_in==`CSR_TID}} & csr_tid |
+                    {32{addr_in==`CSR_TCFG}} & csr_tcfg |
+                    {32{addr_in==`CSR_TVAL}} & csr_tval |
+                    {32{addr_in==`CSR_TICLR}} & csr_ticlr |
+                    {32{addr_in==`CSR_CTAG}} & csr_ctag;
         assign crmd=csr_crmd;
         assign estat=csr_estat;
         assign era_out = csr_era;
@@ -852,7 +885,34 @@ assign rdata[31:0] = {32{addr==`CSR_CRMD}} & csr_crmd |
         assign tid = csr_tid;
 
             `ifdef DIFFTEST
-    wire [32*26-1:0] csr_diff = {csr_crmd,csr_prmd,csr_ecfg,csr_estat,csr_era,csr_badv,csr_eentry,csr_tlbidx,csr_tlbehi,csr_tlbelo0,csr_tlbelo1,csr_asid,csr_pgdl,csr_pgdh,csr_save0,csr_save1,csr_save2,csr_save3,csr_tid,csr_tcfg,csr_tval,csr_ticlr,csr_llbctl,csr_tlbrentry,csr_dmw0,csr_dmw1};
+    wire [32*26-1:0] csr_diff =  
+    {
+    wen&&addr==`CSR_CRMD ? wdata :csr_crmd,
+    wen&&addr==`CSR_PRMD ? wdata :csr_prmd,
+    wen&&addr==`CSR_ECFG ? wdata :csr_ecfg,
+    wen&&addr==`CSR_ESTAT ? wdata :csr_estat,
+    wen&&addr==`CSR_ERA ? wdata :csr_era,
+    wen&&addr==`CSR_BADV ? wdata :csr_badv,
+    wen&&(addr==`CSR_EENTRY) ? wdata :csr_eentry,
+    wen&&addr==`CSR_TLBIDX ? wdata :csr_tlbidx,
+    wen&&addr==`CSR_TLBEHI ? wdata :csr_tlbehi,
+    wen&&addr==`CSR_TLBELO0 ? wdata :csr_tlbelo0,
+    wen&&addr==`CSR_TLBELO1 ? wdata :csr_tlbelo1,
+    wen&&addr==`CSR_ASID ? wdata :csr_asid,
+    wen&&addr==`CSR_PGDL ? wdata :csr_pgdl,
+    wen&&addr==`CSR_PGDH ? wdata :csr_pgdh,
+    wen&&addr==`CSR_SAVE0 ? wdata :csr_save0,
+    wen&&addr==`CSR_SAVE1 ? wdata :csr_save1,
+    wen&&addr==`CSR_SAVE2 ? wdata :csr_save2,
+    wen&&addr==`CSR_SAVE3 ? wdata :csr_save3,
+    wen&&addr==`CSR_TID ? wdata :csr_tid,
+    wen&&addr==`CSR_TCFG ? wdata :csr_tcfg,
+    wen&&addr==`CSR_TVAL ? wdata :csr_tval,
+    wen&&addr==`CSR_TICLR ? wdata :csr_ticlr,
+    wen&&addr==`CSR_LLBCTL ? wdata :csr_llbctl,
+    wen&&addr==`CSR_TLBRENTRY ? wdata :csr_tlbrentry,
+    wen&&addr==`CSR_DMW0 ? wdata :csr_dmw0,
+    wen&&addr==`CSR_DMW1 ? wdata :csr_dmw1};
 
     reg [32*26-1:0] csr_diff_delay0;
 

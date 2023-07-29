@@ -6,6 +6,7 @@ module HazardUnit (
     input flush_from_id,
     input flush_from_if1_fifo,
     input flush_from_if1,
+    input flush_by_priv,
 
     output flush_to_ex2_wb,
     output flush_to_ex1_ex2,
@@ -26,14 +27,17 @@ module HazardUnit (
                                         flush_from_ex2? 1:0;
     assign  flush_to_reg_ex1        =   flush_from_wb?  1:
                                         flush_from_ex2? 1:
+                                        flush_by_priv?  1:
                                         flush_from_ex1? 1:0;
     assign  flush_to_id_reg         =   flush_from_wb?  1:
                                         flush_from_ex2? 1:
                                         flush_from_ex1? 1:
+                                        flush_by_priv?  1:
                                         flush_from_reg? 1:0;
 
     assign  flush_to_fifo_id        =   flush_from_wb ? 1:
                                         flush_from_ex2? 1:
+                                        flush_by_priv?  1:
                                         flush_from_ex1? 1:
                                         flush_from_reg? 1:
                                         flush_from_id ? 1:0;
@@ -41,15 +45,17 @@ module HazardUnit (
     assign  flush_to_fifo           =   flush_from_wb?  1:
                                         flush_from_ex2? 1:
                                         flush_from_ex1? 1:
+                                        flush_by_priv?  1:
                                         flush_from_reg? 1:
                                         flush_from_id ? 1:0;
 
     assign  flush_to_if1_fifo       =   flush_from_wb?  1:
-                                        flush_from_ex2? 1:
-                                        flush_from_ex1? 1:
-                                        flush_from_reg? 1:
-                                        flush_from_id ? 1:
-                                        flush_from_if1_fifo?1:0;
+                                          flush_by_priv?  1:
+                                        // flush_from_ex2? 1:
+                                        flush_from_ex1? 1:0;
+                                        // flush_from_reg? 1:
+                                        // flush_from_id ? 1:
+                                        // flush_from_if1_fifo?1:0;
 
     // assign  flush_to_if1            =   flush_from_wb?  1:
     //                                     flush_from_ex2? 1:
@@ -60,6 +66,7 @@ module HazardUnit (
     //                                     flush_from_if1? 1:0;
     
     assign  flush_to_if0_if1        =   flush_from_wb?  1:
+                                        flush_by_priv?  1:
                                         flush_from_ex2? 1:
                                         flush_from_ex1? 1:
                                         flush_from_reg? 1:

@@ -82,6 +82,10 @@ module IF1_FIFO(
     reg             tmp;//for last rready but fifo full
     reg [2:0]       next_stat;
     reg [31:0]      pc_after_priv;
+
+
+
+
     reg             if1_fifo_valid;
             
     reg [31:0]      tmp_pc;
@@ -90,6 +94,8 @@ module IF1_FIFO(
     reg [31:0]      tmp_inst1;
     reg [31:0]      tmp_icache_badv;
     reg [6:0]       tmp_icache_exception;
+
+
     reg [WIDTH*32-1:0] if1_fifo_pc_buf;
     reg [BUF_W:0]    icache_rvalid_buf;
     
@@ -97,8 +103,6 @@ module IF1_FIFO(
     reg [31:0]      tmp_icache_cookie_out;
     reg             tmp_cacop_ready;
     reg             tmp_cacop_complete;
-    // assign p_if1_fifo_inst0  =  if0_if1_pc[2]? `INST_NOP:if1_fifo_inst0[31:0];
-    // assign p_if1_fifo_inst1  =  priv_flag[0]?`INST_NOP:if1_fifo_inst1;
     assign fifo_readygo =       if1_fifo_valid;
     wire critical_allowin;
     assign  critical_allowin=!icache_rvalid_buf[BUF_W-1]
@@ -114,14 +118,13 @@ module IF1_FIFO(
                                     // 1
                                 )&&
                                 (//icache_rready->tlb_rvalid
-                                    (stat==IDLE)||(next_stat==IDLE)
+                                    1// (stat==IDLE)||(next_stat==IDLE)
                                 );
     assign idle         = stat==IDLE;
     assign cache_idle = icache_idle&dcache_idle;
-    // assign pc_fetch_ok= if0_if1_pc==pc_after_priv;
-    assign set_pc_from_PRIV = stat!=IDLE;
+    assign set_pc_from_PRIV = 0;
+    // assign set_pc_from_PRIV = (stat!=IDLE)&&(csr_done||tlb_done||cache_idle);
     assign pc_from_PRIV = pc_after_priv;
-    // assign pushable     =   
 
 
     always @(posedge clk) begin
@@ -153,45 +156,45 @@ module IF1_FIFO(
         if(!idle)begin
             if1_fifo_valid<=0;
         end else begin
-            // if(!if1_fifo_valid)begin
-            //     if1_fifo_valid<=icache_rready;
-            // end else if(if1_readygo&&if1_allowin&&fifo_allowin) begin
-            //     if1_fifo_valid<=icache_rready;
-            // end
             if1_fifo_valid<=icache_rready;
         end
     end
-    always @(*) begin
-        if (priv_flag[0]) begin
-            pc_after_priv=pc_out+4;
+    always @(posedge clk) begin
+        if(stat==IDLE)begin
+            if (priv_flag[0]) begin
+                pc_after_priv<=pc_out;
+            end 
+            else if(priv_flag[1])begin
+                pc_after_priv<=pc_out+8;
+            end 
         end 
-        else if(priv_flag[1])begin
-            pc_after_priv=pc_out+8;
-        end else begin
-            pc_after_priv=0;
-        end
     end
-
+    reg first_appear;
     always @(*) begin//FSM
-        flush_from_if1_fifo=0;
+        flush_from_if1_fifo=1;
         case (stat)
             IDLE:begin
-                next_stat=  ibar_flag!=2'b00 ?  WAIT_EX_IBAR:
-                            csr_flag!=2'b00 ?  WAIT_EX_CSR:
-                            tlb_flag!=2'b00  ?  WAIT_TLB_TLB:
-                            IDLE;
+                if(first_appear)begin
+                    next_stat=  ibar_flag!=2'b00 ?  WAIT_EX_IBAR:
+                                csr_flag!=2'b00 ?  WAIT_EX_CSR:
+                                tlb_flag!=2'b00  ?  WAIT_TLB_TLB:
+                                IDLE;
+                end else begin
+                    next_stat=  IDLE;
+                end
+                flush_from_if1_fifo=0;
             end
             WAIT_EX_IBAR:begin
                 next_stat=  ibar_flag_from_ex?WAIT_CACHE_IDLE:WAIT_EX_IBAR;  
-                flush_from_if1_fifo=1;
+                // flush_from_if1_fifo=1;
             end
             WAIT_EX_CSR:begin
                 next_stat=  csr_flag_from_ex ?WAIT_CSR_OK    :WAIT_EX_CSR;
-                flush_from_if1_fifo=1;
+                // flush_from_if1_fifo=1;
             end
             WAIT_TLB_TLB:begin
                 next_stat=  tlb_flag_from_ex?WAIT_TLB_OK    :WAIT_TLB_TLB;
-                flush_from_if1_fifo=1;
+                // flush_from_if1_fifo=1;
             end
             WAIT_CACHE_IDLE:begin
                 next_stat=  cache_idle?IDLE            :WAIT_CACHE_IDLE;
@@ -205,14 +208,17 @@ module IF1_FIFO(
             default:begin
                 next_stat=IDLE;
             end
-            // WAIT_FETCH:begin
-            //     next_stat=pc_fetch_ok?IDLE:WAIT_FETCH;
-            // end
         endcase
     end
-
+    always @(posedge clk or rstn) begin
+        if(!rstn)begin
+            first_appear<=1;
+        end else if(csr_flag||tlb_flag||ibar_flag)begin
+            first_appear<=~first_appear;
+        end
+    end        
     always @ (posedge clk) begin
-        if (~rstn || flush||(!icache_rready&&fifo_allowin&&fifo_readygo)||(!idle)) begin
+        if (~rstn || flush||(!icache_rready&&fifo_allowin&&fifo_readygo)) begin
             //clear stage-stage reg
             if1_fifo_pc     <=  `PC_RESET;
 
@@ -228,15 +234,12 @@ module IF1_FIFO(
         end
         else if (icache_rready&&if1_allowin&&fifo_allowin) begin
             //update stage-stage reg
+            
             if1_fifo_pc     <=  pc_out;
             if1_fifo_pc_next<=  icache_pc_next;
             if1_fifo_pc_taken<=  pc_taken_out;
             if1_fifo_inst0  <=  pc_out[2]? icache_inst1[31:0]:icache_inst0[31:0];
-            // if1_fifo_inst1  <=  priv_flag[0] ? `INST_NOP:icache_inst1[31:0];//TODO
             if1_fifo_inst1  <=  pc_out[2]? `INST_NOP:icache_inst1[31:0];
-            // if1_fifo_inst0  <=  icache_inst0[31:0];
-            // if1_fifo_inst1  <=  icache_inst1[31:0];
-
             if1_fifo_icache_badv      <=icache_badv;
             if1_fifo_icache_cookie_out<=icache_pc_next;
             if1_fifo_icache_exception <=icache_exception;//did not replace,cope need to test excp_flag first!!

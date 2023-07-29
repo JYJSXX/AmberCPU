@@ -171,6 +171,7 @@ idle_clk idle_clk1
     wire [31:0]pc_from_WB;
     wire set_pc_from_PRIV;//from if1_fifo
     wire [31:0]pc_from_PRIV;
+    wire flush_by_priv;
 
     //for BTB
     wire [31:0]  pred_pc;
@@ -187,6 +188,7 @@ idle_clk idle_clk1
     wire    pc_taken;
     wire         pc_in_stall;
     wire ex2_wb_excp_flag; 
+    wire set_by_priv;
     IF0 u_IF0(
         .clk                 ( clk                 ),
         .rstn                ( aresetn             ),
@@ -198,7 +200,7 @@ idle_clk idle_clk1
         .pc_from_ID          ( pc_from_ID          ),
         .set_pc_from_EX      ( fact_taken          ),
         .pc_from_EX          ( fact_tpc            ),
-        .set_pc_from_WB      ( ex2_wb_excp_flag    ),
+        .set_pc_from_WB      ( ex2_wb_excp_flag |  set_by_priv  ),
         .pc_from_WB          ( pc_from_WB          ),
         .set_pc_from_PRIV    ( set_pc_from_PRIV    ),
         .pc_from_PRIV        ( pc_from_PRIV        ),
@@ -817,7 +819,7 @@ idle_clk idle_clk1
 
 
 
-
+    wire wen_csr;
     //前递用到的信号
     //从ex1_ex2段间输入
     wire [4:0] ex1_ex2_rd0;
@@ -1234,8 +1236,11 @@ idle_clk idle_clk1
         .uop1                ( ex1_ex2_uop1                ),
         .ex2_result0         ( ex2_rd0_data         ),
         .ex2_result1         ( ex2_rd1_data         ),
-        .ex1_ex2_is_priviledged_0 ( ex1_ex2_is_priviledged_0 ),
-        .ex1_ex2_is_priviledged_1 ( ex1_ex2_is_priviledged_1 ),
+        .flush_by_priv        ( flush_by_priv        ),
+        .ex1_ex2_is_priviledged_0 ( reg_ex_is_priviledged_0 ),
+        .ex1_ex2_is_priviledged_1 ( reg_ex_is_priviledged_1 ),
+        .reg_ex1_pc0         ( reg_ex_pc0         ),
+        .wen_csr             (  wen_csr          ),
         // .pc_dcache_out       ( pc_dcache_out       ), // TODO 没做
         // .inst_dcache_out     ( inst_dcache_out     ),
         // .inst_dcache_in      ( inst_dcache_in      ),
@@ -1285,6 +1290,7 @@ idle_clk idle_clk1
         .badv_in             ( ex1_ex2_badv             ),
         .ecode_out           ( ex2_wb_exception           ),
         .exception_flag_out  ( ex2_wb_excp_flag  ),
+        .set_by_priv          ( set_by_priv          ),
         .badv_out            ( ex2_wb_badv           ),
         .wen_badv            ( wen_badv            ),
         .tlb_exception       ( tlb_exception       ),
@@ -1346,11 +1352,12 @@ idle_clk idle_clk1
         .clk             ( clk             ),
         .aclk            ( aclk            ),
         .aresetn         ( aresetn         ),
-        .software_en     ( csr_wen        ),
-        .addr            ( csr_addr       ),
+        .d_idle          ( d_idle          ),
+        .addr_in            ( csr_addr       ),
         .rdata           ( csr_rdata           ),
-        .wen             ( csr_wen             ),
-        .wdata           ( csr_wdata           ),
+        .wen_in             ( csr_wen             ),
+        .wdata_in           ( csr_wdata           ),
+        .wen_csr                 ( wen_csr                 ),
         .crmd            ( crmd            ),
         .estat           ( estat           ),
         .era_out         ( csr_era        ),
@@ -1696,6 +1703,7 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .flush_from_ex1         ( flush_from_ex1        ),
         .flush_from_reg         ( flush_from_reg        ),
         .flush_from_id          ( flush_from_id         ),
+        .flush_by_priv           ( flush_by_priv         ),
         .flush_from_if1_fifo    ( flush_from_if1_fifo   ),
         .flush_from_if1         ( flush_from_if1        ),
         .flush_to_ex2_wb        ( flush_to_ex2_wb       ),
@@ -1756,7 +1764,7 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
             end else begin
                 //有异常时不置valid
                 cmt_valid0  <= ex_eu0_en&&!set_pc_from_WB && debug0_wb_inst[31:0]!=`INST_NOP 
-                && debug0_wb_pc != 0 && debug0_wb_inst[31:0] != 0;
+                                && debug0_wb_pc != 0 && debug0_wb_inst[31:0] != 0;
                 cmt_pc0     <= debug0_wb_pc;
                 cmt_inst0   <= debug0_wb_inst;
                 cmt_wen0    <= debug0_wb_rf_wen!=0;
