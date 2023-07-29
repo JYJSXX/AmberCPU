@@ -210,7 +210,6 @@ module EX_Privilege(
         csr_wdata = 0;
         csr_wen = 0;
         csr_ren = 0;
-        done = 0;
         ertn_en = 0;
         block_cache = 0;
         block_clock = 0;
@@ -248,21 +247,6 @@ module EX_Privilege(
                 csr_wdata = isxchg ? ((~rj_data & csr_rdata_reg) | (rj_data & rk_data)) : rk_data;
                 csr_wen = |rj;
                 csr_ren = 1;
-                done = 1;
-            end
-            PR_CACOP_I_WAIT:
-            begin
-                if (cacop_i_done)
-                    done = 1;
-            end
-            PR_CACOP_D_WAIT:
-            begin
-                if (cacop_d_done)
-                    done = 1;
-            end
-            PR_ERTN:
-            begin
-                done = 1;
             end
             PR_IDLE_WAIT:
             begin
@@ -272,25 +256,53 @@ module EX_Privilege(
             begin
                 block_clock = 1;
                 block_cache = 1;
-                done = 1;
+            end
+        endcase
+    end
+
+    always @(posedge clk or negedge rstn)
+    begin
+        case(PR_state)
+            PR_INIT:
+            begin
+                if(en & pr_type[`INS_CSR])
+                begin
+                    done <= 1;
+                end
+            end
+            PR_CACOP_I_WAIT:
+            begin
+                if (cacop_i_done)
+                    done <= 1;
+            end
+            PR_CACOP_D_WAIT:
+            begin
+                if (cacop_d_done)
+                    done <= 1;
+            end
+            PR_IDLE:
+            begin
+                block_clock = 1;
+                block_cache = 1;
+                done <= 1;
             end
             PR_TLBSRCH:
             if (tlbsrch_ready)
-                done=1;
+                done<=1;
             PR_TLBRD:
             if(tlbrd_ready)
-                done=1;
+                done<=1;
             PR_TLBWR:
             if(tlbwr_ready)
-                done=1;
+                done<=1;
             PR_TLBFILL:
             if(tlbfill_ready)
-                done=1;
+                done<=1;
             PR_TLBINV:
             if(invtlb_ready)
-                done=1;
+                done<=1;
             default:
-                done = 0;
+                done <= 0;
         endcase
     end
 
