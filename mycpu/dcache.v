@@ -476,10 +476,10 @@ module dcache #(
     assign hit_way_valid = cache_hit && ~victim_hit ? hit_way : 0;
     
     /* write control */
-    assign wdata_pipe_512 = ({{(BIT_NUM-32){1'b0}}, wdata_pipe} << address[1:0]) << {address[BYTE_OFFSET_WIDTH-1:2], 5'b0};
+    assign wdata_pipe_512 = ({{(BIT_NUM-32){1'b0}}, wdata_pipe} << {address[1:0],3'b0}) << {address[BYTE_OFFSET_WIDTH-1:2], 5'b0};
     assign wstrb_pipe_512 = {
             {(BIT_NUM-32){1'b0}}, ({{8{wstrb_pipe[3]}}, {8{wstrb_pipe[2]}}, {8{wstrb_pipe[1]}}, {8{wstrb_pipe[0]}}})
-        } << {address[BYTE_OFFSET_WIDTH-1:2], 5'b0};
+        } << {address[BYTE_OFFSET_WIDTH-1:2], 5'b0} << {address[1:0],3'b0};
     always @(*) begin
         if(wdata_from_pipe) begin
             mem_wdata = wdata_pipe_512;
@@ -843,7 +843,7 @@ module dcache #(
                         rready                  = !we_pipe;
                         //写
                         if(op_buf == WRITE_OP) begin
-                            mem_we[hit_way]     = {{(BYTE_NUM-4){1'b0}}, wstrb_pipe} << {address[BYTE_OFFSET_WIDTH-1:2], 2'b0};
+                            mem_we[hit_way]     = {{(BYTE_NUM-4){1'b0}}, wstrb_pipe} << {address[BYTE_OFFSET_WIDTH-1:2], 2'b0} << address[1:0];
                             dirty_we            = hit;
                             dirty_wdata         = 1;
                             wready              = we_pipe;

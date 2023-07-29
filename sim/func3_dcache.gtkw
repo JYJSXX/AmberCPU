@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
-[*] Fri Jul 28 02:48:56 2023
+[*] Sat Jul 29 01:48:40 2023
 [*]
-[dumpfile] "/home/yiran/Desktop/chiplab/sims/verilator/run_prog/log/func/func_lab4_log/simu_trace.fst"
-[dumpfile_mtime] "Fri Jul 28 02:47:58 2023"
-[dumpfile_size] 19550355
+[dumpfile] "/home/yiran/Desktop/chiplab/sims/verilator/run_prog/log/func/func_lab7_log/simu_trace.fst"
+[dumpfile_mtime] "Sat Jul 29 01:45:28 2023"
+[dumpfile_size] 490979
 [savefile] "/home/yiran/Desktop/AmberCPU/sim/func3_dcache.gtkw"
-[timestart] 155250
-[size] 1848 1016
-[pos] -89 -100
-*-2.000000 155258 546597 879716 155258 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[timestart] 953823
+[size] 1846 854
+[pos] -51 -51
+*-5.000000 953948 546597 879716 155258 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] TOP.
 [treeopen] TOP.simu_top.
 [treeopen] TOP.simu_top.soc.
@@ -29,7 +29,7 @@
 [sst_width] 325
 [signals_width] 458
 [sst_expanded] 1
-[sst_vpaned_height] 611
+[sst_vpaned_height] 558
 @28
 TOP.simu_top.soc.cpu.u_dcache.rstn
 @22
@@ -68,11 +68,6 @@ TOP.simu_top.soc.cpu.u_EX1.ex1_forward1.ex2_wb_data_0_valid
 @22
 TOP.simu_top.soc.cpu.u_EX1.ex1_forward1.ex1_rj[4:0]
 TOP.simu_top.soc.cpu.u_EX1.ex1_forward1.ex2_wb_rd0[4:0]
-@28
-TOP.simu_top.soc.cpu.u_EX1.ex1_forward1.forward_flag
-@23
-TOP.simu_top.soc.cpu.u_EX1.ex1_forward1.forward_data[31:0]
-@22
 TOP.simu_top.soc.cpu.u_EX1.ex1_forward1.ex2_wb_data_0[31:0]
 TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_data_0[31:0]
 @28
@@ -86,11 +81,6 @@ TOP.simu_top.soc.cpu.u_REG_EX1.regfile1.raddr1[4:0]
 TOP.simu_top.soc.cpu.u_REG_EX1.regfile1.rdata1[31:0]
 TOP.simu_top.soc.cpu.u_REG_EX1.rj0_data[31:0]
 TOP.simu_top.soc.cpu.u_REG_EX1.reg_ex_rj0_data[31:0]
-@28
-TOP.simu_top.soc.cpu.u_EX1.ex1_forward1.forward_flag
-TOP.simu_top.soc.cpu.u_REG_EX1.forward_flag
-TOP.simu_top.soc.cpu.u_REG_EX1.forward_flag_ps
-@22
 TOP.simu_top.soc.cpu.u_EX1.ex1_forward1.ex2_wb_data_1[31:0]
 TOP.simu_top.soc.cpu.u_EX1.ex1_forward1.ex2_wb_data_2[31:0]
 TOP.simu_top.soc.cpu.u_EX1.rj0_data[31:0]
@@ -144,14 +134,6 @@ TOP.simu_top.soc.cpu.u_dcache.flush
 TOP.simu_top.soc.cpu.u_dcache.clk
 [color] 2
 TOP.simu_top.soc.cpu.u_dcache.rready
-@800022
-TOP.simu_top.soc.cpu.u_EX2_WB.uop0[24:0]
-@28
-(16)TOP.simu_top.soc.cpu.u_EX2_WB.uop0[24:0]
-(16)TOP.simu_top.soc.cpu.u_EX2_WB.uop0_reg[24:0]
-@1001200
--group_end
-@28
 (1)TOP.simu_top.soc.cpu.u_EX2_WB.cond0[3:0]
 TOP.simu_top.soc.cpu.u_EX2_WB.dcache_w_ready
 [color] 3
