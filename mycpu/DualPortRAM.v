@@ -16,8 +16,8 @@ module DualPortRAM
     if (writeEnable) begin
       memory[writeAddr] <= writeData;
     end
-    readDataA <= memory[readAddrA];
-    readDataB <= memory[readAddrB];
+    readDataA = memory[readAddrA];
+    readDataB = memory[readAddrB];
   end
 
 endmodule
