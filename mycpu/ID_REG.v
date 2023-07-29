@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 `include "define.vh"
 //regfile内嵌于REG_EX1模块，直接本模块直接与REG_EX1相连
 module ID_REG(

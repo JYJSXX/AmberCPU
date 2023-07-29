@@ -324,8 +324,15 @@ module icache #(
     assign victim_we = missbuf_we && valid[victim_sel] && flush_valid;  //&& !miss_flush_flag
     reg [25:0] victim_w_tag_buf;
     reg        victim_flush_miss;
-    wire [25:0] victim_w_tag;
-    assign victim_w_tag = {tag_rdata[victim_sel][TAG_WIDTH-1:0], req_buf[11:6]};
+    reg [25:0] victim_w_tag;
+    always @(posedge clk) begin
+        if(!rstn) begin
+            victim_w_tag <= 0;
+        end
+        else begin
+            victim_w_tag <= {tag_rdata[victim_sel][TAG_WIDTH-1:0], req_buf[11:6]};
+        end
+    end
     always@(posedge clk) begin
         if(!rstn) begin
             victim_w_tag_buf <= 0;
@@ -334,6 +341,16 @@ module icache #(
         else begin
             victim_w_tag_buf <= victim_w_tag;
             victim_flush_miss <= miss_flush_flag;
+        end
+    end
+
+    reg [BIT_NUM - 1 : 0] victim_data_in;
+    always @(posedge clk) begin
+        if(!rstn) begin
+            victim_data_in <= 0;
+        end
+        else begin
+            victim_data_in <= mem_rdata[victim_sel];
         end
     end
 
@@ -347,7 +364,7 @@ module icache #(
         .data_out   (victim_data),
         .w_tag      (victim_flush_miss? victim_w_tag_buf : victim_w_tag),
         .we         (victim_we), // missbuf_we && valid[victim_sel] && victim_hit
-        .data_in    (mem_rdata[victim_sel])
+        .data_in    (victim_data_in)
     );
     
     /* settings of miss request */

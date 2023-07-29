@@ -452,6 +452,24 @@ module dcache #(
     assign victim_sel = lru_sel[0] ? 0 : 1;
     wire victim_we;
     assign victim_we = mbuf_we && valid[victim_sel] && flush_valid;
+    reg [25:0] victim_w_tag;
+    always @(posedge clk) begin
+        if(!rstn) begin
+            victim_w_tag <= 0;
+        end
+        else begin
+            victim_w_tag <= {tag_rdata[victim_sel][TAG_WIDTH-1:0], req_buf[11:6]};
+        end
+    end
+    reg [BIT_NUM - 1 : 0] victim_data_in;
+    always @(posedge clk) begin
+        if(!rstn) begin
+            victim_data_in <= 0;
+        end
+        else begin
+            victim_data_in <= mem_rdata[victim_sel];
+        end
+    end
 
     victim_cache #(
         .CAPACITY(8)
@@ -461,9 +479,9 @@ module dcache #(
         .r_tag      ({tag,req_buf[11:6]}),
         .victim_hit (victim_hit),
         .data_out   (victim_data),
-        .w_tag      ({tag_rdata[victim_sel][TAG_WIDTH-1:0],req_buf[11:6]}),
+        .w_tag      (victim_w_tag),
         .we         (victim_we), // missbuf_we && valid[victim_sel] && victim_hit
-        .data_in    (mem_rdata[victim_sel])
+        .data_in    (victim_data_in)
     );
 
     /* hit */
