@@ -54,6 +54,9 @@ module IF0 (
         //     pc<=0;
         // end
         else if(set_pc_from_WB)begin
+            if(pc_from_WB[2])begin
+                branch_stat<=1;
+            end
             pc<=pc_from_WB;
         end
         else if(set_pc_from_EX)begin

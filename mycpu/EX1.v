@@ -31,6 +31,7 @@ module EX1(
     input   [4:0] ex_rj1,
     input   [4:0] ex_rk0,
     input   [4:0] ex_rk1,
+    input         dcache_ready,
     //input   [4:0] ex_rd0,
     //input   [4:0] ex_rd1,
     output forward_flag_j0,
@@ -353,10 +354,10 @@ EX_BRANCH ex_branch(
     .fact_pc(fact_pc),
     .fact_tpc(fact_tpc)
 );
-EX_Privilege ex_privilige(
+EX_Privilege ex_privilege(
     .clk(clk),
     .rstn(aresetn),
-    .en(is_priviledged_0 && ~plv),           
+    .en(is_priviledged_0 && ~plv && ~dcache_ready),     
     .rk_data(rk0_data_o),      
     .rj_data(rj0_data_o),      
     .ins(inst0),          

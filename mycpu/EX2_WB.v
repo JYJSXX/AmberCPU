@@ -278,7 +278,7 @@ always@(*) begin
         ex2_allowin=1;
     end
     //else if((ex2_wb_data_0_valid | ~(~dcache_ready && tlb_d_valid_reg)  | div_ready | csr_ready) && ex2_wb_data_1_valid) begin
-    else if( csr_ready)  begin
+    else if( csr_ready && (!dcache_valid_buf[1] || dcache_ready ))  begin
         ex2_allowin=1;
     end
     else if(div_ready ) begin

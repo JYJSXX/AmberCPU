@@ -923,6 +923,8 @@ idle_clk idle_clk1
     wire [31:0] ex_paddr_diff;
     wire [31:0] ex_data_diff;
 `endif
+    wire rready_dcache;
+    wire wready_dcache;
 
     EX1 u_EX1(
         .clk                  ( clk                  ),
@@ -937,6 +939,7 @@ idle_clk idle_clk1
         .forward_data_j1        ( forward_data_j1     ),
         .forward_data_k0        ( forward_data_k0     ),
         .forward_data_k1        ( forward_data_k1     ),
+        .dcache_ready       (wready_dcache | rready_dcache),
         .pc0                  ( reg_ex_pc0                  ),
         .pc1                  ( reg_ex_pc1                  ),
         .inst0                ( reg_ex_inst0                ),
@@ -1190,8 +1193,6 @@ idle_clk idle_clk1
 
     //dcache
     wire [31:0] r_data_dcache;
-    wire rready_dcache;
-    wire wready_dcache;
 
     //csr 三条读写csr的指令都要写
     //wire [31:0] csr_data_in;
@@ -1446,6 +1447,7 @@ idle_clk idle_clk1
         .fact_tpc         ( fact_tpc         ),
         .fact_taken       ( fact_taken       ),
         .predict_dir_fail ( predict_dir_fail ),
+        .if0_allowin       ( if0_allowin       ),
         .predict_add_fail ( predict_add_fail )
     );
 
