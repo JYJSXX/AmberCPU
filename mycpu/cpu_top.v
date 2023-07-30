@@ -168,6 +168,7 @@ idle_clk idle_clk1
     // wire set_pc_from_EX; replaced by fact_pc/fact taken
     // wire [31:0]pc_from_EX;
     wire set_pc_from_WB;
+    assign set_pc_from_WB =ex2_wb_excp_flag ;
     wire [31:0]pc_from_WB;
     wire set_pc_from_PRIV;//from if1_fifo
     wire [31:0]pc_from_PRIV;
