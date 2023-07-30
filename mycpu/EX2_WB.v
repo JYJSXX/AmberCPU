@@ -149,6 +149,25 @@ always@(posedge clk)begin
 
 end
 
+reg [31:0] pc_mem_reg = 0;
+reg [31:0] inst_mem_reg = 0;
+reg mem_count = 1;
+
+    always @(posedge clk)begin
+        if(~aresetn) begin
+            pc_mem_reg <= 0;
+            inst_mem_reg <= 0;
+            mem_count <= 1;
+        end
+        else if (ex2_allowin & dcache_valid_buf[0])begin
+            pc_mem_reg <= pc0;
+            inst_mem_reg <= ex1_ex2_inst0;
+            mem_count <= 0;
+        end
+        else
+            mem_count <= 1;
+    end
+
 reg [`WIDTH_UOP-1:0] uop0_reg=0;
 reg [`WIDTH_UOP-1:0] uop1_reg=0;
 always@(posedge clk) begin
@@ -268,9 +287,11 @@ assign cond1 = uop1_reg[`UOP_COND];
 
     end
 
-    reg [2:0]    dcache_valid_buf;
+
+    reg [2:0]    dcache_valid_buf = 0;
     reg buf_sign;
     reg buf_sign_reg = 1;
+
     always @ (posedge clk) buf_sign_reg <= buf_sign;
         always @(posedge clk) begin
         if(!aresetn | flush_by_priv)begin
@@ -305,7 +326,7 @@ always@(*) begin
     end
     else if(!(dcache_valid_buf[1] ) && !(uop0[`INS_DIV] | reg_ex1_is_priviledeged_0) || dcache_ready) 
         ex2_allowin=1;
-    else if(/*!(dcache_valid_buf[0] ) && !(uop0[`INS_DIV] | reg_ex1_is_priviledeged_0) || dcache_ready*/(dcache_valid_buf[0] && ~dcache_ready) || (uop0[`INS_DIV])) begin
+    else if(/*!(dcache_valid_buf[0] ) && !(uop0[`INS_DIV] | reg_ex1_is_priviledeged_0) || dcache_ready*/(dcache_valid_buf[0]&& ~dcache_valid_buf[1] && ~dcache_ready) || (uop0[`INS_DIV])) begin
         ex2_allowin=0;
         buf_sign = 1;
         // ld_stall_flag = 1;
@@ -324,11 +345,11 @@ always@(posedge clk)begin
         debug1_valid <= 0;
     end
     else begin
-        debug0_wb_pc <= pc0;
-        debug0_wb_inst <= ex1_ex2_inst0;
+        debug0_wb_pc <= dcache_ready ? pc_mem_reg : pc0;
+        debug0_wb_inst <= dcache_ready ? inst_mem_reg : ex1_ex2_inst0;
         debug1_wb_pc <= pc1;
         debug1_wb_inst <= ex1_ex2_inst1;
-        debug0_valid <= ex2_allowin;
+        debug0_valid <= dcache_ready ? 1: (ex2_allowin && !uop0[`INS_MEM]);
         debug1_valid <= ex2_allowin;
     end
 
