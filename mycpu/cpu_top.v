@@ -200,7 +200,7 @@ idle_clk idle_clk1
         .pc_from_ID          ( pc_from_ID          ),
         .set_pc_from_EX      ( fact_taken          ),
         .pc_from_EX          ( fact_tpc            ),
-        .set_pc_from_WB      ( ex2_wb_excp_flag    ),
+        .set_pc_from_WB      ( ex2_wb_excp_flag |  set_by_priv  ),
         .pc_from_WB          ( pc_from_WB          ),
         .set_pc_from_PRIV    ( set_pc_from_PRIV    ),
         .pc_from_PRIV        ( pc_from_PRIV        ),
