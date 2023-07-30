@@ -195,7 +195,6 @@ idle_clk idle_clk1
         .rstn                ( aresetn             ),
         .if0_readygo         ( if0_readygo         ),
         .if0_allowin         ( if0_allowin         ),
-        .pc_taken           ( pc_taken        ),
         .flush               ( flush_to_if0        ),
         .set_pc_from_ID      ( set_pc_from_ID      ),
         .pc_from_ID          ( pc_from_ID          ),
@@ -208,10 +207,9 @@ idle_clk idle_clk1
         .pred_pc             ( pred_pc             ),
         .pred_taken          ( pred_taken          ),
         .fetch_pc            ( fetch_pc            ),
-        // .rvalid              ( tlb_rvalid          ),
         .raddr               ( tlb_raddr           ),
-        .cookie_in           ( cookie_in           ),
         .pc_next             ( pc_next             ),
+        .pc_taken            ( pc_taken            ),
         .pc_in_stall         ( pc_in_stall         )
     );
 
@@ -284,7 +282,7 @@ idle_clk idle_clk1
     wire  [31:0]    if1_fifo_icache_badv;
     wire  [6:0]     if1_fifo_icache_exception;
     wire  [1:0]     if1_fifo_icache_excp_flag;
-    wire  [31+3:0]    if1_fifo_icache_cookie_out;
+    // wire  [31+3:0]    if1_fifo_icache_cookie_out;
     wire            if1_fifo_pc_taken;
     wire icache_rvalid;
     wire            space_ok;
@@ -309,15 +307,15 @@ idle_clk idle_clk1
         .space_ok                   ( space_ok                   ),
         .write_en                   ( write_en                   ),
         .pop_en                     ( pop_en                     ),
-        .fetch_pc                   ( fetch_pc                   ),
-        .pc_out                     ( pc_out                     ),
+        // .fetch_pc                   ( fetch_pc                   ),
         .pc_taken_out               ( pc_taken_out             ),  // ?
-        .if1_fifo_pc_taken           ( if1_fifo_pc_taken         ), // OUT
+        .if1_fifo_pc_taken          ( if1_fifo_pc_taken         ), // OUT
         // .if0_if1_pc                 ( if0_if1_pc                 ),
         // .if0_if1_pc_next            ( if0_if1_pc_next            ),
         .icache_badv                ( icache_badv                ),
         .icache_exception           ( icache_exception           ),
         .icache_excp_flag           ( icache_excp_flag           ),
+        .pc_out                     ( pc_out                     ),
         .icache_pc_next             ( icache_pc_next             ), // ?
         .icache_inst0               ( icache_rdata[31:0]         ),
         .icache_inst1               ( icache_rdata[63:32]        ),
@@ -343,8 +341,8 @@ idle_clk idle_clk1
         // .p_if1_fifo_inst1             ( if1_fifo_inst1             ),
         .if1_fifo_icache_badv       ( if1_fifo_icache_badv       ),
         .if1_fifo_icache_exception  ( if1_fifo_icache_exception  ),
-        .if1_fifo_icache_excp_flag  ( if1_fifo_icache_excp_flag  ),
-        .if1_fifo_icache_cookie_out ( if1_fifo_icache_cookie_out )
+        .if1_fifo_icache_excp_flag  ( if1_fifo_icache_excp_flag  )
+        // .if1_fifo_icache_cookie_out ( if1_fifo_icache_cookie_out )
     );
 
     
@@ -418,7 +416,7 @@ idle_clk idle_clk1
         .if1_fifo_pc_next           ( if1_fifo_pc_next           ), //input
         .if1_fifo_pc_taken          ( if1_fifo_pc_taken ),  // input
         .if1_fifo_icache_badv       ( if1_fifo_icache_badv       ),
-        .if1_fifo_icache_cookie_out ( if1_fifo_icache_cookie_out ),
+        // .if1_fifo_icache_cookie_out ( if1_fifo_icache_cookie_out ),
         .if1_fifo_icache_exception  ( if1_fifo_icache_exception  ),
         .if1_fifo_icache_excp_flag  ( if1_fifo_icache_excp_flag  ),
         .fifo_inst0                 ( fifo_inst0                 ),
@@ -428,7 +426,7 @@ idle_clk idle_clk1
         .fifo_pc_next               ( fifo_pc_next               ),
         .fifo_pc_taken              ( fifo_pc_taken              ),
         .fifo_badv                  ( fifo_badv                  ),
-        .fifo_cookie_out            ( fifo_cookie_out            ),
+        // .fifo_cookie_out            ( fifo_cookie_out            ),
         .fifo_exception             ( fifo_exception             ),
         .fifo_excp_flag             ( fifo_excp_flag             ),
         .fifo_priv_flag             ( fifo_priv_flag             ),
@@ -471,7 +469,7 @@ idle_clk idle_clk1
         .fifo_pcAdd          ( fifo_pcAdd          ),
         .fifo_pc_taken       ( fifo_pc_taken       ),
         .fifo_badv           ( fifo_badv           ),
-        .fifo_cookie_out     ( fifo_cookie_out     ),
+        // .fifo_cookie_out     ( fifo_cookie_out     ),
         .fifo_exception      ( fifo_exception      ),
         .fifo_excp_flag      ( fifo_excp_flag      ),
         .fifo_priv_flag      ( fifo_priv_flag      ),
@@ -483,7 +481,7 @@ idle_clk idle_clk1
         .fifo_id_pc_next     ( fifo_id_pc_next     ),
         .fifo_id_pc_taken    ( fifo_id_pc_taken    ),
         .fifo_id_badv        ( fifo_id_badv        ),
-        .fifo_id_cookie_out  ( fifo_id_cookie_out  ),
+        // .fifo_id_cookie_out  ( fifo_id_cookie_out  ),
         .fifo_id_exception   ( fifo_id_exception   ),
         .fifo_id_excp_flag   ( fifo_id_excp_flag   ),
         .fifo_id_priv_flag   ( fifo_id_priv_flag   ),

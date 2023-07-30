@@ -29,7 +29,7 @@ module FIFO(
     input        if1_fifo_pc_taken,
 
     input [31:0] if1_fifo_icache_badv,
-    input [31:0] if1_fifo_icache_cookie_out,
+    // input [31:0] if1_fifo_icache_cookie_out,
     input [6 :0] if1_fifo_icache_exception,
     input [1:0]  if1_fifo_icache_excp_flag,
 
@@ -40,10 +40,10 @@ module FIFO(
     output reg [31:0] fifo_pc,//co pc with fifo_inst0 
     output wire[31:0] fifo_pcAdd,
     output reg [31:0] fifo_pc_next,
-    output reg         fifo_pc_taken,
+    output reg        fifo_pc_taken,
     output reg [31:0] fifo_badv,
 
-    output reg [31:0] fifo_cookie_out,
+    // output reg [31:0] fifo_cookie_out,
     output reg [6 :0] fifo_exception, 
     output reg [1 :0] fifo_excp_flag,
     output reg [1 :0] fifo_priv_flag,
@@ -86,9 +86,13 @@ module FIFO(
     wire pcbdv_em1,pcbdv_fu1;
     wire stat_empty,stat_full;
     wire stat_em1,stat_fu1;
-    wire [63:0] inst_din,inst_dout;
-    wire [95:0] pcbdv_din,pcbdv_dout;
-    wire [45:0] stat_din,stat_dout;
+    localparam          INST_WIDTH = 64,
+                        PCBDV_WIDTH= 96,
+                        STAT_WIDTH = 14;
+
+    wire [INST_WIDTH-1:0] inst_din,inst_dout;
+    wire [PCBDV_WIDTH-1:0] pcbdv_din,pcbdv_dout;
+    wire [STAT_WIDTH-1:0] stat_din,stat_dout;
     
     //[31:0]cookie  [38:32]exception [40:39]excp_flag [42:41]ibar_flag
     //[43:43]cacop_ready  [44:44]cacop_complete
@@ -112,8 +116,8 @@ module FIFO(
                                         branch_flag[1:0],
                                         priv_flag[1:0],
                                         if1_fifo_icache_excp_flag[1:0],
-                                        if1_fifo_icache_exception[6:0],
-                                        if1_fifo_icache_cookie_out[31:0]
+                                        if1_fifo_icache_exception[6:0]
+                                        // if1_fifo_icache_cookie_out[31:0]
                                     };
     assign  fifo_valid          =   !fetch_buf_empty;
     assign  fifo_allowin        =   !fetch_buf_full;
@@ -133,12 +137,12 @@ module FIFO(
             fifo_pc_next=pcbdv_dout[95:64];
             fifo_badv=pcbdv_dout[31:0];
             
-            fifo_cookie_out=stat_dout[31:0];
-            fifo_exception=stat_dout[38:32];
-            fifo_excp_flag=stat_dout[40:39];
-            fifo_priv_flag=stat_dout[42:41];
-            fifo_branch_flag=stat_dout[44:43];
-            fifo_pc_taken=stat_dout[45];
+            // fifo_cookie_out=stat_dout[31:0];
+            fifo_exception=stat_dout[6:0];
+            fifo_excp_flag=stat_dout[8:7];
+            fifo_priv_flag=stat_dout[10:9];
+            fifo_branch_flag=stat_dout[12:11];
+            fifo_pc_taken=stat_dout[13];
         end else begin
             fifo_inst0=`INST_NOP;
             fifo_inst1=`INST_NOP;
@@ -146,7 +150,7 @@ module FIFO(
             fifo_pc_next=`PC_RESET+8;
 
             fifo_badv=`PC_RESET;
-            fifo_cookie_out=1919810;
+            // fifo_cookie_out=1919810;
             fifo_exception=7'b0000000;
             fifo_excp_flag=2'b00;
             fifo_priv_flag=2'b00;
@@ -157,7 +161,7 @@ module FIFO(
 
 
     FIFO_generator #(
-        .DATA_WIDTH         (   64 ),
+        .DATA_WIDTH         (   INST_WIDTH ),
         .DEPTH              (   BUF_DEPTH  ),
         .LOG_DEPTH          (   LOG_BUF_DEPTH)
     )fetch_buf(
@@ -175,7 +179,7 @@ module FIFO(
     );
 
     FIFO_generator#(
-        .DATA_WIDTH         (   96              ),
+        .DATA_WIDTH         (   PCBDV_WIDTH              ),
         .DEPTH              (   BUF_DEPTH       ),
         .LOG_DEPTH          (   LOG_BUF_DEPTH)
     )co_pcbdvbuf(
@@ -193,7 +197,7 @@ module FIFO(
     );
 
     FIFO_generator#(
-        .DATA_WIDTH         (   46           ),
+        .DATA_WIDTH         (   STAT_WIDTH           ),
         .DEPTH              (   BUF_DEPTH    ),
         .LOG_DEPTH          (   LOG_BUF_DEPTH)
     )co_statbuf(

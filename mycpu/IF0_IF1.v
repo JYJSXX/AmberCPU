@@ -19,13 +19,13 @@ module IF0_IF1 (
     // output [31:0]     if0_if1_pc_next
 
 );
-    localparam WIDTH = 3;
+    // localparam WIDTH = 3;
 
-    reg [WIDTH*32-1:0] pc_buf;
-    reg [WIDTH*32-1:0] pc_next_buf;
+    // reg [WIDTH*32-1:0] pc_buf;
+    // reg [WIDTH*32-1:0] pc_next_buf;
 
     assign  if0_allowin= if1_allowin;
-    assign  if1_readygo= 1;
+    assign  if1_readygo= if0_readygo;
     // assign  if0_if1_pc=pc_buf[WIDTH*32-1:(WIDTH-1)*32];
     // assign  if0_if1_pc_next=pc_next_buf[WIDTH*32-1:(WIDTH-1)*32];
 
