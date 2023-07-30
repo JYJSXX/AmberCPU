@@ -30,10 +30,8 @@ module BTB #(
     input               predict_add_fail
 
 );
-    assign pred_pc=fetch_pc+8;  
-    assign pred_taken=0;
-    assign pred_pc=fetch_pc+8;  
-    assign pred_taken=0;
+    // assign pred_pc=fetch_pc+8;  
+    // assign pred_taken=0;
     
     localparam      PC_INDEX_WIDTH       =   8,
                     EASY_STRONG_TAKEN    =   2'b00,

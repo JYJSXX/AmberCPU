@@ -50,11 +50,9 @@ module IF1_FIFO(
     input               tlb_done,
 
     output reg[31:0]    if1_fifo_pc,
-    output reg[31:0]    if1_fifo_pc_next,   //?
+    output reg[31:0]    if1_fifo_pc_next,  
     output reg[31:0]    if1_fifo_inst0,
     output reg[31:0]    if1_fifo_inst1,
-    // output wire[31:0]    p_if1_fifo_inst0,
-    // output wire[31:0]    p_if1_fifo_inst1,
     output reg[31:0]    if1_fifo_icache_badv,
     output reg[6:0]     if1_fifo_icache_exception,
     output reg[1:0]     if1_fifo_icache_excp_flag,
@@ -74,40 +72,40 @@ module IF1_FIFO(
                     BUF_W = 2;
 
 
-    wire cache_idle;
-    wire pc_fetch_ok;
-    wire idle;
-    wire pushable;
+    // wire cache_idle;
+    // wire pc_fetch_ok;
+    // wire idle;
+    // wire pushable;
     wire miss_inst=!fifo_allowin&&icache_rready;
     // reg [31:0]     if1_fifo_inst0;
     // reg [31:0]     if1_fifo_inst1;
 
-    reg [2:0]       stat;
-    reg [1:0]       tmp;//for last rready but fifo full
-    reg [2:0]       next_stat;
-    reg [31:0]      pc_after_priv;
+    // reg [2:0]       stat;
+    reg [1:0]       tmp;
+    // reg [2:0]       next_stat;
+    // reg [31:0]      pc_after_priv;
 
 
 
 
     reg             if1_fifo_valid;
     // reg             tmp;
-    reg [31:0]      tmp_pc;
-    reg [31:0]      tmp_pc_next;
-    reg             tmp_pc_taken;
-    reg [31:0]      tmp_inst0;
-    reg [31:0]      tmp_inst1;
-    reg [31:0]      tmp_icache_badv;
-    reg [6:0]       tmp_icache_exception;
+    // reg [31:0]      tmp_pc;
+    // reg [31:0]      tmp_pc_next;
+    // reg             tmp_pc_taken;
+    // reg [31:0]      tmp_inst0;
+    // reg [31:0]      tmp_inst1;
+    // reg [31:0]      tmp_icache_badv;
+    // reg [6:0]       tmp_icache_exception;
 
 
-    reg [WIDTH*32-1:0] if1_fifo_pc_buf;
+    // reg [WIDTH*32-1:0] if1_fifo_pc_buf;
     reg [BUF_W:0]    icache_rvalid_buf;
     
-    reg [1:0]       tmp_icache_excp_flag;
-    reg [31:0]      tmp_icache_cookie_out;
-    reg             tmp_cacop_ready;
-    reg             tmp_cacop_complete;
+    // reg [1:0]       tmp_icache_excp_flag;
+    // reg [31:0]      tmp_icache_cookie_out;
+    // reg             tmp_cacop_ready;
+    // reg             tmp_cacop_complete;
     always @(posedge clk or negedge rstn) begin
         if(!rstn)begin
             tmp<=0;//就绪
