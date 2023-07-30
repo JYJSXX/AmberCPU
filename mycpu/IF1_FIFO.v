@@ -13,12 +13,16 @@ module IF1_FIFO(
     input               fifo_allowin,
     output  wire        fifo_readygo,
     input               nearly_full,
+    input               space_ok,
+    input               write_en,
+    input               pop_en,
+    // input   [31:0]      icache_raddr,
 
     input               icache_rready,//icache rready makes reg update anytime
     input               icache_rvalid,
     input [31:0]        fetch_pc,
     input               pc_taken_out,   //?
-    output  reg       if1_fifo_pc_taken,    //?
+    output  reg        if1_fifo_pc_taken,    //?
     // input [31:0]        if0_if1_pc,
     // input [31:0]        if0_if1_pc_next,
     input [31:0]        icache_badv,
@@ -79,7 +83,7 @@ module IF1_FIFO(
     // reg [31:0]     if1_fifo_inst1;
 
     reg [2:0]       stat;
-    reg             tmp;//for last rready but fifo full
+    reg [1:0]       tmp;//for last rready but fifo full
     reg [2:0]       next_stat;
     reg [31:0]      pc_after_priv;
 
@@ -87,9 +91,10 @@ module IF1_FIFO(
 
 
     reg             if1_fifo_valid;
-            
+    // reg             tmp;
     reg [31:0]      tmp_pc;
     reg [31:0]      tmp_pc_next;
+    reg             tmp_pc_taken;
     reg [31:0]      tmp_inst0;
     reg [31:0]      tmp_inst1;
     reg [31:0]      tmp_icache_badv;
@@ -103,23 +108,57 @@ module IF1_FIFO(
     reg [31:0]      tmp_icache_cookie_out;
     reg             tmp_cacop_ready;
     reg             tmp_cacop_complete;
-    assign fifo_readygo =       if1_fifo_valid;
+    always @(posedge clk or negedge rstn) begin
+        if(!rstn)begin
+            tmp<=0;//就绪
+        end else if(write_en&&critical_wire&&tmp==2'b00)begin
+            tmp<=1;//暂存未写入
+        end else if(tmp==1&&if1_fifo_valid&&!(!space_ok&&!nearly_full))begin
+            tmp<=2;//暂存已写入
+        end else if(tmp==2&&space_ok)begin
+            tmp<=0;
+        end
+        // if(!rstn)begin
+        //     tmp_pc<=0;
+        //     tmp_pc_next<=0;
+        //     tmp_inst0<=`INST_NOP;
+        //     tmp_inst1<=`INST_NOP;
+        //     tmp_pc_taken<=0;
+
+        //     tmp_icache_badv<=0;
+        //     tmp_icache_exception<=0;
+        //     tmp_icache_excp_flag<=0;
+        // end else begin
+        //     tmp_pc<=pc_out;
+        //     tmp_pc_next<=icache_pc_next;
+        //     tmp_pc_taken<=pc_taken_out;
+        //     tmp_inst0<=icache_inst0;
+        //     tmp_inst1<=icache_inst1;
+
+        //     tmp_icache_badv<=icache_badv;
+        //     tmp_icache_exception<=icache_exception;
+        //     tmp_icache_excp_flag<=icache_excp_flag;
+        // end
+    end
+    // assign p_if1_fifo_inst0  =  if0_if1_pc[2]? `INST_NOP:if1_fifo_inst0[31:0];
+    // assign p_if1_fifo_inst1  =  priv_flag[0]?`INST_NOP:if1_fifo_inst1;
+    assign fifo_readygo =       if1_fifo_valid&&!(!space_ok&&!nearly_full)&&tmp!=2;
     wire critical_allowin;
     assign  critical_allowin=!icache_rvalid_buf[BUF_W-1]
                                     ||icache_rready;
-    assign if1_allowin  =       (fifo_allowin)&&
-                                (//correct_pc->rready,consider plus 5 stage cache
-                                    // !if0_if1_tlb_rvalid||
-                                    // !(if1_fifo_pc_buf[WIDTH*32-1:(WIDTH-1)*32]==if0_if1_pc)
-                                    // ||icache_rready
-                                    // ||!if0_if1_pc
+
+    wire critical_wire;
+    assign  critical_wire=(!icache_rvalid_buf[BUF_W-1]||(icache_rready))&&!space_ok&&tmp==0;
+    assign if1_allowin  =       (space_ok)&&
+                                (//2spaceleft->correct_pc->rready,consider plus 5 stage cache
                                     !icache_rvalid_buf[BUF_W-1]
-                                    ||icache_rready
-                                    // 1
+                                    ||(icache_rready)
+                                    // ||(space_ok)
                                 )&&
                                 (//icache_rready->tlb_rvalid
-                                    1// (stat==IDLE)||(next_stat==IDLE)
+                                    tmp==0
                                 );
+                                
     assign idle         = stat==IDLE;
     assign cache_idle = icache_idle&dcache_idle;
     assign set_pc_from_PRIV = 0;
@@ -152,11 +191,21 @@ module IF1_FIFO(
             
         end
     end
+    reg old_tmp;
+    always @(posedge clk ) begin
+        old_tmp<=tmp==2;
+    end
+    wire negedge_tmp = (tmp==0)&&(old_tmp==1);
     always @(posedge clk ) begin
         if(!idle)begin
             if1_fifo_valid<=0;
         end else begin
-            if1_fifo_valid<=icache_rready;
+            // if(!if1_fifo_valid)begin
+            //     if1_fifo_valid<=icache_rready;
+            // end else if(if1_readygo&&if1_allowin&&fifo_allowin) begin
+            //     if1_fifo_valid<=icache_rready;
+            // end
+            if1_fifo_valid<=icache_rready&&tmp!=2&&!negedge_tmp;
         end
     end
     always @(posedge clk) begin
@@ -232,7 +281,7 @@ module IF1_FIFO(
             if1_fifo_icache_excp_flag<=0;
             if1_fifo_icache_cookie_out<=0;
         end
-        else if (icache_rready&&if1_allowin&&fifo_allowin) begin
+        else if ((write_en&&critical_wire&&tmp==0)||(icache_rready&&if1_allowin&&fifo_allowin)) begin
             //update stage-stage reg
             
             if1_fifo_pc     <=  pc_out;
@@ -241,9 +290,9 @@ module IF1_FIFO(
             if1_fifo_inst0  <=  pc_out[2]? icache_inst1[31:0]:icache_inst0[31:0];
             if1_fifo_inst1  <=  pc_out[2]? `INST_NOP:icache_inst1[31:0];
             if1_fifo_icache_badv      <=icache_badv;
-            // if1_fifo_icache_cookie_out[3<=icache_pc_next;
+            // if1_fifo_icache_cookie_out<=icache_pc_next;
             if1_fifo_icache_exception <=icache_exception;//did not replace,cope need to test excp_flag first!!
-            if1_fifo_icache_excp_flag<=priv_flag[0]?2'b00:icache_excp_flag;
+            if1_fifo_icache_excp_flag<=icache_excp_flag;
         end 
         // else if (tmp) begin
         //     tmp<=0;

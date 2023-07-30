@@ -12,6 +12,11 @@ module FIFO(
     input           fifo_ready,
     output          fifo_valid,
     output          nearly_full,
+    output          space_ok,
+    output          write_en,
+    output          pop_en,
+    input   [31:0]  icache_raddr,
+    input   [31:0]  pc_out,
     
 
     
@@ -45,8 +50,8 @@ module FIFO(
     output reg [1 :0] fifo_branch_flag
     
 );
-    localparam      BUF_DEPTH = 64,
-                    LOG_BUF_DEPTH = 6;
+    localparam      BUF_DEPTH = 16,
+                    LOG_BUF_DEPTH = 4;
     /*
             fifo_space=1:inst=3
             fifo_space=2:inst=57
@@ -74,8 +79,8 @@ module FIFO(
     // wire nearly_full;
     wire fetch_buf_nearly_empty;
     wire fetch_buf_nearly_full;
-    wire write_en;
-    wire pop_en;
+    // wire write_en;
+    // wire pop_en;
     wire empty,full;
     wire pcbdv_empty,pcbdv_full;
     wire pcbdv_em1,pcbdv_fu1;
@@ -84,6 +89,7 @@ module FIFO(
     wire [63:0] inst_din,inst_dout;
     wire [95:0] pcbdv_din,pcbdv_dout;
     wire [45:0] stat_din,stat_dout;
+    
     //[31:0]cookie  [38:32]exception [40:39]excp_flag [42:41]ibar_flag
     //[43:43]cacop_ready  [44:44]cacop_complete
 
@@ -91,6 +97,7 @@ module FIFO(
     assign  full                =   fetch_buf_full;
     assign  nearly_empty        =   fetch_buf_nearly_empty;
     assign  nearly_full         =   fetch_buf_nearly_full;
+    assign  space_ok            =   !full&&!nearly_full;
     assign  write_en            =   fifo_readygo&&!full;                        
     assign  pop_en              =   fifo_ready&&!empty;
     assign  inst_din            =   {if1_fifo_inst1[31:0],if1_fifo_inst0[31:0]};
@@ -111,6 +118,12 @@ module FIFO(
     assign  fifo_valid          =   !fetch_buf_empty;
     assign  fifo_allowin        =   !fetch_buf_full;
 
+
+    // reg  [31:0] last_pc;
+    // always @(posedge clk) begin
+    //     if(write_en)
+    //         last_pc<=if1_fifo_pc;
+    // end
 
     always @(*) begin
         if (fifo_valid)begin

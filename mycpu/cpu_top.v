@@ -286,7 +286,11 @@ idle_clk idle_clk1
     wire  [31+3:0]    if1_fifo_icache_cookie_out;
     wire            if1_fifo_pc_taken;
     wire icache_rvalid;
+    wire            space_ok;
     wire nearly_full;
+    wire            write_en;
+    wire            pop_en;
+    wire [31:0] icache_raddr, dcache_addr;
     // wire            if1_fifo_cacop_ready;
     // wire            if1_fifo_cacop_complete;
     IF1_FIFO u_IF1_FIFO(
@@ -300,6 +304,9 @@ idle_clk idle_clk1
         .icache_rready              ( icache_rready              ),
         .icache_rvalid              ( icache_rvalid              ),
         .nearly_full                ( nearly_full                ),
+        .space_ok                   ( space_ok                   ),
+        .write_en                   ( write_en                   ),
+        .pop_en                     ( pop_en                     ),
         .fetch_pc                   ( fetch_pc                   ),
         .pc_out                     ( pc_out                     ),
         .pc_taken_out               ( pc_taken_out             ),  // ?
@@ -396,7 +403,12 @@ idle_clk idle_clk1
         .fifo_allowin               ( fifo_allowin               ),
         .fifo_valid                 ( fifo_valid                 ),
         .fifo_ready                 ( fifo_ready                 ),
-        .nearly_full                (nearly_full                 ),
+        .nearly_full                ( nearly_full                ),
+        .icache_raddr               ( icache_raddr               ),
+        .pc_out                     ( pc_out                     ),
+        .space_ok                   ( space_ok                   ),
+        .write_en                   (write_en                    ),
+        .pop_en                     ( pop_en                     ),
         .priv_flag                  ( priv_flag                  ),
         .if1_fifo_inst0             ( if1_fifo_inst0             ),
         .if1_fifo_inst1             ( if1_fifo_inst1             ),
@@ -1487,7 +1499,7 @@ idle_clk idle_clk1
     wire is_cached_I, is_cached_D; //是否经过cache
     wire [6:0] tlb_exception_code_i, tlb_exception_code_d; //tlb例外码
 
-    wire [31:0] icache_raddr, dcache_addr;
+    // wire [31:0] icache_raddr, dcache_addr;
     wire signed_ext, is_atom_TLB, SOL_D_OUT;
     
     icache#(
