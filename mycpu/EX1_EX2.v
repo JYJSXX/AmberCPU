@@ -51,7 +51,6 @@ module EX1_EX2(
     // output  reg ex1_ex2_is_break_0,
     // output  reg ex1_ex2_is_break_1,
      output  reg ex1_ex2_is_priviledged_0,
-     output  reg ex1_ex2_is_priviledged_1,
     output  reg [`WIDTH_UOP-1:0] ex1_ex2_uop0,
     output  reg [`WIDTH_UOP-1:0] ex1_ex2_uop1,
     output  reg [31:0] ex1_ex2_imm0,
@@ -103,7 +102,6 @@ always@(posedge clk) begin
         // ex1_ex2_is_break_0<=0;
         // ex1_ex2_is_break_1<=0;
          ex1_ex2_is_priviledged_0<=0;
-         ex1_ex2_is_priviledged_1<=0;
         ex1_ex2_badv<=0;
         ex1_ex2_excp_flag<=0;
         ex1_ex2_exception<=0;
@@ -137,7 +135,6 @@ always@(posedge clk) begin
         // ex1_ex2_is_break_0<=reg_ex1_is_break_0;
         // ex1_ex2_is_break_1<=reg_ex1_is_break_1;
          ex1_ex2_is_priviledged_0<=reg_ex1_is_priviledged_0;
-         ex1_ex2_is_priviledged_1<=reg_ex1_is_priviledged_1;
         ex1_ex2_badv<=excp_flag_in? badv_in : d_badv;
         ex1_ex2_exception<=excp_flag_in? exception_in : d_exception;
         ex1_ex2_excp_flag<=(excp_flag_in | (|d_exception[6])) & ~ex1_ex2_excp_flag;
@@ -173,7 +170,6 @@ always@(posedge clk) begin
         // ex1_ex2_is_break_0<=ex1_ex2_is_break_0;
         // ex1_ex2_is_break_1<=ex1_ex2_is_break_1;
          ex1_ex2_is_priviledged_0<=ex1_ex2_is_priviledged_0;
-         ex1_ex2_is_priviledged_1<=ex1_ex2_is_priviledged_1;
         ex1_ex2_badv<=ex1_ex2_badv;
         ex1_ex2_exception<=ex1_ex2_exception;
         ex1_ex2_excp_flag<=ex1_ex2_excp_flag;

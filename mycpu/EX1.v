@@ -173,12 +173,12 @@ module EX1(
     output reg [6:0] exception_out,
     output [63:0] stable_counter
 `ifdef DIFFTEST
-    ,input vaddr_diff_in,
-    input paddr_diff_in,
-    input data_diff_in,
-    output reg vaddr_diff_out,
-    output reg paddr_diff_out,
-    output reg data_diff_out,
+    ,input [31:0] vaddr_diff_in,
+    input [31:0] paddr_diff_in,
+    input [31:0] data_diff_in,
+    output reg [31:0] vaddr_diff_out,
+    output reg [31:0] paddr_diff_out,
+    output reg [31:0] data_diff_out,
     output reg [63:0] ex_stable_counter,
     output ex1_allowin
 `endif
