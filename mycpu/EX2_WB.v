@@ -273,15 +273,15 @@ assign cond1 = uop1_reg[`UOP_COND];
     reg buf_sign_reg = 1;
     always @ (posedge clk) buf_sign_reg <= buf_sign;
         always @(posedge clk) begin
-        if(!aresetn)begin
+        if(!aresetn | flush_by_priv)begin
             dcache_valid_buf<=0;
         end 
         else if(ex2_allowin)begin
-            dcache_valid_buf<={dcache_valid_buf[1:0], tlb_d_valid_reg };            
+            dcache_valid_buf<={dcache_valid_buf[1:0], tlb_d_valid_reg & ~flush_by_priv};            
         end
         else if (buf_sign & ~buf_sign_reg) begin
-            // dcache_valid_buf<={dcache_valid_buf[1:0], 1'b0 };       
-                dcache_valid_buf <= {dcache_valid_buf[2], 2'b10};
+             dcache_valid_buf<={dcache_valid_buf[1:0], 1'b0 };       
+            //    dcache_valid_buf <= {dcache_valid_buf[2], 2'b10};
         end
         
     end

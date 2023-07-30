@@ -5,6 +5,7 @@ module  REG_EX1(
     input   aresetn,
     input   flush,
     input   forward_stall,
+    input   flush_by_priv,
     input   reg_readygo,
     output  reg reg_allowin,
     input   ex_allowin,
