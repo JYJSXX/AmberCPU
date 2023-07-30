@@ -569,7 +569,7 @@ module icache #(
         end
         // ! 这里存在一个问题，lru_sel在miss的情况下是否需要缓存？
         REFILL: begin
-            if(!uncache_buf) begin
+            if(!uncache_buf && !cacop_en_buf) begin
                 tagv_we                 = lru_sel;
                 mem_we                  = lru_sel;
                 way_visit               = lru_sel[1];
