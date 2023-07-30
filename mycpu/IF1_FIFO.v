@@ -160,11 +160,11 @@ module IF1_FIFO(
                                     tmp==0
                                 );
                                 
-    assign idle         = stat==IDLE;
-    assign cache_idle = icache_idle&dcache_idle;
-    assign set_pc_from_PRIV = 0;
+    // assign idle         = stat==IDLE;
+    // assign cache_idle = icache_idle&dcache_idle;
+    // assign set_pc_from_PRIV = 0;
     // assign set_pc_from_PRIV = (stat!=IDLE)&&(csr_done||tlb_done||cache_idle);
-    assign pc_from_PRIV = pc_after_priv;
+    // assign pc_from_PRIV = pc_after_priv;
 
 
     always @(posedge clk) begin
@@ -180,31 +180,31 @@ module IF1_FIFO(
     end
 
     //add FSM for 1.detect ibar 2.detect ex's ibar signal 3.detect icache&dcache idle
-    always @(posedge clk) begin
-        if (!rstn||flush) begin
-            stat<=IDLE;
+    // always @(posedge clk) begin
+    //     if (!rstn||flush) begin
+    //         stat<=IDLE;
             
-        end else begin
-            stat<=next_stat;
+    //     end else begin
+    //         stat<=next_stat;
             
-        end
-    end
+    //     end
+    // end
     reg old_tmp;
     always @(posedge clk ) begin
         old_tmp<=tmp==2;
     end
     wire negedge_tmp = (tmp==0)&&(old_tmp==1);
     
-    always @(*) begin
-        if (priv_flag[0]) begin
-            pc_after_priv=pc_out+4;
-        end 
-        else if(priv_flag[1])begin
-            pc_after_priv=pc_out+8;
-        end else begin
-            pc_after_priv=0;
-        end
-    end
+    // always @(*) begin
+    //     if (priv_flag[0]) begin
+    //         pc_after_priv=pc_out+4;
+    //     end 
+    //     else if(priv_flag[1])begin
+    //         pc_after_priv=pc_out+8;
+    //     end else begin
+    //         pc_after_priv=0;
+    //     end
+    // end
 
     // always @(*) begin//FSM
     //     flush_from_if1_fifo=0;
@@ -243,7 +243,7 @@ module IF1_FIFO(
     // end
 
     always @ (posedge clk) begin
-        if (~rstn || flush||(!icache_rready&&fifo_allowin&&fifo_readygo)||(!idle)||(tmp==1&&write_en)) begin
+        if (~rstn || flush||(!icache_rready&&fifo_allowin&&fifo_readygo)||(tmp==1&&write_en)) begin
             //clear stage-stage reg
             if1_fifo_valid<=0;
             if1_fifo_pc     <=  `PC_RESET;
