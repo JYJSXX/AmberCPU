@@ -317,9 +317,9 @@ assign ld_stall_flag = (dcache_valid_buf[1] && ~dcache_ready);
 always@(posedge clk)begin
     if (flush_out_all)begin
         debug0_wb_pc <= 0;
-        debug0_wb_inst <= 0;
+        debug0_wb_inst <= `INST_NOP;
         debug1_wb_pc <= 0;
-        debug1_wb_inst <= 0;
+        debug1_wb_inst <= `INST_NOP;
         debug0_valid <= 0;
         debug1_valid <= 0;
     end

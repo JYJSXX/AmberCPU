@@ -274,8 +274,8 @@ always@(posedge clk)begin
         reg_ex_pc1 <= 0;
         reg_ex_pc_next <= 0;
         reg_ex_pc_taken <= 0;
-        reg_ex_inst0 <= 0;
-        reg_ex_inst1 <= 0;
+        reg_ex_inst0 <= `INST_NOP;
+        reg_ex_inst1 <= `INST_NOP;
         reg_ex_branch_flag <= 0;
         reg_ex_excp_flag <= 0;
         reg_ex_exception <= 0;

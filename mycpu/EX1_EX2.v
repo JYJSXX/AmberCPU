@@ -95,7 +95,7 @@ always@(posedge clk) begin
     if(~aresetn | (~ex1_readygo & ex2_allowin & ex2_readygo) | flush_in) begin
         ex1_ex2_pc0<=0;
         ex1_ex2_pc1<=0;
-        ex1_ex2_inst0<=0;
+        ex1_ex2_inst0<=`INST_NOP;
         csr_ren_ex2<=0;
         // ex1_ex2_inst1<=0;
         // ex1_ex2_is_syscall_0<=0;
