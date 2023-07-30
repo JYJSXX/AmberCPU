@@ -25,7 +25,7 @@ module icache #(
     input [511:0]       i_rdata,        // read data from main memory
     // 暂时用不到
     // input               i_rlast,        // indicate the last beat of read data from main memory
-    // output [2:0]        i_rsize,        // indicate the size of read data once, if i_rsize = n then read 2^n bytes once
+    // output reg [2:0]    i_rsize,        // indicate the size of read data once, if i_rsize = n then read 2^n bytes once
     output reg [7:0]    i_rlen,          // indicate the number of read data, if i_rlen = n then read n+1 times
 
     output [1:0]  i_exception_flag,

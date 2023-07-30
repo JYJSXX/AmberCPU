@@ -26,8 +26,8 @@ module dcache #(
     input                   uncache,            // indicate whether the request is an uncache request
     input                   signed_ext,         // indicate whether the request is a signed extension request
     output                  idle,               // indicate whether the cache is idle
-    input                   flush,              // TODO 和icache的flush处理同步一下
-    input [COOKIE_WIDTH-1 : 0]       cookie_in,
+    input                   flush,              // only exception flush
+    input  [COOKIE_WIDTH-1 : 0]       cookie_in,
     output [COOKIE_WIDTH-1 : 0]       cookie_out,
     /* from AXI arbiter */
     // read
@@ -36,7 +36,7 @@ module dcache #(
     output [31:0]           d_raddr,            // read address to main memory
     input [511:0]           d_rdata,            // read data from main memory
    //input                   d_rlast,            // indicate the last beat of read data from main memory
-   // output [2:0]            d_rsize,            // indicate the size of read data once, if d_rsize = n then read 2^n bytes once
+    output reg [2:0]        d_rsize,            // indicate the size of read data once, if d_rsize = n then read 2^n bytes once
     output reg [7:0]        d_rlen,             // indicate the number of read data, if d_rlen = n then read n+1 times
     // write
     output reg              d_wvalid,           // valid signal of write request to main memory
@@ -45,7 +45,7 @@ module dcache #(
     output [511:0]          d_wdata,            // write data to main memory
     output reg [3:0]        d_wstrb,            // write mask of each write-back word to main memory
    // output reg              d_wlast,            // indicate the last beat of write data to main memory
-   // output [2:0]            d_wsize,            // indicate the size of write data once, if d_wsize = n then write 2^n bytes once
+    output reg [2:0]        d_wsize,            // indicate the size of write data once, if d_wsize = n then write 2^n bytes once
     output reg [7:0]        d_wlen,             // indicate the number of write data, if d_wlen = n then write n+1 times
 
     // // back
@@ -831,6 +831,8 @@ module dcache #(
         dirty_way            = 0;
         llbit_set            = 0;
         llbit_clear          = 0;
+        d_rsize              = 2;
+        d_wsize              = 2;
         case(state)
         IDLE: begin
             req_buf_we = 1;
@@ -876,6 +878,7 @@ module dcache #(
                     wbuf_we = 1;
                     d_wlen  = 8'd0;
                     d_wstrb = wstrb_pipe;
+                    d_wsize = uncache_rwsize;
                     wfsm_en = 1;
                 end
             end
@@ -889,6 +892,7 @@ module dcache #(
             d_rvalid = 1;
             if(uncache_buf) begin
                 d_rlen = 8'd0;
+                d_rsize = uncache_rwsize;
             end
         end
         REFILL: begin
