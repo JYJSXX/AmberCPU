@@ -524,11 +524,13 @@ module icache #(
 
         case(state)
         IDLE: begin
-            req_buf_we      = 1;
-            lru_we          = 0;
-            if(cacop_en)
-                cacop_ready     = 1;
-        end
+                req_buf_we      = 1;
+                lru_we          = 0;
+                if(cacop_en)
+                    cacop_ready     = 1;
+                if(cacop_en_buf)
+                    cacop_complete  = 1;
+            end
         LOOKUP: begin
             if(exception == 0)begin
                 pbuf_we                = (miss_flush_flag && !cache_hit) ? 0 : 1;

@@ -77,9 +77,11 @@ module IF0 (
             end else begin
                 pc<=pc_next;
             end
-        end 
-        else begin
             branch_stat<=0;
+        end 
+        else 
+        begin
+            // branch_stat<=0;
         end
     end
 endmodule
