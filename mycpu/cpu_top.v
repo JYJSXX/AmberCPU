@@ -1472,7 +1472,6 @@ idle_clk idle_clk1
         .fact_tpc         ( fact_tpc         ),
         .fact_taken       ( fact_taken       ),
         .predict_dir_fail ( predict_dir_fail ),
-        .if0_allowin       ( if0_allowin       ),
         .predict_add_fail ( predict_add_fail )
     );
 
