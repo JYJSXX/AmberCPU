@@ -103,7 +103,14 @@ module csr
     output [31:0] dmw1_diff
 `endif
 );
+reg exception_delay;        // delay信号
 
+always @ ( posedge clk  )
+  if( !aresetn )
+     exception_delay <= 0;
+  else
+     exception_delay <= exception;   // orig是原信号
+wire pos_signal_excp = exception&& ( ~exception_delay );       // 原信号上升沿位置处产生的pulse信号
     wire [31:0] csr_crmd ;
     wire [31:0] csr_prmd ;
     wire [31:0] csr_euen ;
@@ -377,7 +384,7 @@ always @(posedge clk)
                 crmd_da <= 0;
                 crmd_pg <= 1;
             end
-        end else if(exception) begin
+        end else if(pos_signal_excp) begin
             if(tlb_exception) begin //现在要进入TLB例外
                 crmd_da <= 1;
                 crmd_pg <= 0;
@@ -401,7 +408,7 @@ always @(posedge clk)
         if(~aresetn) begin
             prmd_pplv <= 0;
             prmd_pie <= 0;
-        end else if(exception) begin
+        end else if(pos_signal_excp) begin
             prmd_pplv <= crmd_plv;
             prmd_pie  <= crmd_ie;
         end else if(wen&&addr==`CSR_PRMD) begin
@@ -433,7 +440,7 @@ always @(posedge clk)
             estat_ecode <= 0;
             estat_subecode <= 0;
         end
-        else if(wen_expcode | exception) begin
+        else if(wen_expcode | pos_signal_excp) begin
             estat_ecode <= expcode_in[5:0];
             estat_subecode <= expcode_in[5:0]==0 ? 0:{8'b0,expcode_in[6]};
         end
@@ -897,12 +904,12 @@ assign rdata[31:0] = {32{addr_in==`CSR_CRMD}} & csr_crmd |
             `ifdef DIFFTEST
     wire [32*26-1:0] csr_diff =  
     {
-    wen&&addr==`CSR_CRMD ?  wdata & 32'b1_1111_1111 : exception ? {csr_crmd[31:3], 3'b000} :
+    wen&&addr==`CSR_CRMD ?  wdata & 32'b1_1111_1111 : pos_signal_excp ? {csr_crmd[31:3], 3'b000} :
                      ertn ? {csr_crmd[31:3],csr_prmd[2:0]}: csr_crmd,
-    wen&&addr==`CSR_PRMD ? wdata & 32'b111 : exception ? {csr_prmd[31:3],csr_crmd[2:0]}:csr_prmd,
+    wen&&addr==`CSR_PRMD ? wdata & 32'b111 : pos_signal_excp ? {csr_prmd[31:3],csr_crmd[2:0]}:csr_prmd,
     wen&&addr==`CSR_ECFG ? wdata & 32'b1_1011_1111_1111 :csr_ecfg & 32'b1_1011_1111_1111,
-    wen&&addr==`CSR_ESTAT ? wdata & 32'b11: exception ? {csr_estat[31:23], expcode_in[6:0], csr_estat[15:0]} :csr_estat,
-    wen&&addr==`CSR_ERA ? wdata : exception ? era_in : csr_era,
+    wen&&addr==`CSR_ESTAT ? wdata & 32'b11: pos_signal_excp ? {csr_estat[31:23], expcode_in[6:0], csr_estat[15:0]} :csr_estat,
+    wen&&addr==`CSR_ERA ? wdata : pos_signal_excp ? era_in : csr_era,
     wen&&addr==`CSR_BADV ? wdata :csr_badv,
     wen&&(addr==`CSR_EENTRY) ? wdata & 32'hffff_ffc0:csr_eentry,
     wen&&addr==`CSR_TLBIDX ? wdata :csr_tlbidx,
