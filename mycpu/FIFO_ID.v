@@ -18,10 +18,10 @@ module FIFO_ID (
     input [31:0] fifo_inst1,
     input [31:0] fifo_pc,
     input [31:0] fifo_pc_next,
-    input         fifo_pc_taken,
+    input        fifo_pc_taken,
     input [31:0] fifo_pcAdd,
     input [31:0] fifo_badv,
-    input [31:0] fifo_cookie_out,
+    // input [31:0] fifo_cookie_out,
     input [6:0]  fifo_exception,
     input [1:0]  fifo_excp_flag,
     input [1:0]  fifo_priv_flag,
@@ -32,9 +32,9 @@ module FIFO_ID (
     output reg[31:0] fifo_id_pc,
     output reg[31:0] fifo_id_pcAdd,
     output reg[31:0] fifo_id_pc_next,
-    output reg        fifo_id_pc_taken,
+    output reg       fifo_id_pc_taken,
     output reg[31:0] fifo_id_badv,
-    output reg[31:0] fifo_id_cookie_out,
+    // output reg[31:0] fifo_id_cookie_out,
     output reg[6:0]  fifo_id_exception,
     output reg[1:0]  fifo_id_excp_flag,
     output reg[1:0]  fifo_id_priv_flag,
@@ -56,7 +56,7 @@ module FIFO_ID (
             fifo_id_pc_next <=`PC_RESET+8;
             fifo_id_pc_taken<=0;
             fifo_id_badv    <=`PC_RESET;
-            fifo_id_cookie_out<=1958;
+            // fifo_id_cookie_out<=1958;
             fifo_id_exception<=7'h00;
             fifo_id_excp_flag<=2'b00;
             fifo_id_priv_flag<=2'b00;
@@ -71,7 +71,7 @@ module FIFO_ID (
             fifo_id_pc_next <=fifo_pc_next;
             fifo_id_pc_taken<=fifo_pc_taken;
             fifo_id_badv    <=fifo_badv;
-            fifo_id_cookie_out<=fifo_cookie_out;
+            // fifo_id_cookie_out<=fifo_cookie_out;
             fifo_id_exception<=fifo_exception;
             fifo_id_excp_flag<=fifo_excp_flag;
             fifo_id_priv_flag<=fifo_priv_flag;
