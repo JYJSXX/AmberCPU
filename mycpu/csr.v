@@ -421,7 +421,7 @@ always @(posedge clk)
         if(~aresetn) begin
             ecfg_lie <= 0;
         end else if(wen&&addr==`CSR_ECFG) begin
-           if(wen) ecfg_lie[`ECFG_LIE]<=wdata[`ECFG_LIE];
+           if(wen) ecfg_lie[`ECFG_LIE]<=wdata[`ECFG_LIE] & 13'b1_1011_1111_1111;
 
         end
     
@@ -896,14 +896,14 @@ assign rdata[31:0] = {32{addr_in==`CSR_CRMD}} & csr_crmd |
             `ifdef DIFFTEST
     wire [32*26-1:0] csr_diff =  
     {
-    wen&&addr==`CSR_CRMD ?  wdata : exception ? {csr_crmd[31:3], 3'b000} :
+    wen&&addr==`CSR_CRMD ?  wdata & 32'b1_1111_1111 : exception ? {csr_crmd[31:3], 3'b000} :
                      ertn ? {csr_crmd[31:3],csr_prmd[2:0]}: csr_crmd,
-    wen&&addr==`CSR_PRMD ? wdata : exception ? {csr_prmd[31:3],csr_crmd[2:0]}:csr_prmd,
-    wen&&addr==`CSR_ECFG ? wdata :csr_ecfg,
-    wen&&addr==`CSR_ESTAT ? wdata : exception ? {csr_estat[31:23], expcode_in[6:0], csr_estat[15:0]} :csr_estat,
+    wen&&addr==`CSR_PRMD ? wdata & 32'b111 : exception ? {csr_prmd[31:3],csr_crmd[2:0]}:csr_prmd,
+    wen&&addr==`CSR_ECFG ? wdata & 32'b1_1011_1111_1111 :csr_ecfg & 32'b1_1011_1111_1111,
+    wen&&addr==`CSR_ESTAT ? wdata & 32'b11: exception ? {csr_estat[31:23], expcode_in[6:0], csr_estat[15:0]} :csr_estat,
     wen&&addr==`CSR_ERA ? wdata : exception ? era_in : csr_era,
     wen&&addr==`CSR_BADV ? wdata :csr_badv,
-    wen&&(addr==`CSR_EENTRY) ? wdata :csr_eentry,
+    wen&&(addr==`CSR_EENTRY) ? wdata & 32'hffff_ffc0:csr_eentry,
     wen&&addr==`CSR_TLBIDX ? wdata :csr_tlbidx,
     wen&&addr==`CSR_TLBEHI ? wdata :csr_tlbehi,
     wen&&addr==`CSR_TLBELO0 ? wdata :csr_tlbelo0,
@@ -922,7 +922,7 @@ assign rdata[31:0] = {32{addr_in==`CSR_CRMD}} & csr_crmd |
     wen&&addr==`CSR_LLBCTL ? wdata : ertn ? {csr_llbctl[31:1], csr_llbctl[2]} :csr_llbctl,
     wen&&addr==`CSR_TLBRENTRY ? wdata :csr_tlbrentry,
     wen&&addr==`CSR_DMW0 ? wdata :csr_dmw0,
-    wen&&addr==`CSR_DMW1 ? wdata :csr_dmw1};
+    wen&&addr==`CSR_DMW1 ? wdata & 32'hff000039:csr_dmw1};
 
     reg [32*26-1:0] csr_diff_delay0;
 
