@@ -273,33 +273,8 @@ module IF1_FIFO(
             if1_fifo_icache_exception <=icache_exception;//did not replace,cope need to test excp_flag first!!
             if1_fifo_icache_excp_flag<=icache_excp_flag;
         end 
-        // else if (tmp) begin
-        //     tmp<=0;
-        //     if1_fifo_pc     <=  tmp_pc;
-        //     if1_fifo_pc_next<=  tmp_pc_next;
-        //     if1_fifo_inst0  <=  tmp_inst0;
-        //     if1_fifo_inst1  <=  tmp_inst1;
-
-        //     if1_fifo_icache_badv<=tmp_icache_badv;
-        //     if1_fifo_icache_cookie_out<=tmp_icache_cookie_out;
-        //     if1_fifo_icache_exception<=tmp_icache_exception;
-        //     if1_fifo_icache_excp_flag<=tmp_icache_excp_flag;
-
-        // end
         else if(~fifo_allowin||~if1_allowin)begin
             //hold stage-stage reg
-            // if(if1_readygo&&~tmp)begin
-            //     tmp<=1;
-            //     tmp_pc<=pc_out;
-            //     tmp_pc_next<=icache_pc_next;
-            //     tmp_inst0<=icache_inst0;
-            //     tmp_inst1<=priv_flag[0]?`INST_NOP:icache_inst1;
-
-            //     tmp_icache_badv      <=icache_badv;
-            //     tmp_icache_cookie_out<=icache_pc_next;
-            //     tmp_icache_exception <=icache_exception;
-            //     tmp_icache_excp_flag<=priv_flag[0]?2'b00:icache_excp_flag;
-            // end
         end
     end
 
