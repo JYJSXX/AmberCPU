@@ -25,7 +25,7 @@ module EX2_WB(
     input ex2_result0_valid,
     input ex2_result1_valid,
     input EN_VA_D,
-    input ex1_ex2_is_priviledged_0,
+    input reg_ex1_is_priviledeged_0,
     input ex1_ex2_is_priviledged_1,
     input [31:0] reg_ex1_pc0,
     output reg [31:0] ex2_wb_data_0,
@@ -41,6 +41,7 @@ module EX2_WB(
     output reg ex2_wb_we0,
     output reg ex2_wb_we1,
     output reg ex2_wb_we2,
+    // output ld_stall_flag,
 
     //除法
     input [31:0] quotient,
@@ -98,6 +99,7 @@ module EX2_WB(
     input  [31:0] eentry,
     input  [31:0] tlbrentry
 );
+wire ld_stall_flag;
 assign pc_from_WB = (tlb_exception) ? tlbrentry : (exception_flag_out ? eentry : (uop0[`INS_ERTN] ? csr_era : (csr_ready ? reg_ex1_pc0 +4 : pc0)));
 assign set_by_priv = csr_ready | tlb_exception | exception_flag_out | uop0[`INS_ERTN];
 assign flush_to_priv_wr_csr = tlb_exception | exception_flag_out | uop0[`INS_ERTN];
@@ -107,7 +109,7 @@ always@(*)begin
     end
 
 assign flush_out_all = exception_flag_out;
-assign flush_by_priv = set_by_priv;
+assign flush_by_priv = set_by_priv & ~ld_stall_flag;
 //wire csr_crmd_ie;
 //assign csr_crmd_ie = csr_crmd[2];
 //wire [12:0] csr_estat_is;
@@ -179,11 +181,11 @@ assign cond1 = uop1_reg[`UOP_COND];
                 ex2_wb_rd0 <= ex_rd0;
                 ex2_wb_we0 <= 1;
             end
-            else if(ex1_ex2_is_priviledged_0 ) begin
+            else if(reg_ex1_is_priviledeged_0 ) begin
                 ex2_wb_data_0 <= csr_data_in;
-                ex2_wb_data_0_valid <= csr_ready & ex1_ex2_is_priviledged_0;
+                ex2_wb_data_0_valid <= csr_ready & reg_ex1_is_priviledeged_0;
                 ex2_wb_rd0 <= ex_rd0;
-                ex2_wb_we0 <= csr_ready & ex1_ex2_is_priviledged_0;
+                ex2_wb_we0 <= csr_ready & reg_ex1_is_priviledeged_0;
             end
             else if(wen_csr) begin
                 ex2_wb_data_0 <= csr_data_in;
@@ -278,35 +280,38 @@ assign cond1 = uop1_reg[`UOP_COND];
             dcache_valid_buf<={dcache_valid_buf[1:0], tlb_d_valid_reg };            
         end
         else if (buf_sign & ~buf_sign_reg) begin
-            dcache_valid_buf<={dcache_valid_buf[1:0], 1'b0 };            
+            // dcache_valid_buf<={dcache_valid_buf[1:0], 1'b0 };       
+                dcache_valid_buf <= {dcache_valid_buf[2], 2'b10};
         end
         
     end
     wire temp = (ex1_ex2_inst0==0 && ex1_ex2_inst1==0) || ( div_ready | csr_ready) || (!dcache_valid_buf[1]  || dcache_ready);
-    wire temp1 = (ex1_ex2_inst0==0 && ex1_ex2_inst1==0 && !(uop0[`INS_DIV] | ex1_ex2_is_priviledged_0));
+    wire temp1 = (ex1_ex2_inst0==0 && ex1_ex2_inst1==0 && !(uop0[`INS_DIV] | reg_ex1_is_priviledeged_0));
     wire temp2 = ( div_ready | csr_ready && (!dcache_valid_buf[1] || dcache_ready ));
-    wire temp3 = (!dcache_valid_buf[1] && !(uop0[`INS_DIV] | ex1_ex2_is_priviledged_0) || dcache_ready);
+    wire temp3 = (!dcache_valid_buf[1] && !(uop0[`INS_DIV] | reg_ex1_is_priviledeged_0) || dcache_ready);
 always@(*) begin
     ex2_allowin=0;
     buf_sign = 0;
-    if(ex1_ex2_inst0==0 && ex1_ex2_inst1==0 && !(uop0[`INS_DIV] | ex1_ex2_is_priviledged_0)) begin
+    // ld_stall_flag = 0;
+    if(ex1_ex2_inst0==0 && ex1_ex2_inst1==0 && !(uop0[`INS_DIV] | reg_ex1_is_priviledeged_0)) begin
         ex2_allowin=1;
     end
     //else if((ex2_wb_data_0_valid | ~(~dcache_ready && tlb_d_valid_reg)  | div_ready | csr_ready) && ex2_wb_data_1_valid) begin
-    else if( csr_ready && (!dcache_valid_buf[1] || dcache_ready ))  begin
+    else if( csr_ready && (!dcache_valid_buf[1] || dcache_ready))  begin
         ex2_allowin=1;
     end
     else if(div_ready ) begin
         ex2_allowin=1;
     end
-    else if(!(dcache_valid_buf[1] ) && !(uop0[`INS_DIV] | ex1_ex2_is_priviledged_0) || dcache_ready) 
+    else if(!(dcache_valid_buf[1] ) && !(uop0[`INS_DIV] | reg_ex1_is_priviledeged_0) || dcache_ready) 
         ex2_allowin=1;
-    else if(/*!(dcache_valid_buf[0] ) && !(uop0[`INS_DIV] | ex1_ex2_is_priviledged_0) || dcache_ready*/(dcache_valid_buf[0] && ~dcache_ready) || (uop0[`INS_DIV] | ex1_ex2_is_priviledged_0)) begin
+    else if(/*!(dcache_valid_buf[0] ) && !(uop0[`INS_DIV] | reg_ex1_is_priviledeged_0) || dcache_ready*/(dcache_valid_buf[0] && ~dcache_ready) || (uop0[`INS_DIV])) begin
         ex2_allowin=0;
         buf_sign = 1;
+        // ld_stall_flag = 1;
     end
 end
-
+assign ld_stall_flag = (dcache_valid_buf[1] && ~dcache_ready) || (uop0[`INS_DIV]);
 
 
 always@(posedge clk)begin

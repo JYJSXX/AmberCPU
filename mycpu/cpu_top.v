@@ -1245,8 +1245,8 @@ idle_clk idle_clk1
         .ex2_result1         ( ex2_rd1_data         ),
         .flush_by_priv        ( flush_by_priv        ),
         .flush_to_priv_wr_csr ( flush_to_priv_wr_csr ),
-        .ex1_ex2_is_priviledged_0 ( reg_ex_is_priviledged_0 ),
-        .ex1_ex2_is_priviledged_1 ( reg_ex_is_priviledged_1 ),
+        .reg_ex1_is_priviledeged_0 ( reg_ex_is_priviledged_0 ),
+        // .reg_ex1_is_priviledged_1 ( reg_ex_is_priviledged_1 ),
         .reg_ex1_pc0         ( reg_ex_pc0         ),
         .wen_csr             (  wen_csr          ),
         // .pc_dcache_out       ( pc_dcache_out       ), // TODO 没做
