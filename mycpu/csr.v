@@ -67,6 +67,7 @@ module csr
     input     [`TLB_TRANSLEN - 1:0]   tlbrd_trans_1,
     input     [`TLB_TRANSLEN - 1:0]   tlbrd_trans_2,
     input [7:0] hardware_interrupt,
+    input flush_to_priv_wr_csr,
     output  [31:0] tid
 
     // input tlb_index_we,
@@ -140,6 +141,7 @@ reg [13:0] waddr_reg = 0;
 reg [1:0]  count = 0;
 always @(posedge clk)begin
     if(~aresetn) count <= 0;
+    else if (flush_to_priv_wr_csr) count <= 0;
     else if (d_idle && wen_reg) 
         if (count < 1) count <= count + 1;
         else count <= 0;
@@ -147,6 +149,11 @@ end
 assign wen_csr = d_idle && wen_reg && ~|count;
 always @(posedge clk)begin
     if (~aresetn)begin
+        wen_reg <= 0;
+        wdata_reg <= 0;
+        waddr_reg <= 0;
+    end
+    else if (flush_to_priv_wr_csr)begin
         wen_reg <= 0;
         wdata_reg <= 0;
         waddr_reg <= 0;

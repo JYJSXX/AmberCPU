@@ -266,7 +266,7 @@ always@(posedge clk) begin
     else
         forward_flag_k1_ps <= forward_flag_k1_ps;
 end
-
+// reg priv_flag;
 always@(posedge clk)begin
     if(~aresetn | (flush & ~stall_D) | (~reg_readygo & ex_allowin & ex_readygo) | (~reg_allowin & ex_allowin & ex_readygo)) begin
         reg_ex_pc0 <= 0;
@@ -301,8 +301,45 @@ always@(posedge clk)begin
         reg_ex_rk1 <= 0;
         reg_ex_rd0 <= 0;
         reg_ex_rd1 <= 0;
-
+        // priv_flag <= 0;
     end
+    // else if(reg_ex_is_priviledged_0 | reg_ex_is_break_0 | reg_ex_is_syscall_0 | priv_flag )
+    // begin
+    //     //寄存器保持不变
+    //     reg_ex_pc0 <= reg_ex_pc0;
+    //     reg_ex_pc1 <= reg_ex_pc1;
+    //     reg_ex_pc_next <= 0;
+    //     reg_ex_pc_taken <= 0;
+    //     reg_ex_inst0 <= 0;
+    //     reg_ex_inst1 <= 0;
+    //     reg_ex_branch_flag <= 0;
+    //     reg_ex_excp_flag <= 0;
+    //     reg_ex_exception <= 0;
+    //     reg_ex_badv <= 0;
+    //     reg_ex_is_ALU_0 <= 0;
+    //     reg_ex_is_ALU_1 <= 0;
+    //     reg_ex_is_syscall_0 <= 0;
+    //     reg_ex_is_syscall_1 <= 0;
+    //     reg_ex_is_break_0 <= 0;
+    //     reg_ex_is_break_1 <= 0;
+    //     reg_ex_is_priviledged_0 <= 0;
+    //     reg_ex_is_priviledged_1 <= 0;
+    //     reg_ex_uop0 <= 0;
+    //     reg_ex_uop1 <= 0;
+    //     reg_ex_imm0 <= 0;
+    //     reg_ex_imm1 <= 0;
+    //     reg_ex_rj0_data <= 0;
+    //     reg_ex_rj1_data <= 0;
+    //     reg_ex_rk0_data <= 0;
+    //     reg_ex_rk1_data <= 0;
+    //     reg_ex_rj0 <= 0;
+    //     reg_ex_rj1 <= 0;
+    //     reg_ex_rk0 <= 0;
+    //     reg_ex_rk1 <= 0;
+    //     reg_ex_rd0 <= 0;
+    //     reg_ex_rd1 <= 0;
+    //     priv_flag <= 1;
+    // end
     else if(reg_readygo&&ex_allowin&&reg_allowin)begin
         reg_ex_pc0 <= id_reg_pc0;
         reg_ex_pc1 <= id_reg_pc1;

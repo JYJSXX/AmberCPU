@@ -1119,6 +1119,7 @@ idle_clk idle_clk1
         .reg_ex1_imm1              ( reg_ex_imm1              ),
         .reg_ex1_is_priviledged_0  ( reg_ex_is_priviledged_0  ),
         .reg_ex1_is_priviledged_1  ( reg_ex_is_priviledged_1  ),
+        .ex2_wb_excp_flag        (ex2_wb_excp_flag),
         .reg_ex1_rj0               ( reg_ex_rj0               ),
         .reg_ex1_rj1               ( reg_ex_rj1               ),
         .reg_ex1_rk0               ( reg_ex_rk0               ),
@@ -1225,6 +1226,7 @@ idle_clk idle_clk1
     wire [31:0] pc_dcache_out; // TODO 没做
     wire [31:0] inst_dcache_in;
     wire [31:0] inst_dcache_out;
+    wire flush_to_priv_wr_csr;
     EX2_WB u_EX2_WB(
         .clk                 ( clk                 ),
         .aresetn             ( aresetn             ),
@@ -1242,6 +1244,7 @@ idle_clk idle_clk1
         .ex2_result0         ( ex2_rd0_data         ),
         .ex2_result1         ( ex2_rd1_data         ),
         .flush_by_priv        ( flush_by_priv        ),
+        .flush_to_priv_wr_csr ( flush_to_priv_wr_csr ),
         .ex1_ex2_is_priviledged_0 ( reg_ex_is_priviledged_0 ),
         .ex1_ex2_is_priviledged_1 ( reg_ex_is_priviledged_1 ),
         .reg_ex1_pc0         ( reg_ex_pc0         ),
@@ -1377,6 +1380,7 @@ idle_clk idle_clk1
         .llbit           ( llbit           ),
         .idle_over       ( idle_over       ),
         .PG              ( PG              ),
+        .flush_to_priv_wr_csr ( flush_to_priv_wr_csr ),
         .DMW0_PSEG       ( DMW0_PSEG       ),
         .DMW1_PSEG       ( DMW1_PSEG       ),
         .DMW0_VSEG       ( DMW0_VSEG       ),

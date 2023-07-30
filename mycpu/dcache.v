@@ -835,6 +835,7 @@ module dcache #(
         IDLE: begin
             req_buf_we = 1;
             lru_we     = 1;
+            pbuf_we   = 1;
             if(cacop_en)
                 cacop_ready = 1;
         end

@@ -39,6 +39,7 @@ module EX1_EX2(
     input   [31:0] mul_stage1_res_lh,
     input   [31:0] mul_stage1_res_ll,
     input   [31:0] mul_compensate,
+    input           ex2_wb_excp_flag,
     
 
     output  reg [31:0] ex1_ex2_pc0,
@@ -139,7 +140,7 @@ always@(posedge clk) begin
          ex1_ex2_is_priviledged_1<=reg_ex1_is_priviledged_1;
         ex1_ex2_badv<=excp_flag_in? badv_in : d_badv;
         ex1_ex2_exception<=excp_flag_in? exception_in : d_exception;
-        ex1_ex2_excp_flag<=excp_flag_in | |d_exception[6];
+        ex1_ex2_excp_flag<=(excp_flag_in | (|d_exception[6])) & ~ex1_ex2_excp_flag;
 
         ex1_ex2_uop0<=reg_ex1_uop0;
         ex1_ex2_uop1<=reg_ex1_uop1;

@@ -94,12 +94,13 @@ module EX2_WB(
     output  [31:0] pc_from_WB,
     output set_by_priv,
     output flush_by_priv,
+    output flush_to_priv_wr_csr,
     input  [31:0] eentry,
     input  [31:0] tlbrentry
 );
 assign pc_from_WB = (tlb_exception) ? tlbrentry : (exception_flag_out ? eentry : (uop0[`INS_ERTN] ? csr_era : (csr_ready ? reg_ex1_pc0 +4 : pc0)));
 assign set_by_priv = csr_ready | tlb_exception | exception_flag_out | uop0[`INS_ERTN];
-
+assign flush_to_priv_wr_csr = tlb_exception | exception_flag_out | uop0[`INS_ERTN];
 reg tlb_d_valid_reg;
 always@(*)begin
         tlb_d_valid_reg = EN_VA_D & (~flush_to_tlb);
@@ -211,7 +212,7 @@ assign cond1 = uop1_reg[`UOP_COND];
                     ex2_wb_we0 <= div_ready;
                 end
             end
-            
+           
             else begin
                 ex2_wb_data_0 <= 0;
                 ex2_wb_data_0_valid <= 0;
@@ -249,13 +250,12 @@ assign cond1 = uop1_reg[`UOP_COND];
             end
             
             if(uop0_reg[`INS_MEM] && ~cond0[2]) begin //cond[2]为0是ld
-            if(dcache_w_ready)begin
+                if(dcache_w_ready)begin
                     ex2_wb_data_2 <= dcache_data;
                     ex2_wb_rd2 <= rd_dcache_out;
-                    ex2_wb_data_2_valid <= dcache_w_ready;
-            end
-                    ex2_wb_data_2_valid <= dcache_w_ready;
-                    ex2_wb_we2 <= dcache_w_ready;
+                end
+                ex2_wb_data_2_valid <= dcache_w_ready;
+                ex2_wb_we2 <= dcache_w_ready;
             end
             else begin 
                 ex2_wb_we2 <= 0;
@@ -267,12 +267,18 @@ assign cond1 = uop1_reg[`UOP_COND];
     end
 
     reg [2:0]    dcache_valid_buf;
+    reg buf_sign;
+    reg buf_sign_reg = 1;
+    always @ (posedge clk) buf_sign_reg <= buf_sign;
         always @(posedge clk) begin
         if(!aresetn)begin
             dcache_valid_buf<=0;
         end 
         else if(ex2_allowin)begin
             dcache_valid_buf<={dcache_valid_buf[1:0], tlb_d_valid_reg };            
+        end
+        else if (buf_sign & ~buf_sign_reg) begin
+            dcache_valid_buf<={dcache_valid_buf[1:0], 1'b0 };            
         end
         
     end
@@ -282,6 +288,7 @@ assign cond1 = uop1_reg[`UOP_COND];
     wire temp3 = (!dcache_valid_buf[1] && !(uop0[`INS_DIV] | ex1_ex2_is_priviledged_0) || dcache_ready);
 always@(*) begin
     ex2_allowin=0;
+    buf_sign = 0;
     if(ex1_ex2_inst0==0 && ex1_ex2_inst1==0 && !(uop0[`INS_DIV] | ex1_ex2_is_priviledged_0)) begin
         ex2_allowin=1;
     end
@@ -292,8 +299,12 @@ always@(*) begin
     else if(div_ready ) begin
         ex2_allowin=1;
     end
-else if(!dcache_valid_buf[1] && !(uop0[`INS_DIV] | ex1_ex2_is_priviledged_0) || dcache_ready) 
+    else if(!(dcache_valid_buf[1] ) && !(uop0[`INS_DIV] | ex1_ex2_is_priviledged_0) || dcache_ready) 
         ex2_allowin=1;
+    else if(/*!(dcache_valid_buf[0] ) && !(uop0[`INS_DIV] | ex1_ex2_is_priviledged_0) || dcache_ready*/(dcache_valid_buf[0] && ~dcache_ready) || (uop0[`INS_DIV] | ex1_ex2_is_priviledged_0)) begin
+        ex2_allowin=0;
+        buf_sign = 1;
+    end
 end
 
 
