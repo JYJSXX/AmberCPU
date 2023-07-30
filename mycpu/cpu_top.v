@@ -291,6 +291,7 @@ idle_clk idle_clk1
     wire            write_en;
     wire            pop_en;
     wire [31:0] icache_raddr, dcache_addr;
+    wire            icache_ravlid_valid;
     // wire            if1_fifo_cacop_ready;
     // wire            if1_fifo_cacop_complete;
     IF1_FIFO u_IF1_FIFO(
@@ -1460,6 +1461,7 @@ idle_clk idle_clk1
 
     BTB u_BTB(
         .rstn             ( aresetn             ),
+        .if0_allowin      ( if0_allowin      ),
         .clk              ( clk              ),
         .inst_btype       ( inst_btype       ),
         .inst_bpos        ( inst_bpos        ),
@@ -1501,6 +1503,13 @@ idle_clk idle_clk1
 
     // wire [31:0] icache_raddr, dcache_addr;
     wire signed_ext, is_atom_TLB, SOL_D_OUT;
+    // reg icache_ravlid_valid;
+    // always@(posedge clk)begin
+    //     if(!aresetn)
+    //         icache_ravlid_valid <= 0;
+    //     else
+    //         icache_ravlid_valid <= if1_allowin;
+    // end
     
     icache#(
         .INDEX_WIDTH       ( 6 ),

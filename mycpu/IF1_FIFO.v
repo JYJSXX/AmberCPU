@@ -22,7 +22,7 @@ module IF1_FIFO(
     input               icache_rvalid,
     input [31:0]        fetch_pc,
     input               pc_taken_out,   //?
-    output  reg        if1_fifo_pc_taken,    //?
+    output  reg         if1_fifo_pc_taken,    //?
     // input [31:0]        if0_if1_pc,
     // input [31:0]        if0_if1_pc_next,
     input [31:0]        icache_badv,
@@ -43,7 +43,7 @@ module IF1_FIFO(
     input  [1:0]        priv_flag,
     output [31:0]       pc_from_PRIV,
     output              set_pc_from_PRIV,
-    output reg          flush_from_if1_fifo,
+    output              flush_from_if1_fifo,
     input               icache_idle,
     input               dcache_idle,
     input               csr_done,
@@ -111,7 +111,10 @@ module IF1_FIFO(
     always @(posedge clk or negedge rstn) begin
         if(!rstn)begin
             tmp<=0;//就绪
-        end else if(write_en&&critical_wire&&tmp==2'b00)begin
+        end else if(flush)begin
+            tmp<=0;
+        end
+        else if(write_en&&critical_wire&&tmp==2'b00)begin
             tmp<=1;//暂存未写入
         end else if(tmp==1&&if1_fifo_valid&&!(!space_ok&&!nearly_full))begin
             tmp<=2;//暂存已写入
@@ -142,18 +145,18 @@ module IF1_FIFO(
     end
     // assign p_if1_fifo_inst0  =  if0_if1_pc[2]? `INST_NOP:if1_fifo_inst0[31:0];
     // assign p_if1_fifo_inst1  =  priv_flag[0]?`INST_NOP:if1_fifo_inst1;
-    assign fifo_readygo =       if1_fifo_valid&&!(!space_ok&&!nearly_full)&&tmp!=2;
+    // assign fifo_readygo =       if1_fifo_valid&&!(!space_ok&&!nearly_full)&&tmp!=2;
+    assign fifo_readygo =       if1_fifo_valid&&(if1_fifo_pc!=pc_out);
     wire critical_allowin;
     assign  critical_allowin=!icache_rvalid_buf[BUF_W-1]
                                     ||icache_rready;
 
     wire critical_wire;
     assign  critical_wire=(!icache_rvalid_buf[BUF_W-1]||(icache_rready))&&!space_ok&&tmp==0;
-    assign if1_allowin  =       (space_ok)&&
+    assign  if1_allowin  =       (space_ok)&&
                                 (//2spaceleft->correct_pc->rready,consider plus 5 stage cache
                                     !icache_rvalid_buf[BUF_W-1]
                                     ||(icache_rready)
-                                    // ||(space_ok)
                                 )&&
                                 (//icache_rready->tlb_rvalid
                                     tmp==0
@@ -168,15 +171,12 @@ module IF1_FIFO(
 
     always @(posedge clk) begin
         if(!rstn)begin
-            if1_fifo_pc_buf<=0;
             icache_rvalid_buf<=0;
         end 
         else if(flush)begin
-            if1_fifo_pc_buf<=0;
             icache_rvalid_buf<=0;
         end
         else if(if1_allowin)begin
-            if1_fifo_pc_buf<={if1_fifo_pc_buf[(WIDTH-1)*32-1:0],fetch_pc[31:0]};
             icache_rvalid_buf<={icache_rvalid_buf[BUF_W-1:0],if1_allowin};            
         end
     end
@@ -196,79 +196,58 @@ module IF1_FIFO(
         old_tmp<=tmp==2;
     end
     wire negedge_tmp = (tmp==0)&&(old_tmp==1);
-    always @(posedge clk ) begin
-        if(!idle)begin
-            if1_fifo_valid<=0;
+    
+    always @(*) begin
+        if (priv_flag[0]) begin
+            pc_after_priv=pc_out+4;
+        end 
+        else if(priv_flag[1])begin
+            pc_after_priv=pc_out+8;
         end else begin
-            // if(!if1_fifo_valid)begin
-            //     if1_fifo_valid<=icache_rready;
-            // end else if(if1_readygo&&if1_allowin&&fifo_allowin) begin
-            //     if1_fifo_valid<=icache_rready;
-            // end
-            if1_fifo_valid<=icache_rready&&tmp!=2&&!negedge_tmp;
+            pc_after_priv=0;
         end
     end
-    always @(posedge clk) begin
-        if(stat==IDLE)begin
-            if (priv_flag[0]) begin
-                pc_after_priv<=pc_out;
-            end 
-            else if(priv_flag[1])begin
-                pc_after_priv<=pc_out+8;
-            end 
-        end 
-    end
-    reg first_appear;
-    always @(*) begin//FSM
-        flush_from_if1_fifo=1;
-        case (stat)
-            IDLE:begin
-                if(first_appear)begin
-                    next_stat=  ibar_flag!=2'b00 ?  WAIT_EX_IBAR:
-                                csr_flag!=2'b00 ?  WAIT_EX_CSR:
-                                tlb_flag!=2'b00  ?  WAIT_TLB_TLB:
-                                IDLE;
-                end else begin
-                    next_stat=  IDLE;
-                end
-                flush_from_if1_fifo=0;
-            end
-            WAIT_EX_IBAR:begin
-                next_stat=  ibar_flag_from_ex?WAIT_CACHE_IDLE:WAIT_EX_IBAR;  
-                // flush_from_if1_fifo=1;
-            end
-            WAIT_EX_CSR:begin
-                next_stat=  csr_flag_from_ex ?WAIT_CSR_OK    :WAIT_EX_CSR;
-                // flush_from_if1_fifo=1;
-            end
-            WAIT_TLB_TLB:begin
-                next_stat=  tlb_flag_from_ex?WAIT_TLB_OK    :WAIT_TLB_TLB;
-                // flush_from_if1_fifo=1;
-            end
-            WAIT_CACHE_IDLE:begin
-                next_stat=  cache_idle?IDLE            :WAIT_CACHE_IDLE;
-            end
-            WAIT_CSR_OK:begin
-                next_stat=  csr_done?IDLE:WAIT_CSR_OK;
-            end
-            WAIT_TLB_OK:begin
-                next_stat=  tlb_done?IDLE:WAIT_TLB_OK;
-            end
-            default:begin
-                next_stat=IDLE;
-            end
-        endcase
-    end
-    // always @(posedge clk or rstn) begin
-    //     if(!rstn)begin
-    //         first_appear<=1;
-    //     end else if(csr_flag||tlb_flag||ibar_flag)begin
-    //         first_appear<=~first_appear;
-    //     end
-    // end        
+
+    // always @(*) begin//FSM
+    //     flush_from_if1_fifo=0;
+    //     case (stat)
+    //         IDLE:begin
+    //             next_stat=  ibar_flag!=2'b00 ?  WAIT_EX_IBAR:
+    //                         csr_flag!=2'b00 ?  WAIT_EX_CSR:
+    //                         tlb_flag!=2'b00  ?  WAIT_TLB_TLB:
+    //                         IDLE;
+    //         end
+    //         WAIT_EX_IBAR:begin
+    //             next_stat=  ibar_flag_from_ex?WAIT_CACHE_IDLE:WAIT_EX_IBAR;  
+    //             flush_from_if1_fifo=1;
+    //         end
+    //         WAIT_EX_CSR:begin
+    //             next_stat=  csr_flag_from_ex ?WAIT_CSR_OK    :WAIT_EX_CSR;
+    //             flush_from_if1_fifo=1;
+    //         end
+    //         WAIT_TLB_TLB:begin
+    //             next_stat=  tlb_flag_from_ex?WAIT_TLB_OK    :WAIT_TLB_TLB;
+    //             flush_from_if1_fifo=1;
+    //         end
+    //         WAIT_CACHE_IDLE:begin
+    //             next_stat=  cache_idle?IDLE            :WAIT_CACHE_IDLE;
+    //         end
+    //         WAIT_CSR_OK:begin
+    //             next_stat=  csr_done?IDLE:WAIT_CSR_OK;
+    //         end
+    //         WAIT_TLB_OK:begin
+    //             next_stat=  tlb_done?IDLE:WAIT_TLB_OK;
+    //         end
+    //         default:begin
+    //             next_stat=IDLE;
+    //         end
+    //     endcase
+    // end
+
     always @ (posedge clk) begin
-        if (~rstn || flush||(!icache_rready&&fifo_allowin&&fifo_readygo)) begin
+        if (~rstn || flush||(!icache_rready&&fifo_allowin&&fifo_readygo)||(!idle)||(tmp==1&&write_en)) begin
             //clear stage-stage reg
+            if1_fifo_valid<=0;
             if1_fifo_pc     <=  `PC_RESET;
 
             if1_fifo_pc_next<=  `PC_RESET+4;
@@ -281,9 +260,9 @@ module IF1_FIFO(
             if1_fifo_icache_excp_flag<=0;
             if1_fifo_icache_cookie_out<=0;
         end
-        else if ((write_en&&critical_wire&&tmp==0)||(icache_rready&&if1_allowin&&fifo_allowin)) begin
+        else if ((fifo_allowin&&critical_wire&&tmp==0)||(icache_rready&&if1_allowin&&fifo_allowin)) begin
             //update stage-stage reg
-            
+            if1_fifo_valid<=1;
             if1_fifo_pc     <=  pc_out;
             if1_fifo_pc_next<=  icache_pc_next;
             if1_fifo_pc_taken<=  pc_taken_out;
