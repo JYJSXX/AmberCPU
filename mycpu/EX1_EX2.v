@@ -97,7 +97,7 @@ always@(posedge clk) begin
         ex1_ex2_pc1<=0;
         ex1_ex2_inst0<=`INST_NOP;
         csr_ren_ex2<=0;
-        // ex1_ex2_inst1<=0;
+        ex1_ex2_inst1<=`INST_NOP;
         // ex1_ex2_is_syscall_0<=0;
         // ex1_ex2_is_syscall_1<=0;
         // ex1_ex2_is_break_0<=0;
