@@ -269,7 +269,7 @@ always@(posedge clk) begin
 end
 // reg priv_flag;
 always@(posedge clk)begin
-    if(~aresetn | (flush & ~stall_D) | (~reg_readygo & ex_allowin & ex_readygo) | (~reg_allowin & ex_allowin & ex_readygo)) begin
+    if(~aresetn | flush_by_priv | (flush & ~stall_D) | (~reg_readygo & ex_allowin & ex_readygo) | (~reg_allowin & ex_allowin & ex_readygo)) begin
         reg_ex_pc0 <= 0;
         reg_ex_pc1 <= 0;
         reg_ex_pc_next <= 0;

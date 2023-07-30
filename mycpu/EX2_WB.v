@@ -311,7 +311,7 @@ always@(*) begin
         // ld_stall_flag = 1;
     end
 end
-assign ld_stall_flag = (dcache_valid_buf[1] && ~dcache_ready) || (uop0[`INS_DIV]);
+assign ld_stall_flag = (dcache_valid_buf[1] && ~dcache_ready);
 
 
 always@(posedge clk)begin

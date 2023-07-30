@@ -10,6 +10,7 @@ module EX_Privilege(
     input           [31:0]              ins,            //指令
     input           [`WIDTH_UOP - 1 : 0] pr_type,        //指令类型
     output   reg                        done,           //特权指令握手ready信号
+    input                               flush_by_priv,  //特权指令清空流水线
 
     //CSR
     output  reg     [13:0]              csr_addr,       //csr 读写地址
@@ -89,9 +90,9 @@ module EX_Privilege(
 
     reg [4:0] PR_state = PR_INIT, PR_next_state = PR_INIT;
 
-    always @(posedge clk or negedge rstn)
+    always @(posedge clk)
     begin
-        if(~rstn)
+        if(~rstn | flush_by_priv)
             PR_state <= PR_INIT;
         else
             PR_state <= PR_next_state;
@@ -266,6 +267,8 @@ module EX_Privilege(
 
     always @(posedge clk)
     begin
+        if (flush_by_priv) done <= 0;
+        else
         case(PR_state)
             PR_INIT:
             begin

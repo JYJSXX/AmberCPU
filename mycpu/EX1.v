@@ -362,6 +362,7 @@ EX_Privilege ex_privilege(
     .rk_data(rk0_data_o),      
     .rj_data(rj0_data_o),      
     .ins(inst0),          
+    .flush_by_priv (flush_by_priv),
     . pr_type(uop0),     
     .done(privilege_ready),         
     .csr_addr(csr_addr),     
