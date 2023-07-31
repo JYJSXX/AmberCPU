@@ -200,6 +200,20 @@ assign cond1 = uop1_reg[`UOP_COND];
                 ex2_wb_rd0 <= ex_rd0;
                 ex2_wb_we0 <= 1;
             end
+            else if (uop0[`INS_MEM])begin
+                if(dcache_ready)begin
+                    ex2_wb_data_0 <= dcache_data;
+                    ex2_wb_rd0 <= rd_dcache_out;
+                    ex2_wb_data_2_valid <= 1;
+                    ex2_wb_we2 <= 1;
+                end
+                else begin
+                    ex2_wb_data_0 <= 0;
+                    ex2_wb_rd0 <= 0;
+                    ex2_wb_data_2_valid <= 0;
+                    ex2_wb_we2 <= 0;
+                end
+            end
             else if(reg_ex1_is_priviledeged_0 ) begin
                 ex2_wb_data_0 <= csr_data_in;
                 ex2_wb_data_0_valid <= csr_ready & reg_ex1_is_priviledeged_0;
@@ -270,19 +284,19 @@ assign cond1 = uop1_reg[`UOP_COND];
                 ex2_wb_we1 <= 0;
             end
             
-            if(uop0_reg[`INS_MEM] && ~cond0[2]) begin //cond[2]为0是ld
-                if(dcache_w_ready)begin
-                    ex2_wb_data_2 <= dcache_data;
-                    ex2_wb_rd2 <= rd_dcache_out;
-                end
-                ex2_wb_data_2_valid <= dcache_w_ready;
-                ex2_wb_we2 <= dcache_w_ready;
-            end
-            else begin 
-                ex2_wb_we2 <= 0;
-                ex2_wb_data_2_valid <= 0;
-                ex2_wb_rd2 <= 0;
-            end
+            // if(uop0_reg[`INS_MEM] && ~cond0[2]) begin //cond[2]为0是ld
+            //     if(dcache_w_ready)begin
+            //         ex2_wb_data_2 <= dcache_data;
+            //         ex2_wb_rd2 <= rd_dcache_out;
+            //     end
+            //     ex2_wb_data_2_valid <= dcache_w_ready;
+            //     ex2_wb_we2 <= dcache_w_ready;
+            // end
+            // else begin 
+            //     ex2_wb_we2 <= 0;
+            //     ex2_wb_data_2_valid <= 0;
+            //     ex2_wb_rd2 <= 0;
+            // end
         end
 
     end
