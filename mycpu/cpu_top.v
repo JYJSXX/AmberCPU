@@ -702,6 +702,14 @@ idle_clk idle_clk1
     wire [31:0] forward_data_k0;
     wire [31:0] forward_data_k1;
 
+    wire tlb_forward_flag_j0;
+    wire tlb_forward_flag_j1;
+    wire tlb_forward_flag_k0;
+    wire tlb_forward_flag_k1;
+    wire [31:0] tlb_forward_data_j0;
+    wire [31:0] tlb_forward_data_j1;
+    wire [31:0] tlb_forward_data_k0;
+    wire [31:0] tlb_forward_data_k1;
 
     wire [31:0]           tlb_ex_pc0;
     wire [31:0]           tlb_ex_pc1;
@@ -798,6 +806,14 @@ idle_clk idle_clk1
         .forward_data_j1        ( forward_data_j1     ),
         .forward_data_k0        ( forward_data_k0     ),
         .forward_data_k1        ( forward_data_k1     ),
+        .tlb_forward_flag_j0         ( tlb_forward_flag_j0         ),
+        .tlb_forward_flag_k0         ( tlb_forward_flag_k0         ),
+        .tlb_forward_flag_j1         ( tlb_forward_flag_j1         ),
+        .tlb_forward_flag_k1         ( tlb_forward_flag_k1         ),
+        .tlb_forward_data_j0         ( tlb_forward_data_j0         ),
+        .tlb_forward_data_k0         ( tlb_forward_data_k0         ),
+        .tlb_forward_data_j1         ( tlb_forward_data_j1         ),
+        .tlb_forward_data_k1         ( tlb_forward_data_k1         ),
         .reg_ex_pc0              ( reg_ex_pc0              ),
         .reg_ex_pc1              ( reg_ex_pc1              ),
         .reg_ex_pc_next          ( reg_ex_pc_next          ),
@@ -928,14 +944,14 @@ idle_clk idle_clk1
         .ex2_wb_data_1_valid     ( ex2_wb_data_1_valid     ),
         .ex2_wb_data_2_valid     ( ex2_wb_data_2_valid     ),
         .tlb_forward_stall       ( tlb_forward_stall       ),
-        // .forward_flag_j0         ( forward_flag_j0         ),
-        // .forward_flag_k0         ( forward_flag_k0         ),
-        // .forward_flag_j1         ( forward_flag_j1         ),
-        // .forward_flag_k1         ( forward_flag_k1         ),
-        // .forward_data_j0         ( forward_data_j0         ),
-        // .forward_data_k0         ( forward_data_k0         ),
-        // .forward_data_j1         ( forward_data_j1         ),
-        // .forward_data_k1         ( forward_data_k1         ),
+        .forward_flag_j0         ( tlb_forward_flag_j0         ),
+        .forward_flag_k0         ( tlb_forward_flag_k0         ),
+        .forward_flag_j1         ( tlb_forward_flag_j1         ),
+        .forward_flag_k1         ( tlb_forward_flag_k1         ),
+        .forward_data_j0         ( tlb_forward_data_j0         ),
+        .forward_data_k0         ( tlb_forward_data_k0         ),
+        .forward_data_j1         ( tlb_forward_data_j1         ),
+        .forward_data_k1         ( tlb_forward_data_k1         ),
         .op_dcache               ( op_dcache            ),
         .write_type_dcache       ( write_type_tlb    ),
         .addr_dcache             ( addr_dcache          ),
@@ -1760,7 +1776,7 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .CSR_TLBIDX     ( TLBIDX     ),
         .stall_i        ( pc_in_stall        ),
         .stall_d        ( ~ex2_allowin       ),
-        .en_d           ( reg_ex_uop0[`INS_MEM]        ),
+        .en_d           ( reg_ex_uop0[`INS_MEM] && tlb_readygo && tlb_allowin     ),//todo: flush
         .VA_I           ( fetch_pc[31:12]   ),
         .VA_D           ( addr_dcache[31:12]           ),
         .signed_ext     (reg_ex_uop0[`UOP_SIGN] ),

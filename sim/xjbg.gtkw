@@ -1,15 +1,15 @@
 [*]
-[*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
-[*] Sun Jul 30 11:31:59 2023
+[*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
+[*] Mon Jul 31 07:22:04 2023
 [*]
-[dumpfile] "/home/ruibo/Desktop/loongson/chiplab/sims/verilator/run_prog/log/func/func_lab15_log/simu_trace.fst"
-[dumpfile_mtime] "Sun Jul 30 11:31:27 2023"
-[dumpfile_size] 447347
-[savefile] "/home/ruibo/Desktop/AmberCPU/sim/xjbg.gtkw"
-[timestart] 189701
-[size] 1846 1016
-[pos] -101 -101
-*-2.000000 189716 546597 879716 155258 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[dumpfile] "/home/yiran/Desktop/chiplab/sims/verilator/run_prog/log/func/func_lab7_log/simu_trace.fst"
+[dumpfile_mtime] "Mon Jul 31 07:20:51 2023"
+[dumpfile_size] 102792871
+[savefile] "/home/yiran/Desktop/AmberCPU/sim/xjbg.gtkw"
+[timestart] 976714
+[size] 1842 850
+[pos] -1 -1
+*-2.000000 976723 546597 879716 155258 976722 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] TOP.
 [treeopen] TOP.simu_top.
 [treeopen] TOP.simu_top.soc.
@@ -23,17 +23,17 @@
 [treeopen] TOP.simu_top.soc.cpu.u_ID_REG.
 [treeopen] TOP.simu_top.soc.cpu.u_IF0.
 [treeopen] TOP.simu_top.soc.cpu.u_IF1_FIFO.
+[treeopen] TOP.simu_top.soc.cpu.u_MEMBUF.
 [treeopen] TOP.simu_top.soc.cpu.u_REG_EX1.
 [treeopen] TOP.simu_top.soc.cpu.u_REG_EX1.regfile1.
 [treeopen] TOP.simu_top.soc.cpu.u_TLB.
 [sst_width] 325
 [signals_width] 458
 [sst_expanded] 1
-[sst_vpaned_height] 439
+[sst_vpaned_height] 489
 @28
 TOP.simu_top.soc.cpu.u_dcache.rstn
 @22
-TOP.simu_top.soc.cpu.u_EX1.pc0[31:0]
 TOP.simu_top.soc.cpu.u_dcache.rdata[31:0]
 @28
 TOP.simu_top.soc.cpu.u_dcache.rvalid
@@ -44,9 +44,10 @@ TOP.simu_top.soc.cpu.u_FIFO.co_pcbdvbuf.din[95:0]
 TOP.simu_top.soc.cpu.u_FIFO.fetch_buf.din[63:0]
 @28
 TOP.simu_top.soc.cpu.u_FIFO.co_pcbdvbuf.write_en
-TOP.simu_top.soc.cpu.u_EX2_WB.dcache_valid_buf[2:0]
 @22
 TOP.simu_top.soc.cpu.u_EX2_WB.pc0[31:0]
+TOP.simu_top.soc.cpu.u_EX1.pc0[31:0]
+TOP.simu_top.soc.cpu.u_MEMBUF.reg_ex_pc0[31:0]
 @28
 TOP.simu_top.soc.cpu.u_EX2_WB.ex2_allowin
 @c00022
@@ -86,10 +87,13 @@ TOP.simu_top.soc.cpu.u_EX1.pc0[31:0]
 (31)TOP.simu_top.soc.cpu.u_EX1.pc0[31:0]
 @1401200
 -group_end
-@28
-TOP.simu_top.soc.cpu.u_EX2_WB.dcache_valid_buf[2:0]
-@23
+@22
 TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_rd2[4:0]
+@28
+TOP.simu_top.soc.cpu.u_REG_EX1.stall
+@22
+TOP.simu_top.soc.cpu.u_REG_EX1.regfile1.regs[4][31:0]
+TOP.simu_top.soc.cpu.u_REG_EX1.regfile1.regs[5][31:0]
 @200
 -COMMIT0
 @28
@@ -111,8 +115,28 @@ TOP.simu_top.soc.cpu.u_dcache.uncache
 TOP.simu_top.soc.cpu.u_dcache.signed_ext
 TOP.simu_top.soc.cpu.u_dcache.idle
 TOP.simu_top.soc.cpu.u_dcache.flush
+@22
+TOP.simu_top.soc.cpu.u_MEMBUF.ex1_forward1.ex1_rj_data[31:0]
+TOP.simu_top.soc.cpu.u_MEMBUF.ex1_forward1.ex1_rj_data_o[31:0]
+@29
+TOP.simu_top.soc.cpu.u_MEMBUF.forward_flag_j0
+@22
+TOP.simu_top.soc.cpu.u_REG_EX1.tlb_forward_data_j0[31:0]
+TOP.simu_top.soc.cpu.u_MEMBUF.forward_data_j0[31:0]
+TOP.simu_top.soc.cpu.u_MEMBUF.ex1_forward1.ex2_wb_data_0[31:0]
+TOP.simu_top.soc.cpu.u_REG_EX1.reg_ex_rj0_data[31:0]
+TOP.simu_top.soc.cpu.u_REG_EX1.reg_ex_pc0[31:0]
+TOP.simu_top.soc.cpu.u_MEMBUF.tlb_ex_pc0[31:0]
+@28
+TOP.simu_top.soc.cpu.u_MEMBUF.forward_flag_j0
+TOP.simu_top.soc.cpu.u_REG_EX1.tlb_forward_flag_j0_ps
+TOP.simu_top.soc.cpu.u_REG_EX1.ex_readygo
+TOP.simu_top.soc.cpu.u_REG_EX1.ex_allowin
+TOP.simu_top.soc.cpu.u_REG_EX1.reg_allowin
 @200
 -read
+@22
+TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
 @28
 TOP.simu_top.soc.cpu.u_dcache.clk
 [color] 3
