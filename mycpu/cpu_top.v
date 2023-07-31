@@ -689,6 +689,7 @@ idle_clk idle_clk1
     wire [31:0] ex2_wb_data_2;
 
     wire        forward_stall ;
+    wire        tlb_forward_stall ;
     
     `ifdef DIFFTEST
     wire [31:0] reg_diff[31:0];
@@ -701,15 +702,54 @@ idle_clk idle_clk1
     wire [31:0] forward_data_j1;
     wire [31:0] forward_data_k0;
     wire [31:0] forward_data_k1;
+
+
+    wire [31:0]           tlb_ex_pc0;
+    wire [31:0]           tlb_ex_pc1;
+    wire [31:0]           tlb_ex_pc_next;
+    wire                  tlb_ex_pc_taken;
+    wire [31:0]           tlb_ex_inst0;
+    wire [31:0]           tlb_ex_inst1;
+    wire                  tlb_ex_branch_flag;
+    wire                  tlb_ex_excp_flag;
+    wire [6:0]            tlb_ex_exception;
+    wire [31:0]           tlb_ex_badv;
+    wire                  tlb_ex_is_ALU_0;
+    wire                  tlb_ex_is_ALU_1;
+    wire                  tlb_ex_is_syscall_0;
+    wire                  tlb_ex_is_syscall_1;
+    wire                  tlb_ex_is_break_0;
+    wire                  tlb_ex_is_break_1;
+    wire                  tlb_ex_is_priviledged_0;
+    wire                  tlb_ex_is_priviledged_1;
+    wire [`WIDTH_UOP-1:0] tlb_ex_uop0;
+    wire [`WIDTH_UOP-1:0] tlb_ex_uop1;
+    wire [31:0]           tlb_ex_imm0;
+    wire [31:0]           tlb_ex_imm1;
+    wire [31:0]           tlb_ex_rj0_data;
+    wire [31:0]           tlb_ex_rj1_data;
+    wire [31:0]           tlb_ex_rk0_data;
+    wire [31:0]           tlb_ex_rk1_data;
+    wire [4:0]            tlb_ex_rj0;
+    wire [4:0]            tlb_ex_rj1;
+    wire [4:0]            tlb_ex_rk0;
+    wire [4:0]            tlb_ex_rk1;
+    wire [4:0]            tlb_ex_rd0;
+    wire [4:0]            tlb_ex_rd1;
+    wire                  tlb_allowin;
+    wire                  tlb_readygo;
+    wire                  ex1_readygo;
+    wire                  ex1_allowin;
+
     REG_EX1 u_REG_EX1(
         .clk                     ( clk                     ),
         .aresetn                 ( aresetn                 ),
         .flush                   ( flush_to_reg_ex1        ),
-        .forward_stall           ( forward_stall           ),
+        .forward_stall           ( forward_stall | tlb_forward_stall         ),
         .reg_readygo             ( reg_readygo             ),
         .reg_allowin             ( reg_allowin             ),
-        .ex_allowin              ( ex_allowin              ),
-        .ex_readygo              ( ex_readygo              ),
+        .ex_allowin              ( tlb_allowin              ),
+        .ex_readygo              ( tlb_readygo              ),
         .flush_by_priv           ( flush_by_priv           ),
         .id_reg_pc0              ( iq_pc0              ),
         .id_reg_pc1              ( iq_pc1              ),
@@ -830,37 +870,107 @@ idle_clk idle_clk1
         `endif
     );
 
-    wire [31:0]           tlb_ex_pc0;
-    wire [31:0]           tlb_ex_pc1;
-    wire [31:0]           tlb_ex_pc_next;
-    wire [31:0]           tlb_ex_inst0;
-    wire [31:0]           tlb_ex_inst1;
-    wire                  tlb_ex_branch_flag;
-    wire                  tlb_ex_excp_flag;
-    wire [6:0]            tlb_ex_exception;
-    wire [31:0]           tlb_ex_badv;
-    wire                  tlb_ex_is_ALU_0;
-    wire                  tlb_ex_is_ALU_1;
-    wire                  tlb_ex_is_syscall_0;
-    wire                  tlb_ex_is_syscall_1;
-    wire                  tlb_ex_is_break_0;
-    wire                  tlb_ex_is_break_1;
-    wire                  tlb_ex_is_priviledged_0;
-    wire                  tlb_ex_is_priviledged_1;
-    wire [`WIDTH_UOP-1:0] tlb_ex_uop0;
-    wire [`WIDTH_UOP-1:0] tlb_ex_uop1;
-    wire [31:0]           tlb_ex_imm0;
-    wire [31:0]           tlb_ex_imm1;
-    wire [31:0]           tlb_ex_rj0_data;
-    wire [31:0]           tlb_ex_rj1_data;
-    wire [31:0]           tlb_ex_rk0_data;
-    wire [31:0]           tlb_ex_rk1_data;
-    wire [4:0]            tlb_ex_rj0;
-    wire [4:0]            tlb_ex_rj1;
-    wire [4:0]            tlb_ex_rk0;
-    wire [4:0]            tlb_ex_rk1;
-    wire [4:0]            tlb_ex_rd0;
-    wire [4:0]            tlb_ex_rd1;
+    MEMBUF u_MEMBUF(
+        .clk                     ( clk                     ),
+        .aresetn                 ( aresetn                 ),
+        .flush                   ( flush_to_reg_ex1        ),
+        .forward_stall           ( forward_stall           ),
+        .flush_by_priv           ( flush_by_priv           ),
+        .tlb_readygo             ( tlb_readygo             ),
+        .tlb_allowin             ( tlb_allowin             ),
+        .ex_allowin              ( ex1_allowin              ),
+        .ex_readygo              ( ex1_readygo              ),
+        .reg_ex_pc0              ( reg_ex_pc0              ),
+        .reg_ex_pc1              ( reg_ex_pc1              ),
+        .reg_ex_pc_next          ( reg_ex_pc_next          ),
+        .reg_ex_pc_taken         ( reg_ex_pc_taken         ),
+        .reg_ex_inst0            ( reg_ex_inst0            ),
+        .reg_ex_inst1            ( reg_ex_inst1            ),
+        .reg_ex_branch_flag      ( reg_ex_branch_flag      ),
+        .reg_ex_excp_flag        ( reg_ex_excp_flag        ),
+        .reg_ex_exception        ( reg_ex_exception        ),
+        .reg_ex_badv             ( reg_ex_badv             ),
+        .reg_ex_is_ALU_0         ( reg_ex_is_ALU_0         ),
+        .reg_ex_is_ALU_1         ( reg_ex_is_ALU_1         ),
+        .reg_ex_is_syscall_0     ( reg_ex_is_syscall_0     ),
+        .reg_ex_is_syscall_1     ( reg_ex_is_syscall_1     ),
+        .reg_ex_is_break_0       ( reg_ex_is_break_0       ),
+        .reg_ex_is_break_1       ( reg_ex_is_break_1       ),
+        .reg_ex_is_priviledged_0 ( reg_ex_is_priviledged_0 ),
+        .reg_ex_is_priviledged_1 ( reg_ex_is_priviledged_1 ),
+        .reg_ex_uop0             ( reg_ex_uop0             ),
+        .reg_ex_uop1             ( reg_ex_uop1             ),
+        .reg_ex_imm0             ( reg_ex_imm0             ),
+        .reg_ex_imm1             ( reg_ex_imm1             ),
+        .reg_ex_rj0_data         ( reg_ex_rj0_data         ),
+        .reg_ex_rj1_data         ( reg_ex_rj1_data         ),
+        .reg_ex_rk0_data         ( reg_ex_rk0_data         ),
+        .reg_ex_rk1_data         ( reg_ex_rk1_data         ),
+        .reg_ex_rj0              ( reg_ex_rj0              ),
+        .reg_ex_rj1              ( reg_ex_rj1              ),
+        .reg_ex_rk0              ( reg_ex_rk0              ),
+        .reg_ex_rk1              ( reg_ex_rk1              ),
+        .reg_ex_rd0              ( reg_ex_rd0              ),
+        .reg_ex_rd1              ( reg_ex_rd1              ),
+
+        .ex1_ex2_rd0             ( ex1_ex2_rd0             ),
+        .ex1_ex2_rd1             ( ex1_ex2_rd1             ),
+        .ex1_ex2_data_0          ( ex1_ex2_data_0          ),
+        .ex1_ex2_data_1          ( ex1_ex2_data_1          ),
+        .ex1_ex2_data_0_valid    ( ex1_ex2_data_0_valid    ),
+        .ex1_ex2_data_1_valid    ( ex1_ex2_data_1_valid    ),
+        .ex2_wb_rd0              ( ex2_wb_rd0              ),
+        .ex2_wb_rd1              ( ex2_wb_rd1              ),
+        .ex2_wb_rd2              ( ex2_wb_rd2              ),
+        .ex2_wb_data_0           ( ex2_wb_data_0           ),
+        .ex2_wb_data_1           ( ex2_wb_data_1           ),
+        .ex2_wb_data_2           ( ex2_wb_data_2           ),
+        .ex2_wb_data_0_valid     ( ex2_wb_data_0_valid     ),
+        .ex2_wb_data_1_valid     ( ex2_wb_data_1_valid     ),
+        .ex2_wb_data_2_valid     ( ex2_wb_data_2_valid     ),
+        .tlb_forward_stall       ( tlb_forward_stall       ),
+        // .forward_flag_j0         ( forward_flag_j0         ),
+        // .forward_flag_k0         ( forward_flag_k0         ),
+        // .forward_flag_j1         ( forward_flag_j1         ),
+        // .forward_flag_k1         ( forward_flag_k1         ),
+        // .forward_data_j0         ( forward_data_j0         ),
+        // .forward_data_k0         ( forward_data_k0         ),
+        // .forward_data_j1         ( forward_data_j1         ),
+        // .forward_data_k1         ( forward_data_k1         ),
+
+        .tlb_ex_pc0              ( tlb_ex_pc0              ),
+        .tlb_ex_pc1              ( tlb_ex_pc1              ),
+        .tlb_ex_pc_next          ( tlb_ex_pc_next          ),
+        .tlb_ex_pc_taken         ( tlb_ex_pc_taken         ),
+        .tlb_ex_inst0            ( tlb_ex_inst0            ),
+        .tlb_ex_inst1            ( tlb_ex_inst1            ),
+        .tlb_ex_branch_flag      ( tlb_ex_branch_flag      ),
+        .tlb_ex_excp_flag        ( tlb_ex_excp_flag        ),
+        .tlb_ex_exception        ( tlb_ex_exception        ),
+        .tlb_ex_badv             ( tlb_ex_badv             ),
+        .tlb_ex_is_ALU_0         ( tlb_ex_is_ALU_0         ),
+        .tlb_ex_is_ALU_1         ( tlb_ex_is_ALU_1         ),
+        .tlb_ex_is_syscall_0     ( tlb_ex_is_syscall_0     ),
+        .tlb_ex_is_syscall_1     ( tlb_ex_is_syscall_1     ),
+        .tlb_ex_is_break_0       ( tlb_ex_is_break_0       ),
+        .tlb_ex_is_break_1       ( tlb_ex_is_break_1       ),
+        .tlb_ex_is_priviledged_0 ( tlb_ex_is_priviledged_0 ),
+        .tlb_ex_is_priviledged_1 ( tlb_ex_is_priviledged_1 ),
+        .tlb_ex_uop0             ( tlb_ex_uop0             ),
+        .tlb_ex_uop1             ( tlb_ex_uop1             ),
+        .tlb_ex_imm0             ( tlb_ex_imm0             ),
+        .tlb_ex_imm1             ( tlb_ex_imm1             ),
+        .tlb_ex_rj0_data         ( tlb_ex_rj0_data         ),
+        .tlb_ex_rj1_data         ( tlb_ex_rj1_data         ),
+        .tlb_ex_rk0_data         ( tlb_ex_rk0_data         ),
+        .tlb_ex_rk1_data         ( tlb_ex_rk1_data         ),
+        .tlb_ex_rj0              ( tlb_ex_rj0              ),
+        .tlb_ex_rj1              ( tlb_ex_rj1              ),
+        .tlb_ex_rk0              ( tlb_ex_rk0              ),
+        .tlb_ex_rk1              ( tlb_ex_rk1              ),
+        .tlb_ex_rd0              ( tlb_ex_rd0              ),
+        .tlb_ex_rd1              ( tlb_ex_rd1              )
+    );
 
     wire wen_csr;
     //前递用到的信号
@@ -910,8 +1020,8 @@ idle_clk idle_clk1
 
     //下面都是特权指令的
     wire privilege_ready;
-    assign csr_done = privilege_ready & reg_ex_uop0[`INS_CSR];
-    assign tlb_done = privilege_ready & reg_ex_uop0[`INS_TLB] & (reg_ex_inst0[11:10] == 2'b00 || reg_ex_inst0[11:10] ==2'b01 || reg_ex_inst0[15]);
+    assign csr_done = privilege_ready & tlb_ex_uop0[`INS_CSR];
+    assign tlb_done = privilege_ready & tlb_ex_uop0[`INS_TLB] & (tlb_ex_inst0[11:10] == 2'b00 || tlb_ex_inst0[11:10] ==2'b01 || tlb_ex_inst0[15]);
     //给csr
     wire [13:0] csr_addr;
     wire [31:0] csr_wdata;
@@ -984,30 +1094,30 @@ idle_clk idle_clk1
         .forward_data_k0        ( forward_data_k0     ),
         .forward_data_k1        ( forward_data_k1     ),
         .dcache_ready       (wready_dcache | rready_dcache),
-        .pc0                  ( reg_ex_pc0                  ),
-        .pc1                  ( reg_ex_pc1                  ),
-        .inst0                ( reg_ex_inst0                ),
-        .inst1                ( reg_ex_inst1                ),
-        .is_ALU_0             ( reg_ex_is_ALU_0             ),
-        .is_ALU_1             ( reg_ex_is_ALU_1             ),
-        .is_syscall_0         ( reg_ex_is_syscall_0         ),
-        .is_syscall_1         ( reg_ex_is_syscall_1         ),
-        .is_break_0           ( reg_ex_is_break_0           ),
-        .is_break_1           ( reg_ex_is_break_1           ),
-        .is_priviledged_0     ( reg_ex_is_priviledged_0     ),
-        .is_priviledged_1     ( reg_ex_is_priviledged_1     ),
-        .uop0                 ( reg_ex_uop0                 ),
-        .uop1                 ( reg_ex_uop1                 ),
-        .imm0                 ( reg_ex_imm0                 ),
-        .imm1                 ( reg_ex_imm1                 ),
-        .rj0_data             ( reg_ex_rj0_data             ),
-        .rj1_data             ( reg_ex_rj1_data             ),
-        .rk0_data             ( reg_ex_rk0_data             ),
-        .rk1_data             ( reg_ex_rk1_data             ),
-        .ex_rj0               ( reg_ex_rj0               ),
-        .ex_rj1               ( reg_ex_rj1               ),
-        .ex_rk0               ( reg_ex_rk0               ),
-        .ex_rk1               ( reg_ex_rk1               ),
+        .pc0                  ( tlb_ex_pc0                  ),
+        .pc1                  ( tlb_ex_pc1                  ),
+        .inst0                ( tlb_ex_inst0                ),
+        .inst1                ( tlb_ex_inst1                ),
+        .is_ALU_0             ( tlb_ex_is_ALU_0             ),
+        .is_ALU_1             ( tlb_ex_is_ALU_1             ),
+        .is_syscall_0         ( tlb_ex_is_syscall_0         ),
+        .is_syscall_1         ( tlb_ex_is_syscall_1         ),
+        .is_break_0           ( tlb_ex_is_break_0           ),
+        .is_break_1           ( tlb_ex_is_break_1           ),
+        .is_priviledged_0     ( tlb_ex_is_priviledged_0     ),
+        .is_priviledged_1     ( tlb_ex_is_priviledged_1     ),
+        .uop0                 ( tlb_ex_uop0                 ),
+        .uop1                 ( tlb_ex_uop1                 ),
+        .imm0                 ( tlb_ex_imm0                 ),
+        .imm1                 ( tlb_ex_imm1                 ),
+        .rj0_data             ( tlb_ex_rj0_data             ),
+        .rj1_data             ( tlb_ex_rj1_data             ),
+        .rk0_data             ( tlb_ex_rk0_data             ),
+        .rk1_data             ( tlb_ex_rk1_data             ),
+        .ex_rj0               ( tlb_ex_rj0               ),
+        .ex_rj1               ( tlb_ex_rj1               ),
+        .ex_rk0               ( tlb_ex_rk0               ),
+        .ex_rk1               ( tlb_ex_rk1               ),
         .alu_result0          ( alu_result0          ),
         .alu_result1          ( alu_result1          ),
         .alu_result0_valid    ( alu_result0_valid    ),
@@ -1032,8 +1142,8 @@ idle_clk idle_clk1
         .ex2_wb_data_2_valid  ( ex2_wb_data_2_valid         ),
         .forward_stall        ( forward_stall        ),
         .tid                  ( tid                  ),
-        .predict_to_branch    ( reg_ex_pc_taken       ),
-        .pc0_predict          ( reg_ex_pc_next          ),
+        .predict_to_branch    ( tlb_ex_pc_taken       ),
+        .pc0_predict          ( tlb_ex_pc_next          ),
         .predict_dir_fail     ( predict_dir_fail     ),
         .predict_addr_fail    ( predict_add_fail     ),
         .fact_taken           ( fact_taken           ),
@@ -1089,9 +1199,9 @@ idle_clk idle_clk1
         .invtlb_asid          ( invtlb_asid          ),
         .invtlb_va            ( invtlb_va            ),
         .plv                  ( crmd[0]                  ),
-        .excp_flag_in         ( reg_ex_excp_flag         ),
-        .exception_in         ( reg_ex_exception         ),
-        .badv_in              ( reg_ex_badv              ),
+        .excp_flag_in         ( tlb_ex_excp_flag         ),
+        .exception_in         ( tlb_ex_exception         ),
+        .badv_in              ( tlb_ex_badv              ),
         .badv_out             ( ex1_badv             ),
         .excp_flag_out        ( ex1_excp_flag        ),
         .exception_out        ( ex1_exception        ),
@@ -1147,29 +1257,29 @@ idle_clk idle_clk1
         .clk                       ( clk                       ),
         .aresetn                   ( aresetn                   ),
         .flush_in                  ( flush_to_ex1_ex2                  ),
-        .ex1_readygo               ( ex_readygo               ),
-        .ex1_allowin               ( ex_allowin               ),
+        .ex1_readygo               ( ex1_readygo               ),
+        .ex1_allowin               ( ex1_allowin               ),
         .ex2_allowin               ( ex2_allowin               ),
         .ex2_readygo               ( ex2_readygo               ),
-        .reg_ex1_pc0               ( reg_ex_pc0               ),
-        .reg_ex1_pc1               ( reg_ex_pc1               ),
-        .reg_ex1_inst0             ( reg_ex_inst0             ),
-        .reg_ex1_inst1             ( reg_ex_inst1             ),
+        .reg_ex1_pc0               ( tlb_ex_pc0               ),
+        .reg_ex1_pc1               ( tlb_ex_pc1               ),
+        .reg_ex1_inst0             ( tlb_ex_inst0             ),
+        .reg_ex1_inst1             ( tlb_ex_inst1             ),
         .csr_ren_ex1               ( csr_ren                   ),
         .csr_ren_ex2               ( csr_ren_ex2               ),
-        .reg_ex1_uop0              ( reg_ex_uop0              ),
-        .reg_ex1_uop1              ( reg_ex_uop1              ),
-        .reg_ex1_imm0              ( reg_ex_imm0              ),
-        .reg_ex1_imm1              ( reg_ex_imm1              ),
-        .reg_ex1_is_priviledged_0  ( reg_ex_is_priviledged_0  ),
-        .reg_ex1_is_priviledged_1  ( reg_ex_is_priviledged_1  ),
+        .reg_ex1_uop0              ( tlb_ex_uop0              ),
+        .reg_ex1_uop1              ( tlb_ex_uop1              ),
+        .reg_ex1_imm0              ( tlb_ex_imm0              ),
+        .reg_ex1_imm1              ( tlb_ex_imm1              ),
+        .reg_ex1_is_priviledged_0  ( tlb_ex_is_priviledged_0  ),
+        .reg_ex1_is_priviledged_1  ( tlb_ex_is_priviledged_1  ),
         .ex2_wb_excp_flag        (ex2_wb_excp_flag),
-        .reg_ex1_rj0               ( reg_ex_rj0               ),
-        .reg_ex1_rj1               ( reg_ex_rj1               ),
-        .reg_ex1_rk0               ( reg_ex_rk0               ),
-        .reg_ex1_rk1               ( reg_ex_rk1               ),
-        .reg_ex1_rd0               ( reg_ex_rd0               ),
-        .reg_ex1_rd1               ( reg_ex_rd1               ),
+        .reg_ex1_rj0               ( tlb_ex_rj0               ),
+        .reg_ex1_rj1               ( tlb_ex_rj1               ),
+        .reg_ex1_rk0               ( tlb_ex_rk0               ),
+        .reg_ex1_rk1               ( tlb_ex_rk1               ),
+        .reg_ex1_rd0               ( tlb_ex_rd0               ),
+        .reg_ex1_rd1               ( tlb_ex_rd1               ),
         .mul_stage1_res_hh         ( mul_stage1_res_hh         ),
         .mul_stage1_res_hl         ( mul_stage1_res_hl         ),
         .mul_stage1_res_lh         ( mul_stage1_res_lh         ),
@@ -1289,9 +1399,9 @@ idle_clk idle_clk1
         .ex2_result1         ( ex2_rd1_data         ),
         .flush_by_priv        ( flush_by_priv        ),
         .flush_to_priv_wr_csr ( flush_to_priv_wr_csr ),
-        .reg_ex1_is_priviledeged_0 ( reg_ex_is_priviledged_0 ),
+        .reg_ex1_is_priviledeged_0 ( tlb_ex_is_priviledged_0 ),
         // .reg_ex1_is_priviledged_1 ( reg_ex_is_priviledged_1 ),
-        .reg_ex1_pc0         ( reg_ex_pc0         ),
+        .reg_ex1_pc0         ( tlb_ex_pc0         ),
         .wen_csr             (  wen_csr          ),
         // .pc_dcache_out       ( pc_dcache_out       ), // TODO 没做
         // .inst_dcache_out     ( inst_dcache_out     ),
@@ -1300,7 +1410,7 @@ idle_clk idle_clk1
         .ex_rd1              ( ex1_ex2_rd1              ),
         .ex2_result0_valid   ( ex2_data0_valid   ),
         .ex2_result1_valid   ( ex2_data1_valid   ),
-        .EN_VA_D         (  reg_ex_uop0[`INS_MEM]         ), 
+        .EN_VA_D         (  tlb_ex_uop0[`INS_MEM]         ), 
         .ex2_wb_data_0       ( ex2_wb_data_0       ),
         .ex2_wb_data_1       ( ex2_wb_data_1       ),
         .ex2_wb_data_2       ( ex2_wb_data_2       ),
