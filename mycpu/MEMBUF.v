@@ -4,7 +4,7 @@ module MEMBUF(
     input aresetn,
     input flush,
     input forward_stall,
-    input flush_by_priv,
+    input flush_by_exception,
     input tlb_readygo,
     output tlb_allowin,
     input ex_allowin,
@@ -153,7 +153,7 @@ assign is_atom_dcache = reg_ex_uop0[`UOP_MEM_ATM];
 assign w_data_dcache = rk0_data_o;
 
 always @ (posedge clk)begin
-    if(~aresetn | flush & (ex_allowin) | flush_by_priv)begin
+    if(~aresetn | flush & (ex_allowin) | flush_by_exception)begin
         tlb_ex_pc0 <= 0;
         tlb_ex_pc1 <= 0;
         tlb_ex_pc_next <= 0;
@@ -323,11 +323,16 @@ EX1_FORWARD ex1_forward2(
     .forward_data_k(forward_data_k1)
 );
 
-
+reg exception_tobedone = 0;
+always @ (posedge clk)begin
+    if(~aresetn) exception_tobedone <= 0;
+    else if (flush_by_exception) exception_tobedone <= 0;
+    else if (|ex1_exception) exception_tobedone <= 1;
+end
 
 assign tlb_forward_stall = forward_stall1 | forward_stall2;
 
 assign ex_readygo = ~forward_stall;
-assign tlb_allowin = ex_allowin & ~(reg_ex_is_priviledged_0 & ~privilege_ready);
+assign tlb_allowin = ex_allowin & ~(reg_ex_is_priviledged_0 & ~privilege_ready) & ~(|ex1_exception || exception_tobedone);
 
 endmodule

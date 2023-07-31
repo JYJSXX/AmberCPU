@@ -33,6 +33,7 @@ module EX0(
     input   [4:0] ex_rk0,
     input   [4:0] ex_rk1,
     input         dcache_ready,
+    input         ex_allowin,
     //input   [4:0] ex_rd0,
     //input   [4:0] ex_rd1,
     output forward_flag_j0,
@@ -46,6 +47,7 @@ module EX0(
     output [31:0] alu_result0,
     output [31:0] alu_result1,
     output [31:0] dcache_addr,
+    output [31:0] dcache_wdata,
     output alu_result0_valid,
     output alu_result1_valid,
     output ibar,
@@ -197,7 +199,7 @@ module EX0(
 
 
 );
-
+assign dcache_wdata = rk0_data_o;
 assign csr_flag_from_ex = uop0[`INS_CSR];
 assign tlb_flag_from_ex = uop0[`INS_TLB] && (inst0[11:10] == 2'b00 || inst0[11:10] ==2'b01 || inst0[15]);
     reg [63:0] stable_counter_reg;
@@ -398,7 +400,7 @@ EX_BRANCH ex_branch(
 EX_Privilege ex_privilege(
     .clk(clk),
     .rstn(aresetn),
-    .en(is_priviledged_0 && ~plv && ~dcache_ready),     
+    .en(is_priviledged_0 && ~plv && ~dcache_ready),
     .rk_data(rk0_data_o),      
     .rj_data(rj0_data_o),      
     .ins(inst0),          
@@ -455,7 +457,7 @@ divider divider1(
     .dividend(rj0_data_o),
     .divisor(rk0_data_o),
     .en(uop0[`INS_DIV]),
-    .flush_exception(flush_by_excption),
+    .flush_exception(flush_by_exception),
     .sign(uop0[`UOP_SIGN]),
     .quotient(quotient),
     .remainder(remainder),

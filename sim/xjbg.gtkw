@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
-[*] Mon Jul 31 11:46:20 2023
+[*] Mon Jul 31 15:05:53 2023
 [*]
-[dumpfile] "/home/yiran/Desktop/chiplab/sims/verilator/run_prog/log/func/func_lab6_log/simu_trace.fst"
-[dumpfile_mtime] "Mon Jul 31 11:45:44 2023"
-[dumpfile_size] 68064959
+[dumpfile] "/home/yiran/Desktop/chiplab/sims/verilator/run_prog/log/func/func_lab8_log/simu_trace.fst"
+[dumpfile_mtime] "Mon Jul 31 15:03:50 2023"
+[dumpfile_size] 100801941
 [savefile] "/home/yiran/Desktop/AmberCPU/sim/xjbg.gtkw"
-[timestart] 681093
+[timestart] 1040696
 [size] 1842 850
 [pos] -1 -1
-*-2.000000 668992 546597 879716 155258 976722 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-3.000000 1040721 546597 879716 155258 976722 1042420 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] TOP.
 [treeopen] TOP.simu_top.
 [treeopen] TOP.simu_top.soc.
@@ -30,31 +30,108 @@
 [sst_width] 325
 [signals_width] 458
 [sst_expanded] 1
-[sst_vpaned_height] 380
+[sst_vpaned_height] 318
 @28
 TOP.simu_top.soc.cpu.u_dcache.rstn
 @22
 TOP.simu_top.soc.cpu.u_dcache.rdata[31:0]
+TOP.simu_top.soc.cpu.u_dcache.rdata[31:0]
 @28
 TOP.simu_top.soc.cpu.u_dcache.rvalid
-TOP.simu_top.soc.cpu.u_dcache.rready
 @22
+TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+@28
+TOP.simu_top.soc.cpu.u_dcache.rready
+TOP.simu_top.soc.cpu.u_dcache.wvalid
+@22
+TOP.simu_top.soc.cpu.u_dcache.wdata[31:0]
+@28
+TOP.simu_top.soc.cpu.u_dcache.wready
+@22
+TOP.simu_top.soc.cpu.u_REG_EX1.regfile1.regs[13][31:0]
 TOP.simu_top.soc.cpu.u_FIFO.fifo_pc[31:0]
 TOP.simu_top.soc.cpu.u_FIFO.co_pcbdvbuf.din[95:0]
 TOP.simu_top.soc.cpu.u_FIFO.fetch_buf.din[63:0]
 @28
 TOP.simu_top.soc.cpu.u_FIFO.co_pcbdvbuf.write_en
 @22
-TOP.simu_top.soc.cpu.u_EX2_WB.pc0[31:0]
 TOP.simu_top.soc.cpu.u_MEMBUF.reg_ex_pc0[31:0]
+@28
+TOP.simu_top.soc.cpu.u_REG_EX1.ex_allowin
+TOP.simu_top.soc.cpu.u_REG_EX1.flush_by_priv
+TOP.simu_top.soc.cpu.u_EX0.ex_privilege.d_idle
+@22
+TOP.simu_top.soc.cpu.u_MEMBUF.ex1_exception[6:0]
+@28
+TOP.simu_top.soc.cpu.u_MEMBUF.flush_by_exception
+@29
+TOP.simu_top.soc.cpu.u_MEMBUF.exception_tobedone
+@22
+TOP.simu_top.soc.cpu.u_MEMBUF.tlb_exception[6:0]
+TOP.simu_top.soc.cpu.u_MEMBUF.reg_ex_exception[6:0]
+@28
+[color] 3
+TOP.simu_top.soc.cpu.u_dcache.exception_flag
+@22
+TOP.simu_top.soc.cpu.u_MEMBUF.tlb_ex_pc0[31:0]
+TOP.simu_top.soc.cpu.u_EX1_EX2.ex1_ex2_pc0[31:0]
+TOP.simu_top.soc.cpu.u_EX0.inst0[31:0]
+TOP.simu_top.soc.cpu.addr_dcache[31:0]
+TOP.simu_top.soc.cpu.u_EX0.ex1_forward1.ex1_ex2_data_0[31:0]
+TOP.simu_top.soc.cpu.u_EX0.ex1_forward1.ex1_rj_data[31:0]
+TOP.simu_top.soc.cpu.u_EX0.ex1_forward1.ex1_rj_data_o[31:0]
 @28
 TOP.simu_top.soc.cpu.u_EX2_WB.ex2_allowin
 TOP.simu_top.soc.cpu.u_EX0.divider1.div_state[2:0]
+@22
+[color] 1
+TOP.simu_top.soc.cpu.u_EX0.ex_privilege.PR_state[4:0]
+[color] 1
+TOP.simu_top.soc.cpu.u_EX0.ex_privilege.csr_addr[13:0]
+TOP.simu_top.soc.cpu.u_EX0.ex_privilege.csr_rdata_reg[31:0]
+TOP.simu_top.soc.cpu.u_REG_EX1.regfile1.regs[12][31:0]
+@28
+TOP.simu_top.soc.cpu.u_EX0.ex_privilege.csr_wen
+TOP.simu_top.soc.cpu.u_csr.wen_csr
+@22
+TOP.simu_top.soc.cpu.u_EX0.ex_privilege.csr_wdata[31:0]
+@28
+TOP.simu_top.soc.cpu.u_csr.count[1:0]
+TOP.simu_top.soc.cpu.u_csr.wen
+@22
+TOP.simu_top.soc.cpu.u_EX2_WB.pc0[31:0]
+@28
+TOP.simu_top.soc.cpu.u_MEMBUF.tlb_allowin
+@22
+TOP.simu_top.soc.cpu.u_EX0.pc0[31:0]
+TOP.simu_top.soc.cpu.u_EX0.fact_tpc[31:0]
+TOP.simu_top.soc.cpu.u_EX0.ex_branch.pc_real_branch[31:0]
+TOP.simu_top.soc.cpu.u_EX0.pc0[31:0]
+@28
+TOP.simu_top.soc.cpu.u_EX0.set_by_priv
+@22
+TOP.simu_top.soc.cpu.u_EX0.pc_set_by_priv[31:0]
+@28
+TOP.simu_top.soc.cpu.u_EX0.privilege_ready
 TOP.simu_top.soc.cpu.u_EX0.divider1.ready
+TOP.simu_top.soc.cpu.debug0_valid
+TOP.simu_top.soc.cpu.noequal
+@22
+TOP.simu_top.soc.cpu.u_MEMBUF.reg_ex_pc0[31:0]
+TOP.simu_top.soc.cpu.u_MEMBUF.tlb_ex_pc0[31:0]
+@28
+TOP.simu_top.soc.cpu.u_MEMBUF.tlb_allowin
+TOP.simu_top.soc.cpu.set_pc_from_WB
+@22
+TOP.simu_top.soc.cpu.debug0_pc_reg[31:0]
+@28
+TOP.simu_top.soc.cpu.DifftestInstrCommit0.valid
+@22
+TOP.simu_top.soc.cpu.DifftestInstrCommit0.pc[63:0]
+@28
 TOP.simu_top.soc.cpu.u_EX0.divider1.flush_exception
 TOP.simu_top.soc.cpu.u_EX2_WB.set_by_priv
 TOP.simu_top.soc.cpu.u_EX2_WB.ld_stall_flag
-TOP.simu_top.soc.cpu.u_EX2_WB.flush_by_priv
 TOP.simu_top.soc.cpu.u_EX0.predict_dir_fail
 @22
 TOP.simu_top.soc.cpu.u_EX0.pc0[31:0]
@@ -63,7 +140,6 @@ TOP.simu_top.soc.cpu.u_EX0.divider1.div_state[2:0]
 TOP.simu_top.soc.cpu.u_EX0.divider1.ready
 @22
 TOP.simu_top.soc.cpu.u_REG_EX1.regfile1.regs[13][31:0]
-@23
 TOP.simu_top.soc.cpu.u_REG_EX1.regfile1.reg_diff13[31:0]
 @28
 TOP.simu_top.soc.cpu.u_EX2_WB.ex2_wb_we0

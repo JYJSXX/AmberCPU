@@ -5,7 +5,6 @@
 module EX2_WB(
     input clk,
     input aresetn,
-    input flush_in,
     output flush_out_all,
     input flush_to_tlb,
     //input ex2_valid, 这个信号不要了，由下面一堆valid/div_ready/dcache_ready来代替
