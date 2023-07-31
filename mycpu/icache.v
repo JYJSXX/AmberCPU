@@ -502,6 +502,14 @@ module icache #(
             miss_flush_flag <= (state == MISS_FLUSH);
     end
 
+    reg i_rready_reg;
+    always @(posedge clk) begin
+        if(!rstn)
+            i_rready_reg <= 0;
+        else
+            i_rready_reg <= i_rready;
+    end
+
     always @(*) begin
         req_buf_we              = 0;
         i_rvalid                = 0;
@@ -533,7 +541,8 @@ module icache #(
         end
         LOOKUP: begin
             if(exception == 0)begin
-                pbuf_we                = (miss_flush_flag && !cache_hit) ? 0 : 1;
+                pbuf_we                = ((miss_flush_flag && !cache_hit) ? 0 : 1) || (miss_flush_counter_old && !miss_flush_counter_old_buf);
+                // pbuf_we                = 1;         //寻找两全之策！！！！
                 lru_we                  = 0;
                 if(cacop_en)
                     cacop_ready         = 1;
