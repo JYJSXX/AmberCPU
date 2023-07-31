@@ -85,13 +85,13 @@ module EX1(
     output [31:0] fact_tpc, //目标地址pc
 
     //给cache
-    output rvalid_dcache,
-    output wvalid_dcache,
-    output op_dcache, //0读1写
-    output [3:0] write_type_dcache, //写入类型,0b0001为byte,0b0011为half,0b1111为word
-    output [31:0] addr_dcache,
-    output [31:0] w_data_dcache,
-    output  is_atom_dcache,
+    // output rvalid_dcache,
+    // output wvalid_dcache,
+    // output op_dcache, //0读1写
+    // output [3:0] write_type_dcache, //写入类型,0b0001为byte,0b0011为half,0b1111为word
+    // output [31:0] addr_dcache,
+    // output [31:0] w_data_dcache,
+    // output  is_atom_dcache,
    // output uncache, 由csr负责
 //     输入端
 
@@ -422,12 +422,12 @@ divider divider1(
     .stall_divider(stall_divider),
     .ready(div_ready)
 );
-assign is_atom_dcache = uop0[`UOP_MEM_ATM];
-assign rvalid_dcache=uop0[`INS_MEM] & ~cond0[2] & ~forward_stall;
-assign wvalid_dcache=uop0[`INS_MEM] & cond0[2] & ~forward_stall;
-assign op_dcache=cond0[2];
-assign write_type_dcache=(cond0[1:0]==0)?4'b0001:(cond0[1:0]==1)?4'b0011:4'b1111;
-assign addr_dcache = rj0_data_o+imm0;
-assign w_data_dcache = rk0_data_o;
+// assign rvalid_dcache=uop0[`INS_MEM] & ~cond0[2] & ~forward_stall;
+// assign wvalid_dcache=uop0[`INS_MEM] & cond0[2] & ~forward_stall;
+// assign op_dcache=cond0[2];
+// assign write_type_dcache=(cond0[1:0]==0)?4'b0001:(cond0[1:0]==1)?4'b0011:4'b1111;
+// assign addr_dcache = rj0_data_o+imm0;
+// assign is_atom_dcache = uop0[`UOP_MEM_ATM];
+// assign w_data_dcache = rk0_data_o;
 assign forward_stall = forward_stall1 | forward_stall2;
 endmodule

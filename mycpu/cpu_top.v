@@ -937,6 +937,11 @@ idle_clk idle_clk1
         // .forward_data_k0         ( forward_data_k0         ),
         // .forward_data_j1         ( forward_data_j1         ),
         // .forward_data_k1         ( forward_data_k1         ),
+        .op_dcache               ( op_dcache            ),
+        .write_type_dcache       ( write_type_tlb    ),
+        .addr_dcache             ( addr_dcache          ),
+        .w_data_dcache           ( w_data_tlb           ),
+        .is_atom_dcache          ( is_atom_dcache       ),
 
         .tlb_ex_pc0              ( tlb_ex_pc0              ),
         .tlb_ex_pc1              ( tlb_ex_pc1              ),
@@ -995,8 +1000,8 @@ idle_clk idle_clk1
 
 
     //给cache
-    wire cpu_d_rvalid;
-    wire cpu_d_wvalid;
+    // wire cpu_d_rvalid;
+    // wire cpu_d_wvalid;
     wire op_dcache; //0读1写
     wire [3:0] write_type_tlb, write_type_dcache; //写入类型;0b0001为byte;0b0011为half;0b1111为word
     wire [31:0] addr_dcache;
@@ -1149,13 +1154,8 @@ idle_clk idle_clk1
         .fact_taken           ( fact_taken           ),
         .fact_pc              ( fact_pc              ),
         .fact_tpc             ( fact_tpc             ),
-        .rvalid_dcache        ( cpu_d_rvalid             ),
-        .wvalid_dcache        ( cpu_d_wvalid       ),
-        .op_dcache            ( op_dcache            ),
-        .write_type_dcache    ( write_type_tlb    ),
-        .addr_dcache          ( addr_dcache          ),
-        .w_data_dcache        ( w_data_tlb           ),
-        .is_atom_dcache       ( is_atom_dcache       ),
+        // .rvalid_dcache        ( cpu_d_rvalid             ),
+        // .wvalid_dcache        ( cpu_d_wvalid       ),
         .mul_stage1_res_hh    ( mul_stage1_res_hh    ),
         .mul_stage1_res_hl    ( mul_stage1_res_hl    ),
         .mul_stage1_res_lh    ( mul_stage1_res_lh    ),

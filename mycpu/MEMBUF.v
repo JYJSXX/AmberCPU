@@ -69,6 +69,13 @@ module MEMBUF(
     output [31:0] forward_data_j1,
     output [31:0] forward_data_k1,
 
+    //to dcache
+    output  op_dcache,
+    output [3:0] write_type_dcache,
+    output [31:0] addr_dcache,
+    output [31:0] w_data_dcache,
+    output  is_atom_dcache,
+
     output reg [31:0]           tlb_ex_pc0,
     output reg [31:0]           tlb_ex_pc1,
     output reg [31:0]           tlb_ex_pc_next,
@@ -102,6 +109,12 @@ module MEMBUF(
     output reg [4:0]            tlb_ex_rd0,
     output reg [4:0]            tlb_ex_rd1
 );
+wire[3:0] cond0 = reg_ex_uop0[`UOP_COND];
+assign op_dcache=cond0[2];
+assign write_type_dcache=(cond0[1:0]==0)?4'b0001:(cond0[1:0]==1)?4'b0011:4'b1111;
+assign addr_dcache = rj0_data_o+reg_ex_imm0;
+assign is_atom_dcache = reg_ex_uop0[`UOP_MEM_ATM];
+assign w_data_dcache = rk0_data_o;
 
 always @ (posedge clk)begin
     if(~aresetn | flush | flush_by_priv)begin

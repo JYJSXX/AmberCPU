@@ -288,51 +288,54 @@ assign cond1 = uop1_reg[`UOP_COND];
     end
 
 
-    reg [2:0]    dcache_valid_buf = 0;
-    reg buf_sign;
-    reg buf_sign_reg = 1;
+    // reg [2:0]    dcache_valid_buf = 0;
+    // reg buf_sign;
+    // reg buf_sign_reg = 1;
 
-    always @ (posedge clk) buf_sign_reg <= buf_sign;
-        always @(posedge clk) begin
-        if(!aresetn | flush_by_priv)begin
-            dcache_valid_buf<=0;
-        end 
-        else if(ex2_allowin)begin
-            dcache_valid_buf<={dcache_valid_buf[1:0], tlb_d_valid_reg & ~flush_by_priv};            
-        end
-        else if (buf_sign & ~buf_sign_reg) begin
-             dcache_valid_buf<={dcache_valid_buf[1:0], 1'b0 };       
-            //    dcache_valid_buf <= {dcache_valid_buf[2], 2'b10};
-        end
+    // always @ (posedge clk) buf_sign_reg <= buf_sign;
+    //     always @(posedge clk) begin
+    //     if(!aresetn | flush_by_priv)begin
+    //         dcache_valid_buf<=0;
+    //     end 
+    //     else if(ex2_allowin)begin
+    //         dcache_valid_buf<={dcache_valid_buf[1:0], tlb_d_valid_reg & ~flush_by_priv};            
+    //     end
+    //     else if (buf_sign & ~buf_sign_reg) begin
+    //          dcache_valid_buf<={dcache_valid_buf[1:0], 1'b0 };       
+    //         //    dcache_valid_buf <= {dcache_valid_buf[2], 2'b10};
+    //     end
         
-    end
-    wire temp = (ex1_ex2_inst0==0 && ex1_ex2_inst1==0) || ( div_ready | csr_ready) || (!dcache_valid_buf[1]  || dcache_ready);
-    wire temp1 = (ex1_ex2_inst0==0 && ex1_ex2_inst1==0 && !(uop0[`INS_DIV] | reg_ex1_is_priviledeged_0));
-    wire temp2 = ( div_ready | csr_ready && (!dcache_valid_buf[1] || dcache_ready ));
-    wire temp3 = (!dcache_valid_buf[1] && !(uop0[`INS_DIV] | reg_ex1_is_priviledeged_0) || dcache_ready);
+    // end
+    // wire temp = (ex1_ex2_inst0==0 && ex1_ex2_inst1==0) || ( div_ready | csr_ready) || (!dcache_valid_buf[1]  || dcache_ready);
+    // wire temp1 = (ex1_ex2_inst0==0 && ex1_ex2_inst1==0 && !(uop0[`INS_DIV] | reg_ex1_is_priviledeged_0));
+    // wire temp2 = ( div_ready | csr_ready && (!dcache_valid_buf[1] || dcache_ready ));
+    // wire temp3 = (!dcache_valid_buf[1] && !(uop0[`INS_DIV] | reg_ex1_is_priviledeged_0) || dcache_ready);
 always@(*) begin
     ex2_allowin=0;
-    buf_sign = 0;
+    // buf_sign = 0;
     // ld_stall_flag = 0;
     if(ex1_ex2_inst0==0 && ex1_ex2_inst1==0 && !(uop0[`INS_DIV] | reg_ex1_is_priviledeged_0)) begin
         ex2_allowin=1;
     end
     //else if((ex2_wb_data_0_valid | ~(~dcache_ready && tlb_d_valid_reg)  | div_ready | csr_ready) && ex2_wb_data_1_valid) begin
-    else if( csr_ready && (!dcache_valid_buf[1] || dcache_ready))  begin
+    else if (uop0[`INS_MEM] && ~dcache_ready)
+        ex2_allowin = 0;
+    else if( csr_ready)  begin
         ex2_allowin=1;
     end
     else if(div_ready ) begin
         ex2_allowin=1;
     end
-    else if(!(dcache_valid_buf[1] ) && !(uop0[`INS_DIV] | reg_ex1_is_priviledeged_0) || dcache_ready) 
+    else if(!(uop0[`INS_DIV] | reg_ex1_is_priviledeged_0)) 
         ex2_allowin=1;
-    else if(/*!(dcache_valid_buf[0] ) && !(uop0[`INS_DIV] | reg_ex1_is_priviledeged_0) || dcache_ready*/(dcache_valid_buf[0]&& ~dcache_valid_buf[1] && ~dcache_ready) || (uop0[`INS_DIV])) begin
-        ex2_allowin=0;
-        buf_sign = 1;
-        // ld_stall_flag = 1;
-    end
+    // else if(/*!(dcache_valid_buf[0] ) && !(uop0[`INS_DIV] | reg_ex1_is_priviledeged_0) || dcache_ready*/(dcache_valid_buf[0]&& ~dcache_valid_buf[1] && ~dcache_ready) || (uop0[`INS_DIV])) begin
+    //     ex2_allowin=0;
+    //     // buf_sign = 1;
+    //     // ld_stall_flag = 1;
+    // end
+
 end
-assign ld_stall_flag = (dcache_valid_buf[1] && ~dcache_ready);
+assign ld_stall_flag = (uop0[`INS_MEM] && ~dcache_ready);
 
 
 always@(posedge clk)begin
