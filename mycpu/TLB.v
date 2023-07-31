@@ -995,7 +995,7 @@
 `include "TLB.vh"
 `include "csr.vh"
 module TLB#(
-    parameter TLB_COOKIE_WIDTH = 64
+    parameter TLB_COOKIE_WIDTH = 33
     )(
     input                               clk,
     input                               rstn,
@@ -1019,7 +1019,7 @@ module TLB#(
     input       [3 : 0]                    WSTRB_D,
     input                               signed_ext,
     input                               atom,
-    input       [TLB_COOKIE_WIDTH-1:0]   tlb_cookie_in,
+    input      [TLB_COOKIE_WIDTH-1:0]   tlb_cookie_in,
     output     [TLB_COOKIE_WIDTH-1:0]   tlb_cookie_out,
     input       [4:0]                   rd,
     input       [11:0]                  TAG_OFFSET_I,
@@ -1081,7 +1081,7 @@ module TLB#(
 
 reg [`TLB_VPPN_LEN : 0] VA_I_reg2 = 0;
 reg [`TLB_VPPN_LEN : 0] VA_D_reg2 = 0;
-
+reg [TLB_COOKIE_WIDTH-1:0] tlb_cookie_reg2=0;
 reg                     en_i_reg2 = 0;
 reg                     en_d_reg2 = 0;
 reg [11:0]              TAG_OFFSET_I_reg2 = 0;
@@ -1111,6 +1111,7 @@ assign PA_TAG_OFFSET_D_OUT = TAG_OFFSET_D_reg3;
 assign PA_TAG_OFFSET_I_OUT = TAG_OFFSET_I_reg3;
 assign rd_out = rd_reg2;
 assign SOL_D_OUT = SOL_reg2;
+assign tlb_cookie_out=tlb_cookie_reg2;
 
 
 integer j;
@@ -1133,6 +1134,7 @@ always @(posedge clk or negedge rstn)begin
         VA_D_reg2 <= 0;
         en_i_reg2 <= 0;
         en_d_reg2 <= 0;
+        tlb_cookie_reg2 <=0;
         TAG_OFFSET_I_reg2 <= 0;
         TAG_OFFSET_D_reg2 <= 0;
         signed_ext_reg2 <= 0;
@@ -1153,6 +1155,7 @@ always @(posedge clk or negedge rstn)begin
         VA_D_reg2 <= 0;
         en_i_reg2 <= 0;
         en_d_reg2 <= 0;
+        tlb_cookie_reg2 <=0;
         TAG_OFFSET_I_reg2 <= 0;
         TAG_OFFSET_D_reg2 <= 0;
         signed_ext_reg2 <= 0;
@@ -1197,6 +1200,12 @@ always @(posedge clk or negedge rstn)begin
             WDATA_D_reg2 <= WDATA_D_reg2;
             WSTRB_D_reg2 <= WSTRB_D_reg2;
             rd_reg2 <= rd_reg2;
+        end
+
+        if(~stall_i)begin
+            tlb_cookie_reg2 <=tlb_cookie_in;
+        end else begin
+            tlb_cookie_reg2 <=tlb_cookie_reg2;
         end
         
         TAG_OFFSET_I_reg3 <= TAG_OFFSET_I_reg2;

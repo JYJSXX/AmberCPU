@@ -6,7 +6,7 @@
 module icache #(
     parameter INDEX_WIDTH       = 6,
     parameter WORD_OFFSET_WIDTH = 4,
-    parameter COOKIE_WIDTH      = 32
+    parameter COOKIE_WIDTH      = 33
 )(
     input               clk,            
     input               rstn,           
@@ -376,10 +376,12 @@ module icache #(
     assign hit[0]       = valid[0] && (tag_rdata[0][TAG_WIDTH-1:0] == tag); // hit in way 0
     assign hit[1]       = valid[1] && (tag_rdata[1][TAG_WIDTH-1:0] == tag); // hit in way 1
     assign hit_way      = hit[0] ? 0 : 1;           
-    assign cache_hit    = |hit || victim_hit;
+    // assign cache_hit    = |hit || victim_hit;
+    assign cache_hit    = |hit ;
     // only when cache_hit, hit_way is valid
     wire hit_way_valid;
-    assign hit_way_valid = cache_hit && ~victim_hit ? hit_way : 0;
+    // assign hit_way_valid = cache_hit && ~victim_hit ? hit_way : 0;
+    assign hit_way_valid = cache_hit ? hit_way : 0;
     
 
     /* read control */
