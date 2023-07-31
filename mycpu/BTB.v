@@ -1,13 +1,20 @@
 /*
 3bit动态分支预测器
 taken/not taken 由两种2bit预测器通过计分来选择，预留了一种策略，初始状态是taken
-跳转PC如果有历史记录就提供pred_pc，否则就返回not taken,这时的pred_pc=fetch_pc+8
+跳转PC如果有taken就根据历史记录就提供pred_pc，否则就返回not taken,这时的pred_pc=fetch_pc+8
 预测表中的内容直到fact_tpc来更新
+区分
+1.非跳转指令       BPOS对应index=0
+2.无条件跳转指令    UPOS对应index=1
+3.条件跳转指令      BPOS对应index=1
+
+00 not branch;01 unconditinonal branch
+10 PC relative 11 indirect(uncondition too)
 */
 `include "config.vh"
 
 module BTB #(
-    parameter DEPTH=16
+    parameter PC_INDEX_WIDTH       =   8
 ) (
     input               rstn,
     input               clk,
@@ -16,7 +23,7 @@ module BTB #(
     //10 PC relative 11 indirect(uncondition too)
     //from predecoder
     input   [1:0]       inst_btype,
-    input               inst_bpos,
+    input   [PC_INDEX_WIDTH-1:0] inst_index,
 
     input   [31:0]      fetch_pc,
     output  [31:0]      pred_pc,
@@ -33,8 +40,7 @@ module BTB #(
     assign pred_pc=fetch_pc+8;  
     assign pred_taken=0;
     
-    // localparam      PC_INDEX_WIDTH       =   8,
-    //                 EASY_STRONG_TAKEN    =   2'b00,
+    // localparam      EASY_STRONG_TAKEN    =   2'b00,
     //                 EASY_STRONG_NOTAKEN  =   2'b01,
     //                 EASY_WEAK_TAKEN      =   2'b10,
     //                 EASY_WEAK_NOTAKEN    =   2'b11,
@@ -53,48 +59,40 @@ module BTB #(
     // reg [1:0] EASY_STATE,NEXT_EASY_STATE;
     // reg [1:0] HARD_STATE,NEXT_HARD_STATE;
     // reg [1:0] TOP_STATE , NEXT_TOP_STATE;
-    // reg [1<<(PC_INDEX_WIDTH-1):0]   MASK;
-    // reg [1<<(PC_INDEX_WIDTH-1):0]   BPOS;
-    // reg [1:0]  SCORE=0;
-    // reg taken=0;
+    // reg [(1<<PC_INDEX_WIDTH)-1:0]   UMASK;
+    // reg [(1<<PC_INDEX_WIDTH)-1:0]   BMASK;
+    // reg [1:0]                       SCORE=0;
+    // reg                             taken=0;
+    // reg [1:0]                       btype=0;//reg for temp save
+    // reg [(PC_INDEX_WIDTH-1):0]      bindex=0;
 
 
 
-    // wire we;
-    // wire [31:0] _pred_pc;
-    // wire       hit;
+    // wire                            we;
+    // wire [31:0]                     _pred_pc;
     // wire [PC_INDEX_WIDTH-1:0]       INDEX;
     // wire [PC_INDEX_WIDTH-1:0]       FACT_INDEX;
-    // wire                            BPOS_MISS;
     // wire                            pred_valid;
-    // wire                            flag;
-    // wire we;
-    // wire [31:0] _pred_pc;
-    // wire       hit;
-    // wire [PC_INDEX_WIDTH-1:0]       INDEX;
-    // wire [PC_INDEX_WIDTH-1:0]       FACT_INDEX;
-    // wire                            BPOS_MISS;
-    // wire                            pred_valid;
-    // wire                            flag;
+    // wire                            check=(pred_pc!=fetch_pc+8)&&!pred_taken;
+    // wire [31:0]                     pred_pc_hang;
+    // wire                            hit;
+    // wire                            Bhit;//from predecoder
+    // wire                            Uhit;
+    // wire                            check_Bhit;
+    // wire                            check_Uhit;
 
 
 
-    // assign we = fact_taken&&predict_add_fail;
+    // assign we = fact_taken;
     // assign INDEX=fetch_pc[PC_INDEX_WIDTH+2:3];
     // assign FACT_INDEX=fact_pc[PC_INDEX_WIDTH+2:3];
-    // assign pred_valid=MASK[INDEX];//MASK controls BTB valid
-    // assign pred_pc=pred_valid?_pred_pc:fetch_pc+8;
-    // assign hit = !predict_dir_fail;
-    // assign flag=(inst_bpos&inst_btype[0])&&!BPOS[FACT_INDEX];//unconditional hit means ASID change?
-    // assign BPOS_MISS=(BPOS!=0)&!(flag);
-    // assign pred_taken=flag|taken;
-    
-    // // TODO unimplemented
-    // wire [31:0]  pred_pc_hang;
-    // assign pred_pc_hang=0;
-    // // TODO unimplemented
-    // wire [31:0]  pred_pc_hang;
-    // assign pred_pc_hang=0;
+    // assign hit=taken==fact_taken;
+    // assign Bhit=BMASK[INDEX];
+    // assign Uhit=UMASK[INDEX];
+    // assign check_Bhit=BMASK[INDEX];
+    // assign check_Uhit=UMASK[INDEX];
+    // assign pred_taken=Uhit?1:taken;
+    // assign pred_pc   =pred_taken?_pred_pc:fetch_pc+8;
 
     // `ifdef BTB_LOG
     //     reg [31:0] suc_cnt=0;
@@ -148,29 +146,12 @@ module BTB #(
     //         HARD_STATE<=NEXT_HARD_STATE;
     //     end
     // end
-    // always @(posedge clk or negedge rstn) begin//FSM
-    //     if(!rstn)begin
-    //         TOP_STATE<=TOP_IDLE;
-    //         EASY_STATE<=IDLE;
-    //         HARD_STATE<=IDLE;
-    //     end else if(if0_allowin)begin
-    //         TOP_STATE<=NEXT_TOP_STATE;
-    //         EASY_STATE<=NEXT_EASY_STATE;
-    //         HARD_STATE<=NEXT_HARD_STATE;
-    //     end
-    // end
 
     // always @(posedge clk or negedge rstn) begin//MASK&&SCORE
     //     if (!rstn) begin
-    //         MASK<=0;
-    //         SCORE<=0;
-    //     end else begin
-    //         if (we) begin
-    //             MASK[INDEX]<=1;
-    //         end  else if(inst_btype==2'b00) begin
-    //             MASK[INDEX]<=0;
-    //         end
-            
+    //         SCORE<=2'b00;
+    //     end
+    //     else begin
     //         case (SCORE)
     //             2'b00:SCORE<=hit?2'b00:2'b01;
     //             2'b01:SCORE<=hit?2'b00:2'b10;
@@ -183,13 +164,33 @@ module BTB #(
     // end
     // always @(posedge clk or negedge rstn) begin
     //     if(!rstn)begin
-    //         BPOS<=0;
+    //         btype<=0;
+    //         bindex<=0;
     //     end else begin
-    //         if(BPOS_MISS)BPOS<=0;
-    //         else BPOS<=BPOS|(({128'b0,inst_bpos}&{128'b0,inst_btype[0]})<<FACT_INDEX);
+    //         btype<=inst_btype;
+    //         bindex<=inst_index;
     //     end
     // end
-    // // //pred_taken todo
+    // always @(posedge clk or negedge rstn) begin
+    //     if(!rstn)begin
+    //         UMASK<=0;
+    //     end else begin
+    //         if(check_Uhit==1&&!btype[0])UMASK<=0;
+    //         else if(btype[0])begin
+    //             UMASK<=UMASK|(256'b1<<INDEX);
+    //         end
+    //     end
+    // end
+    // always @(posedge clk or negedge rstn) begin
+    //     if(!rstn)begin
+    //         BMASK<=0;
+    //     end else begin
+    //         if(check_Bhit==1&&btype!=2'b00)BMASK[bindex]<=0;
+    //         else if(btype!=2'b00)begin
+    //             BMASK[bindex]<=1;
+    //         end
+    //     end
+    // end
 
     // always @(*) begin
     //     case (EASY_STATE)
@@ -232,13 +233,6 @@ module BTB #(
     //         1'b0:NEXT_TOP_STATE=TOP_HARD;
     //     endcase
     // end
-    // always @(*) begin
-    //     case (SCORE[1])
-    //         1'b1:NEXT_TOP_STATE=TOP_EASY;
-    //         1'b0:NEXT_TOP_STATE=TOP_HARD;
-    //     endcase
-    // end
-
     // always @(*) begin///taken logic
     //     case (TOP_STATE)
     //         TOP_IDLE:begin
@@ -253,6 +247,5 @@ module BTB #(
     //         TOP_RESR: 
     //             taken=1;
     //     endcase
-
     // end
 endmodule

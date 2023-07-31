@@ -29,6 +29,7 @@ module IF1_FIFO(
     input [31:0]        icache_inst0,
     input [31:0]        icache_inst1,
 
+    input [31:0]        fetch_pc,
     input [31:0]        pc_out,
     input [31:0]        icache_pc_next, //?
     input               pc_taken_out,   //?
@@ -102,7 +103,7 @@ module IF1_FIFO(
     // reg [6:0]       tmp_icache_exception;
 
 
-    // reg [WIDTH*32-1:0] if1_fifo_pc_buf;
+    reg [(BUF_W+1)*32-1:0] if1_fifo_pc_buf;
     reg [BUF_W:0]    icache_rvalid_buf;
     
     // reg [1:0]       tmp_icache_excp_flag;
@@ -147,7 +148,8 @@ module IF1_FIFO(
     // assign p_if1_fifo_inst0  =  if0_if1_pc[2]? `INST_NOP:if1_fifo_inst0[31:0];
     // assign p_if1_fifo_inst1  =  priv_flag[0]?`INST_NOP:if1_fifo_inst1;
     // assign fifo_readygo =       if1_fifo_valid&&!(!space_ok&&!nearly_full)&&tmp!=2;
-    assign fifo_readygo =       if1_fifo_valid&&(if1_fifo_pc!=pc_out);
+    assign fifo_readygo =       if1_fifo_valid&&(if1_fifo_pc!=pc_out);//有隐患
+    // assign fifo_readygo =       if1_fifo_valid&&(if1_fifo_pc!=if1_fifo_pc_buf[BUF_W-1:]);
     wire critical_allowin;
     assign  critical_allowin=!icache_rvalid_buf[BUF_W-1]
                                     ||icache_rready;
@@ -170,7 +172,7 @@ module IF1_FIFO(
     // assign pc_from_PRIV = pc_after_priv;
 
 
-    always @(posedge clk) begin
+    always @(posedge clk or negedge rstn) begin
         if(!rstn)begin
             icache_rvalid_buf<=0;
         end 
@@ -179,6 +181,15 @@ module IF1_FIFO(
         end
         else if(if1_allowin)begin
             icache_rvalid_buf<={icache_rvalid_buf[BUF_W-1:0],if1_allowin};            
+        end
+    end
+    always @(posedge clk or negedge rstn) begin
+        if(!rstn)begin
+            if1_fifo_pc_buf<=0;
+        end else if(flush)begin
+            if1_fifo_pc_buf<=0;
+        end else if(if1_allowin)begin
+            if1_fifo_pc_buf<={if1_fifo_pc_buf[BUF_W*32-1:0],fetch_pc[31:0]};
         end
     end
 

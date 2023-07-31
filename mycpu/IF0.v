@@ -44,6 +44,7 @@ module IF0 (
     assign raddr        =   pc;
     assign pc_in_stall  =   !if0_allowin;
     assign if0_readygo  =   if0_allowin;
+    wire   [31:0]  npc  =   if0_allowin?fetch_pc:0;     
 
     always @(posedge clk) begin
         if (~rstn) begin
