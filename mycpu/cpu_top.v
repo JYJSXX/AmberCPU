@@ -830,8 +830,37 @@ idle_clk idle_clk1
         `endif
     );
 
-
-
+    wire [31:0]           tlb_ex_pc0;
+    wire [31:0]           tlb_ex_pc1;
+    wire [31:0]           tlb_ex_pc_next;
+    wire [31:0]           tlb_ex_inst0;
+    wire [31:0]           tlb_ex_inst1;
+    wire                  tlb_ex_branch_flag;
+    wire                  tlb_ex_excp_flag;
+    wire [6:0]            tlb_ex_exception;
+    wire [31:0]           tlb_ex_badv;
+    wire                  tlb_ex_is_ALU_0;
+    wire                  tlb_ex_is_ALU_1;
+    wire                  tlb_ex_is_syscall_0;
+    wire                  tlb_ex_is_syscall_1;
+    wire                  tlb_ex_is_break_0;
+    wire                  tlb_ex_is_break_1;
+    wire                  tlb_ex_is_priviledged_0;
+    wire                  tlb_ex_is_priviledged_1;
+    wire [`WIDTH_UOP-1:0] tlb_ex_uop0;
+    wire [`WIDTH_UOP-1:0] tlb_ex_uop1;
+    wire [31:0]           tlb_ex_imm0;
+    wire [31:0]           tlb_ex_imm1;
+    wire [31:0]           tlb_ex_rj0_data;
+    wire [31:0]           tlb_ex_rj1_data;
+    wire [31:0]           tlb_ex_rk0_data;
+    wire [31:0]           tlb_ex_rk1_data;
+    wire [4:0]            tlb_ex_rj0;
+    wire [4:0]            tlb_ex_rj1;
+    wire [4:0]            tlb_ex_rk0;
+    wire [4:0]            tlb_ex_rk1;
+    wire [4:0]            tlb_ex_rd0;
+    wire [4:0]            tlb_ex_rd1;
 
     wire wen_csr;
     //前递用到的信号

@@ -63,11 +63,12 @@ module divider(
         end
     end
 
-    localparam [1:0]
+    localparam [2:0]
                     DIV_IDLE = 0,
                     DIV_INIT = 1,
                     DIV_CALC = 2,
-                    DIV_DONE = 3;
+                    DIV_DONE = 3,
+                    DIV_HOLD = 4;
 
     reg     [1:0]   div_state = DIV_IDLE, div_next_state = DIV_IDLE;
     assign ready = (div_state == DIV_DONE);
@@ -95,10 +96,12 @@ module divider(
             DIV_INIT:
             begin
                 if(digit_divisor_reg > digit_dividend_reg || (~|digit_divisor_reg))
-                    div_next_state = DIV_DONE;
+                    div_next_state = DIV_HOLD;
                 else 
                     div_next_state = DIV_CALC;
             end
+            DIV_HOLD:
+            div_next_state = DIV_DONE;
             DIV_CALC:
             begin
                 if(shift_count == digit_dividend_reg - digit_divisor_reg + 1)
@@ -175,18 +178,25 @@ module divider(
                     dividend_reg <= dividend_reg;
                     dividend_sign <= dividend_sign;
                     divisor_sign <= divisor_sign;
-                    if(digit_divisor_reg > digit_dividend_reg || (~|digit_divisor_reg))
-                    begin
-                        shift <= 0;
-                        quotient <= 0;
-                        remainder <= (sign_reg & dividend_sign) ? ~dividend_reg[31:0] + 1 : dividend_reg[31:0];
-                    end
-                    else
+                    // if(digit_divisor_reg > digit_dividend_reg || (~|digit_divisor_reg))
+                    // begin
+                    //     shift <= 0;
+                    //     quotient <= 0;
+                    //     remainder <= (sign_reg & dividend_sign) ? ~dividend_reg[31:0] + 1 : dividend_reg[31:0];
+                    // end
+                    // else
+                    if(~(digit_divisor_reg > digit_dividend_reg || (~|digit_divisor_reg)))
                     begin
                         shift <= 1;
                         quotient <= 0;
                         remainder <= 0;
                     end
+                end
+                DIV_HOLD:
+                begin
+                    shift <= 0;
+                    quotient <= 0;
+                    remainder <= (sign_reg & dividend_sign) ? ~dividend_reg[31:0] + 1 : dividend_reg[31:0];
                 end
                 DIV_CALC:
                 begin

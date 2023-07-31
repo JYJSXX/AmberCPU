@@ -70,7 +70,6 @@ module BTB #(
     wire                            BPOS_MISS;
     wire                            pred_valid;
     wire                            flag;
-    wire we;
     wire [31:0] _pred_pc;
     wire       hit;
     wire [PC_INDEX_WIDTH-1:0]       INDEX;
