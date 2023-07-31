@@ -45,6 +45,7 @@ module EX0(
     output [31:0] forward_data_k1,
     output [31:0] alu_result0,
     output [31:0] alu_result1,
+    output [31:0] dcache_addr,
     output alu_result0_valid,
     output alu_result1_valid,
     output ibar,
@@ -378,7 +379,7 @@ EX_ALU ex_alu2(
     .b(b_2),
     .y(y_2)
 );
-
+assign dcache_addr = rj0_data_o + imm0;
 EX_BRANCH ex_branch(
     .pc(pc0),
     .inst(inst0),

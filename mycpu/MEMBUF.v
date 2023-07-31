@@ -43,6 +43,8 @@ module MEMBUF(
     input [4:0] reg_ex_rd0,
     input [4:0] reg_ex_rd1,
 
+    input [31:0] csr_rd_data,
+
     //从ex1_ex2段间输入
     input [4:0] ex1_ex2_rd0,
     input [4:0] ex1_ex2_rd1,
@@ -76,6 +78,7 @@ module MEMBUF(
     input [31:0]    tlb_badv_out,
     input [0:0]     tlb_excp_flag,
     input [6:0]     tlb_exception,
+    output reg  [31:0]    ex0_ex1_csr_data,
     output reg  [31:0]    ex1_alu_result0,
     output reg  [31:0]    ex1_alu_result1,
     output reg             ex1_alu_result0_valid,
@@ -199,6 +202,7 @@ always @ (posedge clk)begin
         ex1_badv_out <= 0;
         ex1_excp_flag <= 0;
         ex1_exception <= 0;
+        ex0_ex1_csr_data <= 0;
     end
     else if (tlb_readygo && tlb_allowin && ex_allowin)begin
         tlb_ex_pc0 <= reg_ex_pc0;
@@ -249,6 +253,7 @@ always @ (posedge clk)begin
         ex1_badv_out <= tlb_badv_out;
         ex1_excp_flag <= tlb_excp_flag;
         ex1_exception <= tlb_exception;
+        ex0_ex1_csr_data <= csr_rd_data;
 
 
     end

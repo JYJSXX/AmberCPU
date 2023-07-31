@@ -12,6 +12,7 @@ module EX1_EX2(
 
     input   csr_ren_ex1, 
     output reg csr_ren_ex2,
+    input [31:0] ex0_ex1_csr_data,
     input   [31:0] reg_ex1_pc0,//这些信号直接从REG_EX1中接入
     input   [31:0] reg_ex1_pc1,
     input   [31:0] reg_ex1_inst0,
@@ -141,22 +142,27 @@ always@(posedge clk) begin
         // ex1_ex2_is_break_0<=reg_ex1_is_break_0;
         // ex1_ex2_is_break_1<=reg_ex1_is_break_1;
         if(reg_ex1_uop0[`INS_DIV]) begin
-                if(cond0[0]) begin
-                    ex1_ex2_data_0 <= remainder;
-                    ex1_ex2_data_0_valid <= div_ready;
-                    ex1_ex2_rd0 <= reg_ex1_rd0;
-                end
-                else begin
-                    ex1_ex2_data_0 <= quotient;
-                    ex1_ex2_data_0_valid <= div_ready;
-                    ex1_ex2_rd0 <= reg_ex1_rd0;
-                end
-            end
-            else begin
-                ex1_ex2_data_0 <= alu_result0;
-                ex1_ex2_data_0_valid <= alu_result0_valid;
+            if(cond0[0]) begin
+                ex1_ex2_data_0 <= remainder;
+                ex1_ex2_data_0_valid <= div_ready;
                 ex1_ex2_rd0 <= reg_ex1_rd0;
             end
+            else begin
+                ex1_ex2_data_0 <= quotient;
+                ex1_ex2_data_0_valid <= div_ready;
+                ex1_ex2_rd0 <= reg_ex1_rd0;
+            end
+        end
+        else if(reg_ex1_uop0[`INS_CSR]) begin
+            ex1_ex2_data_0 <= ex0_ex1_csr_data;
+            ex1_ex2_data_0_valid <= 1;
+            ex1_ex2_rd0 <= reg_ex1_rd0;
+        end
+        else begin
+            ex1_ex2_data_0 <= alu_result0;
+            ex1_ex2_data_0_valid <= alu_result0_valid;
+            ex1_ex2_rd0 <= reg_ex1_rd0;
+        end
          ex1_ex2_is_priviledged_0<=reg_ex1_is_priviledged_0;
         ex1_ex2_badv<=excp_flag_in? badv_in : d_badv;
         ex1_ex2_exception<=excp_flag_in? exception_in : d_exception;

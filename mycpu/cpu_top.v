@@ -1011,6 +1011,7 @@ wire [31:0]    mb_mul_compensate;
 wire [31:0]    mb_badv_out;
 wire [0:0]     mb_excp_flag;
 wire [6:0]     mb_exception;
+wire [31:0]    ex0_ex1_csr_data;
 
     MEMBUF u_MEMBUF(
         .clk                     ( clk                     ),
@@ -1055,6 +1056,8 @@ wire [6:0]     mb_exception;
         .reg_ex_rk1              ( reg_ex_rk1              ),
         .reg_ex_rd0              ( reg_ex_rd0              ),
         .reg_ex_rd1              ( reg_ex_rd1              ),
+        .csr_rd_data             ( csr_rd_data             ),
+        .ex0_ex1_csr_data       ( ex0_ex1_csr_data       ),
 
         .tlb_alu_result0          ( alu_result0          ),
         .tlb_alu_result1          ( alu_result1          ),
@@ -1116,7 +1119,6 @@ wire [6:0]     mb_exception;
         .forward_data_k1         ( tlb_forward_data_k1         ),
         .op_dcache               ( op_dcache            ),
         .write_type_dcache       ( write_type_tlb    ),
-        .addr_dcache             ( addr_dcache          ),
         .w_data_dcache           ( w_data_tlb           ),
         .is_atom_dcache          ( is_atom_dcache       ),
 
@@ -1171,6 +1173,7 @@ wire [6:0]     mb_exception;
         .forward_data_j1        ( forward_data_j1     ),
         .forward_data_k0        ( forward_data_k0     ),
         .forward_data_k1        ( forward_data_k1     ),
+        .dcache_addr           ( addr_dcache         ),
         .dcache_ready       (wready_dcache | rready_dcache),
         .pc0                  ( reg_ex_pc0                  ),
         .pc1                  ( reg_ex_pc1                  ),
@@ -1350,6 +1353,7 @@ wire [6:0]     mb_exception;
         .reg_ex1_pc1               ( tlb_ex_pc1               ),
         .reg_ex1_inst0             ( tlb_ex_inst0             ),
         .reg_ex1_inst1             ( tlb_ex_inst1             ),
+        .ex0_ex1_csr_data          ( ex0_ex1_csr_data          ),
         .csr_ren_ex1               ( csr_ren                   ),
         .csr_ren_ex2               ( csr_ren_ex2               ),
         .reg_ex1_uop0              ( tlb_ex_uop0              ),
