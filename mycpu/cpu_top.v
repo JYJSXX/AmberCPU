@@ -1781,6 +1781,8 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         if(debug1_valid&&!set_pc_from_WB && debug1_wb_inst[31:0]!=`INST_NOP 
                                 && debug1_wb_pc != 0 )
             debug1_pc_reg<=debug1_wb_pc;
+        else if(~debug1_valid)
+            debug1_pc_reg<=0;
         if(tlbfill_valid)
             fill_index_diff<=stable_counter[`TLBIDX_WIDTH-1:0];
     end
