@@ -82,6 +82,7 @@ module EX2_WB(
     input [31:0] badv_in,
     output reg[6:0] ecode_out,
     output reg exception_flag_out,
+    output reg exception_cpu_interrupt,
     output reg [31:0] badv_out,
     output reg wen_badv,
     output reg tlb_exception, //决定是否回到直接地址翻译
@@ -133,6 +134,7 @@ always@(posedge clk)begin
         wen_era <= 0;
         vppn_out <= 0;
         wen_vppn <= 0;
+        exception_cpu_interrupt <= 0;
     end
     else begin
         exception_flag_out <= exception_flag_in | cpu_interrupt;
@@ -144,7 +146,7 @@ always@(posedge clk)begin
         wen_era <= exception_flag_in | cpu_interrupt;
         vppn_out <= badv_in[18:0];
         wen_vppn <= exception_flag_in && set_vppn;
-        
+        exception_cpu_interrupt <= cpu_interrupt;
     end
 
 end

@@ -1239,6 +1239,7 @@ idle_clk idle_clk1
     wire [31:0] inst_dcache_in;
     wire [31:0] inst_dcache_out;
     wire flush_to_priv_wr_csr;
+    wire exception_cpu_interrupt;
     EX2_WB u_EX2_WB(
         .clk                 ( clk                 ),
         .aresetn             ( aresetn             ),
@@ -1264,6 +1265,7 @@ idle_clk idle_clk1
         // .pc_dcache_out       ( pc_dcache_out       ), // TODO 没做
         // .inst_dcache_out     ( inst_dcache_out     ),
         // .inst_dcache_in      ( inst_dcache_in      ),
+        .exception_cpu_interrupt ( exception_cpu_interrupt ),
         .ex_rd0              ( ex1_ex2_rd0              ),
         .ex_rd1              ( ex1_ex2_rd1              ),
         .ex2_result0_valid   ( ex2_data0_valid   ),
@@ -1769,6 +1771,21 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
     wire ex_eu1_en;
     assign ex_eu0_en=debug0_valid;
     assign ex_eu1_en=debug1_valid;
+    reg [31:0] debug0_pc_reg;
+    reg [31:0] debug1_pc_reg;
+    always @(posedge clk)
+    begin
+        if(debug0_valid&&!set_pc_from_WB && debug0_wb_inst[31:0]!=`INST_NOP 
+                                && debug0_wb_pc != 0 )
+            debug0_pc_reg<=debug0_wb_pc;
+        if(debug1_valid&&!set_pc_from_WB && debug1_wb_inst[31:0]!=`INST_NOP 
+                                && debug1_wb_pc != 0 )
+            debug1_pc_reg<=debug1_wb_pc;
+        if(tlbfill_valid)
+            fill_index_diff<=stable_counter[`TLBIDX_WIDTH-1:0];
+    end
+    wire noequal;
+    assign noequal = (debug0_pc_reg != debug0_wb_pc || debug0_wb_inst == 32'h5000_0000);
 
     always @(posedge clk)
         if(tlbfill_valid)
@@ -1782,7 +1799,9 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
             //防止出现eu0不提交但eu1提交
             cmt_stable_counter <= ex_stable_counter;
             if(ex_eu0_en==0&&ex_eu1_en!=0) begin
-                cmt_valid0  <= ex_eu1_en;
+                cmt_valid0  <= debug0_valid&&!set_pc_from_WB && debug0_wb_inst[31:0]!=`INST_NOP 
+                                && debug0_wb_pc != 0 
+                                && (debug0_pc_reg != debug0_wb_pc || debug0_wb_inst == 32'h5000_0000);
                 cmt_pc0     <= debug1_wb_pc;
                 cmt_inst0   <= debug1_wb_inst;
                 cmt_wen0    <= debug1_wb_rf_wen!=0;
@@ -1793,18 +1812,19 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
                 cmt_valid1  <= 0;
             end else begin
                 //有异常时不置valid
-                cmt_valid0  <= ex_eu0_en&&!set_pc_from_WB && debug0_wb_inst[31:0]!=`INST_NOP 
-                                && debug0_wb_pc != 0 ;
+                cmt_valid0  <= debug0_valid&&!set_pc_from_WB && debug0_wb_inst[31:0]!=`INST_NOP 
+                                && debug0_wb_pc != 0 
+                                && (debug0_pc_reg != debug0_wb_pc || debug0_wb_inst == 32'h5000_0000);
                 cmt_pc0     <= debug0_wb_pc;
                 cmt_inst0   <= debug0_wb_inst;
                 cmt_wen0    <= debug0_wb_rf_wen!=0;
                 cmt_wdest0  <= debug0_wb_rf_wnum;
                 cmt_wdata0  <= debug0_wb_rf_wdata;
-                cmt_excp_valid<=set_pc_from_WB;
+                cmt_excp_valid<=set_pc_from_WB && debug0_wb_pc != 0 | exception_cpu_interrupt;
                 cmt_ecode   <= ex2_wb_exception[5:0];
 
-                cmt_valid1  <= ex_eu1_en&&!set_pc_from_WB && debug1_wb_inst[31:0]!=`INST_NOP
-                && debug1_wb_pc != 0 ;
+                cmt_valid1  <= debug1_valid&&!set_pc_from_WB && debug1_wb_inst[31:0]!=`INST_NOP
+                && debug1_wb_pc != 0 && (debug1_pc_reg != debug1_wb_pc || debug1_wb_inst == 32'h5000_0000);
                 cmt_pc1     <= debug1_wb_pc;
                 cmt_inst1   <= debug1_wb_inst;
                 cmt_wen1    <= debug1_wb_rf_wen!=0;
