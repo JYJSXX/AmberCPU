@@ -349,7 +349,7 @@ always@(posedge clk)begin
         debug0_wb_inst <= dcache_ready ? inst_mem_reg : ex1_ex2_inst0;
         debug1_wb_pc <= pc1;
         debug1_wb_inst <= ex1_ex2_inst1;
-        debug0_valid <= dcache_ready ? 1: (ex2_allowin && !uop0[`INS_MEM]);
+        debug0_valid <= dcache_ready ? 1: (ex2_allowin);
         debug1_valid <= ex2_allowin;
     end
 
