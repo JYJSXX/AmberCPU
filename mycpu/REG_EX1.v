@@ -269,7 +269,7 @@ always@(posedge clk) begin
 end
 // reg priv_flag;
 always@(posedge clk)begin
-    if(~aresetn | flush_by_priv | (flush) | (~reg_readygo & ex_allowin & ex_readygo) | (~reg_allowin & ex_allowin & ex_readygo)) begin
+    if(~aresetn | flush_by_priv | (flush & ex_allowin) | (~reg_readygo & ex_allowin & ex_readygo) | (~reg_allowin & ex_allowin & ex_readygo)) begin
         reg_ex_pc0 <= 0;
         reg_ex_pc1 <= 0;
         reg_ex_pc_next <= 0;
@@ -399,10 +399,10 @@ always@(posedge clk)begin
         reg_ex_uop1 <= reg_ex_uop1;
         reg_ex_imm0 <= reg_ex_imm0;
         reg_ex_imm1 <= reg_ex_imm1;
-        reg_ex_rj0_data <= (stall_D && (forward_flag_j0_ps || forward_flag_j0)) ? forward_data_j0 : reg_ex_rj0_data;
-        reg_ex_rj1_data <= (stall_D && (forward_flag_j1_ps || forward_flag_j1)) ? forward_data_j1 : reg_ex_rj1_data;
-        reg_ex_rk0_data <= (stall_D && (forward_flag_k0_ps || forward_flag_k0)) ? forward_data_k0 : reg_ex_rk0_data;
-        reg_ex_rk1_data <= (stall_D && (forward_flag_k1_ps || forward_flag_k1)) ? forward_data_k1 : reg_ex_rk1_data;
+        reg_ex_rj0_data <=/* (stall_D && (forward_flag_j0_ps || forward_flag_j0)) ? forward_data_j0 : */reg_ex_rj0_data;
+        reg_ex_rj1_data <=/* (stall_D && (forward_flag_j1_ps || forward_flag_j1)) ? forward_data_j1 : */reg_ex_rj1_data;
+        reg_ex_rk0_data <= /*(stall_D && (forward_flag_k0_ps || forward_flag_k0)) ? forward_data_k0 : */reg_ex_rk0_data;
+        reg_ex_rk1_data <= /*(stall_D && (forward_flag_k1_ps || forward_flag_k1)) ? forward_data_k1 : */reg_ex_rk1_data;
         reg_ex_rj0 <= reg_ex_rj0;
         reg_ex_rj1 <= reg_ex_rj1;
         reg_ex_rk0 <= reg_ex_rk0;

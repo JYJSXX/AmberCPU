@@ -70,7 +70,7 @@ module divider(
                     DIV_DONE = 3,
                     DIV_HOLD = 4;
 
-    reg     [1:0]   div_state = DIV_IDLE, div_next_state = DIV_IDLE;
+    reg     [2:0]   div_state = DIV_IDLE, div_next_state = DIV_IDLE;
     assign ready = (div_state == DIV_DONE);
     assign stall_divider = (div_state != DIV_IDLE);
 
