@@ -71,7 +71,7 @@ module FIFO_predecoder #(
     assign  inst_btype         =inst1_btype!=2'b00  ?   inst1_btype:
                                 if1_fifo_pc[2]      ?   2'b00:
                                 inst0_btype ==2'b11 ?   2'b11:2'b00;
-    assign  inst_index         =if1_fifo_pc[PC_INDEX_WIDTH+2:3];
+    assign  inst_index         ={if1_fifo_pc[19],if1_fifo_pc[16:12],if1_fifo_pc[5:4]};
     // assign  branch_flag        ={inst1_btype,inst0_btype};
     // assign  inst_bpos          =inst0_btype?0:1;
     // always @(posedge clk or negedge rstn) begin//get posedge for ibar

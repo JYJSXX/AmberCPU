@@ -12,6 +12,7 @@ taken/not taken 由两种2bit预测器通过计分来选择，预留了一种策
 10 PC relative 11 indirect(uncondition too)
 
 2224/90296
+2235/90530
 */
 `include "config.vh"
 
@@ -62,7 +63,7 @@ module BTB #(
     reg [1:0] TOP_STATE , NEXT_TOP_STATE;
     reg [(1<<PC_INDEX_WIDTH)-1:0]   UMASK;
     reg [(1<<PC_INDEX_WIDTH)-1:0]   BMASK;
-    reg [1:0]                       SCORE=0;
+    reg [2:0]                       SCORE=0;
     reg                             taken=0;
     reg [1:0]                       btype=0;//reg for temp save
     reg [(PC_INDEX_WIDTH-1):0]      bindex=0;
@@ -76,6 +77,7 @@ module BTB #(
     wire                            pred_valid;
     wire                            check=(pred_pc!=fetch_pc+8)&&!pred_taken;
     wire [31:0]                     pred_pc_hang;
+    wire                            local_taken;
     wire                            hit;
     wire                            Bhit;//from predecoder
     wire                            Uhit;
@@ -86,18 +88,22 @@ module BTB #(
 
 
     assign we = fact_taken;
-    assign INDEX=fetch_pc[PC_INDEX_WIDTH+2:3];
-    assign FACT_INDEX=fact_pc[PC_INDEX_WIDTH+2:3];
+    assign INDEX={fetch_pc[19],fetch_pc[16:12],fetch_pc[5:4]};
+    // assign FACT_INDEX=fact_pc[PC_INDEX_WIDTH+2:3];
+    assign FACT_INDEX={fact_pc[19],fact_pc[16:12],fact_pc[5:4]};
     assign hit=taken==fact_taken;//全局检查
     assign Bhit=BMASK[INDEX];
     assign Uhit=UMASK[INDEX];
     assign check_Bhit=BMASK[INDEX];
     assign check_Uhit=UMASK[INDEX];
-    assign pred_taken=Uhit?1:taken;
     assign PCAdd     =  fetch_pc[2]?fetch_pc+4:fetch_pc+8;
-    assign pred_pc   =  pred_taken?
-                        (_pred_pc==0)?PCAdd:
-                                        _pred_pc:PCAdd;
+    // assign pred_taken=Uhit?1:taken;
+    // assign pred_pc   =  pred_taken?
+    //                     (_pred_pc==0)?PCAdd:
+    //                                     _pred_pc:PCAdd;
+    assign      pred_taken=_pred_pc==0?0:
+                                    Uhit?1:0;
+    assign      pred_pc   = pred_taken?_pred_pc:PCAdd;
 
     `ifdef BTB_LOG
         reg [31:0] suc_cnt=0;
@@ -130,21 +136,22 @@ module BTB #(
         .ADDR_WIDTH  ( PC_INDEX_WIDTH )
     )u_DualPortRAM(
         .clk         ( clk         ),
-        .readAddrA   ( fetch_pc[PC_INDEX_WIDTH+2:3]   ),
-        .readAddrB   ( fact_pc [PC_INDEX_WIDTH+2:3]   ),
-        .writeAddr   ( fact_pc [PC_INDEX_WIDTH+2:3]   ),
-        .writeData   ( fact_tpc   ),
-        .writeEnable ( we ),
-        .readDataA   ( _pred_pc   ),
-        .readDataB   ( pred_pc_hang   )
+        .readAddrA   ( INDEX       ),
+        .readAddrB   ( FACT_INDEX  ),
+        .writeAddr   ( FACT_INDEX  ),
+        .writeData   ( fact_tpc    ),
+        .writeEnable ( we          ),
+        .readDataA   ( _pred_pc    ),
+        .readDataB   ( pred_pc_hang)
     );
 
     BTB_local u_BTB_local(//for local taken predict
         .clk        ( clk        ),
         .rstn       ( rstn       ),
+        .fetch_pc   ( fetch_pc   ),
         .fact_tpc   ( fact_tpc   ),
         .fact_taken ( fact_taken ),
-        .pred_taken ( pred_taken ),
+        .pred_taken ( local_taken)
     );
 
 
@@ -163,15 +170,16 @@ module BTB #(
 
     always @(posedge clk or negedge rstn) begin//MASK&&SCORE
         if (!rstn) begin
-            SCORE<=2'b00;
+            SCORE<=3'b000;
         end
         else begin
             case (SCORE)
-                2'b00:SCORE<=hit?2'b00:2'b01;
-                2'b01:SCORE<=hit?2'b00:2'b10;
-                2'b10:SCORE<=hit?2'b11:2'b01;
-                2'b11:SCORE<=hit?2'b11:2'b10;
-                default: SCORE<=2'b10;
+                3'b000:SCORE<=hit?3'b000:3'b001;
+                3'b001:SCORE<=hit?3'b001:3'b010;
+                3'b010:SCORE<=hit?3'b010:3'b011;
+                3'b011:SCORE<=hit?3'b010:3'b100;
+                3'b100:SCORE<=hit?3'b100:3'b011;
+                default:SCORE<=3'b100;
             endcase
 
         end 
@@ -191,7 +199,7 @@ module BTB #(
         end else begin
             if(check_Uhit==1&&!btype[0])UMASK<=0;
             else if(btype[0])begin
-                UMASK<=UMASK|(256'b1<<INDEX);
+                UMASK[INDEX]<=1;
             end
         end
     end
@@ -240,28 +248,19 @@ module BTB #(
             default: NEXT_HARD_STATE=HARD_WEAK_TAKEN;
         endcase
     end
-    always @(*) begin
-        case (LOCAL_STAT)
-            EASY_STRONG_TAKEN:begin
-                NEXT_EASY_STATE=fact_taken?EASY_STRONG_TAKEN:EASY_WEAK_NOTAKEN;
-            end 
-            EASY_STRONG_NOTAKEN:begin
-                NEXT_EASY_STATE=!fact_taken?EASY_STRONG_NOTAKEN:EASY_WEAK_TAKEN;
-            end
-            EASY_WEAK_TAKEN:begin
-                NEXT_EASY_STATE=fact_taken?EASY_STRONG_TAKEN:EASY_WEAK_NOTAKEN;
-            end
-            EASY_WEAK_NOTAKEN:begin
-                NEXT_EASY_STATE=!fact_taken?EASY_STRONG_NOTAKEN:EASY_WEAK_TAKEN;
-            end
-        endcase
-    end
 
     always @(*) begin
-        case (SCORE[1])
-            1'b1:NEXT_TOP_STATE=TOP_EASY;
-            1'b0:NEXT_TOP_STATE=TOP_HARD;
-        endcase
+        if(SCORE==3'b010||SCORE==3'b011)begin
+            NEXT_TOP_STATE=TOP_LOCAL;
+        end else if(SCORE==3'b001)begin
+            NEXT_TOP_STATE=TOP_EASY;
+        end else if(SCORE==3'b100)begin
+            NEXT_TOP_STATE=TOP_HARD;
+        end else if(SCORE==3'b000)begin
+            NEXT_TOP_STATE=TOP_IDLE;
+        end else begin
+            NEXT_TOP_STATE=TOP_LOCAL;
+        end
     end
     always @(*) begin///taken logic
         case (TOP_STATE)
@@ -275,7 +274,7 @@ module BTB #(
                 taken=~HARD_STATE[0];
             end
             TOP_LOCAL: 
-                taken=LOCAL_STAT[0];
+                taken=local_taken;
         endcase
     end
 endmodule
