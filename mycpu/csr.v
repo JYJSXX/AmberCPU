@@ -103,7 +103,14 @@ module csr
     output [31:0] dmw1_diff
 `endif
 );
+reg exception_delay;        // delay信号
 
+always @ ( posedge clk  )
+  if( !aresetn )
+     exception_delay <= 0;
+  else
+     exception_delay <= exception;   // orig是原信号
+wire pos_signal_excp = exception&& ( ~exception_delay );       // 原信号上升沿位置处产生的pulse信号
     wire [31:0] csr_crmd ;
     wire [31:0] csr_prmd ;
     wire [31:0] csr_euen ;
@@ -377,7 +384,7 @@ always @(posedge clk)
                 crmd_da <= 0;
                 crmd_pg <= 1;
             end
-        end else if(exception) begin
+        end else if(pos_signal_excp) begin
             if(tlb_exception) begin //现在要进入TLB例外
                 crmd_da <= 1;
                 crmd_pg <= 0;
@@ -401,7 +408,7 @@ always @(posedge clk)
         if(~aresetn) begin
             prmd_pplv <= 0;
             prmd_pie <= 0;
-        end else if(exception) begin
+        end else if(pos_signal_excp) begin
             prmd_pplv <= crmd_plv;
             prmd_pie  <= crmd_ie;
         end else if(wen&&addr==`CSR_PRMD) begin
@@ -421,7 +428,7 @@ always @(posedge clk)
         if(~aresetn) begin
             ecfg_lie <= 0;
         end else if(wen&&addr==`CSR_ECFG) begin
-           if(wen) ecfg_lie[`ECFG_LIE]<=wdata[`ECFG_LIE];
+           if(wen) ecfg_lie[`ECFG_LIE]<=wdata[`ECFG_LIE] & 13'b1_1011_1111_1111;
 
         end
     
@@ -433,7 +440,7 @@ always @(posedge clk)
             estat_ecode <= 0;
             estat_subecode <= 0;
         end
-        else if(wen_expcode | exception) begin
+        else if(wen_expcode | pos_signal_excp) begin
             estat_ecode <= expcode_in[5:0];
             estat_subecode <= expcode_in[5:0]==0 ? 0:{8'b0,expcode_in[6]};
         end
@@ -820,7 +827,8 @@ always @(posedge clk)
         else if(csr_tval==0|| set_timer) begin
             time_out <= 0;
             //计时器的初始值比标准大1，否则给定时器设置0无法触发中断
-            if(tcfg_periodic|| set_timer) csr_tval<={tcfg_initval[`TCFG_INITVAL],2'd1};
+            //if(tcfg_periodic|| set_timer) csr_tval<={tcfg_initval[`TCFG_INITVAL],2'd1};
+            if(tcfg_periodic|| set_timer) csr_tval<= {2'b00,tcfg_initval[`TCFG_INITVAL]};
         end else if(tcfg_en) begin
             csr_tval<=csr_tval-1;
             time_out<=csr_tval==1;
@@ -896,14 +904,14 @@ assign rdata[31:0] = {32{addr_in==`CSR_CRMD}} & csr_crmd |
             `ifdef DIFFTEST
     wire [32*26-1:0] csr_diff =  
     {
-    wen&&addr==`CSR_CRMD ?  wdata : exception ? {csr_crmd[31:3], 3'b000} :
+    wen&&addr==`CSR_CRMD ?  wdata & 32'b1_1111_1111 : pos_signal_excp ? {csr_crmd[31:3], 3'b000} :
                      ertn ? {csr_crmd[31:3],csr_prmd[2:0]}: csr_crmd,
-    wen&&addr==`CSR_PRMD ? wdata : exception ? {csr_prmd[31:3],csr_crmd[2:0]}:csr_prmd,
-    wen&&addr==`CSR_ECFG ? wdata :csr_ecfg,
-    wen&&addr==`CSR_ESTAT ? wdata : exception ? {csr_estat[31:23], expcode_in[6:0], csr_estat[15:0]} :csr_estat,
-    wen&&addr==`CSR_ERA ? wdata : exception ? era_in : csr_era,
+    wen&&addr==`CSR_PRMD ? wdata & 32'b111 : pos_signal_excp ? {csr_prmd[31:3],csr_crmd[2:0]}:csr_prmd,
+    wen&&addr==`CSR_ECFG ? wdata & 32'b1_1011_1111_1111 :csr_ecfg & 32'b1_1011_1111_1111,
+    wen&&addr==`CSR_ESTAT ? wdata & 32'b11: pos_signal_excp ? {csr_estat[31:23], expcode_in[6:0], csr_estat[15:0]} :csr_estat,
+    wen&&addr==`CSR_ERA ? wdata : pos_signal_excp ? era_in : csr_era,
     wen&&addr==`CSR_BADV ? wdata :csr_badv,
-    wen&&(addr==`CSR_EENTRY) ? wdata :csr_eentry,
+    wen&&(addr==`CSR_EENTRY) ? wdata & 32'hffff_ffc0:csr_eentry,
     wen&&addr==`CSR_TLBIDX ? wdata :csr_tlbidx,
     wen&&addr==`CSR_TLBEHI ? wdata :csr_tlbehi,
     wen&&addr==`CSR_TLBELO0 ? wdata :csr_tlbelo0,
@@ -922,7 +930,7 @@ assign rdata[31:0] = {32{addr_in==`CSR_CRMD}} & csr_crmd |
     wen&&addr==`CSR_LLBCTL ? wdata : ertn ? {csr_llbctl[31:1], csr_llbctl[2]} :csr_llbctl,
     wen&&addr==`CSR_TLBRENTRY ? wdata :csr_tlbrentry,
     wen&&addr==`CSR_DMW0 ? wdata :csr_dmw0,
-    wen&&addr==`CSR_DMW1 ? wdata :csr_dmw1};
+    wen&&addr==`CSR_DMW1 ? wdata & 32'hff000039:csr_dmw1};
 
     reg [32*26-1:0] csr_diff_delay0;
 

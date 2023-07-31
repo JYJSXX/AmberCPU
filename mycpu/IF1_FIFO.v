@@ -20,18 +20,19 @@ module IF1_FIFO(
 
     input               icache_rready,//icache rready makes reg update anytime
     input               icache_rvalid,
-    input [31:0]        fetch_pc,
-    input               pc_taken_out,   //?
-    output  reg         if1_fifo_pc_taken,    //?
+    // input [31:0]        fetch_pc,
     // input [31:0]        if0_if1_pc,
     // input [31:0]        if0_if1_pc_next,
     input [31:0]        icache_badv,
     input [6:0]         icache_exception,
     input [1:0]         icache_excp_flag,
-    input [31:0]        pc_out,
-    input [31:0]        icache_pc_next, //?
     input [31:0]        icache_inst0,
     input [31:0]        icache_inst1,
+
+    input [31:0]        pc_out,
+    input [31:0]        icache_pc_next, //?
+    input               pc_taken_out,   //?
+    
 
 
     input  [1:0]        ibar_flag,//from pre-decoder
@@ -50,15 +51,15 @@ module IF1_FIFO(
     input               tlb_done,
 
     output reg[31:0]    if1_fifo_pc,
-    output reg[31:0]    if1_fifo_pc_next,   //?
+    output reg          if1_fifo_pc_taken,    //?
+    output reg[31:0]    if1_fifo_pc_next,  
+
     output reg[31:0]    if1_fifo_inst0,
     output reg[31:0]    if1_fifo_inst1,
-    // output wire[31:0]    p_if1_fifo_inst0,
-    // output wire[31:0]    p_if1_fifo_inst1,
     output reg[31:0]    if1_fifo_icache_badv,
     output reg[6:0]     if1_fifo_icache_exception,
-    output reg[1:0]     if1_fifo_icache_excp_flag,
-    output reg[31+3:0]    if1_fifo_icache_cookie_out
+    output reg[1:0]     if1_fifo_icache_excp_flag
+    // output reg[31+3:0]    if1_fifo_icache_cookie_out
     );
     
     localparam      IDLE            =   3'b000,
@@ -74,40 +75,40 @@ module IF1_FIFO(
                     BUF_W = 2;
 
 
-    wire cache_idle;
-    wire pc_fetch_ok;
-    wire idle;
-    wire pushable;
+    // wire cache_idle;
+    // wire pc_fetch_ok;
+    // wire idle;
+    // wire pushable;
     wire miss_inst=!fifo_allowin&&icache_rready;
     // reg [31:0]     if1_fifo_inst0;
     // reg [31:0]     if1_fifo_inst1;
 
-    reg [2:0]       stat;
-    reg [1:0]       tmp;//for last rready but fifo full
-    reg [2:0]       next_stat;
-    reg [31:0]      pc_after_priv;
+    // reg [2:0]       stat;
+    reg [1:0]       tmp;
+    // reg [2:0]       next_stat;
+    // reg [31:0]      pc_after_priv;
 
 
 
 
     reg             if1_fifo_valid;
     // reg             tmp;
-    reg [31:0]      tmp_pc;
-    reg [31:0]      tmp_pc_next;
-    reg             tmp_pc_taken;
-    reg [31:0]      tmp_inst0;
-    reg [31:0]      tmp_inst1;
-    reg [31:0]      tmp_icache_badv;
-    reg [6:0]       tmp_icache_exception;
+    // reg [31:0]      tmp_pc;
+    // reg [31:0]      tmp_pc_next;
+    // reg             tmp_pc_taken;
+    // reg [31:0]      tmp_inst0;
+    // reg [31:0]      tmp_inst1;
+    // reg [31:0]      tmp_icache_badv;
+    // reg [6:0]       tmp_icache_exception;
 
 
-    reg [WIDTH*32-1:0] if1_fifo_pc_buf;
+    // reg [WIDTH*32-1:0] if1_fifo_pc_buf;
     reg [BUF_W:0]    icache_rvalid_buf;
     
-    reg [1:0]       tmp_icache_excp_flag;
-    reg [31:0]      tmp_icache_cookie_out;
-    reg             tmp_cacop_ready;
-    reg             tmp_cacop_complete;
+    // reg [1:0]       tmp_icache_excp_flag;
+    // reg [31:0]      tmp_icache_cookie_out;
+    // reg             tmp_cacop_ready;
+    // reg             tmp_cacop_complete;
     always @(posedge clk or negedge rstn) begin
         if(!rstn)begin
             tmp<=0;//就绪
@@ -162,11 +163,11 @@ module IF1_FIFO(
                                     tmp==0
                                 );
                                 
-    assign idle         = stat==IDLE;
-    assign cache_idle = icache_idle&dcache_idle;
-    assign set_pc_from_PRIV = 0;
+    // assign idle         = stat==IDLE;
+    // assign cache_idle = icache_idle&dcache_idle;
+    // assign set_pc_from_PRIV = 0;
     // assign set_pc_from_PRIV = (stat!=IDLE)&&(csr_done||tlb_done||cache_idle);
-    assign pc_from_PRIV = pc_after_priv;
+    // assign pc_from_PRIV = pc_after_priv;
 
 
     always @(posedge clk) begin
@@ -182,31 +183,31 @@ module IF1_FIFO(
     end
 
     //add FSM for 1.detect ibar 2.detect ex's ibar signal 3.detect icache&dcache idle
-    always @(posedge clk) begin
-        if (!rstn||flush) begin
-            stat<=IDLE;
+    // always @(posedge clk) begin
+    //     if (!rstn||flush) begin
+    //         stat<=IDLE;
             
-        end else begin
-            stat<=next_stat;
+    //     end else begin
+    //         stat<=next_stat;
             
-        end
-    end
+    //     end
+    // end
     reg old_tmp;
     always @(posedge clk ) begin
         old_tmp<=tmp==2;
     end
     wire negedge_tmp = (tmp==0)&&(old_tmp==1);
     
-    always @(*) begin
-        if (priv_flag[0]) begin
-            pc_after_priv=pc_out+4;
-        end 
-        else if(priv_flag[1])begin
-            pc_after_priv=pc_out+8;
-        end else begin
-            pc_after_priv=0;
-        end
-    end
+    // always @(*) begin
+    //     if (priv_flag[0]) begin
+    //         pc_after_priv=pc_out+4;
+    //     end 
+    //     else if(priv_flag[1])begin
+    //         pc_after_priv=pc_out+8;
+    //     end else begin
+    //         pc_after_priv=0;
+    //     end
+    // end
 
     // always @(*) begin//FSM
     //     flush_from_if1_fifo=0;
@@ -245,20 +246,19 @@ module IF1_FIFO(
     // end
 
     always @ (posedge clk) begin
-        if (~rstn || flush||(!icache_rready&&fifo_allowin&&fifo_readygo)||(!idle)||(tmp==1&&write_en)) begin
+        if (~rstn || flush||(!icache_rready&&fifo_allowin&&fifo_readygo)||(tmp==1&&write_en)) begin
             //clear stage-stage reg
             if1_fifo_valid<=0;
             if1_fifo_pc     <=  `PC_RESET;
-
             if1_fifo_pc_next<=  `PC_RESET+4;
-            if1_fifo_pc_taken<=0;
+            if1_fifo_pc_taken<=  0;
             if1_fifo_inst0  <=  `INST_NOP;
             if1_fifo_inst1  <=  `INST_NOP; 
 
             if1_fifo_icache_badv<=`zero;
             if1_fifo_icache_exception<=7'b000_0000;
             if1_fifo_icache_excp_flag<=0;
-            if1_fifo_icache_cookie_out<=0;
+            // if1_fifo_icache_cookie_out<=0;
         end
         else if ((fifo_allowin&&critical_wire&&tmp==0)||(icache_rready&&if1_allowin&&fifo_allowin)) begin
             //update stage-stage reg
@@ -266,6 +266,7 @@ module IF1_FIFO(
             if1_fifo_pc     <=  pc_out;
             if1_fifo_pc_next<=  icache_pc_next;
             if1_fifo_pc_taken<=  pc_taken_out;
+
             if1_fifo_inst0  <=  pc_out[2]? icache_inst1[31:0]:icache_inst0[31:0];
             if1_fifo_inst1  <=  pc_out[2]? `INST_NOP:icache_inst1[31:0];
             if1_fifo_icache_badv      <=icache_badv;

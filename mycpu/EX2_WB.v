@@ -82,6 +82,7 @@ module EX2_WB(
     input [31:0] badv_in,
     output reg[6:0] ecode_out,
     output reg exception_flag_out,
+    output reg exception_cpu_interrupt,
     output reg [31:0] badv_out,
     output reg wen_badv,
     output reg tlb_exception, //决定是否回到直接地址翻译
@@ -133,6 +134,7 @@ always@(posedge clk)begin
         wen_era <= 0;
         vppn_out <= 0;
         wen_vppn <= 0;
+        exception_cpu_interrupt <= 0;
     end
     else begin
         exception_flag_out <= exception_flag_in | cpu_interrupt;
@@ -140,11 +142,11 @@ always@(posedge clk)begin
         badv_out <= badv_in;
         wen_badv <= exception_flag_in && set_badv;
         tlb_exception <= exception_flag_in && (ecode_in == `EXP_TLBR);
-        era_out <= era_in;
+        if(era_in!=0) era_out <= era_in;
         wen_era <= exception_flag_in | cpu_interrupt;
         vppn_out <= badv_in[18:0];
         wen_vppn <= exception_flag_in && set_vppn;
-        
+        exception_cpu_interrupt <= cpu_interrupt;
     end
 
 end
@@ -355,9 +357,9 @@ assign ld_stall_flag = (uop0[`INS_MEM] && ~dcache_ready);
 always@(posedge clk)begin
     if (flush_out_all)begin
         debug0_wb_pc <= 0;
-        debug0_wb_inst <= 0;
+        debug0_wb_inst <= `INST_NOP;
         debug1_wb_pc <= 0;
-        debug1_wb_inst <= 0;
+        debug1_wb_inst <= `INST_NOP;
         debug0_valid <= 0;
         debug1_valid <= 0;
     end

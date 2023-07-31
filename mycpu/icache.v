@@ -524,13 +524,13 @@ module icache #(
 
         case(state)
         IDLE: begin
-                req_buf_we      = 1;
-                lru_we          = 0;
-                if(cacop_en)
-                    cacop_ready     = 1;
-                if(cacop_en_buf)
-                    cacop_complete  = 1;
-            end
+            req_buf_we      = 1;
+            lru_we          = 0;
+            if(cacop_en)
+                cacop_ready     = 1;
+            if(cacop_en_buf)
+                cacop_complete  = 1;
+        end
         LOOKUP: begin
             if(exception == 0)begin
                 pbuf_we                = (miss_flush_flag && !cache_hit) ? 0 : 1;
@@ -569,7 +569,7 @@ module icache #(
         end
         // ! 这里存在一个问题，lru_sel在miss的情况下是否需要缓存？
         REFILL: begin
-            if(!uncache_buf) begin
+            if(!uncache_buf && !cacop_en_buf) begin
                 tagv_we                 = lru_sel;
                 mem_we                  = lru_sel;
                 way_visit               = lru_sel[1];

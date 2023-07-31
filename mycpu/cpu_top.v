@@ -168,6 +168,7 @@ idle_clk idle_clk1
     // wire set_pc_from_EX; replaced by fact_pc/fact taken
     // wire [31:0]pc_from_EX;
     wire set_pc_from_WB;
+    assign set_pc_from_WB =ex2_wb_excp_flag ;
     wire [31:0]pc_from_WB;
     wire set_pc_from_PRIV;//from if1_fifo
     wire [31:0]pc_from_PRIV;
@@ -194,7 +195,6 @@ idle_clk idle_clk1
         .rstn                ( aresetn             ),
         .if0_readygo         ( if0_readygo         ),
         .if0_allowin         ( if0_allowin         ),
-        .pc_taken           ( pc_taken        ),
         .flush               ( flush_to_if0        ),
         .set_pc_from_ID      ( set_pc_from_ID      ),
         .pc_from_ID          ( pc_from_ID          ),
@@ -207,10 +207,9 @@ idle_clk idle_clk1
         .pred_pc             ( pred_pc             ),
         .pred_taken          ( pred_taken          ),
         .fetch_pc            ( fetch_pc            ),
-        // .rvalid              ( tlb_rvalid          ),
         .raddr               ( tlb_raddr           ),
-        .cookie_in           ( cookie_in           ),
         .pc_next             ( pc_next             ),
+        .pc_taken            ( pc_taken            ),
         .pc_in_stall         ( pc_in_stall         )
     );
 
@@ -283,7 +282,7 @@ idle_clk idle_clk1
     wire  [31:0]    if1_fifo_icache_badv;
     wire  [6:0]     if1_fifo_icache_exception;
     wire  [1:0]     if1_fifo_icache_excp_flag;
-    wire  [31+3:0]    if1_fifo_icache_cookie_out;
+    // wire  [31+3:0]    if1_fifo_icache_cookie_out;
     wire            if1_fifo_pc_taken;
     wire icache_rvalid;
     wire            space_ok;
@@ -308,15 +307,15 @@ idle_clk idle_clk1
         .space_ok                   ( space_ok                   ),
         .write_en                   ( write_en                   ),
         .pop_en                     ( pop_en                     ),
-        .fetch_pc                   ( fetch_pc                   ),
-        .pc_out                     ( pc_out                     ),
+        // .fetch_pc                   ( fetch_pc                   ),
         .pc_taken_out               ( pc_taken_out             ),  // ?
-        .if1_fifo_pc_taken           ( if1_fifo_pc_taken         ), // OUT
+        .if1_fifo_pc_taken          ( if1_fifo_pc_taken         ), // OUT
         // .if0_if1_pc                 ( if0_if1_pc                 ),
         // .if0_if1_pc_next            ( if0_if1_pc_next            ),
         .icache_badv                ( icache_badv                ),
         .icache_exception           ( icache_exception           ),
         .icache_excp_flag           ( icache_excp_flag           ),
+        .pc_out                     ( pc_out                     ),
         .icache_pc_next             ( icache_pc_next             ), // ?
         .icache_inst0               ( icache_rdata[31:0]         ),
         .icache_inst1               ( icache_rdata[63:32]        ),
@@ -342,8 +341,8 @@ idle_clk idle_clk1
         // .p_if1_fifo_inst1             ( if1_fifo_inst1             ),
         .if1_fifo_icache_badv       ( if1_fifo_icache_badv       ),
         .if1_fifo_icache_exception  ( if1_fifo_icache_exception  ),
-        .if1_fifo_icache_excp_flag  ( if1_fifo_icache_excp_flag  ),
-        .if1_fifo_icache_cookie_out ( if1_fifo_icache_cookie_out )
+        .if1_fifo_icache_excp_flag  ( if1_fifo_icache_excp_flag  )
+        // .if1_fifo_icache_cookie_out ( if1_fifo_icache_cookie_out )
     );
 
     
@@ -417,7 +416,7 @@ idle_clk idle_clk1
         .if1_fifo_pc_next           ( if1_fifo_pc_next           ), //input
         .if1_fifo_pc_taken          ( if1_fifo_pc_taken ),  // input
         .if1_fifo_icache_badv       ( if1_fifo_icache_badv       ),
-        .if1_fifo_icache_cookie_out ( if1_fifo_icache_cookie_out ),
+        // .if1_fifo_icache_cookie_out ( if1_fifo_icache_cookie_out ),
         .if1_fifo_icache_exception  ( if1_fifo_icache_exception  ),
         .if1_fifo_icache_excp_flag  ( if1_fifo_icache_excp_flag  ),
         .fifo_inst0                 ( fifo_inst0                 ),
@@ -427,7 +426,7 @@ idle_clk idle_clk1
         .fifo_pc_next               ( fifo_pc_next               ),
         .fifo_pc_taken              ( fifo_pc_taken              ),
         .fifo_badv                  ( fifo_badv                  ),
-        .fifo_cookie_out            ( fifo_cookie_out            ),
+        // .fifo_cookie_out            ( fifo_cookie_out            ),
         .fifo_exception             ( fifo_exception             ),
         .fifo_excp_flag             ( fifo_excp_flag             ),
         .fifo_priv_flag             ( fifo_priv_flag             ),
@@ -470,7 +469,7 @@ idle_clk idle_clk1
         .fifo_pcAdd          ( fifo_pcAdd          ),
         .fifo_pc_taken       ( fifo_pc_taken       ),
         .fifo_badv           ( fifo_badv           ),
-        .fifo_cookie_out     ( fifo_cookie_out     ),
+        // .fifo_cookie_out     ( fifo_cookie_out     ),
         .fifo_exception      ( fifo_exception      ),
         .fifo_excp_flag      ( fifo_excp_flag      ),
         .fifo_priv_flag      ( fifo_priv_flag      ),
@@ -482,7 +481,7 @@ idle_clk idle_clk1
         .fifo_id_pc_next     ( fifo_id_pc_next     ),
         .fifo_id_pc_taken    ( fifo_id_pc_taken    ),
         .fifo_id_badv        ( fifo_id_badv        ),
-        .fifo_id_cookie_out  ( fifo_id_cookie_out  ),
+        // .fifo_id_cookie_out  ( fifo_id_cookie_out  ),
         .fifo_id_exception   ( fifo_id_exception   ),
         .fifo_id_excp_flag   ( fifo_id_excp_flag   ),
         .fifo_id_priv_flag   ( fifo_id_priv_flag   ),
@@ -1250,7 +1249,6 @@ idle_clk idle_clk1
     wire   ex1_ex2_excp_flag; 
     wire   [6:0] ex1_ex2_exception; 
     wire ex1_ex2_is_priviledged_0 ;
-    wire ex1_ex2_is_priviledged_1 ;
     wire csr_ren_ex2;
 
     EX1_EX2 u_EX1_EX2(
@@ -1300,7 +1298,6 @@ idle_clk idle_clk1
         .ex1_ex2_rd0               ( ex1_ex2_rd0               ),
         .ex1_ex2_rd1               ( ex1_ex2_rd1               ),
         .ex1_ex2_is_priviledged_0  ( ex1_ex2_is_priviledged_0  ),
-        .ex1_ex2_is_priviledged_1  ( ex1_ex2_is_priviledged_1  ),
         .ex1_ex2_mul_stage1_res_hh ( ex1_ex2_mul_stage1_res_hh ),
         .ex1_ex2_mul_stage1_res_hl ( ex1_ex2_mul_stage1_res_hl ),
         .ex1_ex2_mul_stage1_res_lh ( ex1_ex2_mul_stage1_res_lh ),
@@ -1381,6 +1378,7 @@ idle_clk idle_clk1
     wire [31:0] inst_dcache_in;
     wire [31:0] inst_dcache_out;
     wire flush_to_priv_wr_csr;
+    wire exception_cpu_interrupt;
     EX2_WB u_EX2_WB(
         .clk                 ( clk                 ),
         .aresetn             ( aresetn             ),
@@ -1406,6 +1404,7 @@ idle_clk idle_clk1
         // .pc_dcache_out       ( pc_dcache_out       ), // TODO 没做
         // .inst_dcache_out     ( inst_dcache_out     ),
         // .inst_dcache_in      ( inst_dcache_in      ),
+        .exception_cpu_interrupt ( exception_cpu_interrupt ),
         .ex_rd0              ( ex1_ex2_rd0              ),
         .ex_rd1              ( ex1_ex2_rd1              ),
         .ex2_result0_valid   ( ex2_data0_valid   ),
@@ -1911,6 +1910,23 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
     wire ex_eu1_en;
     assign ex_eu0_en=debug0_valid;
     assign ex_eu1_en=debug1_valid;
+    reg [31:0] debug0_pc_reg;
+    reg [31:0] debug1_pc_reg;
+    always @(posedge clk)
+    begin
+        if(debug0_valid&&!set_pc_from_WB && debug0_wb_inst[31:0]!=`INST_NOP 
+                                && debug0_wb_pc != 0 )
+            debug0_pc_reg<=debug0_wb_pc;
+        if(debug1_valid&&!set_pc_from_WB && debug1_wb_inst[31:0]!=`INST_NOP 
+                                && debug1_wb_pc != 0 )
+            debug1_pc_reg<=debug1_wb_pc;
+        else if(~debug1_valid)
+            debug1_pc_reg<=0;
+        if(tlbfill_valid)
+            fill_index_diff<=stable_counter[`TLBIDX_WIDTH-1:0];
+    end
+    wire noequal;
+    assign noequal = (debug0_pc_reg != debug0_wb_pc || debug0_wb_inst == 32'h5000_0000);
 
     always @(posedge clk)
         if(tlbfill_valid)
@@ -1924,7 +1940,9 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
             //防止出现eu0不提交但eu1提交
             cmt_stable_counter <= ex_stable_counter;
             if(ex_eu0_en==0&&ex_eu1_en!=0) begin
-                cmt_valid0  <= ex_eu1_en;
+                cmt_valid0  <= debug0_valid&&!set_pc_from_WB && debug0_wb_inst[31:0]!=`INST_NOP 
+                                && debug0_wb_pc != 0 
+                                && (debug0_pc_reg != debug0_wb_pc || debug0_wb_inst == 32'h5000_0000);
                 cmt_pc0     <= debug1_wb_pc;
                 cmt_inst0   <= debug1_wb_inst;
                 cmt_wen0    <= debug1_wb_rf_wen!=0;
@@ -1935,18 +1953,19 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
                 cmt_valid1  <= 0;
             end else begin
                 //有异常时不置valid
-                cmt_valid0  <= ex_eu0_en&&!set_pc_from_WB && debug0_wb_inst[31:0]!=`INST_NOP 
-                                && debug0_wb_pc != 0 && debug0_wb_inst[31:0] != 0;
+                cmt_valid0  <= debug0_valid&&!set_pc_from_WB && debug0_wb_inst[31:0]!=`INST_NOP 
+                                && debug0_wb_pc != 0 
+                                && (debug0_pc_reg != debug0_wb_pc || debug0_wb_inst == 32'h5000_0000);
                 cmt_pc0     <= debug0_wb_pc;
                 cmt_inst0   <= debug0_wb_inst;
                 cmt_wen0    <= debug0_wb_rf_wen!=0;
                 cmt_wdest0  <= debug0_wb_rf_wnum;
                 cmt_wdata0  <= debug0_wb_rf_wdata;
-                cmt_excp_valid<=set_pc_from_WB;
+                cmt_excp_valid<=set_pc_from_WB && debug0_wb_pc != 0 | exception_cpu_interrupt;
                 cmt_ecode   <= ex2_wb_exception[5:0];
 
-                cmt_valid1  <= ex_eu1_en&&!set_pc_from_WB && debug1_wb_inst[31:0]!=`INST_NOP
-                && debug1_wb_pc != 0 && debug1_wb_inst[31:0] != 0;
+                cmt_valid1  <= debug1_valid&&!set_pc_from_WB && debug1_wb_inst[31:0]!=`INST_NOP
+                && debug1_wb_pc != 0 && (debug1_pc_reg != debug1_wb_pc || debug1_wb_inst == 32'h5000_0000);
                 cmt_pc1     <= debug1_wb_pc;
                 cmt_inst1   <= debug1_wb_inst;
                 cmt_wen1    <= debug1_wb_rf_wen!=0;

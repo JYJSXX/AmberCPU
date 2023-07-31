@@ -86,7 +86,7 @@ module FIFO_generator
   assign nearly_full=(count==DEPTH-1);
   assign empty = (count == 0);
   assign nearly_empty=(count==1);
-  assign dout = empty?`INST_NOP:mem[readPtr];
+  assign dout = empty?0:mem[readPtr];
   // assign dout = empty?0:mem[readPtr];
 
 endmodule

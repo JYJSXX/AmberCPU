@@ -26,11 +26,11 @@ module IF0 (
     //for TLB
     // output rvalid,
     output [31:0] raddr,
-    output reg[31:0]cookie_in=114514,
+    // output reg[31:0]cookie_in=114514,
 
     //other
     output [31:0] pc_next,
-    output         pc_taken,
+    output        pc_taken,
     output pc_in_stall
     
 );
@@ -39,12 +39,11 @@ module IF0 (
     // wire [31:0] pc_next;
     
     assign pc_next      =   pred_taken?pred_pc:fetch_pc+8;
+    assign pc_taken     =   pred_taken;
     assign fetch_pc     =   pc;
-    // assign rvalid       =   if0_allowin;
     assign raddr        =   pc;
     assign pc_in_stall  =   !if0_allowin;
     assign if0_readygo  =   if0_allowin;
-    assign pc_taken     =   pred_taken;
 
     always @(posedge clk) begin
         if (~rstn) begin
