@@ -471,12 +471,30 @@ module dcache #(
         end
     end
 
+    reg [19:0] victim_rtag_buf;
+    reg miss_state;
+    always @(posedge clk)
+    begin
+        if(!rstn)
+            begin
+            victim_rtag_buf <= 0;
+            miss_state <= 0;
+        end
+        else begin
+            victim_rtag_buf <= tag;
+            miss_state <= (state == MISS) ;
+        end
+    end
+    wire [25:0] victim_rtag;
+    assign victim_rtag = miss_state ? {victim_rtag_buf,req_buf[11:6]}: {tag,req_buf[11:6]};
+
+
     victim_cache #(
         .CAPACITY(8)
     ) victim_cache (
         .clk        (clk),
         .rstn       (rstn),
-        .r_tag      ({tag,req_buf[11:6]}),
+        .r_tag      (victim_rtag),
         .victim_hit (victim_hit),
         .data_out   (victim_data),
         .w_tag      (victim_w_tag),
@@ -485,7 +503,7 @@ module dcache #(
     );
 
     /* hit */
-    assign tag          = p_addr[31:32-TAG_WIDTH];     // the tag of the request
+    assign tag          = (state == MISS) ? paddr_buf[31:32-TAG_WIDTH]:p_addr[31:32-TAG_WIDTH]; // the tag of the request
     assign hit[0]       = valid[0] && (tag_rdata[0][TAG_WIDTH-1:0] == tag); // hit in way 0
     assign hit[1]       = valid[1] && (tag_rdata[1][TAG_WIDTH-1:0] == tag); // hit in way 1
     assign cache_hit    = |hit || victim_hit;
