@@ -24,7 +24,7 @@ module EX2_WB(
     input [4:0] ex_rd1,
     input ex2_result0_valid,
     input ex2_result1_valid,
-    input EN_VA_D,
+    // input EN_VA_D,
     input reg_ex1_is_priviledeged_0,
     input ex1_ex2_is_priviledged_1,
     input [31:0] reg_ex1_pc0,
@@ -43,11 +43,6 @@ module EX2_WB(
     output reg ex2_wb_we2,
     // output ld_stall_flag,
 
-    //除法
-    input [31:0] quotient,
-    input [31:0] remainder,
-    input stall_divider,
-    input div_ready,
 
     //dcache
     input [31:0] dcache_data,
@@ -95,22 +90,22 @@ module EX2_WB(
     output reg wen_vppn,
     output  [31:0] pc_from_WB,
     output set_by_priv,
-    output flush_by_priv,
+    output flush_by_exception,
     output flush_to_priv_wr_csr,
     input  [31:0] eentry,
     input  [31:0] tlbrentry
 );
-wire ld_stall_flag;
-assign pc_from_WB = (tlb_exception) ? tlbrentry : (exception_flag_out ? eentry : (uop0[`INS_ERTN] ? csr_era : (csr_ready ? reg_ex1_pc0 +4 : pc0)));
-assign set_by_priv = csr_ready | tlb_exception | exception_flag_out | uop0[`INS_ERTN];
+// wire ld_stall_flag;
+assign pc_from_WB = (tlb_exception) ? tlbrentry : eentry;
+assign set_by_priv = tlb_exception | exception_flag_out;
 assign flush_to_priv_wr_csr = tlb_exception | exception_flag_out | uop0[`INS_ERTN];
-reg tlb_d_valid_reg;
-always@(*)begin
-        tlb_d_valid_reg = EN_VA_D & (~flush_to_tlb);
-    end
+// reg tlb_d_valid_reg;
+// always@(*)begin
+//         tlb_d_valid_reg = EN_VA_D & (~flush_to_tlb);
+//     end
 
 assign flush_out_all = exception_flag_out;
-assign flush_by_priv = set_by_priv & ~ld_stall_flag;
+assign flush_by_exception = set_by_priv;
 //wire csr_crmd_ie;
 //assign csr_crmd_ie = csr_crmd[2];
 //wire [12:0] csr_estat_is;
@@ -236,18 +231,10 @@ assign cond1 = uop1_reg[`UOP_COND];
                 ex2_wb_we0 <= 1;
             end
             else if(uop0[`INS_DIV]) begin
-                if(cond0[0]) begin
-                    ex2_wb_data_0 <= remainder;
-                    ex2_wb_data_0_valid <= div_ready;
-                    ex2_wb_rd0 <= ex_rd0;
-                    ex2_wb_we0 <= div_ready;
-                end
-                else begin
-                    ex2_wb_data_0 <= quotient;
-                    ex2_wb_data_0_valid <= div_ready;
-                    ex2_wb_rd0 <= ex_rd0;
-                    ex2_wb_we0 <= div_ready;
-                end
+                ex2_wb_data_0 <= csr_data_in;
+                ex2_wb_data_0_valid <= 1;
+                ex2_wb_rd0 <= ex_rd0;
+                ex2_wb_we0 <= 1;
             end
            
             else begin
@@ -263,20 +250,6 @@ assign cond1 = uop1_reg[`UOP_COND];
                 ex2_wb_data_1_valid <= 1;
                 ex2_wb_rd1 <= ex_rd1;
                 ex2_wb_we1 <= 1;
-            end
-            else if(uop1[`INS_DIV]) begin
-                if(cond1[0]) begin
-                    ex2_wb_data_1 <= remainder;
-                    ex2_wb_data_1_valid <= div_ready;
-                    ex2_wb_rd1 <= ex_rd1;
-                    ex2_wb_we1 <= div_ready;
-                end
-                else begin
-                    ex2_wb_data_1 <= quotient;
-                    ex2_wb_data_1_valid <= div_ready;
-                    ex2_wb_rd1 <= ex_rd1;
-                    ex2_wb_we1 <= div_ready;
-                end
             end
             
             else begin
@@ -310,11 +283,11 @@ assign cond1 = uop1_reg[`UOP_COND];
 
     // always @ (posedge clk) buf_sign_reg <= buf_sign;
     //     always @(posedge clk) begin
-    //     if(!aresetn | flush_by_priv)begin
+    //     if(!aresetn | flush_by_exception)begin
     //         dcache_valid_buf<=0;
     //     end 
     //     else if(ex2_allowin)begin
-    //         dcache_valid_buf<={dcache_valid_buf[1:0], tlb_d_valid_reg & ~flush_by_priv};            
+    //         dcache_valid_buf<={dcache_valid_buf[1:0], tlb_d_valid_reg & ~flush_by_exception};            
     //     end
     //     else if (buf_sign & ~buf_sign_reg) begin
     //          dcache_valid_buf<={dcache_valid_buf[1:0], 1'b0 };       
@@ -327,23 +300,20 @@ assign cond1 = uop1_reg[`UOP_COND];
     // wire temp2 = ( div_ready | csr_ready && (!dcache_valid_buf[1] || dcache_ready ));
     // wire temp3 = (!dcache_valid_buf[1] && !(uop0[`INS_DIV] | reg_ex1_is_priviledeged_0) || dcache_ready);
 always@(*) begin
-    ex2_allowin=0;
+    ex2_allowin=1;
     // buf_sign = 0;
     // ld_stall_flag = 0;
-    if(ex1_ex2_inst0==0 && ex1_ex2_inst1==0 && !(uop0[`INS_DIV] | reg_ex1_is_priviledeged_0)) begin
-        ex2_allowin=1;
-    end
+    // if(ex1_ex2_inst0==0 && ex1_ex2_inst1==0 && !(reg_ex1_is_priviledeged_0)) begin
+    //     ex2_allowin=1;
+    // end
     //else if((ex2_wb_data_0_valid | ~(~dcache_ready && tlb_d_valid_reg)  | div_ready | csr_ready) && ex2_wb_data_1_valid) begin
-    else if (uop0[`INS_MEM] && ~dcache_ready)
+    if (uop0[`INS_MEM] && ~dcache_ready)
         ex2_allowin = 0;
-    else if( csr_ready)  begin
-        ex2_allowin=1;
-    end
-    else if(div_ready ) begin
-        ex2_allowin=1;
-    end
-    else if(!(uop0[`INS_DIV] | reg_ex1_is_priviledeged_0)) 
-        ex2_allowin=1;
+    // else if( csr_ready)  begin
+    //     ex2_allowin=1;
+    // end
+    // else if(!(reg_ex1_is_priviledeged_0)) 
+    //     ex2_allowin=1;
     // else if(/*!(dcache_valid_buf[0] ) && !(uop0[`INS_DIV] | reg_ex1_is_priviledeged_0) || dcache_ready*/(dcache_valid_buf[0]&& ~dcache_valid_buf[1] && ~dcache_ready) || (uop0[`INS_DIV])) begin
     //     ex2_allowin=0;
     //     // buf_sign = 1;

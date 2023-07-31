@@ -150,7 +150,7 @@ always @(posedge clk)begin
     if(~aresetn) count <= 0;
     else if (flush_to_priv_wr_csr) count <= 0;
     else if (d_idle && wen_reg) 
-        if (count < 1) count <= count + 1;
+        if (count < 2) count <= count + 1;
         else count <= 0;
 end
 assign wen_csr = d_idle && wen_reg && ~|count;
@@ -170,13 +170,13 @@ always @(posedge clk)begin
         wdata_reg <= wdata_in;
         waddr_reg <= addr_in;
     end
-    else if (count == 1)begin
+    else if (count == 2)begin
         wen_reg <= 0;
         wdata_reg <= 0;
         waddr_reg <= 0;
     end
 end
-wire  wen = (count == 1);
+wire  wen = (count == 2);
 wire [31:0] wdata = wdata_reg;
 wire [13:0] addr = waddr_reg;
 

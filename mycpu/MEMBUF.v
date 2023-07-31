@@ -27,6 +27,7 @@ module MEMBUF(
     input reg_ex_is_break_1,
     input reg_ex_is_priviledged_0,
     input reg_ex_is_priviledged_1,
+    input privilege_ready,
     input [`WIDTH_UOP-1:0] reg_ex_uop0,
     input [`WIDTH_UOP-1:0] reg_ex_uop1,
     input [31:0] reg_ex_imm0,
@@ -59,6 +60,38 @@ module MEMBUF(
     input ex2_wb_data_0_valid,
     input ex2_wb_data_1_valid,
     input ex2_wb_data_2_valid,
+    input [31:0]    tlb_alu_result0,
+    input [31:0]    tlb_alu_result1,
+    input            tlb_alu_result0_valid,
+    input            tlb_alu_result1_valid,
+    input [31:0]    tlb_mul_stage1_res_hh,
+    input [31:0]    tlb_mul_stage1_res_hl,
+    input [31:0]    tlb_mul_stage1_res_lh,
+    input [31:0]    tlb_mul_stage1_res_ll,
+    input [31:0]    tlb_mul_compensate,
+    // input [31:0]    tlb_quotient,
+    // input [31:0]    tlb_remainder,
+    // input [0:0]     tlb_stall_divider,
+    // input [0:0]     tlb_div_ready,
+    input [31:0]    tlb_badv_out,
+    input [0:0]     tlb_excp_flag,
+    input [6:0]     tlb_exception,
+    output reg  [31:0]    ex1_alu_result0,
+    output reg  [31:0]    ex1_alu_result1,
+    output reg             ex1_alu_result0_valid,
+    output reg             ex1_alu_result1_valid,
+    output reg  [31:0]    ex1_mul_stage1_res_hh,
+    output reg  [31:0]    ex1_mul_stage1_res_hl,
+    output reg  [31:0]    ex1_mul_stage1_res_lh,
+    output reg  [31:0]    ex1_mul_stage1_res_ll,
+    output reg  [31:0]    ex1_mul_compensate,
+    // output reg  [31:0]    ex1_quotient,
+    // output reg  [31:0]    ex1_remainder,
+    // output reg  [0:0]     ex1_stall_divider,
+    // output reg  [0:0]     ex1_div_ready,
+    output reg  [31:0]    ex1_badv_out,
+    output reg  [0:0]     ex1_excp_flag,
+    output reg  [6:0]     ex1_exception,
     output tlb_forward_stall, //需要前递，但还没算出来，给段间寄存器ready信号用
     output forward_flag_j0,
     output forward_flag_k0,
@@ -150,6 +183,22 @@ always @ (posedge clk)begin
         tlb_ex_rk1 <= 0;
         tlb_ex_rd0 <= 0;
         tlb_ex_rd1 <= 0;
+        ex1_alu_result0 <= 0;
+        ex1_alu_result1 <= 0;
+        ex1_alu_result0_valid <= 0;
+        ex1_alu_result1_valid <= 0;
+        ex1_mul_stage1_res_hh <= 0;
+        ex1_mul_stage1_res_hl <= 0;
+        ex1_mul_stage1_res_lh <= 0;
+        ex1_mul_stage1_res_ll <= 0;
+        ex1_mul_compensate <= 0;
+        // ex1_quotient <= 0;
+        // ex1_remainder <= 0;
+        // ex1_stall_divider <= 0;
+        // ex1_div_ready <= 0;
+        ex1_badv_out <= 0;
+        ex1_excp_flag <= 0;
+        ex1_exception <= 0;
     end
     else if (tlb_readygo && tlb_allowin && ex_allowin)begin
         tlb_ex_pc0 <= reg_ex_pc0;
@@ -184,6 +233,24 @@ always @ (posedge clk)begin
         tlb_ex_rk1 <= reg_ex_rk1;
         tlb_ex_rd0 <= reg_ex_rd0;
         tlb_ex_rd1 <= reg_ex_rd1;
+        ex1_alu_result0 <= tlb_alu_result0;
+        ex1_alu_result1 <= tlb_alu_result1;
+        ex1_alu_result0_valid <= tlb_alu_result0_valid;
+        ex1_alu_result1_valid <= tlb_alu_result1_valid;
+        ex1_mul_stage1_res_hh <= tlb_mul_stage1_res_hh;
+        ex1_mul_stage1_res_hl <= tlb_mul_stage1_res_hl;
+        ex1_mul_stage1_res_lh <= tlb_mul_stage1_res_lh;
+        ex1_mul_stage1_res_ll <= tlb_mul_stage1_res_ll;
+        ex1_mul_compensate <= tlb_mul_compensate;
+        // ex1_quotient <= tlb_quotient;
+        // ex1_remainder <= tlb_remainder;
+        // ex1_stall_divider <= tlb_stall_divider;
+        // ex1_div_ready <= tlb_div_ready;
+        ex1_badv_out <= tlb_badv_out;
+        ex1_excp_flag <= tlb_excp_flag;
+        ex1_exception <= tlb_exception;
+
+
     end
 end
 
@@ -251,9 +318,11 @@ EX1_FORWARD ex1_forward2(
     .forward_data_k(forward_data_k1)
 );
 
+
+
 assign tlb_forward_stall = forward_stall1 | forward_stall2;
 
 assign ex_readygo = ~forward_stall;
-assign tlb_allowin = ex_allowin;
+assign tlb_allowin = ex_allowin & ~(reg_ex_is_priviledged_0 & ~privilege_ready);
 
 endmodule

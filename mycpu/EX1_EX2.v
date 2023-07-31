@@ -34,11 +34,11 @@ module EX1_EX2(
     input   [4:0] reg_ex1_rk1,
     input   [4:0] reg_ex1_rd0,
     input   [4:0] reg_ex1_rd1,
-    input   [31:0] mul_stage1_res_hh,
-    input   [31:0] mul_stage1_res_hl,
-    input   [31:0] mul_stage1_res_lh,
-    input   [31:0] mul_stage1_res_ll,
-    input   [31:0] mul_compensate,
+    // input   [31:0] mul_stage1_res_hh,
+    // input   [31:0] mul_stage1_res_hl,
+    // input   [31:0] mul_stage1_res_lh,
+    // input   [31:0] mul_stage1_res_ll,
+    // input   [31:0] mul_compensate,
     input           ex2_wb_excp_flag,
     
 
@@ -61,11 +61,11 @@ module EX1_EX2(
     output  reg [4:0] ex1_ex2_rk1,
     output  reg [4:0] ex1_ex2_rd0,
     output  reg [4:0] ex1_ex2_rd1,
-    output  reg [31:0] ex1_ex2_mul_stage1_res_hh,
-    output  reg [31:0] ex1_ex2_mul_stage1_res_hl,
-    output  reg [31:0] ex1_ex2_mul_stage1_res_lh,
-    output  reg [31:0] ex1_ex2_mul_stage1_res_ll,
-    output  reg [31:0] ex1_ex2_mul_compensate,
+    // output  reg [31:0] ex1_ex2_mul_stage1_res_hh,
+    // output  reg [31:0] ex1_ex2_mul_stage1_res_hl,
+    // output  reg [31:0] ex1_ex2_mul_stage1_res_lh,
+    // output  reg [31:0] ex1_ex2_mul_stage1_res_ll,
+    // output  reg [31:0] ex1_ex2_mul_compensate,
 
     input [31:0] alu_result0,
     input [31:0] alu_result1,
@@ -84,12 +84,18 @@ module EX1_EX2(
     input   [31:0] d_badv,
     output  reg [31:0] ex1_ex2_badv,
     output  reg ex1_ex2_excp_flag,
-    output  reg [6:0] ex1_ex2_exception
+    output  reg [6:0] ex1_ex2_exception,
+
+    //除法
+    input [31:0] quotient,
+    input [31:0] remainder,
+    input stall_divider,
+    input div_ready
 
     // input dcache_ready,
     // input div_ready
-
 );
+    wire [3:0] cond0 = reg_ex1_uop0[`UOP_COND];
 always@(posedge clk) begin
     if(~aresetn | (~ex1_readygo & ex2_allowin & ex2_readygo) | flush_in) begin
         ex1_ex2_pc0<=0;
@@ -119,11 +125,11 @@ always@(posedge clk) begin
         ex1_ex2_data_1<=0;
         ex1_ex2_data_0_valid<=0;
         ex1_ex2_data_1_valid<=0;
-        ex1_ex2_mul_stage1_res_hh<=0;
-        ex1_ex2_mul_stage1_res_hl<=0;
-        ex1_ex2_mul_stage1_res_lh<=0;
-        ex1_ex2_mul_stage1_res_ll<=0;
-        ex1_ex2_mul_compensate<=0;
+        // ex1_ex2_mul_stage1_res_hh<=0;
+        // ex1_ex2_mul_stage1_res_hl<=0;
+        // ex1_ex2_mul_stage1_res_lh<=0;
+        // ex1_ex2_mul_stage1_res_ll<=0;
+        // ex1_ex2_mul_compensate<=0;
     end else if(ex1_readygo&&ex2_allowin&&ex1_allowin)begin
         ex1_ex2_pc0<=reg_ex1_pc0;
         ex1_ex2_pc1<=reg_ex1_pc1;
@@ -134,6 +140,23 @@ always@(posedge clk) begin
         // ex1_ex2_is_syscall_1<=reg_ex1_is_syscall_1;
         // ex1_ex2_is_break_0<=reg_ex1_is_break_0;
         // ex1_ex2_is_break_1<=reg_ex1_is_break_1;
+        if(reg_ex1_uop0[`INS_DIV]) begin
+                if(cond0[0]) begin
+                    ex1_ex2_data_0 <= remainder;
+                    ex1_ex2_data_0_valid <= div_ready;
+                    ex1_ex2_rd0 <= reg_ex1_rd0;
+                end
+                else begin
+                    ex1_ex2_data_0 <= quotient;
+                    ex1_ex2_data_0_valid <= div_ready;
+                    ex1_ex2_rd0 <= reg_ex1_rd0;
+                end
+            end
+            else begin
+                ex1_ex2_data_0 <= alu_result0;
+                ex1_ex2_data_0_valid <= alu_result0_valid;
+                ex1_ex2_rd0 <= reg_ex1_rd0;
+            end
          ex1_ex2_is_priviledged_0<=reg_ex1_is_priviledged_0;
         ex1_ex2_badv<=excp_flag_in? badv_in : d_badv;
         ex1_ex2_exception<=excp_flag_in? exception_in : d_exception;
@@ -147,17 +170,14 @@ always@(posedge clk) begin
         ex1_ex2_rj1<=reg_ex1_rj1;
         ex1_ex2_rk0<=reg_ex1_rk0;
         ex1_ex2_rk1<=reg_ex1_rk1;
-        ex1_ex2_rd0<=reg_ex1_rd0;
         ex1_ex2_rd1<=reg_ex1_rd1;
-        ex1_ex2_data_0<=alu_result0;
         ex1_ex2_data_1<=alu_result1;
-        ex1_ex2_data_0_valid<=alu_result0_valid;
         ex1_ex2_data_1_valid<=alu_result1_valid;
-        ex1_ex2_mul_stage1_res_hh<=mul_stage1_res_hh;
-        ex1_ex2_mul_stage1_res_hl<=mul_stage1_res_hl;
-        ex1_ex2_mul_stage1_res_lh<=mul_stage1_res_lh;
-        ex1_ex2_mul_stage1_res_ll<=mul_stage1_res_ll;
-        ex1_ex2_mul_compensate<=mul_compensate;
+        // ex1_ex2_mul_stage1_res_hh<=mul_stage1_res_hh;
+        // ex1_ex2_mul_stage1_res_hl<=mul_stage1_res_hl;
+        // ex1_ex2_mul_stage1_res_lh<=mul_stage1_res_lh;
+        // ex1_ex2_mul_stage1_res_ll<=mul_stage1_res_ll;
+        // ex1_ex2_mul_compensate<=mul_compensate;
     end
     else begin
         //~ex2_allowin,寄存器保持不变
@@ -187,16 +207,16 @@ always@(posedge clk) begin
         ex1_ex2_data_1<=ex1_ex2_data_1;
         ex1_ex2_data_0_valid<=ex1_ex2_data_0_valid;
         ex1_ex2_data_1_valid<=ex1_ex2_data_1_valid;
-        ex1_ex2_mul_stage1_res_hh<=ex1_ex2_mul_stage1_res_hh;
-        ex1_ex2_mul_stage1_res_hl<=ex1_ex2_mul_stage1_res_hl;
-        ex1_ex2_mul_stage1_res_lh<=ex1_ex2_mul_stage1_res_lh;
-        ex1_ex2_mul_stage1_res_ll<=ex1_ex2_mul_stage1_res_ll;
-        ex1_ex2_mul_compensate<=ex1_ex2_mul_compensate;
+        // ex1_ex2_mul_stage1_res_hh<=ex1_ex2_mul_stage1_res_hh;
+        // ex1_ex2_mul_stage1_res_hl<=ex1_ex2_mul_stage1_res_hl;
+        // ex1_ex2_mul_stage1_res_lh<=ex1_ex2_mul_stage1_res_lh;
+        // ex1_ex2_mul_stage1_res_ll<=ex1_ex2_mul_stage1_res_ll;
+        // ex1_ex2_mul_compensate<=ex1_ex2_mul_compensate;
 
     end
 end
 always@(*)begin
-    ex1_allowin=ex2_allowin;
+    ex1_allowin=ex2_allowin & ~(reg_ex1_uop0[`INS_DIV] & ~div_ready);
     ex2_readygo =  1; //由于forward_stall停顿
 end
 
