@@ -354,7 +354,7 @@ idle_clk idle_clk1
     wire    [1 :0]      inst_btype;
     wire    [1 :0]      branch_flag;
     // wire                inst_bpos;
-    wire    [1 :0]      inst_btype;
+    // wire    [1 :0]      inst_btype;
     wire    [7 :0]      inst_index;
 
 

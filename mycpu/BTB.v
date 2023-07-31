@@ -10,6 +10,8 @@ taken/not taken 由两种2bit预测器通过计分来选择，预留了一种策
 
 00 not branch;01 unconditinonal branch
 10 PC relative 11 indirect(uncondition too)
+
+2224/90296
 */
 `include "config.vh"
 
@@ -52,8 +54,7 @@ module BTB #(
                     TOP_IDLE             =   2'b00,//static no taken
                     TOP_EASY             =   2'b01,
                     TOP_HARD             =   2'b10,
-                    TOP_RESR             =   2'b11;//strategy reserved
-
+                    TOP_LOCAL            =   2'b11;//strategy reserved
 
 
     reg [1:0] EASY_STATE,NEXT_EASY_STATE;
@@ -87,7 +88,7 @@ module BTB #(
     assign we = fact_taken;
     assign INDEX=fetch_pc[PC_INDEX_WIDTH+2:3];
     assign FACT_INDEX=fact_pc[PC_INDEX_WIDTH+2:3];
-    assign hit=taken==fact_taken;
+    assign hit=taken==fact_taken;//全局检查
     assign Bhit=BMASK[INDEX];
     assign Uhit=UMASK[INDEX];
     assign check_Bhit=BMASK[INDEX];
@@ -116,7 +117,7 @@ module BTB #(
             end else if(last_pc!=fetch_pc)begin
                 tot_cnt<=tot_cnt+1;
                 fal_add_cnt<=predict_add_fail?fal_add_cnt+1:fal_add_cnt;
-                fal_dir_cnt<=predict_dir_fail?fal_dir_cnt+1:fal_dir_cnt
+                fal_dir_cnt<=predict_dir_fail?fal_dir_cnt+1:fal_dir_cnt;
             end
         end
 
@@ -124,6 +125,7 @@ module BTB #(
     
     DualPortRAM #(
         //write after read,for conditional branch(btype =10)
+        //for PC colloct
         .DATA_WIDTH  ( 32 ),
         .ADDR_WIDTH  ( PC_INDEX_WIDTH )
     )u_DualPortRAM(
@@ -136,6 +138,15 @@ module BTB #(
         .readDataA   ( _pred_pc   ),
         .readDataB   ( pred_pc_hang   )
     );
+
+    BTB_local u_BTB_local(//for local taken predict
+        .clk        ( clk        ),
+        .rstn       ( rstn       ),
+        .fact_tpc   ( fact_tpc   ),
+        .fact_taken ( fact_taken ),
+        .pred_taken ( pred_taken ),
+    );
+
 
 
     always @(posedge clk or negedge rstn) begin//FSM
@@ -229,6 +240,22 @@ module BTB #(
             default: NEXT_HARD_STATE=HARD_WEAK_TAKEN;
         endcase
     end
+    always @(*) begin
+        case (LOCAL_STAT)
+            EASY_STRONG_TAKEN:begin
+                NEXT_EASY_STATE=fact_taken?EASY_STRONG_TAKEN:EASY_WEAK_NOTAKEN;
+            end 
+            EASY_STRONG_NOTAKEN:begin
+                NEXT_EASY_STATE=!fact_taken?EASY_STRONG_NOTAKEN:EASY_WEAK_TAKEN;
+            end
+            EASY_WEAK_TAKEN:begin
+                NEXT_EASY_STATE=fact_taken?EASY_STRONG_TAKEN:EASY_WEAK_NOTAKEN;
+            end
+            EASY_WEAK_NOTAKEN:begin
+                NEXT_EASY_STATE=!fact_taken?EASY_STRONG_NOTAKEN:EASY_WEAK_TAKEN;
+            end
+        endcase
+    end
 
     always @(*) begin
         case (SCORE[1])
@@ -247,8 +274,8 @@ module BTB #(
             TOP_HARD:begin
                 taken=~HARD_STATE[0];
             end
-            TOP_RESR: 
-                taken=1;
+            TOP_LOCAL: 
+                taken=LOCAL_STAT[0];
         endcase
     end
 endmodule
