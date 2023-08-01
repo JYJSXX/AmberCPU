@@ -213,6 +213,10 @@ wire [13:0] addr = waddr_reg;
     assign csr_ecfg[`ECFG_ZERO] = 0;
 
         //ESTAT
+        reg reg_soft_interrupt;
+always@(posedge clk)
+    reg_soft_interrupt<=|estat_is_soft;
+
     reg [`ESTAT_IS_SOFT] estat_is_soft=0;
     reg [`ESTAT_IS_HARD] estat_is_hard=0;
     reg [`ESTAT_IS_TI] estat_is_ti=0;
@@ -457,7 +461,9 @@ always @(posedge clk)
         if(~aresetn) begin
             csr_era <= 0;
         end else if(wen_era) begin
-            csr_era <= era_in;
+            if(reg_soft_interrupt)
+                csr_era <= era_in+4;
+            else csr_era <= era_in;
         end else if(wen&&addr==`CSR_ERA) begin
             if(wen) csr_era[ 31:0]<=wdata[ 31:0];
             
@@ -910,7 +916,7 @@ assign rdata[31:0] = {32{addr_in==`CSR_CRMD}} & csr_crmd |
     wen&&addr==`CSR_ECFG ? wdata & 32'b1_1011_1111_1111 :csr_ecfg & 32'b1_1011_1111_1111 ,
     wen&&addr==`CSR_ESTAT ? (wdata & 32'b11 | csr_estat & ~32'b11) : pos_signal_excp ? {csr_estat[31:23], expcode_in[6:0], csr_estat[15:0]} :csr_estat,
     wen&&addr==`CSR_ERA ? wdata : pos_signal_excp ? era_in : csr_era,
-    wen&&addr==`CSR_BADV ? wdata :csr_badv,
+    wen&&addr==`CSR_BADV ? wdata : wen_badv ? badv_in : csr_badv,
     wen&&(addr==`CSR_EENTRY) ? wdata :csr_eentry,
     wen&&addr==`CSR_TLBIDX ? wdata :csr_tlbidx,
     wen&&addr==`CSR_TLBEHI ? wdata :csr_tlbehi,
