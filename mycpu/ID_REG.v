@@ -31,7 +31,8 @@ module ID_REG(
     input is_break_1,
     input is_priviledged_0,
     input is_priviledged_1,
-    input invalid_instruction,
+    input invalid_instruction1,
+    input invalid_instruction2,
     input [`WIDTH_UOP-1:0] uop0,
     input [`WIDTH_UOP-1:0] uop1,
     input [31:0] imm0,
@@ -142,10 +143,10 @@ always@(posedge aclk) begin
         id_reg_inst0  <= fifo_id_inst0;
         id_reg_inst1  <= fifo_id_inst1;
         id_reg_badv  <= fifo_id_badv;
-        id_reg_excp_flag  <= fifo_id_excp_flag;
+        id_reg_excp_flag  <= fifo_id_excp_flag | { invalid_instruction2 ,invalid_instruction1};
         id_reg_branch_flag<= fifo_id_branch_flag;
         id_reg_priv_flag  <=fifo_id_priv_flag;
-        id_reg_exception  <= fifo_id_exception != 0 ? fifo_id_exception : invalid_instruction ? `EXP_INE : 7'b0;
+        id_reg_exception  <= fifo_id_exception != 0 ? fifo_id_exception : invalid_instruction1 | invalid_instruction2 ? `EXP_INE : 7'b0;
         id_reg_is_ALU_0  <= is_ALU_0;
         id_reg_is_ALU_1  <= is_ALU_1;
         id_reg_is_syscall_0  <= is_syscall_0;
