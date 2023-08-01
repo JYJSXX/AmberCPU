@@ -88,9 +88,9 @@ module BTB #(
 
 
     assign we = fact_taken;
-    assign INDEX={fetch_pc[19],fetch_pc[16:12],fetch_pc[5:4]};
+    assign INDEX={fetch_pc[19],fetch_pc[14:10],fetch_pc[5:4]};
     // assign FACT_INDEX=fact_pc[PC_INDEX_WIDTH+2:3];
-    assign FACT_INDEX={fact_pc[19],fact_pc[16:12],fact_pc[5:4]};
+    assign FACT_INDEX={fact_pc[19],fact_pc[14:10],fact_pc[5:4]};
     assign hit=taken==fact_taken;//全局检查
     assign Bhit=BMASK[INDEX];
     assign Uhit=UMASK[INDEX];
@@ -122,6 +122,7 @@ module BTB #(
                 last_pc<=0;
             end else if(last_pc!=fetch_pc)begin
                 tot_cnt<=tot_cnt+1;
+                suc_cnt<=!predict_add_fail&&fact_taken?suc_cnt+1:suc_cnt;
                 fal_add_cnt<=predict_add_fail?fal_add_cnt+1:fal_add_cnt;
                 fal_dir_cnt<=predict_dir_fail?fal_dir_cnt+1:fal_dir_cnt;
             end
