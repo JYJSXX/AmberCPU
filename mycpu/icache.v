@@ -423,7 +423,7 @@ module icache #(
         endcase
     end
     //uncache操作（直接取返回缓冲区的最低的数据，因为前面已经判断了uncache，申请地址的低3位必然为0）
-    assign rdata = uncache_buf ? ret_buf[511:448] : rdata_cache;
+    assign rdata = i_exception_flag ? 0 : uncache_buf ? ret_buf[511:448] : rdata_cache;
 
     
     /* LRU */
