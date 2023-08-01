@@ -10,7 +10,7 @@
 // exp19, 21~22 : n1~n72  SHORT_TEST1 0 NOP_INSERT 0 TEST1 1 TEST2 1 TEST3 1 TEST4 1 TEST5 1 TEST6 1 TEST7 1 TEST8 0 TEST9 0 
 // exp23        : n1~n79  SHORT_TEST1 0 NOP_INSERT 0 TEST1 1 TEST2 1 TEST3 1 TEST4 1 TEST5 1 TEST6 1 TEST7 1 TEST8 1 TEST9 0
 // ==========================================================================================================================
-#define EXP 6
+#define EXP 0
 
 #if EXP==0 //for user-config
   //==================================================================
