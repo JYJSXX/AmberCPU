@@ -58,11 +58,11 @@ module BTB #(
                     TOP_LOCAL            =   2'b11;//strategy reserved
 
 
-    reg [1:0] EASY_STATE,NEXT_EASY_STATE;
-    reg [1:0] HARD_STATE,NEXT_HARD_STATE;
-    reg [1:0] TOP_STATE , NEXT_TOP_STATE;
-    reg [(1<<PC_INDEX_WIDTH)-1:0]   UMASK;
-    reg [(1<<PC_INDEX_WIDTH)-1:0]   BMASK;
+    reg [1:0] EASY_STATE=0,NEXT_EASY_STATE=0;
+    reg [1:0] HARD_STATE=0,NEXT_HARD_STATE=0;
+    reg [1:0] TOP_STATE=0, NEXT_TOP_STATE=0;
+    reg [(1<<PC_INDEX_WIDTH)-1:0]   UMASK=0;
+    reg [(1<<PC_INDEX_WIDTH)-1:0]   BMASK=0;
     reg [2:0]                       SCORE=0;
     reg                             taken=0;
     reg [1:0]                       btype=0;//reg for temp save
@@ -102,8 +102,8 @@ module BTB #(
     //                     (_pred_pc==0)?PCAdd:
     //                                     _pred_pc:PCAdd;
     assign      pred_taken=_pred_pc==0?0:
-                                    Uhit?1:0;
-                                        // Bhit?taken:0;
+                                    Uhit?1:
+                                        Bhit?taken:0;
     assign      pred_pc   = pred_taken?_pred_pc:PCAdd;
 
     `ifdef BTB_LOG

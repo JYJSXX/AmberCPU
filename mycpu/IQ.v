@@ -48,7 +48,7 @@ module IQ (
 
     output  reg [31:0] iq_pc0,
     output  reg [31:0] iq_pc1,
-    output  reg        CMT,//1单发0双发   
+    output             CMT,//1单发0双发   
     output  reg [31:0] iq_pc_next,
     output  reg         iq_pc_taken,
     output  reg [31:0] iq_inst0,

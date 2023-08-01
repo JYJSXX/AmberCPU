@@ -51,15 +51,15 @@ module IF1_FIFO(
     input               csr_done,
     input               tlb_done,
 
-    output reg[31:0]    if1_fifo_pc,
-    output reg          if1_fifo_pc_taken,    //?
-    output reg[31:0]    if1_fifo_pc_next,  
+    output reg[31:0]    if1_fifo_pc=0,
+    output reg          if1_fifo_pc_taken=0,    //?
+    output reg[31:0]    if1_fifo_pc_next=0,  
 
-    output reg[31:0]    if1_fifo_inst0,
-    output reg[31:0]    if1_fifo_inst1,
-    output reg[31:0]    if1_fifo_icache_badv,
-    output reg[6:0]     if1_fifo_icache_exception,
-    output reg[1:0]     if1_fifo_icache_excp_flag
+    output reg[31:0]    if1_fifo_inst0=0,
+    output reg[31:0]    if1_fifo_inst1=0,
+    output reg[31:0]    if1_fifo_icache_badv=0,
+    output reg[6:0]     if1_fifo_icache_exception=0,
+    output reg[1:0]     if1_fifo_icache_excp_flag=0
     // output reg[31+3:0]    if1_fifo_icache_cookie_out
     );
     
@@ -85,14 +85,14 @@ module IF1_FIFO(
     // reg [31:0]     if1_fifo_inst1;
 
     // reg [2:0]       stat;
-    reg [1:0]       tmp;
+    reg [1:0]       tmp=0;
     // reg [2:0]       next_stat;
     // reg [31:0]      pc_after_priv;
 
 
 
 
-    reg             if1_fifo_valid;
+    reg             if1_fifo_valid=0;
     // reg             tmp;
     // reg [31:0]      tmp_pc;
     // reg [31:0]      tmp_pc_next;
@@ -103,8 +103,8 @@ module IF1_FIFO(
     // reg [6:0]       tmp_icache_exception;
 
 
-    reg [(WIDTH+1)*32-1:0] if1_fifo_pc_buf;
-    reg [BUF_W:0]    icache_rvalid_buf;
+    reg [(WIDTH+1)*32-1:0] if1_fifo_pc_buf=0;
+    reg [BUF_W:0]    icache_rvalid_buf=0;
     
     // reg [1:0]       tmp_icache_excp_flag;
     // reg [31:0]      tmp_icache_cookie_out;
@@ -148,6 +148,8 @@ module IF1_FIFO(
     wire [31:0]                     cmp_pc;
     wire                            pc_ins_full;
     wire                            pc_ins_empty;
+    wire                            pc_inst_nearly_full;
+    wire                            pc_inst_nearly_empty;
     FIFO_generator#(
         .DATA_WIDTH   ( 32),
         .DEPTH        ( 4 ),
@@ -161,7 +163,9 @@ module IF1_FIFO(
         .write_en     (    if1_allowin ),
         .dout         (    cmp_pc ),
         .full         (pc_ins_full),
-        .empty        (pc_ins_empty)
+        .empty        (pc_ins_empty),
+        .nearly_full    (pc_inst_nearly_full),
+        .nearly_empty (pc_inst_nearly_empty)
     );
 
     // assign p_if1_fifo_inst0  =  if0_if1_pc[2]? `INST_NOP:if1_fifo_inst0[31:0];

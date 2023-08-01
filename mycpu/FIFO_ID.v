@@ -27,18 +27,18 @@ module FIFO_ID (
     input [1:0]  fifo_priv_flag,
     input [1:0]  fifo_branch_flag,
 
-    output reg[31:0] fifo_id_inst0,
-    output reg[31:0] fifo_id_inst1,
-    output reg[31:0] fifo_id_pc,
-    output reg[31:0] fifo_id_pcAdd,
-    output reg[31:0] fifo_id_pc_next,
-    output reg       fifo_id_pc_taken,
-    output reg[31:0] fifo_id_badv,
+    output reg[31:0] fifo_id_inst0=0,
+    output reg[31:0] fifo_id_inst1=0,
+    output reg[31:0] fifo_id_pc=0,
+    output reg[31:0] fifo_id_pcAdd=0,
+    output reg[31:0] fifo_id_pc_next=0,
+    output reg       fifo_id_pc_taken=0,
+    output reg[31:0] fifo_id_badv=0,
     // output reg[31:0] fifo_id_cookie_out,
-    output reg[6:0]  fifo_id_exception,
-    output reg[1:0]  fifo_id_excp_flag,
-    output reg[1:0]  fifo_id_priv_flag,
-    output reg[1:0]  fifo_id_branch_flag
+    output reg[6:0]  fifo_id_exception=0,
+    output reg[1:0]  fifo_id_excp_flag=0,
+    output reg[1:0]  fifo_id_priv_flag=0,
+    output reg[1:0]  fifo_id_branch_flag=0
 );
     reg fifo_id_valid=0;
 
