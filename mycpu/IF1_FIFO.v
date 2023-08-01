@@ -302,7 +302,7 @@ module IF1_FIFO(
             if1_fifo_inst1  <=  pc_out[2]? `INST_NOP:icache_inst1[31:0];
             if1_fifo_icache_badv      <=icache_badv;
             if1_fifo_icache_exception <=icache_exception;//did not replace,cope need to test excp_flag first!!
-            if1_fifo_icache_excp_flag<=icache_excp_flag;
+            if1_fifo_icache_excp_flag<=pc_out[2]?{1'b0,icache_excp_flag[1]}:icache_excp_flag;
         end 
         else if(~fifo_allowin||~if1_allowin)begin
             //hold stage-stage reg
