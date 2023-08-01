@@ -191,15 +191,19 @@ idle_clk idle_clk1
     wire ex2_wb_excp_flag; 
     wire set_by_priv;
     wire [31:0] pc_set_by_priv;
+    wire    [1:0]flush_cause;
+    wire    [31:0]tlb_pc_next;
+    wire          tlb_pc_taken;
     IF0 u_IF0(
         .clk                 ( clk                 ),
         .rstn                ( aresetn             ),
         .if0_readygo         ( if0_readygo         ),
         .if0_allowin         ( if0_allowin         ),
         .flush               ( flush_to_if0        ),
+        // .flush_cause         ( flush_cause         ),
         .set_pc_from_ID      ( set_pc_from_ID      ),
         .pc_from_ID          ( pc_from_ID          ),
-        .set_pc_from_EX      ( fact_taken          ),
+        .set_pc_from_EX      ( predict_dir_fail|predict_add_fail    ),
         .pc_from_EX          ( fact_tpc            ),
         .set_pc_from_WB      ( ex2_wb_excp_flag |  set_by_priv  ),
         .pc_from_WB          ( ex2_wb_excp_flag?pc_from_WB : pc_set_by_priv          ),
@@ -317,6 +321,7 @@ idle_clk idle_clk1
         .icache_exception           ( icache_exception           ),
         .icache_excp_flag           ( icache_excp_flag           ),
         .pc_out                     ( pc_out                     ),
+        .fetch_pc                   ( fetch_pc                   ),
         .icache_pc_next             ( icache_pc_next             ), // ?
         .icache_inst0               ( icache_rdata[31:0]         ),
         .icache_inst1               ( icache_rdata[63:32]        ),
@@ -349,7 +354,9 @@ idle_clk idle_clk1
     
     wire    [1 :0]      inst_btype;
     wire    [1 :0]      branch_flag;
-    wire                inst_bpos;
+    // wire                inst_bpos;
+    // wire    [1 :0]      inst_btype;
+    wire    [7 :0]      inst_index;
 
 
 
@@ -361,9 +368,9 @@ idle_clk idle_clk1
         .ibar_flag      ( ibar_flag      ),
         .csr_flag       ( csr_flag       ),
         .tlb_flag       ( tlb_flag       ),
-        .branch_flag    ( branch_flag    ),
-        .inst_btype     ( inst_btype     ),
-        .inst_bpos      ( inst_bpos      )
+        .inst_index     ( inst_index     ),
+        .inst_btype     ( inst_btype     )
+        //.inst_bpos      ( inst_bpos      )
     );
 
 
@@ -573,6 +580,7 @@ idle_clk idle_clk1
     wire [4:0]  iq_rj1 ;
     wire [4:0]  iq_rk0 ;
     wire [4:0]  iq_rk1 ;
+    wire        CMT;
     
     ID_REG u_ID_REG(
         .aclk                 ( clk                    ),
@@ -613,6 +621,7 @@ idle_clk idle_clk1
         .rk1                  ( id_rk1                  ),
         .iq_pc0               ( iq_pc0                  ),
         .iq_pc1               ( iq_pc1                  ),
+        .CMT                  ( CMT                     ),
         .iq_pc_next           ( iq_pc_next              ),
         .iq_pc_taken          ( iq_pc_taken             ),
         .iq_inst0             ( iq_inst0                ),
@@ -643,7 +652,6 @@ idle_clk idle_clk1
 
 
 
-    wire  ex_allowin;
     wire  ex_readygo;
     wire  we_0;
     wire  we_1;
@@ -651,6 +659,7 @@ idle_clk idle_clk1
 
     wire [31:0] reg_ex_pc0;
     wire [31:0] reg_ex_pc1;
+    wire        reg_ex_CMT;
     wire [31:0] reg_ex_pc_next;
     wire         reg_ex_pc_taken;
     wire [31:0] reg_ex_inst0;
@@ -753,6 +762,7 @@ idle_clk idle_clk1
         .clk                     ( clk                     ),
         .aresetn                 ( aresetn                 ),
         .flush                   ( flush_to_reg_ex1        ),
+        // .flush_by_exception      ( flush_by_exception      ),
         .forward_stall           ( forward_stall | tlb_forward_stall         ),
         .reg_readygo             ( reg_readygo             ),
         .reg_allowin             ( reg_allowin             ),
@@ -762,6 +772,7 @@ idle_clk idle_clk1
         .id_reg_pc0              ( iq_pc0              ),
         .id_reg_pc1              ( iq_pc1              ),
         .id_reg_pc_next          ( iq_pc_next          ),
+        .CMT                     ( CMT                 ),
         .id_reg_pc_taken         ( iq_pc_taken         ),
         .id_reg_inst0            ( iq_inst0            ),
         .id_reg_inst1            ( iq_inst1            ),
@@ -817,6 +828,7 @@ idle_clk idle_clk1
         .tlb_forward_data_k1         ( tlb_forward_data_k1         ),
         .reg_ex_pc0              ( reg_ex_pc0              ),
         .reg_ex_pc1              ( reg_ex_pc1              ),
+        .reg_ex_CMT              ( reg_ex_CMT              ),
         .reg_ex_pc_next          ( reg_ex_pc_next          ),
         .reg_ex_pc_taken         ( reg_ex_pc_taken         ),
         .reg_ex_inst0            ( reg_ex_inst0            ),
@@ -1178,6 +1190,7 @@ wire [31:0]    ex0_ex1_csr_data;
         .dcache_ready       (wready_dcache | rready_dcache),
         .pc0                  ( reg_ex_pc0                  ),
         .pc1                  ( reg_ex_pc1                  ),
+        .CMT                   ( reg_ex_CMT                 ),
         .inst0                ( reg_ex_inst0                ),
         .inst1                ( reg_ex_inst1                ),
         .is_ALU_0             ( reg_ex_is_ALU_0             ),
@@ -1300,7 +1313,7 @@ wire [31:0]    ex0_ex1_csr_data;
         .paddr_diff_out(ex_paddr_diff),
         .data_diff_out(ex_data_diff),
         .ex_stable_counter(ex_stable_counter),
-        .ex1_allowin(ex_allowin)
+        .ex1_allowin(tlb_allowin)
 `endif
     );
 
@@ -1693,7 +1706,7 @@ wire [31:0]    ex0_ex1_csr_data;
         .if0_allowin      ( if0_allowin      ),
         .clk              ( clk              ),
         .inst_btype       ( inst_btype       ),
-        .inst_bpos        ( inst_bpos        ),
+        .inst_index       ( inst_index       ),
         .fetch_pc         ( fetch_pc         ),
         .pred_pc          ( pred_pc          ),
         .pred_taken       ( pred_taken       ),
@@ -1764,7 +1777,7 @@ wire [31:0]    ex0_ex1_csr_data;
         .i_exception_flag  ( icache_excp_flag  ),   
         .flush             ( flush_to_icache   ),
         .uncache           ( !is_cached_I      ),   
-        .cookie_in         ( {pc_next, pc_taken}         ),
+        .cookie_in         ( {tlb_pc_next,tlb_pc_taken}         ),
         .cookie_out        ( {icache_pc_next, pc_taken_out}        ),
         .cacop_en          ( cacop_i_en        ),
         .cacop_code        ( cacop_ins_type    ),
@@ -1836,11 +1849,12 @@ wire [3:0]reg_ex_cond0;
 
 assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
     TLB#(
-        .TLB_COOKIE_WIDTH (64)
+        .TLB_COOKIE_WIDTH (33)
         ) u_TLB(
         .clk            ( clk            ),
         .rstn           ( aresetn           ),
         .flush          ( flush_to_tlb      ),
+        .flush_to_reg_ex1 ( flush_to_reg_ex1 ),
         .CSR_ASID       ( ASID[9:0]   ),
         .CSR_VPPN       ( TLBEHI       ),
         .CSR_PG         ( PG         ),
@@ -1858,8 +1872,10 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .signed_ext_out ( signed_ext    ),
         .atom           ( is_atom_dcache),
         .atom_out       ( is_atom_TLB   ),
-        .tlb_cookie_in  ({reg_ex_pc0, reg_ex_inst0}),
-        .tlb_cookie_out ({pc_dcache_in, inst_dcache_in}),
+        // .tlb_cookie_in  ({reg_ex_pc0, reg_ex_inst0}),
+        // .tlb_cookie_out ({pc_dcache_in, inst_dcache_in}),
+        .tlb_cookie_in   ( {pc_taken,pc_next}),
+        .tlb_cookie_out  ( {tlb_pc_taken,tlb_pc_next}),
         .rd                 (reg_ex_rd0),
         .rd_out             (rd_dcache_in),
         .WDATA_D           ( w_data_tlb),

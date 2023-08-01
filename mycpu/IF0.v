@@ -34,6 +34,8 @@ module IF0 (
     output pc_in_stall
     
 );
+    localparam PRED_FAIL = 2'b11;
+
     reg  [31:0] pc;//指令集手册P68
     reg         branch_stat=0;//第一次跳转后置1,然后变0
     // wire [31:0] pc_next;
@@ -76,7 +78,7 @@ module IF0 (
             end else begin
                 pc<=pc_next;
             end
-            branch_stat<=0;
+            branch_stat<=pc_next[2];
         end 
         else 
         begin
