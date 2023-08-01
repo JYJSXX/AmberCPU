@@ -2,7 +2,7 @@
 `timescale 1ns / 1ps
 `include "config.vh"
 `include "exception.vh"
-
+`include "define.vh"
 module icache #(
     parameter INDEX_WIDTH       = 6,
     parameter WORD_OFFSET_WIDTH = 4,
@@ -140,7 +140,6 @@ module icache #(
             miss_time <= miss_time ;
         end
     end
-
     // cache operation
     reg tagv_clear;
     reg [1:0] cacop_code_buf;
@@ -417,7 +416,7 @@ module icache #(
     end
     wire [25:0] victim_rtag;
     assign victim_rtag = miss_state ? {victim_rtag_buf,req_buf[11:6]}: {tag,req_buf[11:6]};
-
+    
     victim_cache #(
         .CAPACITY(8)
     ) victim_cache (
@@ -468,8 +467,7 @@ module icache #(
         endcase
     end
     //uncache操作（直接取返回缓冲区的最低的数据，因为前面已经判断了uncache，申请地址的低3位必然为0）
-    assign rdata = uncache_buf ? ret_buf[511:448] : rdata_cache;
-
+    assign rdata = i_exception_flag ? `INST_NOP : uncache_buf ? ret_buf[511:448] : rdata_cache;
     
     /* LRU */
     reg way_visit;  // 0: way0, 1: way1

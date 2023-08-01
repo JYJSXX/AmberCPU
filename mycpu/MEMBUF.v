@@ -128,7 +128,7 @@ assign is_atom_dcache = reg_ex_uop0[`UOP_MEM_ATM];
 // assign w_data_dcache = reg_ex_rk0_data;
 
 always @ (posedge clk)begin
-    if(~aresetn | flush & (ex_allowin) | flush_by_exception)begin
+    if(~aresetn | flush & (ex_allowin) | flush_by_exception | (ex_allowin & ex_readygo & (~tlb_allowin | ~tlb_readygo)))begin
         tlb_ex_pc0 <= 0;
         tlb_ex_pc1 <= 0;
         tlb_ex_pc_next <= 0;
