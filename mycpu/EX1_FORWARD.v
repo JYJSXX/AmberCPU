@@ -4,6 +4,13 @@ module EX1_FORWARD(
     input [4:0] ex1_rk,
     input [31:0] ex1_rj_data,
     input [31:0] ex1_rk_data,
+    //从mb_ex段间输入
+    input [4:0] mb_ex_rd0,
+    input [4:0] mb_ex_rd1,
+    input [31:0] mb_ex_data_0,
+    input [31:0] mb_ex_data_1,
+    input mb_ex_data_0_valid,
+    input mb_ex_data_1_valid,
     //从ex1_ex2段间输入
     input [4:0] ex1_ex2_rd0,
     input [4:0] ex1_ex2_rd1,
@@ -66,7 +73,27 @@ module EX1_FORWARD(
         // forward_flag=1;
         // forward_data=0;
         if(ex1_rj!=0)begin
-        if(ex1_rj==ex1_ex2_rd1) begin
+            if(ex1_rj == mb_ex_rd1) begin
+                if(mb_ex_data_1_valid) begin
+                    forward_stall=0;
+                    ex1_rj_data_o=mb_ex_data_1;
+                    // forward_flag=1;
+                    // forward_data=mb_ex_data_1;
+                end else begin
+                    forward_stall=1;
+                end
+            end
+            else if(ex1_rj == mb_ex_rd0) begin
+                if(mb_ex_data_0_valid) begin
+                    forward_stall=0;
+                    ex1_rj_data_o=mb_ex_data_0;
+                    // forward_flag=1;
+                    // forward_data=mb_ex_data_0;
+                end else begin
+                    forward_stall=1;
+                end
+            end
+        else if(ex1_rj==ex1_ex2_rd1) begin
             if(ex1_ex2_data_1_valid) begin
                 forward_stall=0;
                 ex1_rj_data_o=ex1_ex2_data_1;
@@ -117,6 +144,23 @@ module EX1_FORWARD(
         // else forward_flag=0;
 
         if(ex1_rk!=0)begin
+            if(ex1_rk == mb_ex_rd1) begin
+                if(mb_ex_data_1_valid) begin
+                    forward_stall=0;
+                    ex1_rk_data_o=mb_ex_data_1;
+                end else begin
+                    forward_stall=1;
+                end
+            end
+            else if(ex1_rk == mb_ex_rd0) begin
+                if(mb_ex_data_0_valid) begin
+                    forward_stall=0;
+                    ex1_rk_data_o=mb_ex_data_0;
+                end else begin
+                    forward_stall=1;
+                end
+            end
+        else
         if(ex1_rk==ex1_ex2_rd1 ) begin
             if(ex1_ex2_data_1_valid) begin
                 forward_stall=0;

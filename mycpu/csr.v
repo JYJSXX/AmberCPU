@@ -150,7 +150,7 @@ always @(posedge clk)begin
     if(~aresetn) count <= 0;
     else if (flush_to_priv_wr_csr) count <= 0;
     else if (d_idle && wen_reg) 
-        if (count < 1) count <= count + 1;
+        if (count < 2) count <= count + 1;
         else count <= 0;
 end
 assign wen_csr = d_idle && wen_reg && ~|count;
@@ -170,13 +170,13 @@ always @(posedge clk)begin
         wdata_reg <= wdata_in;
         waddr_reg <= addr_in;
     end
-    else if (count == 1)begin
+    else if (count == 2)begin
         wen_reg <= 0;
         wdata_reg <= 0;
         waddr_reg <= 0;
     end
 end
-wire  wen = (count == 1);
+wire  wen = (count == 2);
 wire [31:0] wdata = wdata_reg;
 wire [13:0] addr = waddr_reg;
 
@@ -828,7 +828,7 @@ always @(posedge clk)
             time_out <= 0;
             //计时器的初始值比标准大1，否则给定时器设置0无法触发中断
             //if(tcfg_periodic|| set_timer) csr_tval<={tcfg_initval[`TCFG_INITVAL],2'd1};
-            if(tcfg_periodic|| set_timer) csr_tval<= {2'b00,tcfg_initval[`TCFG_INITVAL]};
+            if(tcfg_periodic|| set_timer) csr_tval<= {2'b00,tcfg_initval[`TCFG_INITVAL]} + 100;
         end else if(tcfg_en) begin
             csr_tval<=csr_tval-1;
             time_out<=csr_tval==1;
@@ -852,7 +852,7 @@ always @(posedge clk)
 assign rdata[31:0] = {32{addr_in==`CSR_CRMD}} & csr_crmd |
                     {32{addr_in==`CSR_PRMD}} & csr_prmd |
                     {32{addr_in==`CSR_EUEN}} & csr_euen |
-                    {32{addr_in==`CSR_ECFG}} & csr_ecfg | 
+                    {32{addr_in==`CSR_ECFG}} & csr_ecfg & 32'b1_1011_1111_1111 | 
                     {32{addr_in==`CSR_ESTAT}} & csr_estat |
                     {32{addr_in==`CSR_ERA}} & csr_era |
                     {32{addr_in==`CSR_BADV}} & csr_badv |
@@ -904,14 +904,14 @@ assign rdata[31:0] = {32{addr_in==`CSR_CRMD}} & csr_crmd |
             `ifdef DIFFTEST
     wire [32*26-1:0] csr_diff =  
     {
-    wen&&addr==`CSR_CRMD ?  wdata & 32'b1_1111_1111 : pos_signal_excp ? {csr_crmd[31:3], 3'b000} :
+    wen&&addr==`CSR_CRMD ?  wdata  : pos_signal_excp ? {csr_crmd[31:3], 3'b000} :
                      ertn ? {csr_crmd[31:3],csr_prmd[2:0]}: csr_crmd,
-    wen&&addr==`CSR_PRMD ? wdata & 32'b111 : pos_signal_excp ? {csr_prmd[31:3],csr_crmd[2:0]}:csr_prmd,
-    wen&&addr==`CSR_ECFG ? wdata & 32'b1_1011_1111_1111 :csr_ecfg & 32'b1_1011_1111_1111,
-    wen&&addr==`CSR_ESTAT ? wdata & 32'b11: pos_signal_excp ? {csr_estat[31:23], expcode_in[6:0], csr_estat[15:0]} :csr_estat,
+    wen&&addr==`CSR_PRMD ? wdata  : pos_signal_excp ? {csr_prmd[31:3],csr_crmd[2:0]}:csr_prmd,
+    wen&&addr==`CSR_ECFG ? wdata & 32'b1_1011_1111_1111 :csr_ecfg & 32'b1_1011_1111_1111 ,
+    wen&&addr==`CSR_ESTAT ? (wdata & 32'b11 | csr_estat & ~32'b11) : pos_signal_excp ? {csr_estat[31:23], expcode_in[6:0], csr_estat[15:0]} :csr_estat,
     wen&&addr==`CSR_ERA ? wdata : pos_signal_excp ? era_in : csr_era,
     wen&&addr==`CSR_BADV ? wdata :csr_badv,
-    wen&&(addr==`CSR_EENTRY) ? wdata & 32'hffff_ffc0:csr_eentry,
+    wen&&(addr==`CSR_EENTRY) ? wdata :csr_eentry,
     wen&&addr==`CSR_TLBIDX ? wdata :csr_tlbidx,
     wen&&addr==`CSR_TLBEHI ? wdata :csr_tlbehi,
     wen&&addr==`CSR_TLBELO0 ? wdata :csr_tlbelo0,
@@ -930,7 +930,7 @@ assign rdata[31:0] = {32{addr_in==`CSR_CRMD}} & csr_crmd |
     wen&&addr==`CSR_LLBCTL ? wdata : ertn ? {csr_llbctl[31:1], csr_llbctl[2]} :csr_llbctl,
     wen&&addr==`CSR_TLBRENTRY ? wdata :csr_tlbrentry,
     wen&&addr==`CSR_DMW0 ? wdata :csr_dmw0,
-    wen&&addr==`CSR_DMW1 ? wdata & 32'hff000039:csr_dmw1};
+    wen&&addr==`CSR_DMW1 ? wdata :csr_dmw1};
 
     reg [32*26-1:0] csr_diff_delay0;
 
