@@ -274,9 +274,9 @@ begin
 end
 
 assign w_last = (w_count == d_wlen[4:0]);
+wire [3:0] d_wstrb_true = d_wstrb << d_waddr[1:0];
 assign w_strb = d_wstrb_true;
 wire [511:0] d_wdata_true = d_wdata << ({d_waddr[1:0], 3'b0});
-wire [3:0] d_wstrb_true = d_wstrb << d_waddr[1:0];
 always @(*)
 begin
     aw_len = 15;

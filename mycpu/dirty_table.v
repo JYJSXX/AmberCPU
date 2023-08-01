@@ -19,6 +19,14 @@ module dirty_table(
     reg [6:0] dirty_num;        // dirty block number, max = 128
     reg [1:0] dirty_table [0:63];
     reg [6:0] crt_num;
+    reg [5:0] crt_addr;
+    reg [1:0] csr, nsr;
+    reg hit2;
+    localparam
+        IDLE = 2'b00,
+        SEARCH = 2'b01,
+        WRITE = 2'b10,
+        DONE = 2'b11;
     integer i;
     initial begin
         for (i = 0; i < 64; i = i + 1) begin
@@ -54,14 +62,6 @@ module dirty_table(
     ibar状态机得到数据并写回后，发回ibar_ready信号，此时ibar_valid置为0, 从当前addr开始继续遍历
     重复上述过程直到dirty_num为0，结束ibar处理
     */
-    reg [5:0] crt_addr;
-    reg [1:0] csr, nsr;
-    reg hit2;
-    localparam
-        IDLE = 2'b00,
-        SEARCH = 2'b01,
-        WRITE = 2'b10,
-        DONE = 2'b11;
     always @(posedge clk) begin
         if(!rstn) begin
             csr <= IDLE;

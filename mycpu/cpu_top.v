@@ -167,6 +167,7 @@ idle_clk idle_clk1
     wire [31:0]pc_from_ID;
     // wire set_pc_from_EX; replaced by fact_pc/fact taken
     // wire [31:0]pc_from_EX;
+    wire ex2_wb_excp_flag; 
     wire set_pc_from_WB;
     assign set_pc_from_WB =ex2_wb_excp_flag ;
     wire [31:0]pc_from_WB;
@@ -188,7 +189,6 @@ idle_clk idle_clk1
     wire    pc_taken_out;
     wire    pc_taken;
     wire         pc_in_stall;
-    wire ex2_wb_excp_flag; 
     wire set_by_priv;
     wire [31:0] pc_set_by_priv;
     wire    [1:0]flush_cause;
@@ -332,7 +332,7 @@ idle_clk idle_clk1
         .tlb_flag                   ( tlb_flag                   ),
         .tlb_flag_from_ex           ( tlb_flag_from_ex           ),
         .priv_flag                  ( priv_flag                  ),
-        .pc_from_PRIV               ( pc_from_PRIV               ),
+        //.pc_from_PRIV               ( pc_from_PRIV               ),
         .set_pc_from_PRIV           ( set_pc_from_PRIV           ),
         .flush_from_if1_fifo        ( flush_from_if1_fifo        ),
         .icache_idle                ( i_idle                     ),
@@ -364,10 +364,11 @@ idle_clk idle_clk1
         .if1_fifo_inst0 ( if1_fifo_inst0 ),
         .if1_fifo_inst1 ( if1_fifo_inst1 ),
         .if1_fifo_pc    ( if1_fifo_pc    ),
-        .priv_flag      ( priv_flag      ),
-        .ibar_flag      ( ibar_flag      ),
-        .csr_flag       ( csr_flag       ),
-        .tlb_flag       ( tlb_flag       ),
+        // .priv_flag      ( priv_flag      ),
+        // .ibar_flag      ( ibar_flag      ),
+        // .csr_flag       ( csr_flag       ),
+        // .tlb_flag       ( tlb_flag       ),
+        // .branch_flag    ( 0  ), //TODO
         .inst_index     ( inst_index     ),
         .inst_btype     ( inst_btype     )
         //.inst_bpos      ( inst_bpos      )
@@ -613,7 +614,7 @@ idle_clk idle_clk1
         .is_priviledged_0     ( id_is_priviledged_0     ),
         .is_priviledged_1     ( id_is_priviledged_1     ),
         .invalid_instruction1  (invalid_instruction1      ),
-        .invalid_instruction2  (invalid_instruction2),
+        .invalid_instruction2  (invalid_instruction2      ),
         .uop0                 ( id_uop0                 ),
         .uop1                 ( id_uop1                 ),
         .imm0                 ( id_imm0                 ),
@@ -763,6 +764,11 @@ idle_clk idle_clk1
     wire                  ex1_readygo;
     wire                  ex1_allowin;
 
+    wire rready_dcache;
+    wire wready_dcache;
+    wire flush_by_exception;
+    wire ex2_allowin;
+
     REG_EX1 u_REG_EX1(
         .clk                     ( clk                     ),
         .aresetn                 ( aresetn                 ),
@@ -799,15 +805,12 @@ idle_clk idle_clk1
         .id_reg_imm1             ( iq_imm1             ),
         .wb_rd0                  ( ex2_wb_rd0          ),
         .wb_rd1                  ( ex2_wb_rd1          ),
-        .wb_rd2                  ( ex2_wb_rd2          ),
         .dcache_rready           ( rready_dcache           ),
         .we_0                    ( we_0                    ),
         
         .we_1                    ( we_1                    ),
-        .we_2                    ( we_2                    ),
         .rd0_data                ( ex2_wb_data_0               ),
         .rd1_data                ( ex2_wb_data_1               ),
-        .rd2_data                ( ex2_wb_data_2               ),
         .id_reg_rj0              ( iq_rj0              ),
         .id_reg_rj1              ( iq_rj1              ),
         .id_reg_rk0              ( iq_rk0              ),
@@ -823,14 +826,14 @@ idle_clk idle_clk1
         .forward_data_j1        ( forward_data_j1     ),
         .forward_data_k0        ( forward_data_k0     ),
         .forward_data_k1        ( forward_data_k1     ),
-        .tlb_forward_flag_j0         ( tlb_forward_flag_j0         ),
-        .tlb_forward_flag_k0         ( tlb_forward_flag_k0         ),
-        .tlb_forward_flag_j1         ( tlb_forward_flag_j1         ),
-        .tlb_forward_flag_k1         ( tlb_forward_flag_k1         ),
-        .tlb_forward_data_j0         ( tlb_forward_data_j0         ),
-        .tlb_forward_data_k0         ( tlb_forward_data_k0         ),
-        .tlb_forward_data_j1         ( tlb_forward_data_j1         ),
-        .tlb_forward_data_k1         ( tlb_forward_data_k1         ),
+        // .tlb_forward_flag_j0         ( tlb_forward_flag_j0         ),
+        // .tlb_forward_flag_k0         ( tlb_forward_flag_k0         ),
+        // .tlb_forward_flag_j1         ( tlb_forward_flag_j1         ),
+        // .tlb_forward_flag_k1         ( tlb_forward_flag_k1         ),
+        // .tlb_forward_data_j0         ( tlb_forward_data_j0         ),
+        // .tlb_forward_data_k0         ( tlb_forward_data_k0         ),
+        // .tlb_forward_data_j1         ( tlb_forward_data_j1         ),
+        // .tlb_forward_data_k1         ( tlb_forward_data_k1         ),
         .reg_ex_pc0              ( reg_ex_pc0              ),
         .reg_ex_pc1              ( reg_ex_pc1              ),
         .reg_ex_CMT              ( reg_ex_CMT              ),
@@ -1009,8 +1012,7 @@ idle_clk idle_clk1
     wire [31:0] ex_paddr_diff;
     wire [31:0] ex_data_diff;
 `endif
-    wire rready_dcache;
-    wire wready_dcache;
+
 
 wire [31:0]    mb_alu_result0;
 wire [31:0]    mb_alu_result1;
@@ -1047,8 +1049,8 @@ wire [31:0]    ex0_ex1_csr_data;
         .reg_ex_inst0            ( reg_ex_inst0            ),
         .reg_ex_inst1            ( reg_ex_inst1            ),
         .reg_ex_branch_flag      ( reg_ex_branch_flag      ),
-        .reg_ex_excp_flag        ( ex1_excp_flag        ),
-        .reg_ex_exception        ( ex1_exception        ),
+        .reg_ex_excp_flag        ( reg_ex_excp_flag        ),
+        .reg_ex_exception        ( reg_ex_exception        ),
         .reg_ex_badv             ( reg_ex_badv             ),
         .reg_ex_is_ALU_0         ( reg_ex_is_ALU_0         ),
         .reg_ex_is_ALU_1         ( reg_ex_is_ALU_1         ),
@@ -1110,30 +1112,30 @@ wire [31:0]    ex0_ex1_csr_data;
         .ex1_excp_flag        ( mb_excp_flag        ),
         .ex1_exception        ( mb_exception        ),
 
-        .ex1_ex2_rd0             ( ex1_ex2_rd0             ),
-        .ex1_ex2_rd1             ( ex1_ex2_rd1             ),
-        .ex1_ex2_data_0          ( ex1_ex2_data_0          ),
-        .ex1_ex2_data_1          ( ex1_ex2_data_1          ),
-        .ex1_ex2_data_0_valid    ( ex1_ex2_data_0_valid    ),
-        .ex1_ex2_data_1_valid    ( ex1_ex2_data_1_valid    ),
-        .ex2_wb_rd0              ( ex2_wb_rd0              ),
-        .ex2_wb_rd1              ( ex2_wb_rd1              ),
-        .ex2_wb_rd2              ( ex2_wb_rd2              ),
-        .ex2_wb_data_0           ( ex2_wb_data_0           ),
-        .ex2_wb_data_1           ( ex2_wb_data_1           ),
-        .ex2_wb_data_2           ( ex2_wb_data_2           ),
-        .ex2_wb_data_0_valid     ( ex2_wb_data_0_valid     ),
-        .ex2_wb_data_1_valid     ( ex2_wb_data_1_valid     ),
-        .ex2_wb_data_2_valid     ( ex2_wb_data_2_valid     ),
-        .tlb_forward_stall       ( tlb_forward_stall       ),
-        .forward_flag_j0         ( tlb_forward_flag_j0         ),
-        .forward_flag_k0         ( tlb_forward_flag_k0         ),
-        .forward_flag_j1         ( tlb_forward_flag_j1         ),
-        .forward_flag_k1         ( tlb_forward_flag_k1         ),
-        .forward_data_j0         ( tlb_forward_data_j0         ),
-        .forward_data_k0         ( tlb_forward_data_k0         ),
-        .forward_data_j1         ( tlb_forward_data_j1         ),
-        .forward_data_k1         ( tlb_forward_data_k1         ),
+        // .ex1_ex2_rd0             ( ex1_ex2_rd0             ),
+        // .ex1_ex2_rd1             ( ex1_ex2_rd1             ),
+        // .ex1_ex2_data_0          ( ex1_ex2_data_0          ),
+        // .ex1_ex2_data_1          ( ex1_ex2_data_1          ),
+        // .ex1_ex2_data_0_valid    ( ex1_ex2_data_0_valid    ),
+        // .ex1_ex2_data_1_valid    ( ex1_ex2_data_1_valid    ),
+        // .ex2_wb_rd0              ( ex2_wb_rd0              ),
+        // .ex2_wb_rd1              ( ex2_wb_rd1              ),
+        // .ex2_wb_rd2              ( ex2_wb_rd2              ),
+        // .ex2_wb_data_0           ( ex2_wb_data_0           ),
+        // .ex2_wb_data_1           ( ex2_wb_data_1           ),
+        // .ex2_wb_data_2           ( ex2_wb_data_2           ),
+        // .ex2_wb_data_0_valid     ( ex2_wb_data_0_valid     ),
+        // .ex2_wb_data_1_valid     ( ex2_wb_data_1_valid     ),
+        // .ex2_wb_data_2_valid     ( ex2_wb_data_2_valid     ),
+        // .tlb_forward_stall       ( tlb_forward_stall       ),
+        // .forward_flag_j0         ( tlb_forward_flag_j0         ),
+        // .forward_flag_k0         ( tlb_forward_flag_k0         ),
+        // .forward_flag_j1         ( tlb_forward_flag_j1         ),
+        // .forward_flag_k1         ( tlb_forward_flag_k1         ),
+        // .forward_data_j0         ( tlb_forward_data_j0         ),
+        // .forward_data_k0         ( tlb_forward_data_k0         ),
+        // .forward_data_j1         ( tlb_forward_data_j1         ),
+        // .forward_data_k1         ( tlb_forward_data_k1         ),
         .op_dcache               ( op_dcache            ),
         .write_type_dcache       ( write_type_tlb    ),
         // .w_data_dcache           ( w_data_tlb           ),
@@ -1172,7 +1174,9 @@ wire [31:0]    ex0_ex1_csr_data;
         .tlb_ex_rd0              ( tlb_ex_rd0              ),
         .tlb_ex_rd1              ( tlb_ex_rd1              )
     );
-    wire flush_by_exception;
+        
+    wire [31:0] csr_era;
+
     EX0 u_EX0(
         .clk                  ( clk                  ),
         .aclk                 ( aclk                 ),
@@ -1249,13 +1253,10 @@ wire [31:0]    ex0_ex1_csr_data;
         .ex1_ex2_data_1_valid ( ex1_ex2_data_1_valid ),
         .ex2_wb_rd0           ( ex2_wb_rd0           ),
         .ex2_wb_rd1           ( ex2_wb_rd1           ),
-        .ex2_wb_rd2           ( ex2_wb_rd2           ),
         .ex2_wb_data_0        ( ex2_wb_data_0        ),
         .ex2_wb_data_1        ( ex2_wb_data_1        ),
-        .ex2_wb_data_2        ( ex2_wb_data_2        ),
         .ex2_wb_data_0_valid  ( ex2_wb_data_0_valid  ),
         .ex2_wb_data_1_valid  ( ex2_wb_data_1_valid  ),
-        .ex2_wb_data_2_valid  ( ex2_wb_data_2_valid         ),
         .forward_stall        ( forward_stall        ),
 
         .alu_result0          ( alu_result0          ),
@@ -1324,7 +1325,7 @@ wire [31:0]    ex0_ex1_csr_data;
 
     
     //wire  flush_out;
-    wire   ex2_allowin;
+
     wire   ex2_readygo;
     wire [31:0] ex2_data_0, ex2_data_1;
     wire   ex2_data_0_valid, ex2_data_1_valid;
@@ -1423,7 +1424,7 @@ wire [31:0]    ex0_ex1_csr_data;
         .ex1_ex2_data_1_valid      ( ex1_ex2_data_1_valid      ),
         .badv_in                   ( mb_badv_out                   ),
         .excp_flag_in              ( mb_excp_flag              ),
-        .exception_in              ( tlb_ex_exception              ),
+        .exception_in              ( mb_exception              ),
         .d_exception               ( dcache_exception           ),
         .d_badv                    ( dcache_badv               ),
         .ex1_ex2_badv              ( ex1_ex2_badv              ),
@@ -1526,17 +1527,13 @@ wire [31:0]    ex0_ex1_csr_data;
         // .EN_VA_D         (  tlb_ex_uop0[`INS_MEM]         ), 
         .ex2_wb_data_0       ( ex2_wb_data_0       ),
         .ex2_wb_data_1       ( ex2_wb_data_1       ),
-        .ex2_wb_data_2       ( ex2_wb_data_2       ),
         .ex2_wb_data_0_valid ( ex2_wb_data_0_valid ),
         .ex2_wb_data_1_valid ( ex2_wb_data_1_valid ),
-        .ex2_wb_data_2_valid ( ex2_wb_data_2_valid ),
         .ex2_wb_rd0          ( ex2_wb_rd0          ),
         .rd_dcache_out       ( rd_dcache_out       ),
         .ex2_wb_rd1          ( ex2_wb_rd1          ),
-        .ex2_wb_rd2          ( ex2_wb_rd2          ),
         .ex2_wb_we0          ( we_0          ),
         .ex2_wb_we1          ( we_1          ),
-        .ex2_wb_we2          ( we_2          ),
         .dcache_data         ( r_data_dcache         ),
         .dcache_ready        ( wready_dcache | rready_dcache        ),
         .dcache_w_ready      ( rready_dcache        ),
@@ -1581,7 +1578,6 @@ wire [31:0]    ex0_ex1_csr_data;
 
     wire [31:0] crmd; //当前模式信息，包含privilege
     wire [31:0] estat;    //例外状态 idle_interrupt; 
-    wire [31:0] csr_era;
     wire [31:0] pgdl,pgdh;
     
     wire [31:0] dmw0;
@@ -1776,7 +1772,8 @@ wire [31:0]    ex0_ex1_csr_data;
         .i_raddr           ( i_raddr           ), 
         .i_rdata           ( i_rdata           ), 
         .i_rlen            ( i_rlen            ),    
-        .tlb_exception     ( tlb_exception_code_i ),  
+        // .tlb_exception     ( tlb_exception_code_i ), 
+        .tlb_exception     ( 0                 ), 
         .badv              ( icache_badv       ),
         .exception         ( icache_exception  ),
         .i_exception_flag  ( icache_excp_flag  ),   
@@ -1791,7 +1788,7 @@ wire [31:0]    ex0_ex1_csr_data;
         .ibar              ( ibar              )
     );
 
-
+    wire [2:0] d_rsize, d_wsize;
 
     dcache#(
         .INDEX_WIDTH                       ( 6 ),
@@ -1934,7 +1931,6 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .stable_counter ( stable_counter[4:0])
     );
 
-    wire [2:0] d_rsize, d_wsize;
 
 
     // MEMBUF u_MEMBUF(
@@ -2064,14 +2060,21 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
 
     HazardUnit u_HazardUnit(
         .flush_from_wb          ( flush_from_wb         ),
-        .flush_from_ex2         ( flush_from_ex2        ),
+        // .flush_from_ex2         ( flush_from_ex2        ),
+        .flush_from_ex2(0),
         .flush_from_ex1         ( flush_from_ex1        ),
-        .flush_from_reg         ( flush_from_reg        ),
-        .flush_from_id          ( flush_from_id         ),
+        // .flush_from_reg         ( flush_from_reg        ),
+        .flush_from_reg(0),
+        // .flush_from_id          ( flush_from_id         ),
+        .flush_from_id(0),
         .flush_by_priv           ( flush_by_priv         ),
-        .flush_from_if1_fifo    ( flush_from_if1_fifo   ),
-        .flush_from_if1         ( flush_from_if1        ),
+        // .flush_from_if1_fifo    ( flush_from_if1_fifo   ),
+        .flush_from_if1_fifo(0),
+        // .flush_from_if1         ( flush_from_if1        ),
+        .flush_from_if1(0),
         .flush_to_ex2_wb        ( flush_to_ex2_wb       ),
+        .flush_cause_from_ex1    (0),
+        .flush_cause_from_wb     (0),
         .flush_to_ex1_ex2       ( flush_to_ex1_ex2      ),
         .flush_to_reg_ex1       ( flush_to_reg_ex1      ),
         .flush_to_id_reg        ( flush_to_id_reg       ),

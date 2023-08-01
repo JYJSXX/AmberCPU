@@ -38,7 +38,7 @@ module IF0 (
 );
     localparam PRED_FAIL = 2'b11;
 
-    reg  [31:0] pc;//指令集手册P68
+    reg  [31:0] pc=0;//指令集手册P68
     reg         branch_stat=0;//第一次跳转后置1,然后变0
     // wire [31:0] pc_next;
     

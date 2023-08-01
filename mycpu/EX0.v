@@ -34,7 +34,7 @@ module EX0(
     input   [4:0] ex_rk0,
     input   [4:0] ex_rk1,
     input         dcache_ready,
-    input         ex_allowin,
+    // input         ex_allowin, //TODO
     //input   [4:0] ex_rd0,
     //input   [4:0] ex_rd1,
     output forward_flag_j0,
@@ -72,13 +72,10 @@ module EX0(
     //从ex2_wb段间输入
     input [4:0] ex2_wb_rd0,
     input [4:0] ex2_wb_rd1,
-    input [4:0] ex2_wb_rd2,
     input [31:0] ex2_wb_data_0,
     input [31:0] ex2_wb_data_1,
-    input [31:0] ex2_wb_data_2,
     input ex2_wb_data_0_valid,
     input ex2_wb_data_1_valid,
-    input ex2_wb_data_2_valid,
     output forward_stall, //需要前递，但还没算出来，给段间寄存器ready信号用
     //csr
     input [31:0] tid, //读时钟id的指令RDCNTID用到
@@ -200,6 +197,10 @@ module EX0(
 
 
 );
+wire [31:0] rj0_data_o;
+wire [31:0] rk0_data_o;
+wire [31:0] rk1_data_o;
+wire [31:0] rj1_data_o;
 assign dcache_wdata = rk0_data_o;
 assign csr_flag_from_ex = uop0[`INS_CSR];
 assign tlb_flag_from_ex = uop0[`INS_TLB] && (inst0[11:10] == 2'b00 || inst0[11:10] ==2'b01 || inst0[15]);
@@ -280,10 +281,6 @@ assign alu_result0_valid = is_ALU_0 || uop0[`INS_BR] || inst0 == 32'b0;
 assign alu_result1_valid = is_ALU_1 || uop1[`INS_BR] || inst1 == 32'b0; //beq之类的就向r0写，应该也没什么问题
 assign alu_result0 = uop0[`INS_BR]? pc_add_4:y_1;
 assign alu_result1 = y_2; //跳转指令单发，只在0号，1号alu不发射跳转
-wire [31:0] rj0_data_o;
-wire [31:0] rk0_data_o;
-wire [31:0] rk1_data_o;
-wire [31:0] rj1_data_o;
 wire forward_stall1;
 wire forward_stall2;
 EX1_FORWARD ex1_forward1(
@@ -304,13 +301,10 @@ EX1_FORWARD ex1_forward1(
     .ex1_ex2_rd1(ex1_ex2_rd1),
     .ex2_wb_data_0_valid(ex2_wb_data_0_valid),
     .ex2_wb_data_1_valid(ex2_wb_data_1_valid),
-    .ex2_wb_data_2_valid(ex2_wb_data_2_valid),
     .ex2_wb_data_0(ex2_wb_data_0),
     .ex2_wb_data_1(ex2_wb_data_1),
-    .ex2_wb_data_2(ex2_wb_data_2),
     .ex2_wb_rd0(ex2_wb_rd0),
     .ex2_wb_rd1(ex2_wb_rd1),
-    .ex2_wb_rd2(ex2_wb_rd2),
     .ex1_rj_data(rj0_data),
     .ex1_rk_data(rk0_data),
     .ex1_rj_data_o(rj0_data_o),
@@ -353,13 +347,10 @@ EX1_FORWARD ex1_forward2(
     .ex1_ex2_rd1(ex1_ex2_rd1),
     .ex2_wb_data_0_valid(ex2_wb_data_0_valid),
     .ex2_wb_data_1_valid(ex2_wb_data_1_valid),
-    .ex2_wb_data_2_valid(ex2_wb_data_2_valid),
     .ex2_wb_data_0(ex2_wb_data_0),
     .ex2_wb_data_1(ex2_wb_data_1),
-    .ex2_wb_data_2(ex2_wb_data_2),
     .ex2_wb_rd0(ex2_wb_rd0),
     .ex2_wb_rd1(ex2_wb_rd1),
-    .ex2_wb_rd2(ex2_wb_rd2),
     .ex1_rj_data(rj1_data),
     .ex1_rk_data(rk1_data),
     .ex1_rj_data_o(rj1_data_o),

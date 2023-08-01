@@ -74,35 +74,35 @@ module ID_REG(
     output  [4:0]  iq_rk0 ,
     output  [4:0]  iq_rk1 
 );
-    reg [31:0] id_reg_pc0;
-    reg [31:0] id_reg_pc1;
-    reg [31:0] id_reg_pc_next;
-    reg id_reg_pc_taken;
-    reg [31:0] id_reg_inst0;
-    reg [31:0] id_reg_inst1;
-    reg [31:0] id_reg_badv;
-    reg [1 :0] id_reg_excp_flag;
-    reg [1 :0] id_reg_branch_flag;
-    reg [1 :0] id_reg_priv_flag;
-    reg [6:0] id_reg_exception;
-    reg id_reg_is_ALU_0 ;
-    reg id_reg_is_ALU_1 ;
-    reg id_reg_is_syscall_0 ;
-    reg id_reg_is_syscall_1 ;
-    reg id_reg_is_break_0 ;
-    reg id_reg_is_break_1 ;
+    reg [31:0] id_reg_pc0=0;
+    reg [31:0] id_reg_pc1=0;
+    reg [31:0] id_reg_pc_next=0;
+    reg id_reg_pc_taken=0;
+    reg [31:0] id_reg_inst0=`INST_NOP;
+    reg [31:0] id_reg_inst1=`INST_NOP;
+    reg [31:0] id_reg_badv=0;
+    reg [1 :0] id_reg_excp_flag=0;
+    reg [1 :0] id_reg_branch_flag=0;
+    reg [1 :0] id_reg_priv_flag=0;
+    reg [6:0] id_reg_exception=0;
+    reg id_reg_is_ALU_0 =0;
+    reg id_reg_is_ALU_1 =0;
+    reg id_reg_is_syscall_0 =0;
+    reg id_reg_is_syscall_1 =0;
+    reg id_reg_is_break_0 =0;
+    reg id_reg_is_break_1 =0;
     reg id_reg_is_priviledged_0 = 0 ;
     reg id_reg_is_priviledged_1 = 0 ;
-    reg [`WIDTH_UOP-1:0] id_reg_uop0 ;
-    reg [`WIDTH_UOP-1:0] id_reg_uop1 ;
-    reg [31:0] id_reg_imm0 ;
-    reg [31:0] id_reg_imm1 ;
-    reg [4:0] id_reg_rd0 ;
-    reg [4:0] id_reg_rd1 ;
-    reg [4:0] id_reg_rj0 ;
-    reg [4:0] id_reg_rj1 ;
-    reg [4:0] id_reg_rk0 ;
-    reg [4:0] id_reg_rk1 ;
+    reg [`WIDTH_UOP-1:0] id_reg_uop0 =0;
+    reg [`WIDTH_UOP-1:0] id_reg_uop1 =0;
+    reg [31:0] id_reg_imm0 =0;
+    reg [31:0] id_reg_imm1 =0;
+    reg [4:0] id_reg_rd0 =0;
+    reg [4:0] id_reg_rd1 =0;
+    reg [4:0] id_reg_rj0 =0;
+    reg [4:0] id_reg_rj1 =0;
+    reg [4:0] id_reg_rk0 =0;
+    reg [4:0] id_reg_rk1 =0;
 //没考虑flush stall，之后再说
 always@(posedge aclk) begin
     if(~aresetn | (~id_readygo && reg_allowin && reg_readygo&&id_allowin)|flush) begin

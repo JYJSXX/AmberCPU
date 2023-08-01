@@ -35,13 +35,10 @@ module  REG_EX1(
     input   [31:0] id_reg_imm1,
     input   [4:0] wb_rd0,
     input   [4:0] wb_rd1,
-    input   [4:0] wb_rd2,
     input   we_0,
     input   we_1,
-    input   we_2,
     input  [31:0] rd0_data,
     input  [31:0] rd1_data,
-    input  [31:0] rd2_data,
     input   [4:0] id_reg_rj0,
     input   [4:0] id_reg_rj1,
     input   [4:0] id_reg_rk0,
@@ -57,19 +54,11 @@ module  REG_EX1(
     input [31:0] forward_data_k0,
     input [31:0] forward_data_j1,
     input [31:0] forward_data_k1,
-    input        tlb_forward_flag_j0,
-    input        tlb_forward_flag_k0,
-    input        tlb_forward_flag_j1,
-    input        tlb_forward_flag_k1,
-    input [31:0] tlb_forward_data_j0,
-    input [31:0] tlb_forward_data_k0,
-    input [31:0] tlb_forward_data_j1,
-    input [31:0] tlb_forward_data_k1,
     input         dcache_rready,
 
     output  reg [31:0] reg_ex_pc0,
     output  reg [31:0] reg_ex_pc1,
-    output              reg_ex_CMT,
+    output  reg         reg_ex_CMT,
     output  reg [31:0] reg_ex_pc_next,
     output  reg reg_ex_pc_taken,
     output  reg [31:0] reg_ex_inst0,
@@ -167,10 +156,7 @@ regfile regfile1( //内部自带写优先
     .raddr3(id_reg_rk0),
     .rdata3(rk0_data),
     .raddr4(id_reg_rk1),
-    .rdata4(rk1_data),
-    .we3(we_2),
-    .waddr3(wb_rd2),
-    .wdata3(rd2_data)
+    .rdata4(rk1_data)
     `ifdef DIFFTEST
     ,.reg_diff0(reg_diff0),
     .reg_diff1(reg_diff1),
@@ -245,10 +231,6 @@ reg forward_flag_j0_ps = 0;
 reg forward_flag_j1_ps = 0;
 reg forward_flag_k0_ps = 0;
 reg forward_flag_k1_ps = 0;
-reg tlb_forward_flag_j0_ps = 0;
-reg tlb_forward_flag_j1_ps = 0;
-reg tlb_forward_flag_k0_ps = 0;
-reg tlb_forward_flag_k1_ps = 0;
 always@(posedge clk) begin
     if(~aresetn || !stall_D) 
         forward_flag_j0_ps<=0;
@@ -285,37 +267,37 @@ always@(posedge clk) begin
 end
 always@(posedge clk) begin
     if(~aresetn || ex_allowin) 
-        tlb_forward_flag_j0_ps<=0;
-    else if(tlb_forward_flag_j0)
-        tlb_forward_flag_j0_ps <= 1;
+        forward_flag_j0_ps<=0;
+    else if(forward_flag_j0)
+        forward_flag_j0_ps <= 1;
     else
-        tlb_forward_flag_j0_ps <= tlb_forward_flag_j0_ps;
+        forward_flag_j0_ps <= forward_flag_j0_ps;
 end
 always@(posedge clk) begin
     if(~aresetn || ex_allowin) 
-        tlb_forward_flag_j1_ps<=0;
-    else if(tlb_forward_flag_j1)
-        tlb_forward_flag_j1_ps <= 1;
+        forward_flag_j1_ps<=0;
+    else if(forward_flag_j1)
+        forward_flag_j1_ps <= 1;
     else
-        tlb_forward_flag_j1_ps <= tlb_forward_flag_j1_ps;
-end
-
-always@(posedge clk) begin
-    if(~aresetn || ex_allowin) 
-        tlb_forward_flag_k0_ps<=0;
-    else if(tlb_forward_flag_k0)
-        tlb_forward_flag_k0_ps <= 1;
-    else
-        tlb_forward_flag_k0_ps <= tlb_forward_flag_k0_ps;
+        forward_flag_j1_ps <= forward_flag_j1_ps;
 end
 
 always@(posedge clk) begin
     if(~aresetn || ex_allowin) 
-        tlb_forward_flag_k1_ps<=0;
-    else if(tlb_forward_flag_k1)
-        tlb_forward_flag_k1_ps <= 1;
+        forward_flag_k0_ps<=0;
+    else if(forward_flag_k0)
+        forward_flag_k0_ps <= 1;
     else
-        tlb_forward_flag_k1_ps <= tlb_forward_flag_k1_ps;
+        forward_flag_k0_ps <= forward_flag_k0_ps;
+end
+
+always@(posedge clk) begin
+    if(~aresetn || ex_allowin) 
+        forward_flag_k1_ps<=0;
+    else if(forward_flag_k1)
+        forward_flag_k1_ps <= 1;
+    else
+        forward_flag_k1_ps <= forward_flag_k1_ps;
 end
 // reg priv_flag;
 always@(posedge clk)begin
@@ -452,10 +434,10 @@ always@(posedge clk)begin
         reg_ex_uop1 <= reg_ex_uop1;
         reg_ex_imm0 <= reg_ex_imm0;
         reg_ex_imm1 <= reg_ex_imm1;
-        reg_ex_rj0_data <=( tlb_forward_flag_j0) ? tlb_forward_data_j0 : reg_ex_rj0_data;
-        reg_ex_rj1_data <=(tlb_forward_flag_j1) ? tlb_forward_data_j1 : reg_ex_rj1_data;
-        reg_ex_rk0_data <= (tlb_forward_flag_k0) ? tlb_forward_data_k0 : reg_ex_rk0_data;
-        reg_ex_rk1_data <= (tlb_forward_flag_k1) ? tlb_forward_data_k1 : reg_ex_rk1_data;
+        reg_ex_rj0_data <=( forward_flag_j0) ? forward_data_j0 : reg_ex_rj0_data;
+        reg_ex_rj1_data <=(forward_flag_j1) ? forward_data_j1 : reg_ex_rj1_data;
+        reg_ex_rk0_data <= (forward_flag_k0) ? forward_data_k0 : reg_ex_rk0_data;
+        reg_ex_rk1_data <= (forward_flag_k1) ? forward_data_k1 : reg_ex_rk1_data;
         reg_ex_rj0 <= reg_ex_rj0;
         reg_ex_rj1 <= reg_ex_rj1;
         reg_ex_rk0 <= reg_ex_rk0;
