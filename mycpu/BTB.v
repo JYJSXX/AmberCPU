@@ -103,6 +103,7 @@ module BTB #(
     //                                     _pred_pc:PCAdd;
     assign      pred_taken=_pred_pc==0?0:
                                     Uhit?1:0;
+                                        // Bhit?taken:0;
     assign      pred_pc   = pred_taken?_pred_pc:PCAdd;
 
     `ifdef BTB_LOG

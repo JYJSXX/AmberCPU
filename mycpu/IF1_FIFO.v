@@ -290,7 +290,6 @@ module IF1_FIFO(
             if1_fifo_icache_badv<=`zero;
             if1_fifo_icache_exception<=7'b000_0000;
             if1_fifo_icache_excp_flag<=0;
-            // if1_fifo_icache_cookie_out<=0;
         end
         else if ((fifo_allowin&&critical_wire&&tmp==0)||(icache_rready&&if1_allowin&&fifo_allowin)) begin
             //update stage-stage reg
@@ -302,7 +301,6 @@ module IF1_FIFO(
             if1_fifo_inst0  <=  pc_out[2]? icache_inst1[31:0]:icache_inst0[31:0];
             if1_fifo_inst1  <=  pc_out[2]? `INST_NOP:icache_inst1[31:0];
             if1_fifo_icache_badv      <=icache_badv;
-            // if1_fifo_icache_cookie_out<=icache_pc_next;
             if1_fifo_icache_exception <=icache_exception;//did not replace,cope need to test excp_flag first!!
             if1_fifo_icache_excp_flag<=icache_excp_flag;
         end 
