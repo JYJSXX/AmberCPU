@@ -8,6 +8,11 @@ module HazardUnit (
     input flush_from_if1,
     input flush_by_priv,
 
+    input [1:0]flush_cause_from_wb,
+    input [1:0]flush_cause_from_ex1,
+
+    output [1:0] flush_cause,
+
     output flush_to_ex2_wb,
     output flush_to_ex1_ex2,
     output flush_to_reg_ex1,
@@ -22,6 +27,8 @@ module HazardUnit (
     output flush_to_dcache,
     output flush_to_btb
 );
+    assign flush_cause              =   flush_from_wb? flush_cause_from_wb:
+                                        flush_from_ex1?flush_cause_from_ex1:2'b00;
     assign  flush_to_ex2_wb         =   flush_from_wb?  1:0;
     assign  flush_to_ex1_ex2        =   flush_from_wb?  1:
                                         flush_from_ex2? 1:0;

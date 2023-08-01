@@ -1702,9 +1702,9 @@ wire [31:0]    ex0_ex1_csr_data;
         .dmw1_diff      (csr_dmw1_diff     )
         `endif
     );
-
+    
     BTB u_BTB(
-        .rstn             ( aresetn             ),
+        .rstn             ( aresetn          ),
         .if0_allowin      ( if0_allowin      ),
         .clk              ( clk              ),
         .inst_btype       ( inst_btype       ),
@@ -1928,6 +1928,82 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .tlb_exception_code_d(tlb_exception_code_d),
         .stable_counter ( stable_counter[4:0])
     );
+
+
+    // MEMBUF u_MEMBUF(
+    //     .clk                     ( clk                     ),
+    //     .aresetn                 ( aresetn                 ),
+    //     .flush                   ( flush                   ),
+    //     .forward_stall           ( forward_stall           ),
+    //     .flush_by_priv           ( flush_by_priv           ),
+    //     .tlb_readygo             ( tlb_readygo             ),
+    //     .tlb_allowin             ( tlb_allowin             ),
+    //     .ex_allowin              ( ex_allowin              ),
+    //     .ex_readygo              ( ex_readygo              ),
+    //     .reg_ex_pc0              ( reg_ex_pc0              ),
+    //     .reg_ex_pc1              ( reg_ex_pc1              ),
+    //     .reg_ex_pc_next          ( reg_ex_pc_next          ),
+    //     .reg_ex_inst0            ( reg_ex_inst0            ),
+    //     .reg_ex_inst1            ( reg_ex_inst1            ),
+    //     .reg_ex_branch_flag      ( reg_ex_branch_flag      ),
+    //     .reg_ex_excp_flag        ( reg_ex_excp_flag        ),
+    //     .reg_ex_exception        ( reg_ex_exception        ),
+    //     .reg_ex_badv             ( reg_ex_badv             ),
+    //     .reg_ex_is_ALU_0         ( reg_ex_is_ALU_0         ),
+    //     .reg_ex_is_ALU_1         ( reg_ex_is_ALU_1         ),
+    //     .reg_ex_is_syscall_0     ( reg_ex_is_syscall_0     ),
+    //     .reg_ex_is_syscall_1     ( reg_ex_is_syscall_1     ),
+    //     .reg_ex_is_break_0       ( reg_ex_is_break_0       ),
+    //     .reg_ex_is_break_1       ( reg_ex_is_break_1       ),
+    //     .reg_ex_is_priviledged_0 ( reg_ex_is_priviledged_0 ),
+    //     .reg_ex_is_priviledged_1 ( reg_ex_is_priviledged_1 ),
+    //     .reg_ex_uop0             ( reg_ex_uop0             ),
+    //     .reg_ex_uop1             ( reg_ex_uop1             ),
+    //     .reg_ex_imm0             ( reg_ex_imm0             ),
+    //     .reg_ex_imm1             ( reg_ex_imm1             ),
+    //     .reg_ex_rj0_data         ( reg_ex_rj0_data         ),
+    //     .reg_ex_rj1_data         ( reg_ex_rj1_data         ),
+    //     .reg_ex_rk0_data         ( reg_ex_rk0_data         ),
+    //     .reg_ex_rk1_data         ( reg_ex_rk1_data         ),
+    //     .reg_ex_rj0              ( reg_ex_rj0              ),
+    //     .reg_ex_rj1              ( reg_ex_rj1              ),
+    //     .reg_ex_rk0              ( reg_ex_rk0              ),
+    //     .reg_ex_rk1              ( reg_ex_rk1              ),
+    //     .reg_ex_rd0              ( reg_ex_rd0              ),
+    //     .reg_ex_rd1              ( reg_ex_rd1              ),
+    //     .tlb_ex_pc0              ( tlb_ex_pc0              ),
+    //     .tlb_ex_pc1              ( tlb_ex_pc1              ),
+    //     .tlb_ex_pc_next          ( tlb_ex_pc_next          ),
+    //     .tlb_ex_inst0            ( tlb_ex_inst0            ),
+    //     .tlb_ex_inst1            ( tlb_ex_inst1            ),
+    //     .tlb_ex_branch_flag      ( tlb_ex_branch_flag      ),
+    //     .tlb_ex_excp_flag        ( tlb_ex_excp_flag        ),
+    //     .tlb_ex_exception        ( tlb_ex_exception        ),
+    //     .tlb_ex_badv             ( tlb_ex_badv             ),
+    //     .tlb_ex_is_ALU_0         ( tlb_ex_is_ALU_0         ),
+    //     .tlb_ex_is_ALU_1         ( tlb_ex_is_ALU_1         ),
+    //     .tlb_ex_is_syscall_0     ( tlb_ex_is_syscall_0     ),
+    //     .tlb_ex_is_syscall_1     ( tlb_ex_is_syscall_1     ),
+    //     .tlb_ex_is_break_0       ( tlb_ex_is_break_0       ),
+    //     .tlb_ex_is_break_1       ( tlb_ex_is_break_1       ),
+    //     .tlb_ex_is_priviledged_0 ( tlb_ex_is_priviledged_0 ),
+    //     .tlb_ex_is_priviledged_1 ( tlb_ex_is_priviledged_1 ),
+    //     .tlb_ex_uop0             ( tlb_ex_uop0             ),
+    //     .tlb_ex_uop1             ( tlb_ex_uop1             ),
+    //     .tlb_ex_imm0             ( tlb_ex_imm0             ),
+    //     .tlb_ex_imm1             ( tlb_ex_imm1             ),
+    //     .tlb_ex_rj0_data         ( tlb_ex_rj0_data         ),
+    //     .tlb_ex_rj1_data         ( tlb_ex_rj1_data         ),
+    //     .tlb_ex_rk0_data         ( tlb_ex_rk0_data         ),
+    //     .tlb_ex_rk1_data         ( tlb_ex_rk1_data         ),
+    //     .tlb_ex_rj0              ( tlb_ex_rj0              ),
+    //     .tlb_ex_rj1              ( tlb_ex_rj1              ),
+    //     .tlb_ex_rk0              ( tlb_ex_rk0              ),
+    //     .tlb_ex_rk1              ( tlb_ex_rk1              ),
+    //     .tlb_ex_rd0              ( tlb_ex_rd0              ),
+    //     .tlb_ex_rd1              ( tlb_ex_rd1              )
+    // );
+
 
 
     sram_axi u_sram_axi(

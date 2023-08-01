@@ -193,7 +193,7 @@ module IF1_FIFO(
     // assign pc_from_PRIV = pc_after_priv;
 
 
-    always @(posedge clk) begin
+    always @(posedge clk or negedge rstn) begin
         if(!rstn)begin
             icache_rvalid_buf<=0;
         end 
@@ -204,6 +204,15 @@ module IF1_FIFO(
             icache_rvalid_buf<={icache_rvalid_buf[BUF_W-1:0],if1_allowin};            
         end
     end
+    // always @(posedge clk or negedge rstn) begin
+    //     if(!rstn)begin
+    //         if1_fifo_pc_buf<=0;
+    //     end else if(flush)begin
+    //         if1_fifo_pc_buf<=0;
+    //     end else if(if1_allowin||cmp_pc==if1_fifo_pc)begin
+    //         if1_fifo_pc_buf<={if1_fifo_pc_buf[WIDTH*32-1:0],fetch_pc[31:0]};
+    //     end
+    // end
 
     //add FSM for 1.detect ibar 2.detect ex's ibar signal 3.detect icache&dcache idle
     // always @(posedge clk) begin
