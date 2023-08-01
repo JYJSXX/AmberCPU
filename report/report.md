@@ -143,6 +143,42 @@ DIV_INIT -- others-->DIV_CACL -- shift < a.digit - b.digit --> DIV_DONE
 DIV_CACL -- others--> DIV_CACL
 ```
 
+### (五) 特权指令实现
+```mermaid
+graph LR
+
+PR_INIT--ins_csr-->PR_CSR
+PR_INIT--is_icache-->PR_CACOP_I_CALL
+PR_INIT--is_dcache-->PR_CACOP_D_CALL
+PR_INIT--ins_ertn-->PR_ERTN
+PR_INIT--ins_idle-->PR_IDLE_WAIT
+PR_INIT--ins_tlb&&pri_tlb_type==2'b10-->PR_TLBSRCH
+PR_INIT--ins_tlb&&pri_tlb_type==2'b11-->PR_TLBRD
+PR_INIT--ins_tlb&&pri_tlb_type==2'b00-->PR_TLBWR
+PR_INIT--ins_tlb&&pri_tlb_type==2'b01-->PR_TLBFILL
+PR_INIT--ins_tlb&&invtlb-->PR_TLBINV
+PR_INIT--default-->PR_INIT
+
+PR_CSR---->PR_INIT
+PR_CACOP_I_CALL--cacop_i_ready-->PR_CACOP_I_WAIT
+PR_CACOP_I_WAIT--cacop_i_done-->PR_CACOP_I_DONE
+PR_CACOP_I_DONE---->PR_INIT
+PR_CACOP_D_CALL--cacop_d_ready-->PR_CACOP_D_WAIT
+PR_CACOP_D_WAIT--cacop_d_done-->PR_CACOP_D_DONE
+PR_CACOP_D_DONE---->PR_INIT
+PR_IDLE_WAIT--i_idle&&d_idle-->PR_IDLE
+PR_IDLE---->PR_INIT
+PR_TLBSRCH--tlbsrch_ready-->PR_INIT
+PR_TLBSRCH--!tlbsrch_ready-->PR_TLBSRCH
+PR_TLBWR--tlbwr_ready-->PR_INIT
+PR_TLBWR--!tlbwr_ready-->PR_TLBFILL
+PR_TLBFILL--tlbfill_ready-->PR_INIT
+PR_TLBFILL--!tlbfill_ready-->PR_TLBFILL
+PR_TLBINV--invtlb_ready-->PR_INIT
+PR_TLBINV--!invtlb_ready-->PR_TLBINV
+PR_TLBINV--default-->PR_INIT
+
+```
 
 
 ### （三）XX模块设计（可选）
