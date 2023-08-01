@@ -40,9 +40,10 @@ module IF0 (
 
     reg  [31:0] pc=0;//指令集手册P68
     reg         branch_stat=0;//第一次跳转后置1,然后变0
+    wire [31:0] PcAdd;
     // wire [31:0] pc_next;
-    
-    assign pc_next      =   pred_taken?pred_pc:fetch_pc+8;
+    assign PcAdd        =   pc[2]?pc+4:pc+8;
+    assign pc_next      =   pred_taken?pred_pc:PcAdd;
     assign pc_taken     =   pred_taken;
     assign fetch_pc     =   pc;
     assign raddr        =   pc;
@@ -55,9 +56,9 @@ module IF0 (
             pc<=`PC_RESET;
         end
         else if(set_pc_from_WB)begin
-            if(pc_from_WB[2])begin
-                branch_stat<=1;
-            end
+            // if(pc_from_WB[2])begin
+            //     branch_stat<=1;
+            // end
             pc<=pc_from_WB;
         end
         // else if(flush&&flush_cause==PRED_FAIL)begin
@@ -67,9 +68,9 @@ module IF0 (
         //     pc<=fact_tpc;
         // end
         else if(set_pc_from_EX)begin
-            if(pc_from_EX[2])begin
-                branch_stat<=1;
-            end
+            // if(pc_from_EX[2])begin
+            //     branch_stat<=1;
+            // end
             pc<=pc_from_EX;
         end
         else if(set_pc_from_ID)begin
@@ -79,15 +80,17 @@ module IF0 (
             pc<=pc_from_PRIV;
         end
         else if (if0_readygo&&if0_allowin) begin
-            if(branch_stat)begin
-                pc<={pc_next[31:3],3'b000};
-            end else begin
-                pc<=pc_next;
-            end
-            branch_stat<=pc_next[2];
+            // if(branch_stat)begin
+            //     pc<={pc_next[31:3],3'b000};
+            // end else begin
+            //     pc<=pc_next;
+            // end
+            pc<=pc_next;
+            // branch_stat<=pc_next[2];
         end 
         else 
         begin
+            pc<=pc;
             // branch_stat<=0;
         end
     end
