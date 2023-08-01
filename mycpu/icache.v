@@ -532,14 +532,6 @@ module icache #(
             i_rready_reg <= i_rready;
     end
 
-    // reg i_rready_reg;
-    always @(posedge clk) begin
-        if(!rstn)
-            i_rready_reg <= 0;
-        else
-            i_rready_reg <= i_rready;
-    end
-
     always @(*) begin
         req_buf_we              = 0;
         i_rvalid                = 0;
