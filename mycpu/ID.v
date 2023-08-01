@@ -25,11 +25,12 @@ module id_stage
     output [4:0] rj1,
     output [4:0] rk0,
     output [4:0] rk1,
-    output invalid_instruction
+    output invalid_instruction1,
+    output invalid_instruction2
 );
-wire invalid_instruction1;
-wire invalid_instruction2;
-assign invalid_instruction = invalid_instruction1 | invalid_instruction2;
+// wire invalid_instruction1;
+// wire invalid_instruction2;
+// assign invalid_instruction = invalid_instruction1 | invalid_instruction2;
 ID_decoder id_decoder1(
     .inst(inst0),
     //.pc(pc0),

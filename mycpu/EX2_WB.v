@@ -193,7 +193,8 @@ assign cond1 = uop1_reg[`UOP_COND];
         else begin
             if(ex2_result0_valid) begin
                 //ex2_wb_data_0 <= (ex1_ex2_inst0[30:26]=='b10011 | ex1_ex2_inst0[30:26] == 'b10101)?ex2_result0+4:ex2_result0;
-                ex2_wb_data_0 <= (ex1_ex2_inst0[30:26]=='b10011)?ex2_result0+4:ex2_result0;
+                //ex2_wb_data_0 <= (ex1_ex2_inst0[30:26]=='b10011)?ex2_result0+4:ex2_result0;
+                ex2_wb_data_0 <= ex2_result0;
                 ex2_wb_data_0_valid <= 1;
                 ex2_wb_rd0 <= ex_rd0;
                 ex2_wb_we0 <= 1;
@@ -322,7 +323,7 @@ always@(*) begin
     // end
 
 end
-assign ld_stall_flag = (uop0[`INS_MEM] && ~dcache_ready);
+// assign ld_stall_flag = (uop0[`INS_MEM] && ~dcache_ready);
 
 
 always@(posedge clk)begin

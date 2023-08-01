@@ -188,7 +188,7 @@ always @ (posedge clk)begin
         tlb_ex_inst1 <= reg_ex_inst1;
         tlb_ex_branch_flag <= reg_ex_branch_flag;
         tlb_ex_excp_flag <= reg_ex_excp_flag;
-        tlb_ex_exception <= reg_ex_exception;
+        tlb_ex_exception <= reg_ex_exception != 0 ? reg_ex_exception : tlb_exception;
         tlb_ex_badv <= reg_ex_badv;
         tlb_ex_is_ALU_0 <= reg_ex_is_ALU_0;
         tlb_ex_is_ALU_1 <= reg_ex_is_ALU_1;

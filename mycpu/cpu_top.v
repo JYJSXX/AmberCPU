@@ -455,7 +455,8 @@ idle_clk idle_clk1
     wire [1:0]  fifo_id_priv_flag;
     wire [1:0]  fifo_id_branch_flag;
     wire        id_allowin;
-    wire invalid_instruction;
+    wire invalid_instruction1;
+    wire invalid_instruction2;
 
     wire  id_readygo;//to decoder stage,tell id I'm valid
     wire fifo_id_pc_taken;
@@ -542,7 +543,8 @@ idle_clk idle_clk1
         .rj1              ( id_rj1              ),
         .rk0              ( id_rk0              ),
         .rk1              ( id_rk1              ),
-        .invalid_instruction   (invalid_instruction)
+        .invalid_instruction1   (invalid_instruction1),
+        .invalid_instruction2   (invalid_instruction2)
     );
 
 
@@ -610,7 +612,8 @@ idle_clk idle_clk1
         .is_break_1           ( id_is_break_1           ),
         .is_priviledged_0     ( id_is_priviledged_0     ),
         .is_priviledged_1     ( id_is_priviledged_1     ),
-        .invalid_instruction  (invalid_instruction      ),
+        .invalid_instruction1  (invalid_instruction1      ),
+        .invalid_instruction2  (invalid_instruction2),
         .uop0                 ( id_uop0                 ),
         .uop1                 ( id_uop1                 ),
         .imm0                 ( id_imm0                 ),
@@ -1044,8 +1047,8 @@ wire [31:0]    ex0_ex1_csr_data;
         .reg_ex_inst0            ( reg_ex_inst0            ),
         .reg_ex_inst1            ( reg_ex_inst1            ),
         .reg_ex_branch_flag      ( reg_ex_branch_flag      ),
-        .reg_ex_excp_flag        ( reg_ex_excp_flag        ),
-        .reg_ex_exception        ( reg_ex_exception        ),
+        .reg_ex_excp_flag        ( ex1_excp_flag        ),
+        .reg_ex_exception        ( ex1_exception        ),
         .reg_ex_badv             ( reg_ex_badv             ),
         .reg_ex_is_ALU_0         ( reg_ex_is_ALU_0         ),
         .reg_ex_is_ALU_1         ( reg_ex_is_ALU_1         ),
@@ -1420,7 +1423,7 @@ wire [31:0]    ex0_ex1_csr_data;
         .ex1_ex2_data_1_valid      ( ex1_ex2_data_1_valid      ),
         .badv_in                   ( mb_badv_out                   ),
         .excp_flag_in              ( mb_excp_flag              ),
-        .exception_in              ( mb_exception              ),
+        .exception_in              ( tlb_ex_exception              ),
         .d_exception               ( dcache_exception           ),
         .d_badv                    ( dcache_badv               ),
         .ex1_ex2_badv              ( ex1_ex2_badv              ),
