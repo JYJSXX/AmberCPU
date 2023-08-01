@@ -260,7 +260,7 @@ module icache #(
     /* 2-way data memory */
     // read index
     wire flush_miss;
-    assign flush_miss = !(i_rready && miss_flush_counter_new && !miss_flush_counter_old);
+    assign flush_miss = !(i_rready && miss_flush_counter_new && !miss_flush_counter_old && miss_flush_flag);
     assign r_index = ((state == MISS_FLUSH) && flush_miss) ? w_index : raddr[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
     
     // write index 

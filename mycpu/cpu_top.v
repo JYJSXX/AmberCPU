@@ -332,7 +332,7 @@ idle_clk idle_clk1
         .tlb_flag                   ( tlb_flag                   ),
         .tlb_flag_from_ex           ( tlb_flag_from_ex           ),
         .priv_flag                  ( priv_flag                  ),
-        .pc_from_PRIV               ( pc_from_PRIV               ),
+        // .pc_from_PRIV               ( pc_from_PRIV               ),
         .set_pc_from_PRIV           ( set_pc_from_PRIV           ),
         .flush_from_if1_fifo        ( flush_from_if1_fifo        ),
         .icache_idle                ( i_idle                     ),
@@ -701,7 +701,6 @@ idle_clk idle_clk1
     wire [31:0] ex2_wb_data_2;
 
     wire        forward_stall ;
-    wire        tlb_forward_stall ;
     
     `ifdef DIFFTEST
     wire [31:0] reg_diff[31:0];
@@ -771,7 +770,7 @@ idle_clk idle_clk1
         .aresetn                 ( aresetn                 ),
         .flush                   ( flush_to_reg_ex1        ),
         // .flush_by_exception      ( flush_by_exception      ),
-        .forward_stall           ( forward_stall | tlb_forward_stall         ),
+        .forward_stall           ( forward_stall         ),
         .reg_readygo             ( reg_readygo             ),
         .reg_allowin             ( reg_allowin             ),
         .ex_allowin              ( tlb_allowin              ),
@@ -1838,7 +1837,8 @@ wire [31:0]    ex0_ex1_csr_data;
         .exception_flag                    ( reg_ex_excp_flag                  ),   
         //.d_exception_flag                  ( /*d_exception_flag*/0             ),  
         .forward_exception                 ( reg_ex_exception                  ),  
-        .tlb_exception                     ( tlb_exception_code_d              ),  
+        // .tlb_exception                     ( tlb_exception_code_d              ),  
+        .tlb_exception                     ( 0                    ),
         .badv                              ( dcache_badv                       ),  
         .cacop_en                          ( cacop_d_en                        ),
         .cacop_code                        ( cacop_ins_type                    ),

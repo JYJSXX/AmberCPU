@@ -375,8 +375,8 @@ always @(posedge clk)
             crmd_ie <= 0;
             crmd_da <= 1;
             crmd_pg <= 0;
-            crmd_datf <=1;
-            crmd_datm <= 1;
+            crmd_datf <=0;
+            crmd_datm <= 0;
         end else if(ertn) begin
             crmd_plv <= prmd_pplv;
             crmd_ie <= prmd_pie;
