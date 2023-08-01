@@ -904,14 +904,14 @@ assign rdata[31:0] = {32{addr_in==`CSR_CRMD}} & csr_crmd |
             `ifdef DIFFTEST
     wire [32*26-1:0] csr_diff =  
     {
-    wen&&addr==`CSR_CRMD ?  wdata & 32'b1_1111_1111 : pos_signal_excp ? {csr_crmd[31:3], 3'b000} :
+    wen&&addr==`CSR_CRMD ?  wdata  : pos_signal_excp ? {csr_crmd[31:3], 3'b000} :
                      ertn ? {csr_crmd[31:3],csr_prmd[2:0]}: csr_crmd,
-    wen&&addr==`CSR_PRMD ? wdata & 32'b111 : pos_signal_excp ? {csr_prmd[31:3],csr_crmd[2:0]}:csr_prmd,
+    wen&&addr==`CSR_PRMD ? wdata  : pos_signal_excp ? {csr_prmd[31:3],csr_crmd[2:0]}:csr_prmd,
     wen&&addr==`CSR_ECFG ? wdata:csr_ecfg ,
     wen&&addr==`CSR_ESTAT ? (wdata & 32'b11 | csr_estat & ~32'b11) : pos_signal_excp ? {csr_estat[31:23], expcode_in[6:0], csr_estat[15:0]} :csr_estat,
     wen&&addr==`CSR_ERA ? wdata : pos_signal_excp ? era_in : csr_era,
     wen&&addr==`CSR_BADV ? wdata :csr_badv,
-    wen&&(addr==`CSR_EENTRY) ? wdata & 32'hffff_ffc0:csr_eentry,
+    wen&&(addr==`CSR_EENTRY) ? wdata :csr_eentry,
     wen&&addr==`CSR_TLBIDX ? wdata :csr_tlbidx,
     wen&&addr==`CSR_TLBEHI ? wdata :csr_tlbehi,
     wen&&addr==`CSR_TLBELO0 ? wdata :csr_tlbelo0,
@@ -930,7 +930,7 @@ assign rdata[31:0] = {32{addr_in==`CSR_CRMD}} & csr_crmd |
     wen&&addr==`CSR_LLBCTL ? wdata : ertn ? {csr_llbctl[31:1], csr_llbctl[2]} :csr_llbctl,
     wen&&addr==`CSR_TLBRENTRY ? wdata :csr_tlbrentry,
     wen&&addr==`CSR_DMW0 ? wdata :csr_dmw0,
-    wen&&addr==`CSR_DMW1 ? wdata & 32'hff000039:csr_dmw1};
+    wen&&addr==`CSR_DMW1 ? wdata :csr_dmw1};
 
     reg [32*26-1:0] csr_diff_delay0;
 
