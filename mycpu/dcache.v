@@ -835,7 +835,6 @@ module dcache #(
         data_from_mem        = 1;
         wdata_from_pipe      = 1;
         d_rlen               = 8'd15;
-        d_wlen               = 8'd15;
         lru_we               = 0;
         way_visit            = 0;
         cacop_complete       = 0;
@@ -844,13 +843,11 @@ module dcache #(
         exception_sel        = 0;
         dirty_we             = 0;
         dirty_wdata          = 0;
-        d_wstrb              = 4'b1111;
         ibar_ready           = 0;
         dirty_way            = 0;
         llbit_set            = 0;
         llbit_clear          = 0;
         d_rsize              = 2;
-        d_wsize              = 2;
         case(state)
         IDLE: begin
             req_buf_we = 1;
@@ -894,9 +891,6 @@ module dcache #(
                 end
                 if(uncache_buf && op_buf == WRITE_OP) begin
                     wbuf_we = 1;
-                    d_wlen  = 8'd0;
-                    d_wstrb = wstrb_pipe;
-                    d_wsize = uncache_rwsize;
                     wfsm_en = 1;
                 end
             end
@@ -999,7 +993,7 @@ module dcache #(
         case(wfsm_state)
         INIT: begin
             if(wfsm_en) begin
-                wfsm_next_state = uncache_buf ? WRITE : dirty_rdata ? WRITE : FINISH;
+                wfsm_next_state = (uncache_buf && (op_buf == WRITE_OP)) ? WRITE : dirty_rdata ? WRITE : FINISH;
             end
             else begin
                 wfsm_next_state = INIT;
@@ -1028,13 +1022,21 @@ module dcache #(
     end
     /* stage 2: output */
     always @(*) begin
-        wrt_finish          = 0;
-        d_wvalid            = 0;
+        wrt_finish            = 0;
+        d_wvalid             = 0;
+        d_wlen               = 8'd15;
+        d_wstrb              = 4'b1111;
+        d_wsize              = 2;
         case(wfsm_state)
         INIT: begin
         end
         WRITE: begin
             d_wvalid            = 1;
+            if(uncache_buf && (op_buf == WRITE_OP)) begin
+                d_wlen  = 8'd0;
+                d_wstrb = wstrb_pipe;
+                d_wsize = uncache_rwsize;
+            end
         end
         FINISH: begin
             wrt_finish = 1;

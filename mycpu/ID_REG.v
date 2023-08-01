@@ -1,5 +1,6 @@
 `timescale 1ns/1ps
 `include "define.vh"
+`include "exception.vh"
 //regfile内嵌于REG_EX1模块，直接本模块直接与REG_EX1相连
 module ID_REG(
     input aclk,
@@ -30,6 +31,7 @@ module ID_REG(
     input is_break_1,
     input is_priviledged_0,
     input is_priviledged_1,
+    input invalid_instruction,
     input [`WIDTH_UOP-1:0] uop0,
     input [`WIDTH_UOP-1:0] uop1,
     input [31:0] imm0,
@@ -70,7 +72,6 @@ module ID_REG(
     output  [4:0]  iq_rj1 ,
     output  [4:0]  iq_rk0 ,
     output  [4:0]  iq_rk1 
-
 );
     reg [31:0] id_reg_pc0;
     reg [31:0] id_reg_pc1;
@@ -144,7 +145,7 @@ always@(posedge aclk) begin
         id_reg_excp_flag  <= fifo_id_excp_flag;
         id_reg_branch_flag<= fifo_id_branch_flag;
         id_reg_priv_flag  <=fifo_id_priv_flag;
-        id_reg_exception  <= fifo_id_exception;
+        id_reg_exception  <= fifo_id_exception != 0 ? fifo_id_exception : invalid_instruction ? `EXP_INE : 7'b0;
         id_reg_is_ALU_0  <= is_ALU_0;
         id_reg_is_ALU_1  <= is_ALU_1;
         id_reg_is_syscall_0  <= is_syscall_0;

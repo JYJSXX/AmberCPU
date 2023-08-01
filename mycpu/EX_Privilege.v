@@ -106,7 +106,7 @@ module EX_Privilege(
             begin
                 if(en)
                 begin
-                    if(pr_type[`INS_CSR])
+                    if(pr_type[`INS_CSR] & d_idle)
                         PR_next_state = PR_CSR;
                     else if (is_icache)
                         PR_next_state = PR_CACOP_I_CALL;
@@ -226,7 +226,7 @@ module EX_Privilege(
         case(PR_state)
             PR_INIT:
             begin
-                if(en & pr_type[`INS_CSR])
+                if(en & pr_type[`INS_CSR] & d_idle)
                 begin
                     csr_addr = csr_num;
                     csr_ren = 1;
@@ -272,7 +272,7 @@ module EX_Privilege(
         case(PR_state)
             PR_INIT:
             begin
-                if(en & pr_type[`INS_CSR])
+                if(en & pr_type[`INS_CSR] & d_idle)
                 begin
                     done <= 1;
                 end
