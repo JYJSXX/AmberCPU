@@ -455,7 +455,7 @@ idle_clk idle_clk1
     wire [1:0]  fifo_id_priv_flag;
     wire [1:0]  fifo_id_branch_flag;
     wire        id_allowin;
-    
+    wire invalid_instruction;
 
     wire  id_readygo;//to decoder stage,tell id I'm valid
     wire fifo_id_pc_taken;
@@ -541,7 +541,8 @@ idle_clk idle_clk1
         .rj0              ( id_rj0              ),
         .rj1              ( id_rj1              ),
         .rk0              ( id_rk0              ),
-        .rk1              ( id_rk1              )
+        .rk1              ( id_rk1              ),
+        .invalid_instruction   (invalid_instruction)
     );
 
 
@@ -609,6 +610,7 @@ idle_clk idle_clk1
         .is_break_1           ( id_is_break_1           ),
         .is_priviledged_0     ( id_is_priviledged_0     ),
         .is_priviledged_1     ( id_is_priviledged_1     ),
+        .invalid_instruction  (invalid_instruction      ),
         .uop0                 ( id_uop0                 ),
         .uop1                 ( id_uop1                 ),
         .imm0                 ( id_imm0                 ),

@@ -237,7 +237,9 @@ module icache #(
 
     /* 2-way data memory */
     // read index
-    assign r_index = (state == MISS_FLUSH) ? w_index : raddr[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
+    wire flush_miss;
+    assign flush_miss = !(i_rready && miss_flush_counter_new && !miss_flush_counter_old);
+    assign r_index = ((state == MISS_FLUSH) && flush_miss) ? w_index : raddr[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
     
     // write index 
     assign w_index = req_buf[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
@@ -519,7 +521,7 @@ module icache #(
         if(!rstn)
             miss_flush_flag <= 0;
         else
-            miss_flush_flag <= (state == MISS_FLUSH);
+            miss_flush_flag <= (state == MISS_FLUSH) && flush_miss;
     end
 
     reg i_rready_reg;
