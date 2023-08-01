@@ -89,11 +89,13 @@ module IQ (
                         (id_reg_inst1==`INST_NOP)?1:0;
 
     always @(*) begin//logic for single_en
-        if (id_reg_is_ALU_0&&id_reg_is_ALU_1&&(
-            (id_reg_rd0!=id_reg_rj1)&&(id_reg_rd0!=id_reg_rk1)&&
-            (id_reg_rd1!=id_reg_rj0)&&(id_reg_rd1!=id_reg_rk0)||
-            (id_reg_rd0==0)         ||(id_reg_rd1==0)
-        )) begin
+        if (id_reg_is_ALU_0&&id_reg_is_ALU_1&&
+            (
+                (id_reg_rd0!=id_reg_rj1)&&(id_reg_rd0!=id_reg_rk1)&&
+                (id_reg_rd1!=id_reg_rj0)&&(id_reg_rd1!=id_reg_rk0)||
+                (id_reg_rd0==0)         ||(id_reg_rd1==0)
+            )&&id_reg_excp_flag==2'b00
+        ) begin
             single_en=0;
         end else begin
             single_en=1;
@@ -125,8 +127,8 @@ module IQ (
             iq_inst1=`INST_NOP;
             iq_badv=id_reg_badv;
             iq_excp_flag=id_reg_excp_flag[1];
+            iq_exception=iq_excp_flag?id_reg_exception:0;
             iq_branch_flag=id_reg_branch_flag[1];
-            iq_exception=id_reg_exception;
             iq_is_ALU_0 =id_reg_is_ALU_1;
             iq_is_ALU_1 =1'b1;//TODO NOTICE HERE IS REPLACED BY NOP
             iq_is_syscall_0=id_reg_is_syscall_1;
@@ -154,7 +156,7 @@ module IQ (
             // iq_reg_inst1  = id_reg_inst1;
             iq_badv  = id_reg_badv;
             // iq_excp_flag  = id_reg_excp_flag;
-            iq_exception  = id_reg_exception;
+            iq_exception  = iq_excp_flag?id_reg_exception:0;
             iq_is_ALU_0  = id_reg_is_ALU_0;
             // iq_is_ALU_1  = id_reg_is_ALU_1;
             iq_is_syscall_0  = id_reg_is_syscall_0;
@@ -176,7 +178,6 @@ module IQ (
             if(single_en)begin
                 iq_pc1=`PC_RESET;
                 iq_inst1=`INST_NOP;
-
                 iq_excp_flag=id_reg_excp_flag[0];
                 iq_branch_flag=id_reg_branch_flag[0];
                 iq_is_ALU_1 =1'b1;
@@ -191,7 +192,7 @@ module IQ (
             end else begin
                 iq_pc1    = id_reg_pc1;
                 iq_inst1  = id_reg_inst1;
-                iq_excp_flag  = |id_reg_excp_flag[1:0];
+                iq_excp_flag  = 0;
                 iq_branch_flag=|id_reg_branch_flag[1:0];
                 iq_is_ALU_1  = id_reg_is_ALU_1;
                 iq_is_syscall_1  = id_reg_is_syscall_1;
