@@ -260,7 +260,7 @@ module icache #(
     /* 2-way data memory */
     // read index
     wire flush_miss;
-    assign flush_miss = !(i_rready && miss_flush_counter_new && !miss_flush_counter_old && miss_flush_flag);
+    assign flush_miss = !(i_rready && miss_flush_counter_new && !miss_flush_counter_old);
     assign r_index = ((state == MISS_FLUSH) && flush_miss) ? w_index : raddr[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
     
     // write index 
@@ -567,6 +567,7 @@ module icache #(
         LOOKUP: begin
             if(exception == 0)begin
                 pbuf_we                = ((miss_flush_flag && !cache_hit) ? 0 : 1) || (miss_flush_counter_old && !miss_flush_counter_old_buf);
+                req_buf_we             =  miss_flush_flag && miss_flush_counter_new && !miss_flush_counter_old;
                 // pbuf_we                = 1;         //寻找两全之策！！！！
                 lru_we                  = 0;
                 if(cacop_en)
