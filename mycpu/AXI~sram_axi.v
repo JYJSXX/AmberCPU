@@ -53,7 +53,7 @@ module sram_axi(
     input                       d_rvalid,       //数据cache读有效
     output  reg                 d_rready,       //数据cache读准备好
     input           [7:0]       d_rlen,         //数据cache读长度
-    // input           [2:0]       d_rsize,        //数据cache读大小
+    input           [2:0]       d_rsize,        //数据cache读大小
     // output                      d_rlast,     //数据cache读结束
 
     input           [31:0]      d_waddr,        //数据cache写地址
@@ -61,7 +61,7 @@ module sram_axi(
     input                       d_wvalid,       //数据cache写有效
     output  reg                 d_wready,       //数据cache写准备好
     input           [7:0]       d_wlen,         //数据cache写长度
-    // input           [2:0]       d_wsize         //数据cache写大小
+    input           [2:0]       d_wsize,         //数据cache写大小
     input           [3:0]       d_wstrb         //数据cache写使能
     // input                       d_wlast      //数据cache写结束
 
@@ -158,6 +158,7 @@ begin
                 ar_addr = d_raddr;
                 ar_id = 4'b0001;
                 ar_len = d_rlen;
+                ar_size = d_rsize;
             end
             else if(i_rvalid)
             begin
@@ -186,6 +187,7 @@ begin
             ar_valid = 1'b1;
             ar_addr = d_raddr;
             ar_len = d_rlen;
+            ar_size = d_rsize;
         end
         R_DDATA:
         begin
@@ -292,12 +294,14 @@ begin
             begin
                 aw_valid = 1'b1;
                 aw_len = d_wlen;
+                aw_size = d_wsize;
             end
         end
         W_DADDR:
         begin
             aw_valid = 1'b1;
             aw_len = d_wlen;
+            aw_size = d_wsize;
         end
         W_DDATA:
         begin

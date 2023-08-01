@@ -1817,12 +1817,14 @@ wire [31:0]    ex0_ex1_csr_data;
         .d_raddr                           ( d_raddr                           ),
         .d_rdata                           ( d_rdata                           ),
         .d_rlen                            ( d_rlen                            ),
+        .d_rsize                           ( d_rsize                           ),
         .d_wvalid                          ( d_wvalid                          ),
         .d_wready                          ( d_wready                          ),
         .d_waddr                           ( d_waddr                           ),
         .d_wdata                           ( d_wdata                           ),
         .d_wstrb                           ( d_wstrb                           ),
         .d_wlen                            ( d_wlen                            ),
+        .d_wsize                           ( d_wsize                           ),
         .exception                         ( dcache_exception                  ),  
         .exception_flag                    ( reg_ex_excp_flag                  ),   
         //.d_exception_flag                  ( /*d_exception_flag*/0             ),  
@@ -1927,6 +1929,8 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .stable_counter ( stable_counter[4:0])
     );
 
+    wire [2:0] d_rsize, d_wsize;
+
 
     sram_axi u_sram_axi(
         .aclk     ( clk     ),
@@ -1966,11 +1970,13 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .d_rvalid ( d_rvalid ),
         .d_rready ( d_rready ),
         .d_rlen   ( d_rlen   ),
+        .d_rsize  ( d_rsize  ),
         .d_waddr  ( d_waddr  ),
         .d_wdata  ( d_wdata  ),
         .d_wvalid ( d_wvalid ),
         .d_wready ( d_wready ),
         .d_wlen   ( d_wlen   ),
+        .d_wsize  ( d_wsize  ),
         .d_wstrb  ( d_wstrb  )
     );
 
