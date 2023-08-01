@@ -25,7 +25,7 @@ module EX2_WB(
     input ex2_result1_valid,
     // input EN_VA_D,
     input reg_ex1_is_priviledeged_0,
-    input ex1_ex2_is_priviledged_1,
+    // input ex1_ex2_is_priviledged_1,
     input [31:0] reg_ex1_pc0,
     output reg [31:0] ex2_wb_data_0,
     output reg [31:0] ex2_wb_data_1,
@@ -88,12 +88,12 @@ module EX2_WB(
     output reg [18:0] vppn_out,
     output reg wen_vppn,
     output  [31:0] pc_from_WB,
-    output set_by_priv,
     output flush_by_exception,
     output flush_to_priv_wr_csr,
     input  [31:0] eentry,
     input  [31:0] tlbrentry
 );
+    wire set_by_priv;
 // wire ld_stall_flag;
 assign pc_from_WB = (tlb_exception) ? tlbrentry : eentry;
 assign set_by_priv = tlb_exception | exception_flag_out;

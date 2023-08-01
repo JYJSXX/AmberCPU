@@ -34,7 +34,7 @@ module EX0(
     input   [4:0] ex_rk0,
     input   [4:0] ex_rk1,
     input         dcache_ready,
-    input         ex_allowin,
+    // input         ex_allowin, //TODO
     //input   [4:0] ex_rd0,
     //input   [4:0] ex_rd1,
     output forward_flag_j0,
@@ -200,6 +200,10 @@ module EX0(
 
 
 );
+wire [31:0] rj0_data_o;
+wire [31:0] rk0_data_o;
+wire [31:0] rk1_data_o;
+wire [31:0] rj1_data_o;
 assign dcache_wdata = rk0_data_o;
 assign csr_flag_from_ex = uop0[`INS_CSR];
 assign tlb_flag_from_ex = uop0[`INS_TLB] && (inst0[11:10] == 2'b00 || inst0[11:10] ==2'b01 || inst0[15]);
@@ -280,10 +284,6 @@ assign alu_result0_valid = is_ALU_0 || uop0[`INS_BR] || inst0 == 32'b0;
 assign alu_result1_valid = is_ALU_1 || uop1[`INS_BR] || inst1 == 32'b0; //beq之类的就向r0写，应该也没什么问题
 assign alu_result0 = uop0[`INS_BR]? pc_add_4:y_1;
 assign alu_result1 = y_2; //跳转指令单发，只在0号，1号alu不发射跳转
-wire [31:0] rj0_data_o;
-wire [31:0] rk0_data_o;
-wire [31:0] rk1_data_o;
-wire [31:0] rj1_data_o;
 wire forward_stall1;
 wire forward_stall2;
 EX1_FORWARD ex1_forward1(

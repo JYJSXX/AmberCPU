@@ -159,6 +159,37 @@ module dcache #(
     reg     [63:0]              total_request;
     reg     [63:0]              miss_time;
     reg     [63:0]              write_time;
+
+    /* main FSM */
+    localparam 
+        IDLE        = 4'd0,
+        LOOKUP      = 4'd1,
+        MISS        = 4'd2,
+        REFILL      = 4'd3,
+        WAIT_WRITE  = 4'd4,
+        CACOP       = 4'd5,
+        IBAR        = 4'd6,     //处理uncache写
+        IBAR_EXTRA  = 4'd7,
+        IBAR_WAIT   = 4'd8;
+
+    reg [3:0] state, next_state;
+    assign idle = (state == IDLE) && !ibar;
+    always @(posedge clk) begin
+        if(!rstn) begin
+            state <= IDLE;
+        end
+        else begin
+            state <= next_state;
+        end
+    end
+
+    /* write fsm */
+    localparam 
+        INIT    = 3'd0,
+        WRITE   = 3'd1,
+        FINISH  = 3'd2;
+    reg [2:0] wfsm_state, wfsm_next_state;
+    
     always @(posedge clk) begin
         if(!rstn) begin
             total_time <= 0;
@@ -667,17 +698,6 @@ module dcache #(
     assign d_waddr  = ibar_valid ? dirty_addr[dirty_way] : uncache_buf ? paddr_buf : m_buf;
     assign d_wdata  = wbuf;
 
-    /* main FSM */
-    localparam 
-        IDLE        = 4'd0,
-        LOOKUP      = 4'd1,
-        MISS        = 4'd2,
-        REFILL      = 4'd3,
-        WAIT_WRITE  = 4'd4,
-        CACOP       = 4'd5,
-        IBAR        = 4'd6,     //处理uncache写
-        IBAR_EXTRA  = 4'd7,
-        IBAR_WAIT   = 4'd8;
     
     reg [2:0] uncache_rwsize;
     always @(*) begin
@@ -689,16 +709,7 @@ module dcache #(
         endcase
     end
 
-    reg [3:0] state, next_state;
-    assign idle = (state == IDLE) && !ibar;
-    always @(posedge clk) begin
-        if(!rstn) begin
-            state <= IDLE;
-        end
-        else begin
-            state <= next_state;
-        end
-    end
+    
     always @(*) begin
         case(state)
         IDLE: begin
@@ -973,12 +984,6 @@ module dcache #(
         endcase
     end
 
-    /* write fsm */
-    localparam 
-        INIT    = 3'd0,
-        WRITE   = 3'd1,
-        FINISH  = 3'd2;
-    reg [2:0] wfsm_state, wfsm_next_state;
     /* stage 1 */
     always @(posedge clk) begin
         if(!rstn) begin

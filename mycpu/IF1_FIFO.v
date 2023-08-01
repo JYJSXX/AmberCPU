@@ -43,7 +43,7 @@ module IF1_FIFO(
     input  [1:0]        tlb_flag,
     input               tlb_flag_from_ex,
     input  [1:0]        priv_flag,
-    output [31:0]       pc_from_PRIV,
+    // output [31:0]       pc_from_PRIV,
     output              set_pc_from_PRIV,
     output              flush_from_if1_fifo,
     input               icache_idle,
@@ -55,8 +55,8 @@ module IF1_FIFO(
     output reg          if1_fifo_pc_taken=0,    //?
     output reg[31:0]    if1_fifo_pc_next=0,  
 
-    output reg[31:0]    if1_fifo_inst0=`INST_NOP,
-    output reg[31:0]    if1_fifo_inst1=`INST_NOP,
+    output reg[31:0]    if1_fifo_inst0=0,
+    output reg[31:0]    if1_fifo_inst1=0,
     output reg[31:0]    if1_fifo_icache_badv=0,
     output reg[6:0]     if1_fifo_icache_exception=0,
     output reg[1:0]     if1_fifo_icache_excp_flag=0
@@ -84,6 +84,7 @@ module IF1_FIFO(
     // reg [31:0]     if1_fifo_inst0;
     // reg [31:0]     if1_fifo_inst1;
 
+    wire critical_wire;
     // reg [2:0]       stat;
     reg [1:0]       tmp=0;
     // reg [2:0]       next_stat;
@@ -179,7 +180,6 @@ module IF1_FIFO(
     // assign  critical_allowin=!icache_rvalid_buf[BUF_W-1]
     //                                 ||icache_rready;
 
-    wire critical_wire;
     assign  critical_wire=(!icache_rvalid_buf[BUF_W-1]||(icache_rready))&&!space_ok&&tmp==0;
     assign  if1_allowin  =       (space_ok)&&
                                 (//2spaceleft->correct_pc->rready,consider plus 5 stage cache
@@ -306,8 +306,7 @@ module IF1_FIFO(
             if1_fifo_inst1  <=  pc_out[2]? `INST_NOP:icache_inst1[31:0];
             if1_fifo_icache_badv      <=icache_badv;
             if1_fifo_icache_exception <=icache_exception;//did not replace,cope need to test excp_flag first!!
-            // if1_fifo_icache_excp_flag<=pc_out[2]?{1'b0,icache_excp_flag[1]}:icache_excp_flag;
-            if1_fifo_icache_excp_flag <=(icache_excp_flag!=2'b00)?2'b11:2'b00;
+            if1_fifo_icache_excp_flag<=pc_out[2]?{1'b0,icache_excp_flag[1]}:icache_excp_flag;
         end 
         else if(~fifo_allowin||~if1_allowin)begin
             //hold stage-stage reg

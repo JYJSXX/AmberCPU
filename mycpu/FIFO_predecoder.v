@@ -7,11 +7,11 @@ module FIFO_predecoder #(
     input [31:0]        if1_fifo_pc,
 
     //signal for priv/ibar/csr inst
-    output   [1 :0]      priv_flag,
-    output   [1 :0]      ibar_flag,
-    output   [1 :0]      csr_flag,
-    output   [1 :0]      tlb_flag,
-    output   [1 :0]      branch_flag,
+    // output   [1 :0]      priv_flag,
+    // output   [1 :0]      ibar_flag,
+    // output   [1 :0]      csr_flag,
+    // output   [1 :0]      tlb_flag,
+    // output   [1 :0]      branch_flag,
     output   [1 :0]      inst_btype,
     output   [PC_INDEX_WIDTH-1:0] inst_index
     //两条指令中有一条跳转就是跳转，有一条无条件就是无条件

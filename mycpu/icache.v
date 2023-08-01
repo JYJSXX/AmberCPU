@@ -96,6 +96,28 @@ module icache #(
     reg     [63:0]              total_request;
     reg     [63:0]              total_hit;
     reg     [64:0]              miss_time;
+
+    /* main FSM */
+    localparam [2:0] 
+        IDLE    = 3'b000, 
+        LOOKUP  = 3'b001,
+        MISS    = 3'b010, 
+        REFILL  = 3'b011,
+        //extra
+        CACOP   = 3'b100,
+        MISS_FLUSH = 3'b101;
+    reg [2:0] state, next_state;
+    assign idle = (state == IDLE);
+    // stage 1
+    always @(posedge clk) begin
+        if(!rstn) begin
+            state <= IDLE;
+        end
+        else begin
+            state <= next_state;
+        end
+    end
+
     always @(posedge clk) begin
         if(!rstn) begin
             total_time <= 0;
@@ -346,6 +368,29 @@ module icache #(
         end
     end
 
+    wire miss_flush_counter_new;
+    assign miss_flush_counter_new = missbuf_we ? (raddr != 0) : 0;
+    reg miss_flush_counter_old;
+    reg miss_flush_counter_old_buf;
+    always @(posedge clk) begin
+        if(!rstn || flush) begin
+            miss_flush_counter_old <= 0;
+            miss_flush_counter_old_buf <= 0;
+        end
+        else begin
+            miss_flush_counter_old <= miss_flush_counter_new;
+            miss_flush_counter_old_buf <= miss_flush_counter_old;
+        end
+    end
+        // stage 2: output
+    reg miss_flush_flag;
+    always @(posedge clk) begin
+        if(!rstn)
+            miss_flush_flag <= 0;
+        else
+            miss_flush_flag <= (state == MISS_FLUSH) && flush_miss;
+    end
+
     reg [BIT_NUM - 1 : 0] victim_data_in;
     always @(posedge clk) begin
         if(!rstn) begin
@@ -438,41 +483,7 @@ module icache #(
     end
     assign lru_sel = (store_tag || index_invalid) ? tagv_way_sel : (hit_invalid) ? hit : lru[w_index] ? 1 : 2;
     /* miss_flush counter */
-    wire miss_flush_counter_new;
-    assign miss_flush_counter_new = missbuf_we ? (raddr != 0) : 0;
-    reg miss_flush_counter_old;
-    reg miss_flush_counter_old_buf;
-    always @(posedge clk) begin
-        if(!rstn || flush) begin
-            miss_flush_counter_old <= 0;
-            miss_flush_counter_old_buf <= 0;
-        end
-        else begin
-            miss_flush_counter_old <= miss_flush_counter_new;
-            miss_flush_counter_old_buf <= miss_flush_counter_old;
-        end
-    end
 
-    /* main FSM */
-    localparam [2:0] 
-        IDLE    = 3'b000, 
-        LOOKUP  = 3'b001,
-        MISS    = 3'b010, 
-        REFILL  = 3'b011,
-        //extra
-        CACOP   = 3'b100,
-        MISS_FLUSH = 3'b101;
-    reg [2:0] state, next_state;
-    assign idle = (state == IDLE);
-    // stage 1
-    always @(posedge clk) begin
-        if(!rstn) begin
-            state <= IDLE;
-        end
-        else begin
-            state <= next_state;
-        end
-    end
     // stage 2
     always @(*) begin
         case(state)
@@ -514,14 +525,6 @@ module icache #(
             //                    next_state = rvalid ? LOOKUP : IDLE;
             default:                    next_state = IDLE;
         endcase
-    end
-    // stage 2: output
-    reg miss_flush_flag;
-    always @(posedge clk) begin
-        if(!rstn)
-            miss_flush_flag <= 0;
-        else
-            miss_flush_flag <= (state == MISS_FLUSH) && flush_miss;
     end
 
     reg i_rready_reg;

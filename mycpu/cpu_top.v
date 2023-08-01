@@ -167,6 +167,7 @@ idle_clk idle_clk1
     wire [31:0]pc_from_ID;
     // wire set_pc_from_EX; replaced by fact_pc/fact taken
     // wire [31:0]pc_from_EX;
+    wire ex2_wb_excp_flag; 
     wire set_pc_from_WB;
     assign set_pc_from_WB =ex2_wb_excp_flag ;
     wire [31:0]pc_from_WB;
@@ -188,7 +189,6 @@ idle_clk idle_clk1
     wire    pc_taken_out;
     wire    pc_taken;
     wire         pc_in_stall;
-    wire ex2_wb_excp_flag; 
     wire set_by_priv;
     wire [31:0] pc_set_by_priv;
     wire    [1:0]flush_cause;
@@ -364,10 +364,11 @@ idle_clk idle_clk1
         .if1_fifo_inst0 ( if1_fifo_inst0 ),
         .if1_fifo_inst1 ( if1_fifo_inst1 ),
         .if1_fifo_pc    ( if1_fifo_pc    ),
-        .priv_flag      ( priv_flag      ),
-        .ibar_flag      ( ibar_flag      ),
-        .csr_flag       ( csr_flag       ),
-        .tlb_flag       ( tlb_flag       ),
+        // .priv_flag      ( priv_flag      ),
+        // .ibar_flag      ( ibar_flag      ),
+        // .csr_flag       ( csr_flag       ),
+        // .tlb_flag       ( tlb_flag       ),
+        // .branch_flag    ( 0  ), //TODO
         .inst_index     ( inst_index     ),
         .inst_btype     ( inst_btype     )
         //.inst_bpos      ( inst_bpos      )
@@ -760,6 +761,11 @@ idle_clk idle_clk1
     wire                  ex1_readygo;
     wire                  ex1_allowin;
 
+    wire rready_dcache;
+    wire wready_dcache;
+    wire flush_by_exception;
+    wire ex2_allowin;
+
     REG_EX1 u_REG_EX1(
         .clk                     ( clk                     ),
         .aresetn                 ( aresetn                 ),
@@ -1006,8 +1012,7 @@ idle_clk idle_clk1
     wire [31:0] ex_paddr_diff;
     wire [31:0] ex_data_diff;
 `endif
-    wire rready_dcache;
-    wire wready_dcache;
+
 
 wire [31:0]    mb_alu_result0;
 wire [31:0]    mb_alu_result1;
@@ -1169,7 +1174,9 @@ wire [31:0]    ex0_ex1_csr_data;
         .tlb_ex_rd0              ( tlb_ex_rd0              ),
         .tlb_ex_rd1              ( tlb_ex_rd1              )
     );
-    wire flush_by_exception;
+        
+    wire [31:0] csr_era;
+
     EX0 u_EX0(
         .clk                  ( clk                  ),
         .aclk                 ( aclk                 ),
@@ -1321,7 +1328,7 @@ wire [31:0]    ex0_ex1_csr_data;
 
     
     //wire  flush_out;
-    wire   ex2_allowin;
+
     wire   ex2_readygo;
     wire [31:0] ex2_data_0, ex2_data_1;
     wire   ex2_data_0_valid, ex2_data_1_valid;
@@ -1578,7 +1585,6 @@ wire [31:0]    ex0_ex1_csr_data;
 
     wire [31:0] crmd; //当前模式信息，包含privilege
     wire [31:0] estat;    //例外状态 idle_interrupt; 
-    wire [31:0] csr_era;
     wire [31:0] pgdl,pgdh;
     
     wire [31:0] dmw0;
@@ -1789,7 +1795,7 @@ wire [31:0]    ex0_ex1_csr_data;
         .ibar              ( ibar              )
     );
 
-
+    wire [2:0] d_rsize, d_wsize;
 
     dcache#(
         .INDEX_WIDTH                       ( 6 ),
@@ -1932,7 +1938,6 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .stable_counter ( stable_counter[4:0])
     );
 
-    wire [2:0] d_rsize, d_wsize;
 
 
     // MEMBUF u_MEMBUF(
