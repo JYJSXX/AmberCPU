@@ -137,7 +137,8 @@ always@(posedge clk)begin
         wen_badv <= exception_flag_in && set_badv;
         tlb_exception <= exception_flag_in && (ecode_in == `EXP_TLBR);
         if(era_in!=0 && exception_cpu_interrupt) era_out <= era_in;
-        else era_out <= pc0;
+        else if (era_in !=0) era_out <= pc0;
+        else era_out <= era_out;
         wen_era <= exception_flag_in | cpu_interrupt;
         vppn_out <= badv_in[18:0];
         wen_vppn <= exception_flag_in && set_vppn;

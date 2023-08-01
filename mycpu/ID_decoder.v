@@ -15,7 +15,8 @@ module ID_decoder
     output [31:0] imm,
     output [4:0] rd,
     output [4:0] rj,
-    output [4:0] rk
+    output [4:0] rk,
+    output invalid_instruction
 );
 //先判断大致种类，然后再细分操作数种类（pc，立即数，寄存器或者时钟），最后判断细致种类
     /////////////////////////////
@@ -180,7 +181,7 @@ module ID_decoder
     wire type_invalid = type_==0&!is_ecall; //syscall和break不算非法指令，但也未出现在定义的11种指令类型中
 
     wire invtlb_invalid = is_invalid_tlb && inst[4:0]>5'h6; //INVTLB指令的op无效
-    wire invalid_instruction;
+    // wire invalid_instruction;
     assign invalid_instruction=alu_op_invalid||type_invalid||br_invalid||inst[31]||invtlb_invalid;// ||exception!=0;
     //当IF段出现异常时，认为
 
