@@ -69,7 +69,7 @@ module  REG_EX1(
 
     output  reg [31:0] reg_ex_pc0,
     output  reg [31:0] reg_ex_pc1,
-    output              reg_ex_CMT,
+    output  reg         reg_ex_CMT,
     output  reg [31:0] reg_ex_pc_next,
     output  reg reg_ex_pc_taken,
     output  reg [31:0] reg_ex_inst0,
