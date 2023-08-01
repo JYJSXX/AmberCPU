@@ -23,13 +23,96 @@
 
 我们具体设计的cpu基于LoongArch32位精简版参考手册[^0]，参考了姚永斌老师的《超标量处理器设计》[^1]、汪文祥老师的《计算机体系结构基础》[^4]、汪文祥老师和刑金璋老师的《CPU设计实战》[^3]等书籍,并参考了开源项目clap[^2]的译码器实现。
 
+#### 段间寄存器valid-ready握手协议
+```mermaid
+graph LR
+    段间寄存器1--readygo_12-->段间寄存器2
+    段间寄存器2--allowin_21-->段间寄存器1
+    段间寄存器2--readygo_23-->段间寄存器3
+    段间寄存器3--allowin_23-->段间寄存器2
+```
+
+这里的段间寄存器指的是段间寄存器
 
 
-### （二）XX模块设计（可选）
+readygo_23和allowin_21由流水段传入段间寄存器的组合信号，由段间寄存器产生
+readygo_23和allowin_21还与段间寄存器自身情况有关，这里假设自身准备好，如果自身没准备好，对外readygo_23和allowin_21均为0
+readygo_23不能受allowin_23控制
+伪代码表示：
+```
+readygo_23 =valid (valid表示自身情况,无阻塞的流水段逻辑恒为1,有阻塞的先0,有效时数据和valid同时为1) 
+allowin_21 = allowin_23 || ready (ready表示自身情况)
+if(readygo_12 && allowin_23&&allowin_21)
+	更新段间寄存器2
+if(~readygo_12 && allowin_23&&readygo_23)
+	清空段间寄存器2（所有控制信号置为0，防止上一周期的指令被重复执行）
+if(~allowin_23||~allowin21)
+	维持段间寄存器2（所有寄存器值不动，防止上一周期的指令被丢失）
+```
 
->对模块内部设计方案进行更进一步描述。可以包含：模块的功能意图，模块的输入输出，模块内部的数据通路和控制逻辑，以及可能的软硬件交互机制。
+> 注：这种握手对于一般一级段间寄存器已经足够，但是对于FIFO或者CACHE这种不定周期并且不能简单由组合信号阻塞的流水段还需要另外的精心设计来产生握手控制信号。这样的基本目标是满足指令PC不重不漏。
+
+### （二）FIFO模块设计
+我们在取指段（IF）和译码段（ID）之间使用了FIFO作为PC和指令信息的缓冲。
+
+添加FIFO的作用是为了解决流水线前后段速率不匹配的问题，换句话说就是减少前后段Stall互相之间的掣肘，比如在流水线前段可能会出现IcacheMiss，在流水线后段可能会出现DIV/DcacheMiss。在这个时候
+FIFO队列在不满时对于前段可以屏蔽后段产生的Stall继续取指，同理对于后段可以一定程度上减少前段IcacheMiss产生的暂停并且继续连续发射指令。
+
+但是，尽管FIFO的设计看起来十分美好，FIFO在满时会产生严重的问题：丢指令。
+
+为了避免丢指令，我们设计了状态机，利用FIFO队列引出的full/nearly/we等信号在丢指令的同时巧妙地获取到了即将被丢失的指令的情况下，先阻塞前端流水段，之后在队列有空时插进队列，然后才继续进行流水。
+
+由于我们的Icache不能直接被Stall，并且TLB要经过寄存器传递信息，因此仅仅将FIFO满时的指令插入后可能前面阻塞的流水段仍然在取相同的指令，导致指令可能反而被填充两次FIFO。
+
+经过仔细观察，在IF0_allowin为1时的fetch_pc是每次有效且与时钟周期一一对应（不 会因为allowin阻塞而在寄存器中暂存超过一个周期）的，因此在考察流水线长度后我选择了合适的一个相对小的FIFO作为辅助保证正确性的设计。
+
+
+```mermaid
+graph LR
+FIFO空闲--FIFO满-->指令暂存未填入--等待FIFO空闲-->指令暂存已填入--辅助FIFO校验填入-->FIFO空闲
+```
+
+```mermaid
+graph LR
+IF1_FIFO段间寄存器--fifo_readygo-->FIFO--fifo_valid-->FIFO_ID寄存器
+FIFO_ID寄存器--fifo_readygo-->FIFO--fifo_valid-->IF1_FIFO段间寄存器
+```
+同其它流水段的allowin/readygo相比，FIFO本身本质上是一个新的流水段，因此使用了4个握手信号，分别提供给首尾的段间寄存器进行握手。
+
+###  (四) 分支预测器设计
+分支预测器使用了多种设计进行综合判断。
+
+#### taken判断思路
+1. 静态预测器：默认不调转，仅仅作为复位后的初始状态时采用。
+2. 全局预测器:使用EASY_STATE和HARD_STATE两种状态进行竞争，两种STATE本质上都是2bit预测器，一种是预测失败就切换成相反的预测，另一种是给予一次额外的机会。两种STATE通过SCORE状态机来判断采纳哪一种。
+3. 局部历史预测器：使用一个寄存器数组对于每一个PC对应的INDEX进行预测。
+4. 指令类型前递辅助预测：使用取指后的预译码器（pre_decoder）来判断筛选一些无条件跳转，非跳转的指令，将译码的信息使用UMASK，BMASK保存，优先使用两个寄存器数组的掩码信息来判断跳转与否。
+   
+```mermaid
+graph LR
+HARD_WEAK_NOTAKEN--hit-->HARD_STRONG_NOTAKEN--hit-->HARD_STRONG_NOTAKEN
+HARD_WEAK_TAKEN--hit-->HARD_STRONG_TAKEN--miss-->HARD_WEAK_TAKEN
+HARD_STRONG_NOTAKEN--miss-->HARD_WEAK_NOTAKEN
+HARD_STRONG_TAKEN--hit-->HARD_STRONG_TAKEN
+HARD_WEAK_TAKEN--miss-->HARD_WEAK_NOTAKEN--miss-->HARD_WEAK_TAKEN
+
+EASY_WEAK_NOTAKEN--hit-->EASY_STRONG_NOTAKEN--hit-->EASY_STRONG_NOTAKEN
+EASY_STRONG_NOTAKEN--miss-->EASY_WEAK_TAKEN--hit-->EASY_STRONG_TAKEN--hit-->EASY_STRONG_TAKEN--miss-->EASY_WEAK_NOTAKEN
+EASY_WEAK_NOTAKEN--miss-->EASY_WEAK_TAKEN--miss-->EASY_WEAK_NOTAKEN
+```
+#### PC判断思路
+使用DRAM的寄存器堆来存储预测PC。由于指令无论跳转与否，使用PC_relative方法寻址的跳转指令的跳转目标地址是固定的，而对于寄存器寻址的跳转指令又过于灵活，我们认为采用每一种INDEX仅对应一个目标地址的设计已经是比较平衡的设计。
+
+#### INDEX拼接技巧
+对于一个PC的INDEX来说，最自然简单的设计就是取低INDEX_WIDTH位,或者去掉低两位（PC对齐）或者低三位（指令连续双发）。
+
+但是对于程序中跳转指令的空间分布特性可以认为跳转指令不会连续或者高密度出现，并且不同进程占据的空间在较高位会有显著区别，而这时的跳转指令目标地址又几乎不可能在低位部分重合。
+
+因此我们选择的INDEX是{PC[19],PC[14:10],PC[5:4]}.目的是使用更少的PC信息来获得更高的指令命中率。
 
 ### （三）XX模块设计（可选）
+三
+>对模块内部设计方案进行更进一步描述。可以包含：模块的功能意图，模块的输入输出，模块内部的数据通路和控制逻辑，以及可能的软硬件交互机制。
 
 ……
 

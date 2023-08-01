@@ -84,7 +84,7 @@ module IF0 (
             end else begin
                 pc<=pc_next;
             end
-            branch_stat<=0;
+            branch_stat<=pc_next[2];
         end 
         else 
         begin
