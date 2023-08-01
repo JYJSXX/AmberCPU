@@ -35,13 +35,10 @@ module  REG_EX1(
     input   [31:0] id_reg_imm1,
     input   [4:0] wb_rd0,
     input   [4:0] wb_rd1,
-    input   [4:0] wb_rd2,
     input   we_0,
     input   we_1,
-    input   we_2,
     input  [31:0] rd0_data,
     input  [31:0] rd1_data,
-    input  [31:0] rd2_data,
     input   [4:0] id_reg_rj0,
     input   [4:0] id_reg_rj1,
     input   [4:0] id_reg_rk0,
@@ -159,10 +156,7 @@ regfile regfile1( //内部自带写优先
     .raddr3(id_reg_rk0),
     .rdata3(rk0_data),
     .raddr4(id_reg_rk1),
-    .rdata4(rk1_data),
-    .we3(we_2),
-    .waddr3(wb_rd2),
-    .wdata3(rd2_data)
+    .rdata4(rk1_data)
     `ifdef DIFFTEST
     ,.reg_diff0(reg_diff0),
     .reg_diff1(reg_diff1),

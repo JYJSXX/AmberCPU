@@ -29,17 +29,13 @@ module EX2_WB(
     input [31:0] reg_ex1_pc0,
     output reg [31:0] ex2_wb_data_0,
     output reg [31:0] ex2_wb_data_1,
-    output reg [31:0] ex2_wb_data_2,
     output reg ex2_wb_data_0_valid,
     output reg ex2_wb_data_1_valid,
-    output reg ex2_wb_data_2_valid,
     output reg [4:0] ex2_wb_rd0,
     output reg [4:0] ex2_wb_rd1,
-    output reg [4:0] ex2_wb_rd2,
     input        [4:0] rd_dcache_out,
     output reg ex2_wb_we0,
     output reg ex2_wb_we1,
-    output reg ex2_wb_we2,
     // output ld_stall_flag,
 
 
@@ -182,13 +178,10 @@ assign cond1 = uop1_reg[`UOP_COND];
             ex2_wb_data_1 <= 0;
             ex2_wb_data_0_valid <= 0;
             ex2_wb_data_1_valid <= 0;
-            ex2_wb_data_2_valid <= 0;
             ex2_wb_rd0 <= 0;
             ex2_wb_rd1 <= 0;
-            ex2_wb_rd2 <= 0;
             ex2_wb_we0 <= 0;
             ex2_wb_we1 <= 0;
-            ex2_wb_we2 <= 0;
         end
         else begin
             if(ex2_result0_valid) begin
@@ -202,14 +195,14 @@ assign cond1 = uop1_reg[`UOP_COND];
                 if(dcache_ready)begin
                     ex2_wb_data_0 <= dcache_data;
                     ex2_wb_rd0 <= rd_dcache_out;
-                    ex2_wb_data_2_valid <= 1;
-                    ex2_wb_we2 <= 1;
+                    ex2_wb_data_0_valid <= 1;
+                    ex2_wb_we0 <= 1;
                 end
                 else begin
                     ex2_wb_data_0 <= 0;
                     ex2_wb_rd0 <= 0;
-                    ex2_wb_data_2_valid <= 0;
-                    ex2_wb_we2 <= 0;
+                    ex2_wb_data_0_valid <= 0;
+                    ex2_wb_we0 <= 0;
                 end
             end
             else if(reg_ex1_is_priviledeged_0 ) begin
@@ -322,7 +315,7 @@ always@(*) begin
     // end
 
 end
-assign ld_stall_flag = (uop0[`INS_MEM] && ~dcache_ready);
+// assign ld_stall_flag = (uop0[`INS_MEM] && ~dcache_ready);
 
 
 always@(posedge clk)begin
