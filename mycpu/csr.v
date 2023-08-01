@@ -432,7 +432,7 @@ always @(posedge clk)
         if(~aresetn) begin
             ecfg_lie <= 0;
         end else if(wen&&addr==`CSR_ECFG) begin
-           if(wen) ecfg_lie[`ECFG_LIE]<=wdata[`ECFG_LIE] & 13'b1_1011_1111_1111;
+           if(wen) ecfg_lie[`ECFG_LIE]<=wdata[`ECFG_LIE] ;
 
         end
     
@@ -858,7 +858,7 @@ always @(posedge clk)
 assign rdata[31:0] = {32{addr_in==`CSR_CRMD}} & csr_crmd |
                     {32{addr_in==`CSR_PRMD}} & csr_prmd |
                     {32{addr_in==`CSR_EUEN}} & csr_euen |
-                    {32{addr_in==`CSR_ECFG}} & csr_ecfg & 32'b1_1011_1111_1111 | 
+                    {32{addr_in==`CSR_ECFG}} & csr_ecfg  | 
                     {32{addr_in==`CSR_ESTAT}} & csr_estat |
                     {32{addr_in==`CSR_ERA}} & csr_era |
                     {32{addr_in==`CSR_BADV}} & csr_badv |
@@ -913,7 +913,7 @@ assign rdata[31:0] = {32{addr_in==`CSR_CRMD}} & csr_crmd |
     wen&&addr==`CSR_CRMD ?  wdata  : pos_signal_excp ? {csr_crmd[31:3], 3'b000} :
                      ertn ? {csr_crmd[31:3],csr_prmd[2:0]}: csr_crmd,
     wen&&addr==`CSR_PRMD ? wdata  : pos_signal_excp ? {csr_prmd[31:3],csr_crmd[2:0]}:csr_prmd,
-    wen&&addr==`CSR_ECFG ? wdata & 32'b1_1011_1111_1111 :csr_ecfg & 32'b1_1011_1111_1111 ,
+    wen&&addr==`CSR_ECFG ? wdata  :csr_ecfg  ,
     wen&&addr==`CSR_ESTAT ? (wdata & 32'b11 | csr_estat & ~32'b11) : pos_signal_excp ? {csr_estat[31:23], expcode_in[6:0], csr_estat[15:0]} :csr_estat,
     wen&&addr==`CSR_ERA ? wdata : pos_signal_excp ? era_in : csr_era,
     wen&&addr==`CSR_BADV ? wdata : wen_badv ? badv_in : csr_badv,
