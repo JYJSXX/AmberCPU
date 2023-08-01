@@ -40,10 +40,14 @@ module BTB #(
     input               predict_add_fail
 
 );
-    // assign pred_pc=fetch_pc+8;  
-    // assign pred_taken=0;
-    
-    localparam      EASY_STRONG_TAKEN    =   2'b00,
+    `ifdef BTB_CLOSE
+        assign pred_pc=fetch_pc+8;  
+        assign pred_taken=0;
+
+    `endif
+
+    `ifndef BTB_CLOSE
+        localparam      EASY_STRONG_TAKEN    =   2'b00,
                     EASY_STRONG_NOTAKEN  =   2'b01,
                     EASY_WEAK_TAKEN      =   2'b10,
                     EASY_WEAK_NOTAKEN    =   2'b11,
@@ -278,4 +282,7 @@ module BTB #(
                 taken=local_taken;
         endcase
     end
+
+    `endif
+    wire a;
 endmodule
