@@ -762,6 +762,7 @@ idle_clk idle_clk1
         .clk                     ( clk                     ),
         .aresetn                 ( aresetn                 ),
         .flush                   ( flush_to_reg_ex1        ),
+        // .flush_by_exception      ( flush_by_exception      ),
         .forward_stall           ( forward_stall | tlb_forward_stall         ),
         .reg_readygo             ( reg_readygo             ),
         .reg_allowin             ( reg_allowin             ),

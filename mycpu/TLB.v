@@ -1147,47 +1147,24 @@ always @(posedge clk or negedge rstn)begin
         TAG_OFFSET_D_reg3 <= 0;
         TAG_OFFSET_I_reg3 <= 0;
     end
-    else if (flush)begin
-        // CSR_PG_reg2 <= 0;
-        // CSR_CRMD_reg2 <= 0;
-        // CSR_DMW0_reg2 <= 0;
-        // CSR_DMW1_reg2 <= 0;
-        VA_I_reg2 <= 0;
-        VA_D_reg2 <= 0;
-        en_i_reg2 <= 0;
-        en_d_reg2 <= 0;
-        tlb_cookie_reg2 <=0;
-        TAG_OFFSET_I_reg2 <= 0;
-        TAG_OFFSET_D_reg2 <= 0;
-        signed_ext_reg2 <= 0;
-        atom_reg2 <= 0;
-        SOL_reg2 <= 0;
-        WDATA_D_reg2 <= 0;
-        WSTRB_D_reg2 <= 0;
-        rd_reg2 <= 0;
-        TAG_OFFSET_D_reg3 <= 0;
-        TAG_OFFSET_I_reg3 <= 0;
-    end
-    else if (flush_to_reg_ex1)begin
-        VA_I_reg2 <= 0;
-        en_i_reg2 <= 0;
-        tlb_cookie_reg2 <=0;
-        TAG_OFFSET_I_reg2 <= 0;
-        TAG_OFFSET_I_reg3 <= 0;
-    end
-    else begin
-        if(~stall_i) begin
-            VA_I_reg2 <= VA_I;
-            en_i_reg2 <= 1;
-            TAG_OFFSET_I_reg2 <= TAG_OFFSET_I;
-        end
-        else begin
-            VA_I_reg2 <= VA_I_reg2;
-            en_i_reg2 <= en_i_reg2;
-            TAG_OFFSET_I_reg2 <= TAG_OFFSET_I_reg2;
-
-        end
-        if (~stall_d)begin
+    else begin 
+        if (flush)begin
+            // CSR_PG_reg2 <= 0;
+            // CSR_CRMD_reg2 <= 0;
+            // CSR_DMW0_reg2 <= 0;
+            // CSR_DMW1_reg2 <= 0;
+            VA_D_reg2 <= 0;
+            en_d_reg2 <= 0;
+            tlb_cookie_reg2 <=0;
+            TAG_OFFSET_D_reg2 <= 0;
+            signed_ext_reg2 <= 0;
+            atom_reg2 <= 0;
+            SOL_reg2 <= 0;
+            WDATA_D_reg2 <= 0;
+            WSTRB_D_reg2 <= 0;
+            rd_reg2 <= 0;
+            TAG_OFFSET_D_reg3 <= 0;
+        end else if (~stall_d)begin
             VA_D_reg2 <= VA_D;
             en_d_reg2 <= en_d;
             TAG_OFFSET_D_reg2 <= TAG_OFFSET_D;
@@ -1209,12 +1186,28 @@ always @(posedge clk or negedge rstn)begin
             WSTRB_D_reg2 <= WSTRB_D_reg2;
             rd_reg2 <= rd_reg2;
         end
-
-        if(~stall_i)begin
+        if (flush_to_reg_ex1)begin
+            VA_I_reg2 <= 0;
+            en_i_reg2 <= 0;
+            tlb_cookie_reg2 <=0;
+            TAG_OFFSET_I_reg2 <= 0;
+            TAG_OFFSET_I_reg3 <= 0;
+        end
+        else if(~stall_i) begin
+            VA_I_reg2 <= VA_I;
+            en_i_reg2 <= 1;
+            TAG_OFFSET_I_reg2 <= TAG_OFFSET_I;
             tlb_cookie_reg2 <=tlb_cookie_in;
-        end else begin
+        end
+        else begin
+            VA_I_reg2 <= VA_I_reg2;
+            en_i_reg2 <= en_i_reg2;
+            TAG_OFFSET_I_reg2 <= TAG_OFFSET_I_reg2;
             tlb_cookie_reg2 <=tlb_cookie_reg2;
         end
+    end
+    
+        
         
         TAG_OFFSET_I_reg3 <= TAG_OFFSET_I_reg2;
         TAG_OFFSET_D_reg3 <= TAG_OFFSET_D_reg2;
@@ -1222,7 +1215,7 @@ always @(posedge clk or negedge rstn)begin
         // CSR_CRMD_reg2 <= CSR_CRMD_reg;
         // CSR_DMW0_reg2 <= CSR_DMW0_reg;
         // CSR_DMW1_reg2 <= CSR_DMW1_reg;
-    end
+    
 end
 
 
