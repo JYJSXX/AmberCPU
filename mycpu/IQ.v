@@ -48,6 +48,7 @@ module IQ (
 
     output  reg [31:0] iq_pc0,
     output  reg [31:0] iq_pc1,
+    output  reg        CMT,//1单发0双发   
     output  reg [31:0] iq_pc_next,
     output  reg         iq_pc_taken,
     output  reg [31:0] iq_inst0,
@@ -84,6 +85,8 @@ module IQ (
 
     assign reg_readygo    = id_reg_valid;//!!!!
     assign id_allowin   =(!single_en||(mod&&single_en))&reg_allowin;
+    assign CMT=          single_en               ?1:
+                        (id_reg_inst1==`INST_NOP)?1:0;
 
     always @(*) begin//logic for single_en
         if (id_reg_is_ALU_0&&id_reg_is_ALU_1&&(

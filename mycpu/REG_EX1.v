@@ -12,6 +12,7 @@ module  REG_EX1(
     output  reg ex_readygo,
     input   [31:0] id_reg_pc0,
     input   [31:0] id_reg_pc1,
+    input           CMT,
     input   [31:0] id_reg_pc_next,
     input   id_reg_pc_taken,
     input   [31:0] id_reg_inst0,
@@ -68,6 +69,7 @@ module  REG_EX1(
 
     output  reg [31:0] reg_ex_pc0,
     output  reg [31:0] reg_ex_pc1,
+    output              reg_ex_CMT,
     output  reg [31:0] reg_ex_pc_next,
     output  reg reg_ex_pc_taken,
     output  reg [31:0] reg_ex_inst0,
@@ -321,6 +323,7 @@ always@(posedge clk)begin
         reg_ex_pc0 <= 0;
         reg_ex_pc1 <= 0;
         reg_ex_pc_next <= 0;
+        reg_ex_CMT<=0;
         reg_ex_pc_taken <= 0;
         reg_ex_inst0 <= `INST_NOP;
         reg_ex_inst1 <= `INST_NOP;
@@ -392,6 +395,7 @@ always@(posedge clk)begin
     else if(reg_readygo&&ex_allowin&&reg_allowin)begin
         reg_ex_pc0 <= id_reg_pc0;
         reg_ex_pc1 <= id_reg_pc1;
+        reg_ex_CMT <= CMT;
         reg_ex_pc_next <= id_reg_pc_next;
         reg_ex_pc_taken <= id_reg_pc_taken;
         reg_ex_inst0 <= id_reg_inst0;
@@ -428,6 +432,7 @@ always@(posedge clk)begin
         //寄存器保持不变
         reg_ex_pc0 <= reg_ex_pc0;
         reg_ex_pc1 <= reg_ex_pc1;
+        reg_ex_CMT <= reg_ex_CMT;
         reg_ex_pc_next <= reg_ex_pc_next;
         reg_ex_inst0 <= reg_ex_inst0;
         reg_ex_inst1 <= reg_ex_inst1;

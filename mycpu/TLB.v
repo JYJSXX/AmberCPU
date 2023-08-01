@@ -995,11 +995,12 @@
 `include "TLB.vh"
 `include "csr.vh"
 module TLB#(
-    parameter TLB_COOKIE_WIDTH = 64
+    parameter TLB_COOKIE_WIDTH = 33
     )(
     input                               clk,
     input                               rstn,
     input                               flush,
+    input                               flush_to_reg_ex1,
 
     input       [9:0]                   CSR_ASID,
     input       [31:0]                  CSR_VPPN,
@@ -1019,7 +1020,7 @@ module TLB#(
     input       [3 : 0]                    WSTRB_D,
     input                               signed_ext,
     input                               atom,
-    input       [TLB_COOKIE_WIDTH-1:0]   tlb_cookie_in,
+    input      [TLB_COOKIE_WIDTH-1:0]   tlb_cookie_in,
     output     [TLB_COOKIE_WIDTH-1:0]   tlb_cookie_out,
     input       [4:0]                   rd,
     input       [11:0]                  TAG_OFFSET_I,
@@ -1081,7 +1082,7 @@ module TLB#(
 
 reg [`TLB_VPPN_LEN : 0] VA_I_reg2 = 0;
 reg [`TLB_VPPN_LEN : 0] VA_D_reg2 = 0;
-
+reg [TLB_COOKIE_WIDTH-1:0] tlb_cookie_reg2=0;
 reg                     en_i_reg2 = 0;
 reg                     en_d_reg2 = 0;
 reg [11:0]              TAG_OFFSET_I_reg2 = 0;
@@ -1111,6 +1112,7 @@ assign PA_TAG_OFFSET_D_OUT = TAG_OFFSET_D_reg3;
 assign PA_TAG_OFFSET_I_OUT = TAG_OFFSET_I_reg3;
 assign rd_out = rd_reg2;
 assign SOL_D_OUT = SOL_reg2;
+assign tlb_cookie_out=tlb_cookie_reg2;
 
 
 integer j;
@@ -1133,6 +1135,7 @@ always @(posedge clk or negedge rstn)begin
         VA_D_reg2 <= 0;
         en_i_reg2 <= 0;
         en_d_reg2 <= 0;
+        tlb_cookie_reg2 <=0;
         TAG_OFFSET_I_reg2 <= 0;
         TAG_OFFSET_D_reg2 <= 0;
         signed_ext_reg2 <= 0;
@@ -1153,6 +1156,7 @@ always @(posedge clk or negedge rstn)begin
         VA_D_reg2 <= 0;
         en_i_reg2 <= 0;
         en_d_reg2 <= 0;
+        tlb_cookie_reg2 <=0;
         TAG_OFFSET_I_reg2 <= 0;
         TAG_OFFSET_D_reg2 <= 0;
         signed_ext_reg2 <= 0;
@@ -1162,6 +1166,13 @@ always @(posedge clk or negedge rstn)begin
         WSTRB_D_reg2 <= 0;
         rd_reg2 <= 0;
         TAG_OFFSET_D_reg3 <= 0;
+        TAG_OFFSET_I_reg3 <= 0;
+    end
+    else if (flush_to_reg_ex1)begin
+        VA_I_reg2 <= 0;
+        en_i_reg2 <= 0;
+        tlb_cookie_reg2 <=0;
+        TAG_OFFSET_I_reg2 <= 0;
         TAG_OFFSET_I_reg3 <= 0;
     end
     else begin
@@ -1198,6 +1209,12 @@ always @(posedge clk or negedge rstn)begin
             WSTRB_D_reg2 <= WSTRB_D_reg2;
             rd_reg2 <= rd_reg2;
         end
+
+        if(~stall_i)begin
+            tlb_cookie_reg2 <=tlb_cookie_in;
+        end else begin
+            tlb_cookie_reg2 <=tlb_cookie_reg2;
+        end
         
         TAG_OFFSET_I_reg3 <= TAG_OFFSET_I_reg2;
         TAG_OFFSET_D_reg3 <= TAG_OFFSET_D_reg2;
@@ -1230,6 +1247,10 @@ always @(posedge clk or negedge rstn)begin
         PA_D <= 0;
         is_cached_I <= 0;
         is_cached_D <= 0;
+    end
+    else if (flush_to_reg_ex1)begin
+        PA_I <= 0;
+        is_cached_I <= 0;
     end
     else begin
         PA_I <= CSR_PG ? (DMW0_JUDGE_I ? DMW0_PPN_I : (DMW1_JUDGE_I ? DMW1_PPN_I : 0)) : VA_I_reg2;
