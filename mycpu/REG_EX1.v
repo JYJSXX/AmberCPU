@@ -156,7 +156,7 @@ regfile regfile1( //内部自带写优先
     .raddr3(id_reg_rk0),
     .rdata3(rk0_data),
     .raddr4(id_reg_rk1),
-    .rdata4(rk1_data),
+    .rdata4(rk1_data)
     `ifdef DIFFTEST
     ,.reg_diff0(reg_diff0),
     .reg_diff1(reg_diff1),

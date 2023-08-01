@@ -116,14 +116,14 @@ wire pos_signal_excp = exception&& ( ~exception_delay );       // 原信号上�
     wire [31:0] csr_euen ;
     wire [31:0] csr_ecfg ;
     wire [31:0] csr_estat ;
-    reg [31:0] csr_era ;//////////////////
-    reg [31:0] csr_badv ;//////////////////
+    reg [31:0] csr_era =0;//////////////////
+    reg [31:0] csr_badv=0 ;//////////////////
     wire [31:0] csr_eentry ;
     wire [31:0] csr_cpuid ;
-    reg [31:0] csr_save0 ;  ////////
-    reg [31:0] csr_save1 ; ////////
-    reg [31:0] csr_save2 ; ////////
-    reg [31:0] csr_save3 ; ////////
+    reg [31:0] csr_save0 =0;  ////////
+    reg [31:0] csr_save1 =0; ////////
+    reg [31:0] csr_save2 =0; ////////
+    reg [31:0] csr_save3 =0; ////////
     wire [31:0] csr_llbctl ;
     wire [31:0] csr_tlbidx ;
     wire [31:0] csr_tlbehi ;
@@ -136,11 +136,11 @@ wire pos_signal_excp = exception&& ( ~exception_delay );       // 原信号上�
     wire [31:0] csr_tlbrentry ;
     wire [31:0] csr_dmw0 ;
     wire [31:0] csr_dmw1 ;
-    reg [31:0] csr_tid ;
+    reg [31:0] csr_tid =0;
     wire [31:0] csr_tcfg ;
-    reg [31:0] csr_tval ;
+    reg [31:0] csr_tval =0;
     wire [31:0] csr_ticlr ;
-    reg [31:0] csr_ctag ;
+    reg [31:0] csr_ctag =0;
 
 reg wen_reg = 0;
 reg [31:0] wdata_reg = 0;
@@ -181,12 +181,12 @@ wire [31:0] wdata = wdata_reg;
 wire [13:0] addr = waddr_reg;
 
 //CRMD
-    reg [`CRMD_PLV]     crmd_plv;
-    reg [`CRMD_IE]      crmd_ie;
-    reg [`CRMD_DA]      crmd_da;
-    reg [`CRMD_PG]      crmd_pg;
-    reg [`CRMD_DATF]    crmd_datf;
-    reg [`CRMD_DATM]    crmd_datm;
+    reg [`CRMD_PLV]     crmd_plv=0;
+    reg [`CRMD_IE]      crmd_ie=0;
+    reg [`CRMD_DA]      crmd_da=1;
+    reg [`CRMD_PG]      crmd_pg=0;
+    reg [`CRMD_DATF]    crmd_datf=0;
+    reg [`CRMD_DATM]    crmd_datm=0;
     assign csr_crmd[`CRMD_PLV]  = crmd_plv;
     assign csr_crmd[`CRMD_IE]   = crmd_ie;
     assign csr_crmd[`CRMD_DA]   = crmd_da;
@@ -196,29 +196,29 @@ wire [13:0] addr = waddr_reg;
     assign csr_crmd[`CRMD_ZERO] = 0;
 
     //PRMD
-    reg [`PRMD_PPLV]    prmd_pplv;
-    reg [`PRMD_PIE]     prmd_pie;
+    reg [`PRMD_PPLV]    prmd_pplv=0;
+    reg [`PRMD_PIE]     prmd_pie=0;
     assign csr_prmd[`PRMD_PPLV] = prmd_pplv;
     assign csr_prmd[`PRMD_PIE]  = prmd_pie;
     assign csr_prmd[`PRMD_ZERO] = 0;
 
       //EUEN
-    reg [`EUEN_FPE]     euen_fpe;
+    reg [`EUEN_FPE]     euen_fpe=0;
     assign csr_euen[`EUEN_FPE]  = euen_fpe;
     assign csr_euen[`EUEN_ZERO] = 0;
 
         //ECFG
-    reg [`ECFG_LIE]     ecfg_lie;
+    reg [`ECFG_LIE]     ecfg_lie=0;
     assign csr_ecfg[`ECFG_LIE]  = ecfg_lie;
     assign csr_ecfg[`ECFG_ZERO] = 0;
 
         //ESTAT
-    reg [`ESTAT_IS_SOFT] estat_is_soft;
-    reg [`ESTAT_IS_HARD] estat_is_hard;
-    reg [`ESTAT_IS_TI] estat_is_ti;
+    reg [`ESTAT_IS_SOFT] estat_is_soft=0;
+    reg [`ESTAT_IS_HARD] estat_is_hard=0;
+    reg [`ESTAT_IS_TI] estat_is_ti=0;
     //reg [`ESTAT_IS_IPI] estat_is_ipi;  
-    reg [`ESTAT_ECODE] estat_ecode;
-    reg [`ESTAT_ESUBCODE] estat_subecode;
+    reg [`ESTAT_ECODE] estat_ecode=0;
+    reg [`ESTAT_ESUBCODE] estat_subecode=0;
     assign csr_estat[`ESTAT_IS_SOFT] = estat_is_soft; //软件中断位
     assign csr_estat[`ESTAT_IS_HARD] = estat_is_hard; //硬件中断位
     assign csr_estat[`ESTAT_ZERO_0] = 0;
@@ -230,28 +230,28 @@ wire [13:0] addr = waddr_reg;
     assign csr_estat[`ESTAT_ZERO_1] = 0;
 
     //EENTRY
-    reg [`EENTRY_VA] eentry_va;
+    reg [`EENTRY_VA] eentry_va=0;
     assign csr_eentry[`EENTRY_ZERO] = 0;
     assign csr_eentry[`EENTRY_VA] = eentry_va;
 
     //CPUID
-    reg [`CPUID_COREID] cpuid_coreid;
+    reg [`CPUID_COREID] cpuid_coreid=0;
     assign csr_cpuid[`CPUID_ZERO] = 0;
     assign csr_cpuid[`CPUID_COREID] = cpuid_coreid;
 
     //LLBCTL
-    reg [`LLBCTL_ROLLB] llbctl_rollb;
+    reg [`LLBCTL_ROLLB] llbctl_rollb=0;
     //reg [`LLBCTL_WCLLB] llbctl_wcllb;
-    reg [`LLBCTL_KLO] llbctl_klo;
+    reg [`LLBCTL_KLO] llbctl_klo=0;
     assign csr_llbctl[`LLBCTL_ROLLB] = llbctl_rollb;
     assign csr_llbctl[`LLBCTL_WCLLB] = 0;
     assign csr_llbctl[`LLBCTL_KLO] = llbctl_klo;
     assign csr_llbctl[`LLBCTL_ZERO] = 0;
 
     //TLBIDX
-    reg [`TLBIDX_INDEX] tlbidx_index;
-    reg [`TLBIDX_PS] tlbidx_ps;
-    reg [`TLBIDX_NE] tlbidx_ne;
+    reg [`TLBIDX_INDEX] tlbidx_index=0;
+    reg [`TLBIDX_PS] tlbidx_ps=0;
+    reg [`TLBIDX_NE] tlbidx_ne=0;
     assign csr_tlbidx[`TLBIDX_INDEX] = tlbidx_index;
     assign csr_tlbidx[`TLBIDX_ZERO_0] = 0;
     assign csr_tlbidx[`TLBIDX_PS] = tlbidx_ps;
@@ -259,17 +259,17 @@ wire [13:0] addr = waddr_reg;
     assign csr_tlbidx[`TLBIDX_NE] = tlbidx_ne;
 
     //TLBEHI
-    reg [`TLBEHI_VPPN] tlbehi_vppn;
+    reg [`TLBEHI_VPPN] tlbehi_vppn=0;
     assign csr_tlbehi[`TLBEHI_ZERO] = 0;
     assign csr_tlbehi[`TLBEHI_VPPN] = tlbehi_vppn;
 
     //TLBELO0
-    reg [`TLBELO_V] tlbelo0_v;
-    reg [`TLBELO_D] tlbelo0_d;
-    reg [`TLBELO_PLV] tlbelo0_plv;
-    reg [`TLBELO_MAT] tlbelo0_mat;
-    reg [`TLBELO_G] tlbelo0_g;
-    reg [`TLBELO_PPN] tlbelo0_ppn;
+    reg [`TLBELO_V] tlbelo0_v=0;
+    reg [`TLBELO_D] tlbelo0_d=0;
+    reg [`TLBELO_PLV] tlbelo0_plv=0;
+    reg [`TLBELO_MAT] tlbelo0_mat=0;
+    reg [`TLBELO_G] tlbelo0_g=0;
+    reg [`TLBELO_PPN] tlbelo0_ppn=0;
     assign csr_tlbelo0[`TLBELO_V] = tlbelo0_v;
     assign csr_tlbelo0[`TLBELO_D] = tlbelo0_d;
     assign csr_tlbelo0[`TLBELO_PLV] = tlbelo0_plv;
@@ -280,12 +280,12 @@ wire [13:0] addr = waddr_reg;
     assign csr_tlbelo0[`TLBELO_ZERO_1] = 0;
 
     //TLBELO1
-    reg [`TLBELO_V] tlbelo1_v;
-    reg [`TLBELO_D] tlbelo1_d;
-    reg [`TLBELO_PLV] tlbelo1_plv;
-    reg [`TLBELO_MAT] tlbelo1_mat;
-    reg [`TLBELO_G] tlbelo1_g;
-    reg [`TLBELO_PPN] tlbelo1_ppn;
+    reg [`TLBELO_V] tlbelo1_v=0;
+    reg [`TLBELO_D] tlbelo1_d=0;
+    reg [`TLBELO_PLV] tlbelo1_plv=0;
+    reg [`TLBELO_MAT] tlbelo1_mat=0;
+    reg [`TLBELO_G] tlbelo1_g=0;
+    reg [`TLBELO_PPN] tlbelo1_ppn=0;
     assign csr_tlbelo1[`TLBELO_V] = tlbelo1_v;
     assign csr_tlbelo1[`TLBELO_D] = tlbelo1_d;
     assign csr_tlbelo1[`TLBELO_PLV] = tlbelo1_plv;
@@ -296,37 +296,37 @@ wire [13:0] addr = waddr_reg;
     assign csr_tlbelo1[`TLBELO_ZERO_1] = 0;
 
     //ASID
-    reg [`ASID_ASID] asid_asid;
-    reg [`ASID_ASIDBITS]   asid_asidbits;
+    reg [`ASID_ASID] asid_asid=0;
+    reg [`ASID_ASIDBITS]   asid_asidbits=0;
     assign csr_asid[`ASID_ASID] = asid_asid;
     assign csr_asid[`ASID_ZERO_0] = 0;
     assign csr_asid[`ASID_ZERO_1] = 0;
     assign csr_asid[`ASID_ASIDBITS] = 'ha;
 
     //PGDL
-    reg [`PGDL_BASE] pgdl_base;
+    reg [`PGDL_BASE] pgdl_base=0;
     assign csr_pgdl[`PGDL_BASE] = pgdl_base;
     assign csr_pgdl[`PGDL_ZERO] = 0;
     //PGDH
-    reg [`PGDH_BASE] pgdh_base;
+    reg [`PGDH_BASE] pgdh_base=0;
     assign csr_pgdh[`PGDH_BASE] = pgdh_base;
     assign csr_pgdh[`PGDH_ZERO] = 0;
     //PGD
-    reg [`PGD_BASE] pgd_base;
+    reg [`PGD_BASE] pgd_base=0;
     assign csr_pgd[`PGD_BASE] = pgd_base;
     assign csr_pgd[`PGD_ZERO] = 0;
 
     //TLBRENTRY
-    reg [`TLBRENTRY_PA] tlbrentry_pa;
+    reg [`TLBRENTRY_PA] tlbrentry_pa=0;
     assign csr_tlbrentry[`TLBRENTRY_ZERO] = 0;
     assign csr_tlbrentry[`TLBRENTRY_PA] = tlbrentry_pa;
 
     //DMW0
-    reg [`DMW0_PLV0] dmw0_plv0;
-    reg [`DMW0_PLV3] dmw0_plv3;
-    reg [`DMW0_MAT] dmw0_mat;
-    reg [`DMW0_PSEG] dmw0_pseg;
-    reg [`DMW0_VSEG] dmw0_vseg;
+    reg [`DMW0_PLV0] dmw0_plv0=0;
+    reg [`DMW0_PLV3] dmw0_plv3=0;
+    reg [`DMW0_MAT] dmw0_mat=0;
+    reg [`DMW0_PSEG] dmw0_pseg=0;
+    reg [`DMW0_VSEG] dmw0_vseg=0;
     assign csr_dmw0[`DMW0_PLV0] = dmw0_plv0;
     assign csr_dmw0[`DMW0_PLV3] = dmw0_plv3;
     assign csr_dmw0[`DMW0_MAT] = dmw0_mat;
@@ -337,11 +337,11 @@ wire [13:0] addr = waddr_reg;
     assign csr_dmw0[`DMW0_ZERO_2] = 0;
 
     //DMW1
-    reg [`DMW1_PLV0] dmw1_plv0;
-    reg [`DMW1_PLV3] dmw1_plv3;
-    reg [`DMW1_MAT] dmw1_mat;
-    reg [`DMW1_PSEG] dmw1_pseg;
-    reg [`DMW1_VSEG] dmw1_vseg;
+    reg [`DMW1_PLV0] dmw1_plv0=0;
+    reg [`DMW1_PLV3] dmw1_plv3=0;
+    reg [`DMW1_MAT] dmw1_mat=0;
+    reg [`DMW1_PSEG] dmw1_pseg=0;
+    reg [`DMW1_VSEG] dmw1_vseg=0;
     assign csr_dmw1[`DMW1_PLV0] = dmw1_plv0;
     assign csr_dmw1[`DMW1_PLV3] = dmw1_plv3;
     assign csr_dmw1[`DMW1_MAT] = dmw1_mat;
@@ -352,15 +352,15 @@ wire [13:0] addr = waddr_reg;
     assign csr_dmw1[`DMW1_ZERO_2] = 0;
 
     //TCFG
-    reg [`TCFG_EN] tcfg_en;
-    reg [`TCFG_PERIODIC] tcfg_periodic;
-    reg [`TCFG_INITVAL] tcfg_initval;
+    reg [`TCFG_EN] tcfg_en=0;
+    reg [`TCFG_PERIODIC] tcfg_periodic=0;
+    reg [`TCFG_INITVAL] tcfg_initval=0;
     assign csr_tcfg[`TCFG_EN] = tcfg_en;
     assign csr_tcfg[`TCFG_PERIODIC] = tcfg_periodic;
     assign csr_tcfg[`TCFG_INITVAL] = tcfg_initval;
     
     //TICLR
-    reg [`TICLR_CLR] tlclr_clr; 
+    reg [`TICLR_CLR] tlclr_clr=0; 
     assign csr_ticlr[`TICLR_CLR] = 0;
     assign csr_ticlr[`TICLR_ZERO] = 0;
 assign cpu_interrupt=crmd_ie&&(ecfg_lie&csr_estat[12:0])!=0; //全局中断允许且（局部中断使能位与例外状态位）不为0
@@ -375,7 +375,7 @@ always @(posedge clk)
             crmd_ie <= 0;
             crmd_da <= 1;
             crmd_pg <= 0;
-            crmd_datf <=1;
+            crmd_datf <=1; //TODO 
             crmd_datm <= 1;
         end else if(ertn) begin
             crmd_plv <= prmd_pplv;
