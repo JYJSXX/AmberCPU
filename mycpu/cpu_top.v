@@ -48,6 +48,19 @@ module core_top(
     input    [ 1:0] bresp,
     input           bvalid,
     output          bready,
+    `ifdef SIMUTEST
+    //debug
+    output [31:0] t_debug0_wb_pc,
+    output [ 3:0] t_debug0_wb_rf_wen,
+    output [ 4:0] t_debug0_wb_rf_wnum,
+    output [31:0] t_debug0_wb_rf_wdata,
+
+
+    output [31:0] t_debug1_wb_pc,
+    output [ 3:0] t_debug1_wb_rf_wen,
+    output [ 4:0] t_debug1_wb_rf_wnum,
+    output [31:0] t_debug1_wb_rf_wdata,
+    `endif
     //debug
     output [31:0] debug0_wb_pc,
     output [ 3:0] debug0_wb_rf_wen,
@@ -66,7 +79,18 @@ module core_top(
     output ws_valid,   
     output rf_rdata
 
-);
+);`ifdef SIMUTEST
+    wire [31:0] debug0_wb_pc;
+    wire [ 3:0] debug0_wb_rf_wen;
+    wire [ 4:0] debug0_wb_rf_wnum;
+    wire [31:0] debug0_wb_rf_wdata;
+
+
+    wire [31:0] debug1_wb_pc;
+    wire [ 3:0] debug1_wb_rf_wen;
+    wire [ 4:0] debug1_wb_rf_wnum;
+    wire [31:0] debug1_wb_rf_wdata;
+`endif 
 
     `ifdef DIFFTEST
     wire [31:0] csr_crmd_diff     ;
@@ -2090,6 +2114,90 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .flush_to_btb           ( flush_to_btb          )
     );
 
+
+
+`ifdef SIMUTEST
+
+    reg cmt_valid0,cmt_valid1;
+    reg [31:0] cmt_pc0=0,cmt_pc1=0;
+    reg [31:0] cmt_inst0=0,cmt_inst1=0;
+    reg cmt_wen0=0,cmt_wen1=0;
+    reg [4:0] cmt_wdest0=0,cmt_wdest1=0;
+    reg [31:0] cmt_wdata0=0,cmt_wdata1=0;
+    reg cmt_excp_valid=0;
+    reg [5:0] cmt_ecode=0;
+    reg [63:0] cmt_stable_counter=0;
+    wire ex_eu0_en;
+    wire ex_eu1_en;
+    assign ex_eu0_en=debug0_valid;
+    assign ex_eu1_en=debug1_valid;
+    reg [31:0] debug0_pc_reg = 0;
+    reg [31:0] debug1_pc_reg = 0;
+
+    assign t_debug0_wb_pc = cmt_pc0;
+    assign t_debug1_wb_pc = cmt_pc1;
+    assign t_debug0_wb_rf_wdata = cmt_wdata0;
+    assign t_debug1_wb_rf_wdata = cmt_wdata1;
+    assign t_debug0_wb_rf_wen = {3'b0 , cmt_wen0 & cmt_valid0};
+    assign t_debug1_wb_rf_wen = {3'b0,   cmt_wen1 & cmt_valid1};
+    assign t_debug0_wb_rf_wnum = cmt_wdest0;
+    assign t_debug1_wb_rf_wnum = cmt_wdest1;
+    always @(posedge clk)
+    begin
+        if(debug0_valid&&!set_pc_from_WB && debug0_wb_inst[31:0]!=`INST_NOP 
+                                && debug0_wb_pc != 0 )
+            debug0_pc_reg<=debug0_wb_pc;
+        if(debug1_valid&&!set_pc_from_WB && debug1_wb_inst[31:0]!=`INST_NOP 
+                                && debug1_wb_pc != 0 )
+            debug1_pc_reg<=debug1_wb_pc;
+        else if(~debug1_valid)
+            debug1_pc_reg<=0;
+    end
+    wire noequal;
+    assign noequal = (debug0_pc_reg != debug0_wb_pc || debug0_wb_inst == 32'h5000_0000);
+
+    always @(posedge aclk)
+        if(~aresetn) begin
+            {cmt_valid0,cmt_valid1,cmt_pc0,cmt_pc1,cmt_inst0,cmt_inst1,cmt_wen0,cmt_wen1,cmt_wdest0,
+            cmt_wdest1,cmt_wdata0,cmt_wdata1,cmt_excp_valid,cmt_ecode}<=0;
+        end else begin
+            //防止出现eu0不提交但eu1提交
+            // cmt_stable_counter <= ex_stable_counter;
+            if(ex_eu0_en==0&&ex_eu1_en!=0) begin
+                cmt_valid0  <= debug0_valid&&!set_pc_from_WB && debug0_wb_inst[31:0]!=`INST_NOP 
+                                && debug0_wb_pc != 0 
+                                && (debug0_pc_reg != debug0_wb_pc || debug0_wb_inst == 32'h5000_0000);
+                cmt_pc0     <= debug1_wb_pc;
+                cmt_inst0   <= debug1_wb_inst;
+                cmt_wen0    <= debug1_wb_rf_wen!=0;
+                cmt_wdest0  <= debug1_wb_rf_wnum;
+                cmt_wdata0  <= debug1_wb_rf_wdata;
+                cmt_excp_valid<=0;
+                cmt_ecode   <= 0;
+                cmt_valid1  <= 0;
+            end else begin
+                //有异常时不置valid
+                cmt_valid0  <= debug0_valid&&!set_pc_from_WB && debug0_wb_inst[31:0]!=`INST_NOP 
+                                && debug0_wb_pc != 0 
+                                && (debug0_pc_reg != debug0_wb_pc || debug0_wb_inst == 32'h5000_0000);
+                cmt_pc0     <= debug0_wb_pc;
+                cmt_inst0   <= debug0_wb_inst;
+                cmt_wen0    <= debug0_wb_rf_wen!=0;
+                cmt_wdest0  <= debug0_wb_rf_wnum;
+                cmt_wdata0  <= debug0_wb_rf_wdata;
+                cmt_excp_valid<=set_pc_from_WB && debug0_wb_pc != 0 | exception_cpu_interrupt;
+                cmt_ecode   <= ex2_wb_exception[5:0];
+
+                cmt_valid1  <= debug1_valid&&!set_pc_from_WB && debug1_wb_inst[31:0]!=`INST_NOP
+                && debug1_wb_pc != 0 && (debug1_pc_reg != debug1_wb_pc || debug1_wb_inst == 32'h5000_0000);
+                cmt_pc1     <= debug1_wb_pc;
+                cmt_inst1   <= debug1_wb_inst;
+                cmt_wen1    <= debug1_wb_rf_wen!=0;
+                cmt_wdest1  <= debug1_wb_rf_wnum;
+                cmt_wdata1  <= debug1_wb_rf_wdata;
+            end
+        end
+`endif 
 `ifdef DIFFTEST
     reg cmt_valid0,cmt_valid1;
     reg [31:0] cmt_pc0,cmt_pc1;
