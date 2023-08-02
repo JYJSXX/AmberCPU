@@ -83,8 +83,7 @@ module HazardUnit (
     assign  flush_to_if0            =   flush_to_if0_if1;
     
     assign  flush_to_tlb        =   flush_from_wb?  1:
-                                        flush_from_ex2? 1:
-                                        flush_by_priv?  1:0;
+                                        flush_from_ex2? 1:0;
     assign  flush_to_icache         =   flush_to_if0_if1;
     assign  flush_to_dcache         =   flush_to_reg_ex1;
     assign  flush_to_btb            =   flush_to_if0_if1;
