@@ -238,13 +238,13 @@ module icache #(
         if(!rstn) begin
             exception_buf <= 0;
         end
-        else if(req_buf_we) begin
+        else if (missbuf_we)begin
             exception_buf <= exception_normal;
         end
     end
     assign exception_temp1 = {7{~cacop_en_buf}} & exception_temp;
     assign exception_normal = (exception_temp1 == 0 || tlb_exception == `EXP_ADEF)? tlb_exception : exception_temp1;
-    assign exception = exception_buf;
+    assign exception = exception_sel ? exception_buf : exception_normal;
     assign i_exception_flag = exception != 0 ? 3 : 0;
 
     /* flush signal */
@@ -565,7 +565,6 @@ module icache #(
                 rready_temp = 1;
         end
         LOOKUP: begin
-            exception_sel = 1;
             if(exception == 0)begin
                 pbuf_we                = ((miss_flush_flag && !cache_hit) ? 0 : 1) || (miss_flush_counter_old && !miss_flush_counter_old_buf);
                 // pbuf_we                = 1;         //寻找两全之策！！！！

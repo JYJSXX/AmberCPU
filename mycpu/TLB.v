@@ -995,7 +995,7 @@
 `include "TLB.vh"
 `include "csr.vh"
 module TLB#(
-    parameter TLB_COOKIE_WIDTH = 33
+    parameter TLB_COOKIE_WIDTH = 34
     )(
     input                               clk,
     input                               rstn,
@@ -1075,9 +1075,9 @@ module TLB#(
 
     input                               store_or_load, //1:store 0:load
     input                               exception_flag_in,
-    output                              exception_flag_out,
+    output  reg                         exception_flag_out,
     input         [6:0]                 exception_in,
-    output        [6:0]                 exception_out,
+    output reg    [6:0]                 exception_out,
     input                               plv_1bit,
     output     [6:0]                    tlb_exception_code_i,
     output     [6:0]                    tlb_exception_code_d,

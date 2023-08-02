@@ -26,7 +26,7 @@ module FIFO(
     input [31:0] if1_fifo_inst1,
     input [31:0] if1_fifo_pc,
     input [31:0] if1_fifo_pc_next,
-    input        if1_fifo_pc_taken,
+    input [1 :0] if1_fifo_pc_taken,
 
     input [31:0] if1_fifo_icache_badv,
     // input [31:0] if1_fifo_icache_cookie_out,
@@ -40,7 +40,7 @@ module FIFO(
     output reg [31:0] fifo_pc,//co pc with fifo_inst0 
     output wire[31:0] fifo_pcAdd,
     output reg [31:0] fifo_pc_next,
-    output reg        fifo_pc_taken,
+    output reg [1 :0] fifo_pc_taken,
     output reg [31:0] fifo_badv,
 
     // output reg [31:0] fifo_cookie_out,
@@ -88,7 +88,7 @@ module FIFO(
     wire stat_em1,stat_fu1;
     localparam          INST_WIDTH = 64,
                         PCBDV_WIDTH= 96,
-                        STAT_WIDTH = 14;
+                        STAT_WIDTH = 15;
 
     wire [INST_WIDTH-1:0] inst_din,inst_dout;
     wire [PCBDV_WIDTH-1:0] pcbdv_din,pcbdv_dout;
@@ -112,7 +112,7 @@ module FIFO(
                                         if1_fifo_icache_badv[31:0]
                                     };
     assign  stat_din            =   {
-                                        if1_fifo_pc_taken,
+                                        if1_fifo_pc_taken[1:0], 
                                         branch_flag[1:0],
                                         priv_flag[1:0],
                                         if1_fifo_icache_excp_flag[1:0],
@@ -142,7 +142,7 @@ module FIFO(
             fifo_excp_flag=stat_dout[8:7];
             fifo_priv_flag=stat_dout[10:9];
             fifo_branch_flag=stat_dout[12:11];
-            fifo_pc_taken=stat_dout[13];
+            fifo_pc_taken=stat_dout[14:13];
         end else begin
             fifo_inst0=`INST_NOP;
             fifo_inst1=`INST_NOP;
@@ -155,7 +155,7 @@ module FIFO(
             fifo_excp_flag=2'b00;
             fifo_priv_flag=2'b00;
             fifo_branch_flag=2'b00;
-            fifo_pc_taken=1'b0;
+            fifo_pc_taken=2'b00;
         end
     end 
 

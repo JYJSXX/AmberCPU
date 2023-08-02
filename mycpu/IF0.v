@@ -22,7 +22,7 @@ module IF0 (
 
     //for BTB
     input [31:0]pred_pc,
-    input pred_taken,
+    input [1 :0]pred_taken,
     output [31:0] fetch_pc,
 
     //for TLB
@@ -32,7 +32,7 @@ module IF0 (
 
     //other
     output [31:0] pc_next,
-    output        pc_taken,
+    output [1 :0] pc_taken,
     output pc_in_stall
     
 );
@@ -43,7 +43,7 @@ module IF0 (
     wire [31:0] PcAdd;
     // wire [31:0] pc_next;
     assign PcAdd        =   pc[2]?pc+4:pc+8;
-    assign pc_next      =   pred_taken?pred_pc:PcAdd;
+    assign pc_next      =   (pred_taken!=2'b00)?pred_pc:PcAdd;
     assign pc_taken     =   pred_taken;
     assign fetch_pc     =   pc;
     assign raddr        =   pc;

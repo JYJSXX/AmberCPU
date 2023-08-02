@@ -30,7 +30,7 @@ module BTB #(
 
     input   [31:0]      fetch_pc,
     output  [31:0]      pred_pc,
-    output              pred_taken,
+    output  [1 :0]      pred_taken,
 
     //below signal from the same stage
     input   [31:0]      fact_pc,
@@ -75,11 +75,11 @@ module BTB #(
 
 
     wire                            we;
-    wire [31:0]                     _pred_pc;
+    wire [31:0]                     guess_pc;
     wire [PC_INDEX_WIDTH-1:0]       INDEX;
     wire [PC_INDEX_WIDTH-1:0]       FACT_INDEX;
     wire                            pred_valid;
-    wire                            check=(pred_pc!=fetch_pc+8)&&!pred_taken;
+    wire                            check=(pred_pc!=PCAdd)&&(pred_taken!=2'b00);
     wire [31:0]                     pred_pc_hang;
     wire                            local_taken;
     wire                            hit;
@@ -103,12 +103,12 @@ module BTB #(
     assign PCAdd     =  fetch_pc[2]?fetch_pc+4:fetch_pc+8;
     // assign pred_taken=Uhit?1:taken;
     // assign pred_pc   =  pred_taken?
-    //                     (_pred_pc==0)?PCAdd:
-    //                                     _pred_pc:PCAdd;
-    assign      pred_taken=_pred_pc==0?0:
+    //                     (guess_pc==0)?PCAdd:
+    //                                     guess_pc:PCAdd;
+    assign      pred_taken=guess_pc==0?0:
                                     Uhit?1:
-                                        Bhit?taken:0;
-    assign      pred_pc   = pred_taken?_pred_pc:PCAdd;
+                                        Bhit?{1'b0,taken}:2'b00;
+    assign      pred_pc   = (pred_taken!=2'b00)?guess_pc:PCAdd;
 
     `ifdef BTB_LOG
         reg [31:0] suc_cnt=0;
@@ -146,7 +146,7 @@ module BTB #(
         .writeAddr   ( FACT_INDEX  ),
         .writeData   ( fact_tpc    ),
         .writeEnable ( we          ),
-        .readDataA   ( _pred_pc    ),
+        .readDataA   ( guess_pc    ),
         .readDataB   ( pred_pc_hang)
     );
 

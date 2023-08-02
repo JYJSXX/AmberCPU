@@ -32,7 +32,7 @@ module IF1_FIFO(
     input [31:0]        fetch_pc,
     input [31:0]        pc_out,
     input [31:0]        icache_pc_next, //?
-    input               pc_taken_out,   //?
+    input [1 :0]        pc_taken_out,   //?
     
 
 
@@ -52,7 +52,7 @@ module IF1_FIFO(
     input               tlb_done,
 
     output reg[31:0]    if1_fifo_pc=0,
-    output reg          if1_fifo_pc_taken=0,    //?
+    output reg[1 :0]    if1_fifo_pc_taken=0,    //?
     output reg[31:0]    if1_fifo_pc_next=0,  
 
     output reg[31:0]    if1_fifo_inst0=0,
@@ -295,7 +295,7 @@ module IF1_FIFO(
             if1_fifo_icache_exception<=7'b000_0000;
             if1_fifo_icache_excp_flag<=0;
         end
-        else if ((fifo_allowin&&critical_wire&&tmp==0)||(icache_rready&&if1_allowin&&fifo_allowin)) begin
+        else if ((critical_wire&&!if1_fifo_valid&&tmp==0)||(fifo_allowin&&critical_wire&&tmp==0)||(icache_rready&&if1_allowin&&fifo_allowin)) begin
             //update stage-stage reg
             if1_fifo_valid<=1;
             if1_fifo_pc     <=  pc_out;
@@ -306,7 +306,7 @@ module IF1_FIFO(
             if1_fifo_inst1  <=  pc_out[2]? `INST_NOP:icache_inst1[31:0];
             if1_fifo_icache_badv      <=icache_badv;
             if1_fifo_icache_exception <=icache_exception;//did not replace,cope need to test excp_flag first!!
-            if1_fifo_icache_excp_flag<=icache_excp_flag;
+            if1_fifo_icache_excp_flag<=pc_out[2]?{1'b0,icache_excp_flag[1]}:icache_excp_flag;
         end 
         else if(~fifo_allowin||~if1_allowin)begin
             //hold stage-stage reg
