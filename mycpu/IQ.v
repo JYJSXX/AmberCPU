@@ -19,7 +19,7 @@ module IQ (
     input  [31:0] id_reg_pc0,
     input  [31:0] id_reg_pc1,
     input  [31:0] id_reg_pc_next,
-    input         id_reg_pc_taken,
+    input  [1 :0] id_reg_pc_taken,
     input  [31:0] id_reg_inst0,
     input  [31:0] id_reg_inst1,
     input  [31:0] id_reg_badv,
@@ -120,34 +120,66 @@ module IQ (
     always @(*) begin
         if(mod)begin
             // debug_wire=2'b01;
-            iq_pc0=id_reg_pc1;
-            iq_pc1=`PC_RESET;
-            iq_pc_next=id_reg_pc_next;
-            iq_pc_taken=id_reg_pc_taken;
-            iq_inst0=id_reg_inst1;
-            iq_inst1=`INST_NOP;
-            iq_badv=id_reg_badv;
-            iq_excp_flag=id_reg_excp_flag[1];
-            iq_exception=iq_excp_flag?id_reg_exception:0;
-            iq_branch_flag=id_reg_branch_flag[1];
-            iq_is_ALU_0 =id_reg_is_ALU_1;
-            iq_is_ALU_1 =1'b1;//TODO NOTICE HERE IS REPLACED BY NOP
-            iq_is_syscall_0=id_reg_is_syscall_1;
-            iq_is_syscall_1=1'b0;
-            iq_is_break_0=id_reg_is_break_1;
-            iq_is_break_1=1'b0;
-            iq_is_priviledged_0=id_reg_is_priviledged_1;
-            iq_is_priviledged_1=0;
-            iq_uop0=id_reg_uop1;
-            iq_uop1='h0000_0000_0000_0000_0000;
-            iq_imm0=id_reg_imm1;
-            iq_imm1=0;
-            iq_rd0 = id_reg_rd1;
-            iq_rd1 = 0;
-            iq_rj0 = id_reg_rj1;
-            iq_rj1 = 0;
-            iq_rk0 = id_reg_rk1;
-            iq_rk1 = 0;
+            if(id_reg_pc_taken[0])begin
+                iq_pc0=id_reg_pc0;
+                iq_pc1=id_reg_pc1;
+                iq_pc_next=0;
+                iq_pc_taken=0;
+                iq_inst0=`INST_NOP;
+                iq_inst1=`INST_NOP;
+                iq_badv=0;
+                iq_excp_flag=0;
+                iq_exception=0;
+                iq_branch_flag=0;
+                iq_is_ALU_0 =1'b1;
+                iq_is_ALU_1 =1'b1;
+                iq_is_syscall_0=0;
+                iq_is_syscall_1=1'b0;
+                iq_is_break_0=1'b0;
+                iq_is_break_1=1'b0;
+                iq_is_priviledged_0=0;
+                iq_is_priviledged_1=0;
+                iq_uop0=0;
+                iq_uop1='h0000_0000_0000_0000_0000;
+                iq_imm0=0;
+                iq_imm1=0;
+                iq_rd0 = 0;
+                iq_rd1 = 0;
+                iq_rj0 = 0;
+                iq_rj1 = 0;
+                iq_rk0 = 0;
+                iq_rk1 = 0;
+            end else begin
+                iq_pc0=id_reg_pc1;
+                iq_pc1=`PC_RESET;
+                iq_pc_next=id_reg_pc_next;
+                iq_pc_taken=id_reg_pc_taken[1];
+                iq_inst0=id_reg_inst1;
+                iq_inst1=`INST_NOP;
+                iq_badv=id_reg_badv;
+                iq_excp_flag=id_reg_excp_flag[1];
+                iq_exception=iq_excp_flag?id_reg_exception:0;
+                iq_branch_flag=id_reg_branch_flag[1];
+                iq_is_ALU_0 =id_reg_is_ALU_1;
+                iq_is_ALU_1 =1'b1;//TODO NOTICE HERE IS REPLACED BY NOP
+                iq_is_syscall_0=id_reg_is_syscall_1;
+                iq_is_syscall_1=1'b0;
+                iq_is_break_0=id_reg_is_break_1;
+                iq_is_break_1=1'b0;
+                iq_is_priviledged_0=id_reg_is_priviledged_1;
+                iq_is_priviledged_1=0;
+                iq_uop0=id_reg_uop1;
+                iq_uop1='h0000_0000_0000_0000_0000;
+                iq_imm0=id_reg_imm1;
+                iq_imm1=0;
+                iq_rd0 = id_reg_rd1;
+                iq_rd1 = 0;
+                iq_rj0 = id_reg_rj1;
+                iq_rj1 = 0;
+                iq_rk0 = id_reg_rk1;
+                iq_rk1 = 0;
+            end
+            
         end else begin
             // iq_pc0  = id_reg_pc0;
             // iq_pc_next=id_reg_pc_next;

@@ -177,7 +177,7 @@ idle_clk idle_clk1
 
     //for BTB
     wire [31:0]  pred_pc;
-    wire         pred_taken;
+    wire [1 :0]  pred_taken;
     wire [31:0]  fetch_pc;
     //for tlb
     // wire         tlb_rvalid;
@@ -186,14 +186,14 @@ idle_clk idle_clk1
 
     
     wire [31:0]  pc_next;//rready control logic : use a tmp to store inst temporarily
-    wire    pc_taken_out;
-    wire    pc_taken;
+    wire [1 :0]  pc_taken_out;
+    wire [1 :0]  pc_taken;
     wire         pc_in_stall;
     wire set_by_priv;
     wire [31:0] pc_set_by_priv;
     wire    [1:0]flush_cause;
     wire    [31:0]tlb_pc_next;
-    wire          tlb_pc_taken;
+    wire    [1 :0]tlb_pc_taken;
     IF0 u_IF0(
         .clk                 ( clk                 ),
         .rstn                ( aresetn             ),
@@ -288,7 +288,7 @@ idle_clk idle_clk1
     wire  [6:0]     if1_fifo_icache_exception;
     wire  [1:0]     if1_fifo_icache_excp_flag;
     // wire  [31+3:0]    if1_fifo_icache_cookie_out;
-    wire            if1_fifo_pc_taken;
+    wire  [1:0]     if1_fifo_pc_taken;
     wire icache_rvalid;
     wire            space_ok;
     wire nearly_full;
@@ -400,7 +400,7 @@ idle_clk idle_clk1
     
 
     wire  fifo_valid,fifo_ready;
-    wire fifo_pc_taken;
+    wire  [1:0]fifo_pc_taken;
 
 
     FIFO u_FIFO(
@@ -460,7 +460,7 @@ idle_clk idle_clk1
     wire invalid_instruction2;
 
     wire  id_readygo;//to decoder stage,tell id I'm valid
-    wire fifo_id_pc_taken;
+    wire [1:0]fifo_id_pc_taken;
     FIFO_ID u_FIFO_ID(
         .clk                 ( clk                 ),
         .rstn                ( aresetn             ),
@@ -667,7 +667,7 @@ idle_clk idle_clk1
     wire [31:0] reg_ex_pc1;
     wire        reg_ex_CMT;
     wire [31:0] reg_ex_pc_next;
-    wire         reg_ex_pc_taken;
+    wire        reg_ex_pc_taken;
     wire [31:0] reg_ex_inst0;
     wire [31:0] reg_ex_inst1;
     wire reg_ex_branch_flag;
@@ -1853,7 +1853,7 @@ wire [3:0]reg_ex_cond0;
 
 assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
     TLB#(
-        .TLB_COOKIE_WIDTH (33)
+        .TLB_COOKIE_WIDTH (34)
         ) u_TLB(
         .clk            ( clk            ),
         .rstn           ( aresetn           ),

@@ -16,7 +16,7 @@ module ID_REG(
     input [31:0] fifo_id_pc0,
     input [31:0] fifo_id_pc1,
     input [31:0] fifo_id_pc_next,
-    input         fifo_id_pc_taken,
+    input [1 :0] fifo_id_pc_taken,
     input [31:0] fifo_id_badv,
     input [1:0]  fifo_id_excp_flag,
     input [6:0]  fifo_id_exception,
@@ -48,7 +48,7 @@ module ID_REG(
     output  [31:0] iq_pc1,
     output  [31:0] iq_pc_next,
     output         CMT,
-    output          iq_pc_taken,
+    output         iq_pc_taken,
     output  [31:0] iq_inst0,
     output  [31:0] iq_inst1,
     output  [31:0] iq_badv,
@@ -77,7 +77,7 @@ module ID_REG(
     reg [31:0] id_reg_pc0=0;
     reg [31:0] id_reg_pc1=0;
     reg [31:0] id_reg_pc_next=0;
-    reg id_reg_pc_taken=0;
+    reg [1 :0] id_reg_pc_taken=0;
     reg [31:0] id_reg_inst0=`INST_NOP;
     reg [31:0] id_reg_inst1=`INST_NOP;
     reg [31:0] id_reg_badv=0;
