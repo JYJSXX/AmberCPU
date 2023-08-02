@@ -388,9 +388,14 @@ module dcache #(
         if(flush || !rstn) begin
             flush_valid <= 0;
         end
-        else if(req_buf_we) begin
-            flush_valid <= rvalid;
+        else if(flush) begin
+            flush_valid <= 0;
         end
+        else if(rvalid || wvalid) begin
+            flush_valid <= 1;
+        end
+        else
+            flush_valid <= flush_valid;
 
     `ifdef DIFFTEST
         assign paddr_diff = paddr_buf;
@@ -496,6 +501,8 @@ module dcache #(
         if(!rstn) begin
             victim_w_tag <= 0;
         end
+        if(state == MISS)
+            victim_w_tag <= victim_w_tag;
         else begin
             victim_w_tag <= {tag_rdata[victim_sel][TAG_WIDTH-1:0], req_buf[11:6]};
         end
@@ -505,6 +512,8 @@ module dcache #(
         if(!rstn) begin
             victim_data_in <= 0;
         end
+        if(state == MISS)
+            victim_w_tag <= victim_w_tag;
         else begin
             victim_data_in <= mem_rdata[victim_sel];
         end
@@ -526,6 +535,8 @@ module dcache #(
     end
     wire [25:0] victim_rtag;
     assign victim_rtag = miss_state ? {victim_rtag_buf,req_buf[11:6]}: {tag,req_buf[11:6]};
+    wire victim_hit_temp;
+    assign victim_hit = !op_buf ? victim_hit_temp && (hit == 0) : 0;
 
 
     victim_cache #(
@@ -534,7 +545,7 @@ module dcache #(
         .clk        (clk),
         .rstn       (rstn),
         .r_tag      (victim_rtag),
-        .victim_hit (victim_hit),
+        .victim_hit (victim_hit_temp),
         .data_out   (victim_data),
         .w_tag      (victim_w_tag),
         .we         (victim_we), // missbuf_we && valid[victim_sel] && victim_hit
@@ -560,7 +571,7 @@ module dcache #(
             mem_wdata = wdata_pipe_512;
         end
         else begin
-            mem_wdata = ret_buf & ~wstrb_pipe_512 | wdata_pipe_512 & wstrb_pipe_512;
+            mem_wdata = op_buf == WRITE_OP ? ret_buf & ~wstrb_pipe_512 | wdata_pipe_512 & wstrb_pipe_512 : ret_buf;
         end
     end
 
