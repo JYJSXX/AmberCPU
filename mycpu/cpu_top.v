@@ -1553,6 +1553,7 @@ wire [31:0]    ex0_ex1_csr_data;
         //.csr_estat           ( csr_estat           ),
         //.csr_crmd            ( csr_crmd            ),
         .d_exception               ( dcache_exception           ),
+        .d_badv              ( dcache_badv               ),
         .ecode_in            ( ex1_ex2_exception            ),
         .exception_flag_in   ( ex1_ex2_excp_flag   ),
         .badv_in             ( ex1_ex2_badv             ),
