@@ -1074,6 +1074,10 @@ module TLB#(
     input       [`TLB_VPPN_LEN - 1:0]   TLBINVLD_VA,
 
     input                               store_or_load, //1:store 0:load
+    input                               exception_flag_in,
+    output                              exception_flag_out,
+    input         [6:0]                 exception_in,
+    output        [6:0]                 exception_out,
     input                               plv_1bit,
     output     [6:0]                    tlb_exception_code_i,
     output     [6:0]                    tlb_exception_code_d,
@@ -1164,6 +1168,8 @@ always @(posedge clk or negedge rstn)begin
             WSTRB_D_reg2 <= 0;
             rd_reg2 <= 0;
             TAG_OFFSET_D_reg3 <= 0;
+            exception_flag_out <= 0;
+            exception_out <= exception_in;
         end else if (~stall_d)begin
             VA_D_reg2 <= VA_D;
             en_d_reg2 <= en_d;
@@ -1174,6 +1180,8 @@ always @(posedge clk or negedge rstn)begin
             SOL_reg2 <= store_or_load;
             WDATA_D_reg2 <= WDATA_D;
             WSTRB_D_reg2 <= WSTRB_D;
+            exception_flag_out <= exception_flag_in;
+            exception_out <= exception_in;
         end
         else begin
             VA_D_reg2 <= VA_D_reg2;
