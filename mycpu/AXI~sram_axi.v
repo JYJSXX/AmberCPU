@@ -93,11 +93,13 @@ begin
         R_IDLE:
         begin
             if(d_rvalid) 
-                if(ar_ready) r_next_state = R_DDATA;
-                else r_next_state = R_DADDR;
+                // if(ar_ready) r_next_state = R_DDATA;
+                // else 
+                r_next_state = R_DADDR;
             else if(i_rvalid)
-                if(ar_ready) r_next_state = R_IDATA;
-                else r_next_state = R_IADDR;
+                // if(ar_ready) r_next_state = R_IDATA;
+                // else 
+                r_next_state = R_IADDR;
         end
         R_IADDR:
         begin
@@ -167,6 +169,7 @@ begin
             end
             else if(i_rvalid)
             begin
+                ;
                 // ar_valid = 1'b1;
                 // ar_len = i_rlen;
                 // ar_addr = i_raddr;

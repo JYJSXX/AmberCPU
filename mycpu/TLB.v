@@ -1148,8 +1148,8 @@ always @(posedge clk or negedge rstn)begin
         WDATA_D_reg2 <= 0;
         WSTRB_D_reg2 <= 0;
         rd_reg2 <= 0;
-        TAG_OFFSET_D_reg3 <= 0;
-        TAG_OFFSET_I_reg3 <= 0;
+        // TAG_OFFSET_D_reg3 <= 0;
+        // TAG_OFFSET_I_reg3 <= 0;
     end
     else begin 
         if (flush)begin
@@ -1167,7 +1167,7 @@ always @(posedge clk or negedge rstn)begin
             WDATA_D_reg2 <= 0;
             WSTRB_D_reg2 <= 0;
             rd_reg2 <= 0;
-            TAG_OFFSET_D_reg3 <= 0;
+            // TAG_OFFSET_D_reg3 <= 0;
             exception_flag_out <= 0;
             exception_out <= exception_in;
         end else if (~stall_d)begin
@@ -1199,7 +1199,7 @@ always @(posedge clk or negedge rstn)begin
             en_i_reg2 <= 0;
             tlb_cookie_reg2 <=0;
             TAG_OFFSET_I_reg2 <= 0;
-            TAG_OFFSET_I_reg3 <= 0;
+            // TAG_OFFSET_I_reg3 <= 0;
         end
         else if(~stall_i) begin
             VA_I_reg2 <= VA_I;
@@ -1243,16 +1243,16 @@ always @(posedge clk or negedge rstn)begin
         is_cached_I <= 0;
         is_cached_D <= 0;
     end
-    else if (flush)begin
-        PA_I <= 0;
-        PA_D <= 0;
-        is_cached_I <= 0;
-        is_cached_D <= 0;
-    end
-    else if (flush_to_reg_ex1)begin
-        PA_I <= 0;
-        is_cached_I <= 0;
-    end
+    // else if (flush)begin
+    //     PA_I <= 0;
+    //     PA_D <= 0;
+    //     is_cached_I <= 0;
+    //     is_cached_D <= 0;
+    // end
+    // else if (flush_to_reg_ex1)begin
+    //     PA_I <= 0;
+    //     is_cached_I <= 0;
+    // end
     else begin
         PA_I <= CSR_PG ? (DMW0_JUDGE_I ? DMW0_PPN_I : (DMW1_JUDGE_I ? DMW1_PPN_I : 0)) : VA_I_reg2;
         PA_D <= CSR_PG ? (DMW0_JUDGE_D ? DMW0_PPN_D : (DMW1_JUDGE_D ? DMW1_PPN_D : 0)) : VA_D_reg2;
