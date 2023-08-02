@@ -48,18 +48,18 @@ module BTB #(
 
     `ifndef BTB_CLOSE
         localparam      EASY_STRONG_TAKEN    =   2'b00,
-                    EASY_STRONG_NOTAKEN  =   2'b01,
-                    EASY_WEAK_TAKEN      =   2'b10,
-                    EASY_WEAK_NOTAKEN    =   2'b11,
-                    HARD_STRONG_TAKEN    =   2'b00,
-                    HARD_STRONG_NOTAKEN  =   2'b01,
-                    HARD_WEAK_TAKEN      =   2'b10,
-                    HARD_WEAK_NOTAKEN    =   2'b11,
-                    IDLE                 =   2'b10,
-                    TOP_IDLE             =   2'b00,//static no taken
-                    TOP_EASY             =   2'b01,
-                    TOP_HARD             =   2'b10,
-                    TOP_LOCAL            =   2'b11;//strategy reserved
+                        EASY_STRONG_NOTAKEN  =   2'b01,
+                        EASY_WEAK_TAKEN      =   2'b10,
+                        EASY_WEAK_NOTAKEN    =   2'b11,
+                        HARD_STRONG_TAKEN    =   2'b00,
+                        HARD_STRONG_NOTAKEN  =   2'b01,
+                        HARD_WEAK_TAKEN      =   2'b10,
+                        HARD_WEAK_NOTAKEN    =   2'b11,
+                        IDLE                 =   2'b10,
+                        TOP_IDLE             =   2'b00,//static no taken
+                        TOP_EASY             =   2'b01,
+                        TOP_HARD             =   2'b10,
+                        TOP_LOCAL            =   2'b11;//strategy reserved
 
 
     reg [1:0] EASY_STATE=0,NEXT_EASY_STATE=0;
@@ -109,7 +109,7 @@ module BTB #(
                                     Uhit?1:
                                         Bhit?{1'b0,taken}:2'b00;
     assign      pred_pc   = (pred_taken!=2'b00)?guess_pc:PCAdd;
-
+    
     `ifdef BTB_LOG
         reg [31:0] suc_cnt=0;
         reg [31:0] tot_cnt=0;
