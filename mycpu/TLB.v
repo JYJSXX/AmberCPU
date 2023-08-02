@@ -995,7 +995,7 @@
 `include "TLB.vh"
 `include "csr.vh"
 module TLB#(
-    parameter TLB_COOKIE_WIDTH = 33
+    parameter TLB_COOKIE_WIDTH = 34
     )(
     input                               clk,
     input                               rstn,

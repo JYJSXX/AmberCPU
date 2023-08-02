@@ -56,6 +56,7 @@ if(~allowin_23||~allowin21)
 	维持段间寄存器2（所有寄存器值不动，防止上一周期的指令被丢失）
 ```
 
+## 异常处理
 ## exception信号
 exception[6:0]存放{ESUBCODE,ECODE}(见clap exception.vh)
 excp_flag[1:0] 00表示无异常，10表示上路异常，01表示下路异常，11表示上下路同时异常
@@ -65,5 +66,8 @@ excp_flag[1:0] 00表示无异常，10表示上路异常，01表示下路异常�
 ## ibar_signal & ibar_pos 信号
 ibar_siganl表示当前指令组（同时发射的两条）
 
+## 例外处理逻辑
+首先介绍例外处理的通用逻辑，CPU的异常均在WB段进行提交，
+1. INT中断：接受SOC的硬件和CPU定时器中断信号和特权指令写软件中断时，由CSR发出中断信号，WB段向CSR写入ECODE同时清空流水线
 ## 什么时候flush(由谁发出，发给谁)
 1.WB段如果exception为1，给全流水线发送flush

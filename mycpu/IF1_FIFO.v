@@ -32,7 +32,7 @@ module IF1_FIFO(
     input [31:0]        fetch_pc,
     input [31:0]        pc_out,
     input [31:0]        icache_pc_next, //?
-    input               pc_taken_out,   //?
+    input [1 :0]        pc_taken_out,   //?
     
 
 
@@ -52,7 +52,7 @@ module IF1_FIFO(
     input               tlb_done,
 
     output reg[31:0]    if1_fifo_pc=0,
-    output reg          if1_fifo_pc_taken=0,    //?
+    output reg[1 :0]    if1_fifo_pc_taken=0,    //?
     output reg[31:0]    if1_fifo_pc_next=0,  
 
     output reg[31:0]    if1_fifo_inst0=0,
