@@ -489,77 +489,79 @@ module dcache #(
       .dout     (tag_rdata[1])
     );
 
-     /* victim cache */
-    wire victim_hit;
-    wire [511:0] victim_data;
-    wire victim_sel;
-    assign victim_sel = lru_sel[0] ? 0 : 1;
-    wire victim_we;
-    assign victim_we = mbuf_we && valid[victim_sel] && flush_valid;
-    reg [25:0] victim_w_tag;
-    always @(posedge clk) begin
-        if(!rstn) begin
-            victim_w_tag <= 0;
-        end
-        if(state == MISS)
-            victim_w_tag <= victim_w_tag;
-        else begin
-            victim_w_tag <= {tag_rdata[victim_sel][TAG_WIDTH-1:0], req_buf[11:6]};
-        end
-    end
-    reg [BIT_NUM - 1 : 0] victim_data_in;
-    always @(posedge clk) begin
-        if(!rstn) begin
-            victim_data_in <= 0;
-        end
-        if(state == MISS)
-            victim_w_tag <= victim_w_tag;
-        else begin
-            victim_data_in <= mem_rdata[victim_sel];
-        end
-    end
+    //  /* victim cache */
+    // wire victim_hit;
+    // wire [511:0] victim_data;
+    // wire victim_sel;
+    // assign victim_sel = lru_sel[0] ? 0 : 1;
+    // wire victim_we;
+    // assign victim_we = mbuf_we && valid[victim_sel] && flush_valid;
+    // reg [25:0] victim_w_tag;
+    // always @(posedge clk) begin
+    //     if(!rstn) begin
+    //         victim_w_tag <= 0;
+    //     end
+    //     if(state == MISS)
+    //         victim_w_tag <= victim_w_tag;
+    //     else begin
+    //         victim_w_tag <= {tag_rdata[victim_sel][TAG_WIDTH-1:0], req_buf[11:6]};
+    //     end
+    // end
+    // reg [BIT_NUM - 1 : 0] victim_data_in;
+    // always @(posedge clk) begin
+    //     if(!rstn) begin
+    //         victim_data_in <= 0;
+    //     end
+    //     if(state == MISS)
+    //         victim_w_tag <= victim_w_tag;
+    //     else begin
+    //         victim_data_in <= mem_rdata[victim_sel];
+    //     end
+    // end
 
-    reg [19:0] victim_rtag_buf;
-    reg miss_state;
-    always @(posedge clk)
-    begin
-        if(!rstn)
-            begin
-            victim_rtag_buf <= 0;
-            miss_state <= 0;
-        end
-        else begin
-            victim_rtag_buf <= tag;
-            miss_state <= (state == MISS) ;
-        end
-    end
-    wire [25:0] victim_rtag;
-    assign victim_rtag = miss_state ? {victim_rtag_buf,req_buf[11:6]}: {tag,req_buf[11:6]};
-    wire victim_hit_temp;
-    assign victim_hit = !op_buf ? victim_hit_temp && (hit == 0) : 0;
+    // reg [19:0] victim_rtag_buf;
+    // reg miss_state;
+    // always @(posedge clk)
+    // begin
+    //     if(!rstn)
+    //         begin
+    //         victim_rtag_buf <= 0;
+    //         miss_state <= 0;
+    //     end
+    //     else begin
+    //         victim_rtag_buf <= tag;
+    //         miss_state <= (state == MISS) || (state == REFILL) ;
+    //     end
+    // end
+    // wire [25:0] victim_rtag;
+    // assign victim_rtag = miss_state ? {victim_rtag_buf,req_buf[11:6]}: {tag,req_buf[11:6]};
+    // wire victim_hit_temp;
+    // assign victim_hit = !op_buf ? victim_hit_temp && (hit == 0) : 0;
 
 
-    victim_cache #(
-        .CAPACITY(8)
-    ) victim_cache (
-        .clk        (clk),
-        .rstn       (rstn),
-        .r_tag      (victim_rtag),
-        .victim_hit (victim_hit_temp),
-        .data_out   (victim_data),
-        .w_tag      (victim_w_tag),
-        .we         (victim_we), // missbuf_we && valid[victim_sel] && victim_hit
-        .data_in    (victim_data_in)
-    );
+    // victim_cache #(
+    //     .CAPACITY(8)
+    // ) victim_cache (
+    //     .clk        (clk),
+    //     .rstn       (rstn),
+    //     .r_tag      (victim_rtag),
+    //     .victim_hit (victim_hit_temp),
+    //     .data_out   (victim_data),
+    //     .w_tag      (victim_w_tag),
+    //     .we         (victim_we), // missbuf_we && valid[victim_sel] && victim_hit
+    //     .data_in    (victim_data_in)
+    // );
 
     /* hit */
-    assign tag          = (state == MISS) ? paddr_buf[31:32-TAG_WIDTH]:p_addr[31:32-TAG_WIDTH]; // the tag of the request
+    assign tag          = (state == MISS) || (state == REFILL) ? paddr_buf[31:32-TAG_WIDTH]:p_addr[31:32-TAG_WIDTH]; // the tag of the request
     assign hit[0]       = valid[0] && (tag_rdata[0][TAG_WIDTH-1:0] == tag); // hit in way 0
     assign hit[1]       = valid[1] && (tag_rdata[1][TAG_WIDTH-1:0] == tag); // hit in way 1
-    assign cache_hit    = |hit || victim_hit;
+    // assign cache_hit    = |hit || victim_hit;
+    assign cache_hit    = |hit;
     assign hit_way      = hit[0] ? 0 : 1; // 0 for way 0, 1 for way 1
     wire hit_way_valid;
-    assign hit_way_valid = cache_hit && ~victim_hit ? hit_way : 0;
+    // assign hit_way_valid = cache_hit && ~victim_hit ? hit_way : 0;
+    assign hit_way_valid = cache_hit ? hit_way : 0;
     
     /* write control */
     assign wdata_pipe_512 = ({{(BIT_NUM-32){1'b0}}, wdata_pipe} << {address[1:0],3'b0}) << {address[BYTE_OFFSET_WIDTH-1:2], 5'b0};
@@ -579,7 +581,8 @@ module dcache #(
     // choose data from mem or return buffer 
     wire [BIT_NUM-1:0] o_rdata;
     reg [31:0]        rdata_cache;
-    assign o_rdata = victim_hit ? victim_data : data_from_mem ? mem_rdata[hit_way_valid] : ret_buf; 
+    // assign o_rdata = victim_hit ? victim_data : data_from_mem ? mem_rdata[hit_way_valid] : ret_buf; 
+    assign o_rdata = data_from_mem ? mem_rdata[hit_way_valid] : ret_buf; 
     always @(*) begin
         case(req_buf[5:2])
         4'd0:  rdata_cache = o_rdata[31:0];
