@@ -1055,6 +1055,8 @@ wire [31:0]    mb_badv_out;
 wire [0:0]     mb_excp_flag;
 wire [6:0]     mb_exception;
 wire [31:0]    ex0_ex1_csr_data;
+wire [31:0]     quotient_reg ;
+wire [31:0]     remainder_reg ;
 
     MEMBUF u_MEMBUF(
         .clk                     ( clk                     ),
@@ -1111,8 +1113,9 @@ wire [31:0]    ex0_ex1_csr_data;
         .tlb_mul_stage1_res_lh    ( mul_stage1_res_lh    ),
         .tlb_mul_stage1_res_ll    ( mul_stage1_res_ll    ),
         .tlb_mul_compensate       ( mul_compensate       ),
-        // .tlb_quotient             ( quotient             ),
-        // .tlb_remainder            ( remainder            ),
+        .quotient             ( quotient             ),
+        .remainder            ( remainder            ),
+        .div_ready            ( div_ready            ),
         // .tlb_stall_divider        ( stall_divider        ),
         // .tlb_div_ready            ( div_ready            ),
         .tlb_badv_out             ( ex1_badv             ),
@@ -1135,6 +1138,8 @@ wire [31:0]    ex0_ex1_csr_data;
         .ex1_badv_out             ( mb_badv_out             ),
         .ex1_excp_flag        ( mb_excp_flag        ),
         .ex1_exception        ( mb_exception        ),
+        .quotient_reg             ( quotient_reg             ),
+        .remainder_reg            ( remainder_reg            ),
 
         // .ex1_ex2_rd0             ( ex1_ex2_rd0             ),
         // .ex1_ex2_rd1             ( ex1_ex2_rd1             ),
@@ -1453,10 +1458,8 @@ wire [31:0]    ex0_ex1_csr_data;
         .ex1_ex2_badv              ( ex1_ex2_badv              ),
         .ex1_ex2_excp_flag         ( ex1_ex2_excp_flag         ),
         .ex1_ex2_exception         ( ex1_ex2_exception         ),
-        .quotient            ( quotient            ),
-        .remainder           ( remainder           ),
-        .stall_divider       ( stall_divider       ),
-        .div_ready           ( div_ready           )
+        .quotient            ( quotient_reg            ),
+        .remainder           ( remainder_reg           )
     );
 
 

@@ -17,8 +17,9 @@ module idle_clk
         else if(clear_ps) pause <= 1;
         else if(idle_over) pause <= 0;
     reg l_pause=0;
-    always @(aclk,pause)
-        if(~aclk) l_pause = pause;
+    //always @(aclk,pause)
+    always @(posedge aclk)
+        if(~aclk) l_pause <= pause;
     
     assign clk = aclk&~l_pause; //pause=0时，clk=aclk
 endmodule
