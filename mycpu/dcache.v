@@ -689,7 +689,7 @@ module dcache #(
         end
         else if(mbuf_we) begin
             // dirty_mbuf <= dirty_rdata;
-            exception_buf <= exception_temp;
+            exception_buf <= exception;
         end
     end
     
@@ -727,7 +727,7 @@ module dcache #(
             end
         end
         LOOKUP: begin
-            if(exception_temp != 0 || flush)
+            if(exception_buf != 0 || flush)
                 next_state = IDLE;
             else if(ibar)
                 next_state = IBAR;
