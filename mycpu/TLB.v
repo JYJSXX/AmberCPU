@@ -1148,7 +1148,7 @@ assign exception1_tmp[6:0] = {7{plv_1bit && VA_D[`TLB_VPPN_LEN]}} & `EXP_ADEM;
 // assign exception1 = exception1_tmp[6:0] & {7{en_d}};
 assign exception1 = 0;
 //assign tlbexception_flag1 = |exception1[6:0] & en1;
-always @(posedge clk or negedge rstn)begin
+always @(posedge clk)begin
     if (~rstn)begin
         // CSR_PG_reg2 <= 0;
         // CSR_CRMD_reg2 <= 0;

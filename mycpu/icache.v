@@ -248,6 +248,10 @@ module icache #(
     assign i_exception_flag = exception != 0 ? 3 : 0;
 
     /* flush signal */
+    wire miss_flush_counter_new;
+    assign miss_flush_counter_new = missbuf_we ? (raddr != 0) : 0;
+    reg miss_flush_counter_old;
+    reg miss_flush_counter_old_buf;
     always @(posedge clk)
         if(flush || !rstn) begin
             flush_valid <= 0;
@@ -367,10 +371,6 @@ module icache #(
         end
     end
 
-    wire miss_flush_counter_new;
-    assign miss_flush_counter_new = missbuf_we ? (raddr != 0) : 0;
-    reg miss_flush_counter_old;
-    reg miss_flush_counter_old_buf;
     always @(posedge clk) begin
         if(!rstn || flush) begin
             miss_flush_counter_old <= 0;

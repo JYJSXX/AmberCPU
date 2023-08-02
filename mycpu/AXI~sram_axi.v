@@ -336,13 +336,15 @@ begin
         begin
             w_valid = 1'b1;
             // if (w_ready) w_valid = 1'b1;
-            if (w_last & w_valid & w_ready) begin
-                d_wready = 1'b1;
-            end
+            // if (w_last & w_valid & w_ready) begin
+            //     d_wready = 1'b1;
+            // end
         end
         W_DLAST:
         begin
             b_ready = 1'b1;
+            if(b_valid & b_ready)
+                d_wready = 1'b1;
         end
         default:
             w_valid = 1'b0;
