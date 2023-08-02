@@ -2,6 +2,7 @@
 
 
 `define DIFFTEST
+// `define SIMUTEST
 // `define BTB_LOG
 // `define BTB_CLOSE
 // `define BR_PROFILE
