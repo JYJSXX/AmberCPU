@@ -1777,11 +1777,11 @@ wire [31:0]    ex0_ex1_csr_data;
     //     else
     //         icache_ravlid_valid <= if1_allowin;
     // end
-    
+    wire [6:0] exception_out_i;
     icache#(
         .INDEX_WIDTH       ( 6 ),
         .WORD_OFFSET_WIDTH ( 4 ),
-        .COOKIE_WIDTH      ( 32+1 )
+        .COOKIE_WIDTH      ( 32+1+1 )
     )u_icache(
         .clk               ( clk               ),
         .rstn              ( aresetn           ),
@@ -1797,8 +1797,7 @@ wire [31:0]    ex0_ex1_csr_data;
         .i_raddr           ( i_raddr           ), 
         .i_rdata           ( i_rdata           ), 
         .i_rlen            ( i_rlen            ),    
-        // .tlb_exception     ( tlb_exception_code_i ), 
-        .tlb_exception     ( 0                 ), 
+        .tlb_exception     ( exception_out_i   ), 
         .badv              ( icache_badv       ),
         .exception         ( icache_exception  ),
         .i_exception_flag  ( icache_excp_flag  ),   
@@ -1875,7 +1874,7 @@ wire [31:0]    ex0_ex1_csr_data;
     );
 
 wire [3:0]reg_ex_cond0;
-
+wire [6:0] exception_flag_in;
 assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
     TLB#(
         .TLB_COOKIE_WIDTH (34)
@@ -1951,8 +1950,8 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .TLBINVLD_VA    ( invtlb_va        ),
         .store_or_load  ( reg_ex_cond0[2]  ),
         .plv_1bit         (crmd[0]         ),
-        .tlb_exception_code_i(tlb_exception_code_i),
-        .tlb_exception_code_d(tlb_exception_code_d),
+        .exception_out_i( exception_out_i  ),
+        .exception_out  ( tlb_exception_code_d  ),
         .stable_counter ( stable_counter[4:0])
     );
 
