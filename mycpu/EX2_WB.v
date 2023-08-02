@@ -176,6 +176,11 @@ wire [3:0] cond0;
 wire [3:0] cond1;
 assign cond0 = uop0_reg[`UOP_COND];
 assign cond1 = uop1_reg[`UOP_COND];
+reg [1:0] unwrite =0;
+always@(posedge clk) begin
+    if(|d_exception || exception_flag_in) unwrite<=3;
+    else if(unwrite!=0) unwrite<=unwrite-1;
+end
     always@(posedge clk)begin
         if(~aresetn)begin
             ex2_wb_data_0 <= 0;
@@ -193,14 +198,14 @@ assign cond1 = uop1_reg[`UOP_COND];
                 ex2_wb_data_0 <= ex2_result0;
                 ex2_wb_data_0_valid <= 1;
                 ex2_wb_rd0 <= ex_rd0;
-                ex2_wb_we0 <= 1;
+                ex2_wb_we0 <= 1 & (~((|d_exception) || (|unwrite)) );
             end
             else if (uop0[`INS_MEM])begin
                 if(dcache_ready)begin
                     ex2_wb_data_0 <= dcache_data;
                     ex2_wb_rd0 <= rd_dcache_out;
                     ex2_wb_data_0_valid <= 1;
-                    ex2_wb_we0 <= 1 & (~(|d_exception)); //exception from dcache , don`t write
+                    ex2_wb_we0 <= 1 & (~((|d_exception) || (|unwrite))); //exception from dcache , don`t write
                 end
                 else begin
                     ex2_wb_data_0 <= 0;
@@ -247,7 +252,7 @@ assign cond1 = uop1_reg[`UOP_COND];
                 ex2_wb_data_1 <= ex2_result1;
                 ex2_wb_data_1_valid <= 1;
                 ex2_wb_rd1 <= ex_rd1;
-                ex2_wb_we1 <= 1;
+                ex2_wb_we1 <= 1& (~((|d_exception) || (|unwrite)));
             end
             
             else begin

@@ -84,8 +84,6 @@ begin
         r_state <= r_next_state;
 end
 
-
-
 always @(*)
 begin
     r_next_state = r_state;
@@ -136,9 +134,6 @@ shift_register#(.WIDTH(480)) OUTPUT_BUFFER(
     .data_out(rdata_buffer),
     .ready(r_ready & r_valid)
 );
-reg [31:0] ar_addr_reg = 0;
-reg [7:0] ar_len_reg = 0;
-reg [2:0] ar_size_reg = 0;
 
 always @(*)
 begin
@@ -161,11 +156,11 @@ begin
         begin
             if(d_rvalid)
             begin
-                // ar_valid = 1'b1;
-                // ar_addr = d_raddr;
+                ar_valid = 1'b1;
+                ar_addr = d_raddr;
                 ar_id = 4'b0001;
-                // ar_len = d_rlen;
-                // ar_size = d_rsize;
+                ar_len = d_rlen;
+                ar_size = d_rsize;
             end
             else if(i_rvalid)
             begin
@@ -178,8 +173,8 @@ begin
         R_IADDR:
         begin
             ar_valid = 1'b1;
-            ar_addr = ar_addr_reg;
-            ar_len = ar_len_reg;
+            ar_addr = i_raddr;
+            ar_len = i_rlen;
         end
         R_IDATA:
         begin
@@ -193,9 +188,9 @@ begin
         R_DADDR:
         begin
             ar_valid = 1'b1;
-            ar_addr = ar_addr_reg;
-            ar_len = ar_len_reg;
-            ar_size = ar_size_reg;
+            ar_addr = d_raddr;
+            ar_len = d_rlen;
+            ar_size = d_rsize;
         end
         R_DDATA:
         begin
@@ -208,26 +203,6 @@ begin
         end
         
     endcase
-end
-
-always @ (posedge aclk)begin
-    if(~aresetn)begin
-        ar_addr_reg <= 0;
-        ar_len_reg <= 0;
-        ar_size_reg <= 0;
-    end
-    else if(r_state == R_IDLE)begin
-        if(d_rvalid)begin
-            ar_addr_reg <= d_raddr;
-            ar_len_reg <= d_rlen;
-            ar_size_reg <= d_rsize;
-        end
-        else if(i_rvalid)begin
-            ar_addr_reg <= i_raddr;
-            ar_len_reg <= i_rlen;
-            ar_size_reg <= 2;
-        end
-    end
 end
 
 assign aw_addr = d_waddr;
