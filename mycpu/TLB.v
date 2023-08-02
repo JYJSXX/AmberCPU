@@ -1141,10 +1141,12 @@ wire [6:0] exception1_tmp;
 wire [6:0] exception0;
 wire [6:0] exception1;
 assign exception0_tmp[6:0] = {7{plv_1bit && VA_I[`TLB_VPPN_LEN]}} & `EXP_ADEF;
-assign exception0 = exception0_tmp[6:0] ;
+//assign exception0 = exception0_tmp[6:0] ;
+assign exception0 = 0;
 //assign tlbexception_flag0 = |exception0[6:0] & en0;
 assign exception1_tmp[6:0] = {7{plv_1bit && VA_D[`TLB_VPPN_LEN]}} & `EXP_ADEM;
-assign exception1 = exception1_tmp[6:0] & {7{en_d}};
+// assign exception1 = exception1_tmp[6:0] & {7{en_d}};
+assign exception1 = 0;
 //assign tlbexception_flag1 = |exception1[6:0] & en1;
 always @(posedge clk or negedge rstn)begin
     if (~rstn)begin
