@@ -245,7 +245,7 @@ module icache #(
     assign exception_temp1 = {7{~cacop_en_buf}} & exception_temp;
     assign exception_normal = (exception_temp1 == 0 || tlb_exception == `EXP_ADEF)? tlb_exception : exception_temp1;
     assign exception = exception_sel ? exception_buf : exception_normal;
-    assign i_exception_flag = exception != 0 ? 1 : 0;
+    assign i_exception_flag = exception != 0 ? 3 : 0;
 
     /* flush signal */
     always @(posedge clk)
