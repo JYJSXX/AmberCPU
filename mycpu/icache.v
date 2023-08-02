@@ -566,6 +566,7 @@ module icache #(
             if(exception == 0)begin
                 pbuf_we                = ((miss_flush_flag && !cache_hit) ? 0 : 1) || (miss_flush_counter_old && !miss_flush_counter_old_buf);
                 // pbuf_we                = 1;         //寻找两全之策！！！！
+                req_buf_we             =  miss_flush_flag && miss_flush_counter_new && !miss_flush_counter_old;
                 lru_we                  = 0;
                 if(cacop_en)
                     cacop_ready         = 1;
