@@ -43,7 +43,8 @@ module EX2_WB(
     input [31:0] dcache_data,
     input dcache_ready,
     input dcache_w_ready,
-
+    input [6:0] d_exception,
+    input [31:0] d_badv,
     //csr 三条读写csr的指令都要写
     input [31:0] csr_data_in,
     input csr_ready,
@@ -108,7 +109,10 @@ assign flush_by_exception = set_by_priv;
 wire set_badv;
 assign set_badv = (ecode_in == `EXP_PIL) || (ecode_in == `EXP_PIS) 
 || (ecode_in == `EXP_PIF) || (ecode_in == `EXP_PME) || (ecode_in == `EXP_PPI)
- || (ecode_in == `EXP_ADEF)  || (ecode_in == `EXP_ALE) || (ecode_in == `EXP_TLBR);
+ || (ecode_in == `EXP_ADEF)  || (ecode_in == `EXP_ALE) || (ecode_in == `EXP_TLBR)||
+ (d_exception == `EXP_PIL) || (d_exception == `EXP_PIS) 
+|| (d_exception == `EXP_PIF) || (d_exception == `EXP_PME) || (d_exception == `EXP_PPI)
+ || (d_exception == `EXP_ADEF)  || (d_exception == `EXP_ALE) || (d_exception == `EXP_TLBR);
 wire set_vppn;
 assign set_vppn = (ecode_in == `EXP_PIL) || (ecode_in == `EXP_PIS) 
 || (ecode_in == `EXP_PIF) || (ecode_in == `EXP_PME) || (ecode_in == `EXP_PPI)
@@ -127,15 +131,15 @@ always@(posedge clk)begin
         exception_cpu_interrupt <= 0;
     end
     else begin
-        exception_flag_out <= exception_flag_in | cpu_interrupt;
-        ecode_out <= ecode_in;
-        badv_out <= badv_in;
-        wen_badv <= exception_flag_in && set_badv;
-        tlb_exception <= exception_flag_in && (ecode_in == `EXP_TLBR);
+        exception_flag_out <= exception_flag_in | cpu_interrupt | (|d_exception);
+        ecode_out <= exception_flag_in? ecode_in: d_exception;
+        badv_out <= exception_flag_in ? badv_in : d_badv;
+        wen_badv <= (exception_flag_in | (|d_exception) )&& set_badv;
+        tlb_exception <= exception_flag_in  && (ecode_in == `EXP_TLBR);
         if(era_in!=0 && exception_cpu_interrupt) era_out <= era_in;
         else if (era_in !=0) era_out <= pc0;
         else era_out <= era_out;
-        wen_era <= exception_flag_in | cpu_interrupt;
+        wen_era <= exception_flag_in | cpu_interrupt | (|d_exception);
         vppn_out <= badv_in[18:0];
         wen_vppn <= exception_flag_in && set_vppn;
         exception_cpu_interrupt <= cpu_interrupt;
@@ -196,7 +200,7 @@ assign cond1 = uop1_reg[`UOP_COND];
                     ex2_wb_data_0 <= dcache_data;
                     ex2_wb_rd0 <= rd_dcache_out;
                     ex2_wb_data_0_valid <= 1;
-                    ex2_wb_we0 <= 1;
+                    ex2_wb_we0 <= 1 & (~(|d_exception)); //exception from dcache , don`t write
                 end
                 else begin
                     ex2_wb_data_0 <= 0;

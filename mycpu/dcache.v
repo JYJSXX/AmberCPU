@@ -300,18 +300,26 @@ module dcache #(
         default: exception_temp1 = 0;
         endcase
     end
-    assign exception_cache = ({7{!(op_buf && !llbit_buf && is_atom_buf)}} | {7{~cacop_en_buf}}) & exception_temp1;
-    assign exception_temp  = exception_flag ? forward_exception : ({7{!((cacop_en_buf && hit_invalid) || (op_buf && is_atom_buf && !llbit_buf))}} 
-                            & (tlb_exception == `EXP_ADEM ? tlb_exception : (exception_cache == 0 ? tlb_exception : exception_cache)));
-    assign exception_obuf = {7{((rready || wready) || cacop_en_buf)}} & (exception_sel ? exception_buf : exception_temp);
-    // assign d_exception_flag = exception_flag ? 1 : exception_obuf != 0;
-    reg  [6:0] exception_old;
-    wire [6:0] exception_new;
-    assign exception_new = exception_obuf;
-    always @(posedge clk) 
-        if(~rstn) exception_old <= 0;
-        else exception_old <= exception_new;
-    assign exception = ~exception_old & exception_new;
+    assign exception_temp = ({7{!(op_buf && !llbit_buf && is_atom_buf)}} | {7{~cacop_en_buf}}) & exception_temp1;
+    always @(posedge clk) begin
+        if(!rstn) begin
+            // dirty_mbuf <= 0;
+            exception_buf <= 0;
+        end
+        else if(req_buf_we) begin
+            // dirty_mbuf <= dirty_rdata;
+            exception_buf <= forward_exception;
+        end
+    end
+        reg exception_flag_buf;
+    always @(posedge clk) begin
+        if(!rstn)
+            exception_flag_buf <= 0;
+        else
+            exception_flag_buf <= exception_flag;
+    end
+    assign exception = exception_flag_buf ? exception_buf : (state != IDLE) ? exception_temp : 0;
+
 
     /* request buffer : lock the read request addr */
     // [31:0] addr, [63:32] wdata [67:64] wstrb
@@ -682,16 +690,7 @@ module dcache #(
             m_buf <= {tag_rdata[lru_sel[1]][19:0], w_index, 6'b0};
         end
     end
-    always @(posedge clk) begin
-        if(!rstn) begin
-            // dirty_mbuf <= 0;
-            exception_buf <= 0;
-        end
-        else if(req_buf_we) begin
-            // dirty_mbuf <= dirty_rdata;
-            exception_buf <= exception;
-        end
-    end
+
     
     /* memory visit settings*/
     assign d_raddr  = uncache_buf ? paddr_buf : {paddr_buf[31:12], req_buf[11:6],6'b0};
@@ -828,6 +827,7 @@ module dcache #(
             hit2_flag <= hit2_flag;
     end
 
+
     always @(*) begin
         // default assignments
         req_buf_we           = 0;
@@ -866,13 +866,14 @@ module dcache #(
             pbuf_we   = 1;
             if(cacop_en)
                 cacop_ready = 1;
-            if(exception_buf!=0) begin
+            if(exception!=0) begin
                 rready = !we_pipe;
                 wready = we_pipe;
             end
         end
         LOOKUP: begin
-            if(exception_buf == 0) begin
+            exception_sel = ~exception_flag_buf;
+            if(exception == 0) begin
                 pbuf_we = 1;
                 lru_we  = 0;
                 if(cacop_en)
