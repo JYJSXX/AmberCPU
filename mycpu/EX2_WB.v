@@ -198,14 +198,14 @@ end
                 ex2_wb_data_0 <= ex2_result0;
                 ex2_wb_data_0_valid <= 1;
                 ex2_wb_rd0 <= ex_rd0;
-                ex2_wb_we0 <= 1 & (~(|unwrite));
+                ex2_wb_we0 <= 1 & (~((|d_exception) || (|unwrite)) );
             end
             else if (uop0[`INS_MEM])begin
                 if(dcache_ready)begin
                     ex2_wb_data_0 <= dcache_data;
                     ex2_wb_rd0 <= rd_dcache_out;
                     ex2_wb_data_0_valid <= 1;
-                    ex2_wb_we0 <= 1 & (~(|unwrite)); //exception from dcache , don`t write
+                    ex2_wb_we0 <= 1 & (~((|d_exception) || (|unwrite))); //exception from dcache , don`t write
                 end
                 else begin
                     ex2_wb_data_0 <= 0;
@@ -252,7 +252,7 @@ end
                 ex2_wb_data_1 <= ex2_result1;
                 ex2_wb_data_1_valid <= 1;
                 ex2_wb_rd1 <= ex_rd1;
-                ex2_wb_we1 <= 1& (~(|unwrite));
+                ex2_wb_we1 <= 1& (~((|d_exception) || (|unwrite)));
             end
             
             else begin
