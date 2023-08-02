@@ -111,7 +111,7 @@ module IF1_FIFO(
     // reg [31:0]      tmp_icache_cookie_out;
     // reg             tmp_cacop_ready;
     // reg             tmp_cacop_complete;
-    always @(posedge clk or negedge rstn) begin
+    always @(posedge clk) begin
         if(!rstn)begin
             tmp<=0;//就绪
         end else if(flush)begin

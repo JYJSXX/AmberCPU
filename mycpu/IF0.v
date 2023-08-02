@@ -52,7 +52,7 @@ module IF0 (
     wire   [31:0]  npc  =   if0_allowin?fetch_pc:0;     
 
     always @(posedge clk) begin
-        if (~rstn) begin
+        if (!rstn) begin
             pc<=`PC_RESET;
         end
         else if(set_pc_from_WB)begin
