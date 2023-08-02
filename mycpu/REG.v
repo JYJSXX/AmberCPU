@@ -72,6 +72,13 @@ module regfile(
 );
 
     reg[31:0]  regs[0:31];
+	integer j;
+
+initial begin
+    for(j = 0; j < 32; j = j + 1)begin
+        regs[j] = 0;
+    end
+end
     //assign reg1 = regs[1];
 `ifdef DIFFTEST
 // assign reg_diff0  = (we3 && (waddr3 == 0)) ? wdata3: (debug0_wb_inst[30:28] =='b010 && ~debug0_wb_inst[ 24] &&we1 && (waddr1 == 0)) ? wdata1 : regs[0];
