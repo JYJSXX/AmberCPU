@@ -994,6 +994,7 @@
 `timescale 1ns/1ps
 `include "TLB.vh"
 `include "csr.vh"
+`include "exception.vh"
 module TLB#(
     parameter TLB_COOKIE_WIDTH = 34
     )(
@@ -1078,9 +1079,10 @@ module TLB#(
     output  reg                         exception_flag_out,
     input         [6:0]                 exception_in,
     output reg    [6:0]                 exception_out,
+    output   reg   [6:0]                     exception_out_i,
     input                               plv_1bit,
-    output     [6:0]                    tlb_exception_code_i,
-    output     [6:0]                    tlb_exception_code_d,
+    // output     [6:0]                    tlb_exception_code_i,
+    // output     [6:0]                    tlb_exception_code_d,
     input      [4:0]                    stable_counter
 );
 
@@ -1129,6 +1131,21 @@ integer j;
     output                              SOL_D_OUT,
 */
 
+//TLB INVALIDATE PART
+
+//TLB_EXP
+
+
+wire [6:0] exception0_tmp;
+wire [6:0] exception1_tmp;
+wire [6:0] exception0;
+wire [6:0] exception1;
+assign exception0_tmp[6:0] = {7{plv_1bit && VA_I[`TLB_VPPN_LEN]}} & `EXP_ADEF;
+assign exception0 = exception0_tmp[6:0] ;
+//assign tlbexception_flag0 = |exception0[6:0] & en0;
+assign exception1_tmp[6:0] = {7{plv_1bit && VA_D[`TLB_VPPN_LEN]}} & `EXP_ADEM;
+assign exception1 = exception1_tmp[6:0] & {7{en_d}};
+//assign tlbexception_flag1 = |exception1[6:0] & en1;
 always @(posedge clk or negedge rstn)begin
     if (~rstn)begin
         // CSR_PG_reg2 <= 0;
@@ -1148,6 +1165,9 @@ always @(posedge clk or negedge rstn)begin
         WDATA_D_reg2 <= 0;
         WSTRB_D_reg2 <= 0;
         rd_reg2 <= 0;
+        exception_flag_out<= 0;
+        exception_out<= 0;
+        exception_out_i <= 0;
         // TAG_OFFSET_D_reg3 <= 0;
         // TAG_OFFSET_I_reg3 <= 0;
     end
@@ -1170,6 +1190,7 @@ always @(posedge clk or negedge rstn)begin
             // TAG_OFFSET_D_reg3 <= 0;
             exception_flag_out <= 0;
             exception_out <= exception_in;
+            exception_out_i <= 0;
         end else if (~stall_d)begin
             VA_D_reg2 <= VA_D;
             en_d_reg2 <= en_d;
@@ -1180,8 +1201,8 @@ always @(posedge clk or negedge rstn)begin
             SOL_reg2 <= store_or_load;
             WDATA_D_reg2 <= WDATA_D;
             WSTRB_D_reg2 <= WSTRB_D;
-            exception_flag_out <= exception_flag_in;
-            exception_out <= exception_in;
+            exception_flag_out <= exception_flag_in | (|exception0);
+            exception_out <= exception_flag_in ? exception_in : exception0;
         end
         else begin
             VA_D_reg2 <= VA_D_reg2;
@@ -1206,6 +1227,7 @@ always @(posedge clk or negedge rstn)begin
             en_i_reg2 <= 1;
             TAG_OFFSET_I_reg2 <= TAG_OFFSET_I;
             tlb_cookie_reg2 <=tlb_cookie_in;
+            exception_out_i <= exception1;
         end
         else begin
             VA_I_reg2 <= VA_I_reg2;
