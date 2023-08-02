@@ -221,7 +221,7 @@ always@(posedge clk) begin
     end
 end
 always@(*)begin
-    ex1_allowin=ex2_allowin;
+    ex1_allowin=ex2_allowin & ~(reg_ex1_uop0[`INS_DIV] & ~div_ready);
     ex2_readygo =  1; //由于forward_stall停顿
 end
 
