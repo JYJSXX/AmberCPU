@@ -687,7 +687,7 @@ module dcache #(
             // dirty_mbuf <= 0;
             exception_buf <= 0;
         end
-        else begin
+        else if(req_buf_we) begin
             // dirty_mbuf <= dirty_rdata;
             exception_buf <= exception;
         end
@@ -866,6 +866,10 @@ module dcache #(
             pbuf_we   = 1;
             if(cacop_en)
                 cacop_ready = 1;
+            if(exception_buf!=0) begin
+                rready = !we_pipe;
+                wready = we_pipe;
+            end
         end
         LOOKUP: begin
             if(exception_buf == 0) begin
