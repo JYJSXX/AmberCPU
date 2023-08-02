@@ -43,7 +43,7 @@ module EX2_WB(
     input [31:0] dcache_data,
     input dcache_ready,
     input dcache_w_ready,
-
+    input [6:0] d_exception,
     //csr 三条读写csr的指令都要写
     input [31:0] csr_data_in,
     input csr_ready,
@@ -127,11 +127,11 @@ always@(posedge clk)begin
         exception_cpu_interrupt <= 0;
     end
     else begin
-        exception_flag_out <= exception_flag_in | cpu_interrupt;
-        ecode_out <= ecode_in;
+        exception_flag_out <= exception_flag_in | cpu_interrupt | (|d_exception);
+        ecode_out <= exception_flag_in? ecode_in: d_exception;
         badv_out <= badv_in;
         wen_badv <= exception_flag_in && set_badv;
-        tlb_exception <= exception_flag_in && (ecode_in == `EXP_TLBR);
+        tlb_exception <= exception_flag_in  && (ecode_in == `EXP_TLBR);
         if(era_in!=0 && exception_cpu_interrupt) era_out <= era_in;
         else if (era_in !=0) era_out <= pc0;
         else era_out <= era_out;

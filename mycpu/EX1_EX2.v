@@ -81,7 +81,6 @@ module EX1_EX2(
     input   [31:0] badv_in,
     input   excp_flag_in,
     input   [6:0] exception_in,
-    input   [6:0] d_exception,
     input   [31:0] d_badv,
     output  reg [31:0] ex1_ex2_badv,
     output  reg ex1_ex2_excp_flag,
@@ -165,8 +164,8 @@ always@(posedge clk) begin
         end
          ex1_ex2_is_priviledged_0<=reg_ex1_is_priviledged_0;
         ex1_ex2_badv<=excp_flag_in? badv_in : d_badv;
-        ex1_ex2_exception<=excp_flag_in? exception_in : d_exception;
-        ex1_ex2_excp_flag<=(excp_flag_in | (|d_exception[6])) & ~ex1_ex2_excp_flag;
+        ex1_ex2_exception<=excp_flag_in? exception_in : 0;
+        ex1_ex2_excp_flag<=(excp_flag_in ) & ~ex1_ex2_excp_flag;
 
         ex1_ex2_uop0<=reg_ex1_uop0;
         ex1_ex2_uop1<=reg_ex1_uop1;

@@ -866,14 +866,14 @@ module dcache #(
             pbuf_we   = 1;
             if(cacop_en)
                 cacop_ready = 1;
-            if(exception_buf!=0) begin
+            if(exception!=0) begin
                 rready = !we_pipe;
                 wready = we_pipe;
             end
         end
         LOOKUP: begin
             exception_sel = ~exception_flag_buf;
-            if(exception_buf == 0) begin
+            if(exception == 0) begin
                 pbuf_we = 1;
                 lru_we  = 0;
                 if(cacop_en)
