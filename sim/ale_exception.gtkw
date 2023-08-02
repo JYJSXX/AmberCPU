@@ -1,0 +1,63 @@
+[*]
+[*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
+[*] Wed Aug  2 02:57:17 2023
+[*]
+[dumpfile] "/home/vmware/Desktop/chiplab/sims/verilator/run_prog/log/func/func_lab9_log/simu_trace.fst"
+[dumpfile_mtime] "Wed Aug  2 02:55:40 2023"
+[dumpfile_size] 662619
+[savefile] "/home/vmware/Desktop/AmberCPU/sim/ale_exception.gtkw"
+[timestart] 1113923
+[size] 1846 814
+[pos] -1 -1
+*-3.000000 1113947 546597 879716 155258 976722 1042420 1113946 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] TOP.
+[treeopen] TOP.simu_top.
+[treeopen] TOP.simu_top.soc.
+[treeopen] TOP.simu_top.soc.cpu.
+[treeopen] TOP.simu_top.soc.cpu.u_dcache.
+[treeopen] TOP.simu_top.soc.cpu.u_EX0.
+[treeopen] TOP.simu_top.soc.cpu.u_EX1.
+[treeopen] TOP.simu_top.soc.cpu.u_EX2_WB.
+[treeopen] TOP.simu_top.soc.cpu.u_FIFO.
+[treeopen] TOP.simu_top.soc.cpu.u_icache.
+[treeopen] TOP.simu_top.soc.cpu.u_ID_REG.
+[treeopen] TOP.simu_top.soc.cpu.u_IF0.
+[treeopen] TOP.simu_top.soc.cpu.u_IF1_FIFO.
+[treeopen] TOP.simu_top.soc.cpu.u_MEMBUF.
+[treeopen] TOP.simu_top.soc.cpu.u_REG_EX1.
+[treeopen] TOP.simu_top.soc.cpu.u_REG_EX1.regfile1.
+[treeopen] TOP.simu_top.soc.cpu.u_TLB.
+[sst_width] 325
+[signals_width] 458
+[sst_expanded] 1
+[sst_vpaned_height] 318
+@22
+TOP.simu_top.soc.cpu.u_dcache.exception[6:0]
+TOP.simu_top.soc.cpu.u_dcache.forward_exception[6:0]
+TOP.simu_top.soc.cpu.u_EX2_WB.pc0[31:0]
+@28
+TOP.simu_top.soc.cpu.u_EX2_WB.exception_flag_in
+@22
+TOP.simu_top.soc.cpu.u_EX2_WB.ecode_in[6:0]
+TOP.simu_top.soc.cpu.u_EX2_WB.ecode_out[6:0]
+TOP.simu_top.soc.cpu.u_EX2_WB.debug0_wb_pc[31:0]
+TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+TOP.simu_top.soc.cpu.u_dcache.address[31:0]
+TOP.simu_top.soc.cpu.u_dcache.exception[6:0]
+TOP.simu_top.soc.cpu.u_dcache.exception_temp1[6:0]
+TOP.simu_top.soc.cpu.u_dcache.exception_cache[6:0]
+TOP.simu_top.soc.cpu.u_dcache.exception[6:0]
+TOP.simu_top.soc.cpu.u_dcache.exception_temp[6:0]
+TOP.simu_top.soc.cpu.u_dcache.exception_obuf[6:0]
+@28
+TOP.simu_top.soc.cpu.u_dcache.rready
+TOP.simu_top.soc.cpu.u_dcache.wready
+@22
+TOP.simu_top.soc.cpu.u_dcache.exception_new[6:0]
+TOP.simu_top.soc.cpu.u_dcache.exception_old[6:0]
+@28
+TOP.simu_top.soc.cpu.u_dcache.exception_sel
+@23
+TOP.simu_top.soc.cpu.u_dcache.state[3:0]
+[pattern_trace] 1
+[pattern_trace] 0
