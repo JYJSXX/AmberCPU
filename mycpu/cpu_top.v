@@ -704,7 +704,7 @@ idle_clk idle_clk1
     wire [31:0] ex2_wb_data_2;
 
     wire        forward_stall ;
-    wire        tlb_forward_stall ;
+    // wire        tlb_forward_stall ;
     
     `ifdef DIFFTEST
     wire [31:0] reg_diff[31:0];
@@ -774,7 +774,7 @@ idle_clk idle_clk1
         .aresetn                 ( aresetn                 ),
         .flush                   ( flush_to_reg_ex1        ),
         // .flush_by_exception      ( flush_by_exception      ),
-        .forward_stall           ( forward_stall | tlb_forward_stall         ),
+        .forward_stall           ( forward_stall          ),
         .reg_readygo             ( reg_readygo             ),
         .reg_allowin             ( reg_allowin             ),
         .ex_allowin              ( tlb_allowin              ),

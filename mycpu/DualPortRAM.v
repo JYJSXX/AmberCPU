@@ -12,6 +12,13 @@ module DualPortRAM
 
   reg [DATA_WIDTH-1:0] memory [(1<<ADDR_WIDTH)-1:0];
 
+  integer i;
+  initial begin
+    for(i=0; i<(1<<ADDR_WIDTH); i=i+1) begin
+      memory[i] = 0;
+    end
+  end
+
   always @(posedge clk) begin
     if (writeEnable) begin
       memory[writeAddr] <= writeData;
