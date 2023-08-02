@@ -304,7 +304,7 @@ module dcache #(
     assign exception_temp  = exception_flag ? forward_exception : ({7{!((cacop_en_buf && hit_invalid) || (op_buf && is_atom_buf && !llbit_buf))}} 
                             & (tlb_exception == `EXP_ADEM ? tlb_exception : (exception_cache == 0 ? tlb_exception : exception_cache)));
     assign exception_obuf = {7{((rready || wready) || cacop_en_buf)}} & (exception_sel ? exception_buf : exception_temp);
-    //assign d_exception_flag = exception_flag ? 1 : exception_obuf != 0;
+    // assign d_exception_flag = exception_flag ? 1 : exception_obuf != 0;
     reg  [6:0] exception_old;
     wire [6:0] exception_new;
     assign exception_new = exception_obuf;
@@ -687,7 +687,7 @@ module dcache #(
             // dirty_mbuf <= 0;
             exception_buf <= 0;
         end
-        else if(mbuf_we) begin
+        else begin
             // dirty_mbuf <= dirty_rdata;
             exception_buf <= exception;
         end
@@ -727,7 +727,7 @@ module dcache #(
             end
         end
         LOOKUP: begin
-            if(exception_buf != 0 || flush)
+            if(exception != 0 || flush)
                 next_state = IDLE;
             else if(ibar)
                 next_state = IBAR;
@@ -868,7 +868,7 @@ module dcache #(
                 cacop_ready = 1;
         end
         LOOKUP: begin
-            if(exception_temp == 0) begin
+            if(exception_buf == 0) begin
                 pbuf_we = 1;
                 lru_we  = 0;
                 if(cacop_en)
@@ -941,7 +941,7 @@ module dcache #(
                 cacop_complete  = 1;
         end
         CACOP: begin
-            if(exception_temp != 0) cacop_complete = 1;
+            if(exception_buf != 0) cacop_complete = 1;
             else if(store_tag || index_invalid) begin
                 tagv_clear = 1;
                 tagv_we    = tagv_way_sel;
