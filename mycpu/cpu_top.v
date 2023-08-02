@@ -2222,8 +2222,10 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         if(debug0_valid&&!set_pc_from_WB && debug0_wb_inst[31:0]!=`INST_NOP 
                                 && debug0_wb_pc != 0 )
             debug0_pc_reg<=debug0_wb_pc;
-        if(debug1_valid&&!set_pc_from_WB && debug1_wb_inst[31:0]!=`INST_NOP 
-                                && debug1_wb_pc != 0 )
+        if(debug1_wb_pc == 32'h1c00_0000)
+            debug1_pc_reg<=0;
+        else if(debug1_valid&&!set_pc_from_WB && debug1_wb_inst[31:0]!=`INST_NOP 
+                                && debug1_wb_pc != 0 && debug1_wb_pc != 32'h1c00_0000)
             debug1_pc_reg<=debug1_wb_pc;
         else if(~debug1_valid)
             debug1_pc_reg<=0;
