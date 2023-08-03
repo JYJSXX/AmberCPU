@@ -5,7 +5,7 @@
 采用计数器替换策略
 */
 module victim_cache#(
-    CAPACITY = 8 // 容量
+    CAPACITY = 4 // 容量
 )
 (
     input clk,
@@ -60,7 +60,8 @@ module victim_cache#(
     endgenerate
     assign victim_hit = |hit;
     //找到最早的hit
-    assign hit_index = hit[0] ? 0 : (hit[1] ? 1 : (hit[2] ? 2 : (hit[3] ? 3 : (hit[4] ? 4 : (hit[5] ? 5 : (hit[6] ? 6 : (hit[7] ? 7 : 0)))))));
+    // assign hit_index = hit[0] ? 0 : (hit[1] ? 1 : (hit[2] ? 2 : (hit[3] ? 3 : (hit[4] ? 4 : (hit[5] ? 5 : (hit[6] ? 6 : (hit[7] ? 7 : 0)))))));
+    assign hit_index = hit[0] ? 0 : (hit[1] ? 1 : (hit[2] ? 2 : (hit[3] ? 3 : 0 )));
     assign data_out = data[hit_index];
 
     //对we信号取边沿
