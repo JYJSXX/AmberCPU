@@ -68,7 +68,8 @@ module divider(
                     DIV_INIT = 1,
                     DIV_CALC = 2,
                     DIV_DONE = 3,
-                    DIV_HOLD = 4;
+                    DIV_HOLD = 4,
+                    DIV_PREPARE = 5;
 
     reg     [2:0]   div_state = DIV_IDLE, div_next_state = DIV_IDLE;
     assign ready = (div_state == DIV_DONE);
@@ -105,8 +106,9 @@ module divider(
             DIV_CALC:
             begin
                 if(shift_count == digit_dividend_reg - digit_divisor_reg + 1)
-                    div_next_state = DIV_DONE;
+                    div_next_state = DIV_PREPARE;
             end
+            DIV_PREPARE: div_next_state = DIV_DONE;
             DIV_DONE:
             begin
                 div_next_state = DIV_IDLE;
@@ -203,8 +205,6 @@ module divider(
                     if(shift_count == digit_dividend_reg - digit_divisor_reg + 1)
                     begin
                         shift <= 0;
-                        quotient <= sign_reg & (dividend_sign ^ divisor_sign) ? ~quotient_nxt + 1 : quotient_nxt;
-                        remainder <= (sign_reg & dividend_sign) ? ~(minus[63] ? dividend_reg[31:0] : minus[31:0]) + 1 : (minus[63] ? dividend_reg[31:0] : minus[31:0]);
                     end
 
                     else
@@ -225,6 +225,11 @@ module divider(
                             dividend_reg <= dividend_reg;
                         end
                     end
+                end
+                DIV_PREPARE: begin
+                    shift <= 0;
+                    quotient <= sign_reg & (dividend_sign ^ divisor_sign) ? ~quotient_nxt + 1 : quotient_nxt;
+                    remainder <= (sign_reg & dividend_sign) ? ~(minus[63] ? dividend_reg[31:0] : minus[31:0]) + 1 : (minus[63] ? dividend_reg[31:0] : minus[31:0]);
                 end
                 DIV_DONE:
                 begin
