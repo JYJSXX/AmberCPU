@@ -344,6 +344,7 @@ begin
     w_valid = 1'b0;
     b_ready = 1'b0;
     d_wready = 1'b0;
+    aw_addr = 32'b0;
     case(w_state)
         W_IDLE:
         begin

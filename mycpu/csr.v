@@ -214,10 +214,10 @@ wire [13:0] addr = waddr_reg;
 
         //ESTAT
         reg reg_soft_interrupt;
-always@(posedge clk)
-    reg_soft_interrupt<=|estat_is_soft;
-
     reg [`ESTAT_IS_SOFT] estat_is_soft=0;
+    always@(posedge clk)
+        reg_soft_interrupt<=|estat_is_soft;
+
     reg [`ESTAT_IS_HARD] estat_is_hard=0;
     reg [`ESTAT_IS_TI] estat_is_ti=0;
     //reg [`ESTAT_IS_IPI] estat_is_ipi;  

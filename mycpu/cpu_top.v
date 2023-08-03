@@ -1961,6 +1961,7 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .TLBINVLD_VA    ( invtlb_va        ),
         .store_or_load  ( reg_ex_cond0[2]  ),
         .plv_1bit         (crmd[0]         ),
+        .exception_in   (reg_ex_exception ),
         .exception_out_i( exception_out_i  ),
         .exception_out  ( tlb_exception_code_d  ),
         .stable_counter ( stable_counter[4:0])

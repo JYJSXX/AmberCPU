@@ -412,7 +412,8 @@ module dcache #(
     `endif
 
     /* 2-way data memory */
-    assign r_index = ((way0 || way1)&&ibar_state) ? dirty_index :addr[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
+    // assign r_index = ((way0 || way1)&&ibar_state) ? dirty_index :addr[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
+    assign r_index = addr[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
     assign w_index = address[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
 
     BRAM_bytewrite #(
@@ -473,7 +474,12 @@ module dcache #(
       .waddr    (tag_index),
       .din      (tag_in),
       .we       (tagv_we[0]),
+      `ifdef IBAR
       .ibar     (ibar_complete),
+       `endif
+       `ifndef IBAR
+      .ibar     (0),
+       `endif
       .dout     (tag_rdata[0])
     );
     BRAM_tagv #(
@@ -485,7 +491,12 @@ module dcache #(
       .waddr    (tag_index),
       .din      (tag_in),
       .we       (tagv_we[1]),
+      `ifdef IBAR
       .ibar     (ibar_complete),
+       `endif
+       `ifndef IBAR
+      .ibar     (0),
+       `endif
       .dout     (tag_rdata[1])
     );
 
@@ -556,12 +567,12 @@ module dcache #(
     assign tag          = (state == MISS) || (state == REFILL) ? paddr_buf[31:32-TAG_WIDTH]:p_addr[31:32-TAG_WIDTH]; // the tag of the request
     assign hit[0]       = valid[0] && (tag_rdata[0][TAG_WIDTH-1:0] == tag); // hit in way 0
     assign hit[1]       = valid[1] && (tag_rdata[1][TAG_WIDTH-1:0] == tag); // hit in way 1
-    // assign cache_hit    = |hit || victim_hit;
-    assign cache_hit    = |hit;
+    assign cache_hit    = |hit || victim_hit;
+    // assign cache_hit    = |hit;
     assign hit_way      = hit[0] ? 0 : 1; // 0 for way 0, 1 for way 1
     wire hit_way_valid;
-    // assign hit_way_valid = cache_hit && ~victim_hit ? hit_way : 0;
-    assign hit_way_valid = cache_hit ? hit_way : 0;
+    assign hit_way_valid = cache_hit && ~victim_hit ? hit_way : 0;
+    // assign hit_way_valid = cache_hit ? hit_way : 0;
     
     /* write control */
     assign wdata_pipe_512 = ({{(BIT_NUM-32){1'b0}}, wdata_pipe} << {address[1:0],3'b0}) << {address[BYTE_OFFSET_WIDTH-1:2], 5'b0};
@@ -581,8 +592,8 @@ module dcache #(
     // choose data from mem or return buffer 
     wire [BIT_NUM-1:0] o_rdata;
     reg [31:0]        rdata_cache;
-    // assign o_rdata = victim_hit ? victim_data : data_from_mem ? mem_rdata[hit_way_valid] : ret_buf; 
-    assign o_rdata = data_from_mem ? mem_rdata[hit_way_valid] : ret_buf; 
+    assign o_rdata = victim_hit ? victim_data : data_from_mem ? mem_rdata[hit_way_valid] : ret_buf; 
+    // assign o_rdata = data_from_mem ? mem_rdata[hit_way_valid] : ret_buf; 
     always @(*) begin
         case(req_buf[5:2])
         4'd0:  rdata_cache = o_rdata[31:0];
@@ -687,9 +698,12 @@ module dcache #(
             wbuf <= 0;
         end
         else if(wbuf_we) begin
+            `ifdef IBAR
             if(ibar_valid)          // 要写入的数据来自于ibar
                 wbuf <= mem_rdata[dirty_way];
-            else if(uncache)     // 要写入的数据来自于uncache
+            else 
+            `endif
+            if(uncache)     // 要写入的数据来自于uncache
                 wbuf <= {{(BIT_NUM-32){1'b0}}, wdata_pipe};
             else
                 wbuf <= lru_sel[1] ? mem_rdata[1] : mem_rdata[0];
@@ -713,6 +727,7 @@ module dcache #(
     `ifdef IBAR
     assign d_waddr  = ibar_valid ? dirty_addr[dirty_way] : uncache_buf ? paddr_buf : m_buf;
     `endif 
+
     `ifndef IBAR
     assign d_waddr  = uncache_buf ? paddr_buf : m_buf;
     `endif 
@@ -993,6 +1008,7 @@ module dcache #(
                 end
             end
         end
+        `ifdef IBAR
         IBAR: begin
             ibar_ready = 1;
             if(ibar_valid) begin
@@ -1008,6 +1024,7 @@ module dcache #(
         end
         IBAR_WAIT: 
             wfsm_reset      = 1;
+        `endif
         default:;
         endcase
     end
