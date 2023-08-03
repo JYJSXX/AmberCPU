@@ -182,7 +182,7 @@ module ID_decoder
 
     wire invtlb_invalid = is_invalid_tlb && inst[4:0]>5'h6; //INVTLB指令的op无效
     // wire invalid_instruction;
-    assign invalid_instruction=alu_op_invalid||type_invalid||br_invalid||inst[31]||invtlb_invalid;// ||exception!=0;
+    assign invalid_instruction=(alu_op_invalid||type_invalid||br_invalid||inst[31]||invtlb_invalid) && (inst!= 32'hFFFF_FFFE);// ||exception!=0;
     //当IF段出现异常时，认为
 
 
