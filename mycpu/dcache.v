@@ -605,7 +605,7 @@ module dcache #(
     end
     // uncached read
     wire [31:0] rdata_temp;
-    assign rdata_temp = uncache_buf ? ret_buf[511:480] : rdata_cache;
+    assign rdata_temp = (uncache_buf && state == WAIT_WRITE) ? ret_buf[511:480] : rdata_cache;
     // 根据掩码和符号位拓展，给出最终的读数据
     always @(*) begin
         case(wstrb_pipe)
