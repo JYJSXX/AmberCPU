@@ -710,7 +710,12 @@ module dcache #(
     
     /* memory visit settings*/
     assign d_raddr  = uncache_buf ? paddr_buf : {paddr_buf[31:12], req_buf[11:6],6'b0};
+    `ifdef IBAR
     assign d_waddr  = ibar_valid ? dirty_addr[dirty_way] : uncache_buf ? paddr_buf : m_buf;
+    `endif 
+    `ifndef IBAR
+    assign d_waddr  = uncache_buf ? paddr_buf : m_buf;
+    `endif 
     assign d_wdata  = wbuf;
 
     
