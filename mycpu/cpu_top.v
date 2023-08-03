@@ -795,7 +795,10 @@ idle_clk idle_clk1
     wire flush_by_exception;
     wire ex2_allowin;
     wire priv_jump;
-
+wire is_rdtimel0 = debug0_wb_inst[31:5] == 'b0000_0000_0000_0000_0110_0000_000;    
+wire is_rdtimeh0 = debug0_wb_inst[31:5] == 'b0000_0000_0000_0000_0110_0100_000;
+wire is_rdtimel1 = debug1_wb_inst[31:5] == 'b0000_0000_0000_0000_0110_0000_000;    
+wire is_rdtimeh1 = debug1_wb_inst[31:5] == 'b0000_0000_0000_0000_0110_0100_000;
     REG_EX1 u_REG_EX1(
         .clk                     ( clk                     ),
         .aresetn                 ( aresetn                 ),
@@ -837,8 +840,8 @@ idle_clk idle_clk1
         .we_0                    ( we_0                    ),
         
         .we_1                    ( we_1                    ),
-        .rd0_data                ( ex2_wb_data_0               ),
-        .rd1_data                ( ex2_wb_data_1               ),
+        .rd0_data                ( is_rdtimel0 ? stable_counter[31:0] : is_rdtimeh0 ? stable_counter[63:32] : ex2_wb_data_0               ),
+        .rd1_data                ( is_rdtimel1 ? stable_counter[31:0] : is_rdtimeh1 ? stable_counter[63:32] : ex2_wb_data_1               ),
         .id_reg_rj0              ( iq_rj0              ),
         .id_reg_rj1              ( iq_rj1              ),
         .id_reg_rk0              ( iq_rk0              ),
