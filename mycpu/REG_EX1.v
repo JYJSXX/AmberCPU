@@ -125,6 +125,8 @@ module  REG_EX1(
     output [31:0] reg_diff30,
     output [31:0] reg_diff31,
     input  [63:0] stable_counter,
+    input [31:0] debug0_wb_inst,
+    input [31:0] debug1_wb_inst,
     output reg [63:0] stable_counter_diff,
     input [31:0] debug0_wb_inst
     `endif
@@ -158,7 +160,10 @@ regfile regfile1( //内部自带写优先
     .raddr4(id_reg_rk1),
     .rdata4(rk1_data)
     `ifdef DIFFTEST
-    ,.reg_diff0(reg_diff0),
+
+    ,.debug0_wb_inst(debug0_wb_inst),
+    .debug1_wb_inst(debug1_wb_inst),
+    .reg_diff0(reg_diff0),
     .reg_diff1(reg_diff1),
     .reg_diff2(reg_diff2),
     .reg_diff3(reg_diff3),
@@ -190,7 +195,8 @@ regfile regfile1( //内部自带写优先
     .reg_diff29(reg_diff29),
     .reg_diff30(reg_diff30),
     .reg_diff31(reg_diff31),
-    .debug0_wb_inst(debug0_wb_inst)
+    .debug0_wb_inst(debug0_wb_inst),
+    .debug1_wb_inst(debug1_wb_inst)
     `endif
 );
 
