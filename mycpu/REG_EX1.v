@@ -127,7 +127,7 @@ module  REG_EX1(
     input  [63:0] stable_counter,
     input [31:0] debug0_wb_inst,
     input [31:0] debug1_wb_inst,
-    output reg [63:0] stable_counter_diff,
+    output reg [63:0] stable_counter_diff
     `endif
 );
 `ifdef DIFFTEST
