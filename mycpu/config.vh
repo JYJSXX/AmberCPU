@@ -10,3 +10,4 @@
 // `define AXI_PROFILE
 // `define LD_ST_PROFILE
 // `define CACHE_PROFILE
+`define UNCACHE

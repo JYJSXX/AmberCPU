@@ -379,8 +379,14 @@ always @(posedge clk)
             crmd_ie <= 0;
             crmd_da <= 1;
             crmd_pg <= 0;
+            `ifdef UNCACHE
             crmd_datf <=0; //TODO 
             crmd_datm <= 0;
+            `endif
+            `ifndef UNCACHE
+            crmd_datf <=1; //TODO 
+            crmd_datm <= 1;
+            `endif
         end else if(ertn) begin
             crmd_plv <= prmd_pplv;
             crmd_ie <= prmd_pie;
