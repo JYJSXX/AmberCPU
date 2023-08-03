@@ -62,6 +62,7 @@ module dirty_table(
     ibar状态机得到数据并写回后，发回ibar_ready信号，此时ibar_valid置为0, 从当前addr开始继续遍历
     重复上述过程直到dirty_num为0，结束ibar处理
     */
+    `ifdef IBAR
     always @(posedge clk) begin
         if(!rstn) begin
             csr <= IDLE;
@@ -148,7 +149,7 @@ module dirty_table(
             end
         endcase
     end
-
+    `endif 
 
 
 endmodule

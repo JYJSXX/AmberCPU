@@ -667,8 +667,9 @@ module dcache #(
         .r_addr(w_index),
         .w_addr(w_index),
         .w_data(dirty_wdata),
-        .r_data(dirty_rdata),
-        .ibar(ibar),
+        .r_data(dirty_rdata)
+        `ifdef IBAR
+        ,.ibar(ibar),
         .ibar_ready(ibar_ready),
         .ibar_valid(ibar_valid),
         .ibar_complete(ibar_complete),
@@ -676,6 +677,7 @@ module dcache #(
         .dirty_addr(dirty_index),
         .way0(way0),
         .way1(way1)
+        `endif
     );
 
 
@@ -801,6 +803,7 @@ module dcache #(
             else                    
                 next_state = WAIT_WRITE;
         end
+        `ifdef IBAR
         IBAR: begin
             if(ibar_complete)
                 next_state = IDLE;
@@ -825,6 +828,7 @@ module dcache #(
                 next_state = IBAR_WAIT;
             end
         end
+        `endif
         default: begin
             next_state = IDLE;
         end
