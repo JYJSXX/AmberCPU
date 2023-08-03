@@ -689,7 +689,7 @@ module dcache #(
         else if(wbuf_we) begin
             if(ibar_valid)          // 要写入的数据来自于ibar
                 wbuf <= mem_rdata[dirty_way];
-            else if(uncache_buf)     // 要写入的数据来自于uncache
+            else if(uncache)     // 要写入的数据来自于uncache
                 wbuf <= {{(BIT_NUM-32){1'b0}}, wdata_pipe};
             else
                 wbuf <= lru_sel[1] ? mem_rdata[1] : mem_rdata[0];
