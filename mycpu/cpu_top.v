@@ -215,7 +215,7 @@ idle_clk idle_clk1
     wire [1 :0]  pc_taken_out;
     wire [1 :0]  pc_taken;
     wire         pc_in_stall;
-    wire set_by_priv;
+    // wire set_by_priv;
     wire [31:0] pc_set_by_priv;
     wire    [1:0]flush_cause;
     wire    [31:0]tlb_pc_next;
@@ -231,7 +231,7 @@ idle_clk idle_clk1
         .pc_from_ID          ( pc_from_ID          ),
         .set_pc_from_EX      ( predict_dir_fail|predict_add_fail    ),
         .pc_from_EX          ( fact_tpc            ),
-        .set_pc_from_WB      ( ex2_wb_excp_flag |  set_by_priv  ),
+        .set_pc_from_WB      ( ex2_wb_excp_flag |  flush_by_priv  ),
         .pc_from_WB          ( ex2_wb_excp_flag?pc_from_WB : pc_set_by_priv          ),
         // .set_pc_from_PRIV    ( set_pc_from_PRIV    ),
         .pc_from_PRIV        ( pc_from_PRIV        ),
@@ -794,18 +794,20 @@ idle_clk idle_clk1
     wire wready_dcache;
     wire flush_by_exception;
     wire ex2_allowin;
+    wire priv_jump;
 
     REG_EX1 u_REG_EX1(
         .clk                     ( clk                     ),
         .aresetn                 ( aresetn                 ),
         .flush                   ( flush_to_reg_ex1        ),
-        // .flush_by_exception      ( flush_by_exception      ),
+        .flush_by_exception      ( flush_by_exception      ),
         .forward_stall           ( forward_stall          ),
         .reg_readygo             ( reg_readygo             ),
         .reg_allowin             ( reg_allowin             ),
         .ex_allowin              ( tlb_allowin              ),
         .ex_readygo              ( tlb_readygo              ),
-        .flush_by_priv           ( flush_by_priv   | flush_by_exception        ),
+        .priv_jump               ( priv_jump               ),
+        .flush_by_priv           ( flush_by_priv          ),
         .id_reg_pc0              ( iq_pc0              ),
         .id_reg_pc1              ( iq_pc1              ),
         .id_reg_pc_next          ( iq_pc_next          ),
@@ -1214,7 +1216,7 @@ wire [31:0]     remainder_reg ;
         .aclk                 ( aclk                 ),
         .aresetn              ( aresetn              ),
         .flush                ( flush_from_ex1              ),
-        .set_by_priv         ( set_by_priv          ),
+        // .set_by_priv         ( set_by_priv          ),
         .flush_by_exception        ( flush_by_exception       ),
         .pc_set_by_priv         ( pc_set_by_priv        ),
         .csr_era                ( csr_era                ),
@@ -1254,7 +1256,7 @@ wire [31:0]     remainder_reg ;
         .ex_rj1               ( reg_ex_rj1               ),
         .ex_rk0               ( reg_ex_rk0               ),
         .ex_rk1               ( reg_ex_rk1               ),
-
+        .priv_jump            ( priv_jump            ),
         .ibar                 ( ibar                 ),
         .csr_flag_from_ex     ( csr_flag_from_ex     ),
         .tlb_flag_from_ex     ( tlb_flag_from_ex     ),

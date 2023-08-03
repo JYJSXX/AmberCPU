@@ -50,8 +50,8 @@ module FIFO(
     output reg [1 :0] fifo_branch_flag
     
 );
-    localparam      BUF_DEPTH = 2,
-                    LOG_BUF_DEPTH = 1;
+    localparam      BUF_DEPTH = 16,
+                    LOG_BUF_DEPTH = 4;
     /*
             fifo_space=1:inst=3
             fifo_space=2:inst=57
