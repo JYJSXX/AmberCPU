@@ -417,9 +417,7 @@ module icache #(
     wire [25:0] victim_rtag;
     assign victim_rtag = miss_state ? {victim_rtag_buf,req_buf[11:6]}: {tag,req_buf[11:6]};
     
-    victim_cache #(
-        .CAPACITY(8)
-    ) victim_cache (
+    victim_cache victim_cache (
         .clk        (clk),
         .rstn       (rstn),
         .r_tag      (victim_rtag),

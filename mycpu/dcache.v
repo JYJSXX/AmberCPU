@@ -550,9 +550,7 @@ module dcache #(
     assign victim_hit = !op_buf ? victim_hit_temp && (hit == 0) : 0;
 
 
-    victim_cache #(
-        .CAPACITY(8)
-    ) victim_cache (
+    victim_cache victim_cache (
         .clk        (clk),
         .rstn       (rstn),
         .r_tag      (victim_rtag),

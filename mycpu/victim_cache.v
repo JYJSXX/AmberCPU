@@ -4,9 +4,7 @@
 采用全相连的方式
 采用计数器替换策略
 */
-module victim_cache#(
-    CAPACITY = 4 // 容量
-)
+module victim_cache
 (
     input clk,
     input rstn,
@@ -20,6 +18,8 @@ module victim_cache#(
     input we,
     input [511:0] data_in
 );
+    localparam COUNTER_WIDTH = 2;
+    localparam CAPACITY = 4; // 容量
     wire [5:0] windex;
     wire [19:0] wtag;
     wire victim_valid;
@@ -47,7 +47,6 @@ module victim_cache#(
         end
     endgenerate
     //计数器，每次有写入时加1，不断循环
-    localparam COUNTER_WIDTH = funclog2(CAPACITY);
     reg [COUNTER_WIDTH-1:0] counter;
 
     //读，类似于Dram，组合逻辑
@@ -62,7 +61,7 @@ module victim_cache#(
     //找到最早的hit
     // assign hit_index = hit[0] ? 0 : (hit[1] ? 1 : (hit[2] ? 2 : (hit[3] ? 3 : (hit[4] ? 4 : (hit[5] ? 5 : (hit[6] ? 6 : (hit[7] ? 7 : 0)))))));
     assign hit_index = hit[0] ? 0 : (hit[1] ? 1 : (hit[2] ? 2 : (hit[3] ? 3 : 0 )));
-    assign data_out = data[hit_index];
+    assign data_out = |hit ? data[hit_index] : 0;
 
     //对we信号取边沿
     reg we_pre;
