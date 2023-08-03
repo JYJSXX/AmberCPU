@@ -230,7 +230,7 @@ always @ (posedge aclk)begin
     end
 end
 
-assign aw_addr = d_waddr;
+// assign aw_addr = aw_addr_reg;
 
 localparam [1:0] 
                 W_IDLE = 0,
@@ -304,7 +304,35 @@ end
 
 assign w_last = (w_count == d_wlen[4:0]);
 wire [3:0] d_wstrb_true = d_wstrb << d_waddr[1:0];
-assign w_strb = d_wstrb_true;
+
+
+reg [31:0] wr_addr_reg = 0;
+reg [7:0] wr_len_reg = 0;
+reg [2:0] wr_size_reg = 0;
+reg [3:0] w_strb_reg = 0;
+assign w_strb = w_strb_reg;
+// reg [31:0] w_data_reg = 0;
+
+always @ (posedge aclk)begin
+    if(~aresetn)begin
+        wr_addr_reg <= 0;
+        wr_len_reg <= 0;
+        wr_size_reg <= 0;
+        w_strb_reg <= 0;
+        // w_data_reg <= 0;
+
+    end
+    else if(w_state == W_IDLE)begin
+        if(d_wvalid)begin
+            wr_addr_reg <= d_waddr;
+            wr_len_reg <= d_wlen;
+            wr_size_reg <= d_wsize;
+            w_strb_reg <= d_wstrb_true;
+            // w_data_reg <= d_wdata_true;
+        end
+    end
+end
+
 always @(*)
 begin
     aw_len = 15;
@@ -324,13 +352,15 @@ begin
                 aw_valid = 1'b1;
                 aw_len = d_wlen;
                 aw_size = d_wsize;
+                aw_addr = d_waddr;
             end
         end
         W_DADDR:
         begin
             aw_valid = 1'b1;
-            aw_len = d_wlen;
-            aw_size = d_wsize;
+            aw_len = wr_len_reg;
+            aw_size = wr_size_reg;
+            aw_addr = wr_addr_reg;
         end
         W_DDATA:
         begin
