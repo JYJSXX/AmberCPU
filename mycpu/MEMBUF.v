@@ -183,8 +183,8 @@ always @ (posedge clk)begin
         ex1_excp_flag <= 0;
         ex1_exception <= 0;
         ex0_ex1_csr_data <= 0;
-        quotient_reg <= 0;
-        remainder_reg <= 0;
+        // quotient_reg <= 0;
+        // remainder_reg <= 0;
     end
     else if (tlb_readygo && tlb_allowin && ex_allowin)begin
         tlb_ex_pc0 <= reg_ex_pc0;
@@ -236,6 +236,18 @@ always @ (posedge clk)begin
         ex1_excp_flag <= tlb_excp_flag;
         ex1_exception <= tlb_exception;
         ex0_ex1_csr_data <= csr_rd_data;
+        // quotient_reg <= quotient;
+        // remainder_reg <= remainder;
+
+    end
+end
+
+always @ (posedge clk)begin
+  if (~aresetn)begin
+        quotient_reg <= 0;
+        remainder_reg <= 0;
+  end
+    else begin
         quotient_reg <= quotient;
         remainder_reg <= remainder;
 

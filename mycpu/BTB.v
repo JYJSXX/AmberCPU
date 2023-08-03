@@ -75,6 +75,7 @@ module BTB #(
 
 
     wire                            we;
+    wire [31:0]                     PCAdd;
     wire [31:0]                     guess_pc;
     wire [PC_INDEX_WIDTH-1:0]       INDEX;
     wire [PC_INDEX_WIDTH-1:0]       FACT_INDEX;
@@ -87,7 +88,6 @@ module BTB #(
     wire                            Uhit;
     wire                            check_Bhit;
     wire                            check_Uhit;
-    wire [31:0]                     PCAdd;
 
 
 
