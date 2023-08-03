@@ -2245,13 +2245,13 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         if(tlbfill_valid)
             fill_index_diff<=stable_counter[`TLBIDX_WIDTH-1:0];
 
+        assign    cmt_stable_counter = rf_stable_counter;
     always @(posedge aclk)
         if(~aresetn) begin
             {cmt_valid0,cmt_valid1,cmt_pc0,cmt_pc1,cmt_inst0,cmt_inst1,cmt_wen0,cmt_wen1,cmt_wdest0,
             cmt_wdest1,cmt_wdata0,cmt_wdata1,cmt_excp_valid,cmt_ecode,cmt_vaddr_diff,cmt_paddr_diff,cmt_data_diff}<=0;
         end else begin
             //防止出现eu0不提交但eu1提交
-            cmt_stable_counter <= ex_stable_counter;
             if(ex_eu0_en==0&&ex_eu1_en!=0) begin
                 cmt_valid0  <= debug0_valid&&!set_pc_from_WB && debug0_wb_inst[31:0]!=`INST_NOP 
                                 && debug0_wb_pc != 0 

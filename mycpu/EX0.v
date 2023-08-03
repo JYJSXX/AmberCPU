@@ -321,7 +321,7 @@ assign a_1 = uop0[`UOP_SRC1] == `CTRL_SRC1_RF ? rj0_data_o :
             uop0[`UOP_SRC1] == `CTRL_SRC1_ZERO ? 0 :tid;
 assign b_1= uop0[`UOP_SRC2] == `CTRL_SRC2_RF ? rk0_data_o : 
             uop0[`UOP_SRC2] == `CTRL_SRC2_IMM ? imm0 :
-            uop0[`UOP_SRC2] == `CTRL_SRC2_CNTL ? stable_counter[31:0] : stable_counter[63:32];
+            uop0[`UOP_SRC2] == `CTRL_SRC2_CNTL ? stable_counter[31:0] + 3 : stable_counter[63:32];
 EX_ALU ex_alu1(
     .ctrl(cond0),
     .a(a_1),
@@ -366,7 +366,7 @@ assign a_2 = uop1[`UOP_SRC1] == `CTRL_SRC1_RF ? rj1_data_o :
             uop1[`UOP_SRC1] == `CTRL_SRC1_ZERO ? 0 :tid;
 assign b_2= uop1[`UOP_SRC2] == `CTRL_SRC2_RF ? rk1_data_o : 
             uop1[`UOP_SRC2] == `CTRL_SRC2_IMM ? imm1:
-            uop1[`UOP_SRC2] == `CTRL_SRC2_CNTL ? stable_counter[31:0] : stable_counter[63:32];
+            uop1[`UOP_SRC2] == `CTRL_SRC2_CNTL ? stable_counter[31:0] + 3: stable_counter[63:32];
 EX_ALU ex_alu2(
     .ctrl(cond1),
     .a(a_2),
