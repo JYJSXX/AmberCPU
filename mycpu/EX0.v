@@ -13,6 +13,7 @@ module EX0(
     input   [31:0] inst0,
     input   [31:0] inst1,
     input   CMT,
+    input   priv_jump,
     input   is_ALU_0,
     input   is_ALU_1,
     input   is_syscall_0,
@@ -172,9 +173,8 @@ module EX0(
     output [18:0] invtlb_va,
 
     //priv
-    output reg set_by_priv,
     output reg [31:0] pc_set_by_priv,
-    output reg flush_by_priv,
+    output     flush_by_priv,
     //exception
     input  plv, //从csr_crmd[0]
     input excp_flag_in,
@@ -197,6 +197,8 @@ module EX0(
 
 
 );
+reg set_by_priv = 0;
+assign flush_by_priv = set_by_priv & ~priv_jump;
 wire [31:0] rj0_data_o;
 wire [31:0] rk0_data_o;
 wire [31:0] rk1_data_o;
@@ -223,14 +225,12 @@ assign tlb_flag_from_ex = uop0[`INS_TLB] && (inst0[11:10] == 2'b00 || inst0[11:1
 
     always@(*) begin
         if(is_priviledged_0 & privilege_ready) begin
-            set_by_priv = 1;
             pc_set_by_priv = uop0[`INS_ERTN] ? csr_era : (privilege_ready ? pc0 +4 : pc0);
-            flush_by_priv = 1;
+            set_by_priv = 1;
         end
         else begin
             set_by_priv = 0;
             pc_set_by_priv = 0;
-            flush_by_priv = 0;
         end
         
     end
