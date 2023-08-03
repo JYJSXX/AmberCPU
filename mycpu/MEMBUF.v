@@ -3,7 +3,7 @@ module MEMBUF(
     input clk,
     input aresetn,
     input flush,
-    input forward_stall,
+    // input forward_stall,
     input flush_by_exception,
     input tlb_readygo,
     output tlb_allowin,
@@ -265,7 +265,7 @@ end
 
 // assign tlb_forward_stall = forward_stall1 | forward_stall2;
 
-assign ex_readygo = ~forward_stall;
+assign ex_readygo = 1;
 assign tlb_allowin = ex_allowin & ~(reg_ex_is_priviledged_0 & ~privilege_ready) & ~(|ex1_exception || exception_tobedone) & ~(reg_ex_uop0[`INS_DIV] & ~div_ready);
 
 endmodule
