@@ -21,7 +21,7 @@ module sram_axi(
     output  reg                 r_ready,        //读数据准备好
 
     //aw channel    
-    output          [31:0]      aw_addr,        //写地址
+    output  reg     [31:0]      aw_addr,        //写地址
     output  reg     [2:0]       aw_size,        //写大小
     output  reg     [7:0]       aw_len,         //写长度
     output  reg     [1:0]       aw_burst,       //写突发类型
