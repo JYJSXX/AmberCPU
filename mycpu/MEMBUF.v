@@ -3,7 +3,7 @@ module MEMBUF(
     input clk,
     input aresetn,
     input flush,
-    input forward_stall,
+    // input forward_stall,
     input flush_by_exception,
     input tlb_readygo,
     output tlb_allowin,
