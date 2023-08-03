@@ -5,8 +5,6 @@ module regfile(
 	input clk,
 	input aresetn,
 	
-	input [31:0] debug0_wb_inst,
-	input [31:0] debug1_wb_inst,
 	//写端口1
 	input               we1,
 	input[4:0]    		waddr1,
@@ -68,7 +66,8 @@ module regfile(
 	output [31:0] reg_diff29,
 	output [31:0] reg_diff30,
 	output [31:0] reg_diff31,
-	input [31:0] debug0_wb_inst
+	input [31:0] debug0_wb_inst,
+	input [31:0] debug1_wb_inst,
 	`endif
 	
 );
