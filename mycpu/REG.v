@@ -66,7 +66,8 @@ module regfile(
 	output [31:0] reg_diff29,
 	output [31:0] reg_diff30,
 	output [31:0] reg_diff31,
-	input [31:0] debug0_wb_inst
+	input [31:0] debug0_wb_inst,
+	input [31:0] debug1_wb_inst,
 	`endif
 	
 );
@@ -153,11 +154,37 @@ assign reg_diff31 = regs[31];
 
         
         case ({we2, we1})
-		2'b01: if (waddr1 != 0) regs[waddr1] <= wdata1;
-		2'b10: if (waddr2 != 0) regs[waddr2] <= wdata2;
+		2'b01: if (waddr1 != 0) begin
+			`ifdef DIFF_TEST
+			if(debug0_wb_inst[31:4]==27'b0000_0000_0000_0000_0000_1100_000)
+				regs[waddr1] <= wdata1+2;
+			else 
+		    `endif
+			regs[waddr1] <= wdata1;
+		end
+		2'b10: if (waddr2 != 0) begin
+			`ifdef DIFF_TEST
+			if(debug1_wb_inst[31:4]==27'b0000_0000_0000_0000_0000_1100_000)
+				regs[waddr2] <= wdata2+2;
+			else 
+		    `endif
+			regs[waddr2] <= wdata2;
+		end
 		2'b11: begin
-		     if (waddr2 != 0) regs[waddr2] <= wdata2;
+		     if (waddr2 != 0) begin
+				`ifdef DIFF_TEST
+			if(debug1_wb_inst[31:4]==27'b0000_0000_0000_0000_0000_1100_000)
+				regs[waddr2] <= wdata2+2;
+			else 
+		    `endif
+				regs[waddr2] <= wdata2;
+			 end
 		     if (waddr1 != waddr2 && waddr1 != 0) begin // 没有发生“写后写”（WAW）相关
+			 `ifdef DIFF_TEST
+			if(debug0_wb_inst[31:4]==27'b0000_0000_0000_0000_0000_1100_000)
+				regs[waddr1] <= wdata1+2;
+			else 
+		    `endif
 		         regs[waddr1] <= wdata1;
 		     end
 		 end

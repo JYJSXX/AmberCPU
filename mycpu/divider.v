@@ -209,6 +209,8 @@ module divider(
                     if(shift_count == digit_dividend_reg - digit_divisor_reg + 1)
                     begin
                         shift <= 0;
+                        quotient <= sign_reg & (dividend_sign ^ divisor_sign) ? ~quotient_nxt + 1 : quotient_nxt;
+                        remainder <= (sign_reg & dividend_sign) ? ~(minus[63] ? dividend_reg[31:0] : minus[31:0]) + 1 : (minus[63] ? dividend_reg[31:0] : minus[31:0]);
                     end
 
                     else
