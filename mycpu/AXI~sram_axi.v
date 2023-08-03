@@ -296,7 +296,7 @@ begin
         w_count <= 5'b0;
     else if (w_last & w_valid & w_ready)
         w_count <= 5'b0;
-    else if(w_ready)
+    else if(w_ready & w_valid)
         w_count <= w_count + 1;
     else
         w_count <= w_count;

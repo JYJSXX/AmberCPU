@@ -939,7 +939,7 @@ module dcache #(
             end
         end
         MISS: begin
-            mbuf_we = 1;
+            // mbuf_we = 1;
             d_rvalid = 1;
             if(uncache_buf) begin
                 d_rlen = 8'd0;
