@@ -92,10 +92,10 @@ module icache #(
     assign rready = rready_temp & flush_valid;
 
     // statistics
-    reg     [63:0]              total_time;
-    reg     [63:0]              total_request;
-    reg     [63:0]              total_hit;
-    reg     [64:0]              miss_time;
+    reg     [63:0]              total_time = 0;
+    reg     [63:0]              total_request = 0;
+    reg     [63:0]              total_hit = 0;
+    reg     [64:0]              miss_time = 0;
 
     /* main FSM */
     localparam [2:0] 
@@ -349,9 +349,10 @@ module icache #(
     assign victim_sel = lru_sel[0] ? 0 : 1;
     wire victim_we;
     assign victim_we = missbuf_we && valid[victim_sel] && flush_valid;  //&& !miss_flush_flag
-    reg [25:0] victim_w_tag_buf;
-    reg        victim_flush_miss;
-    reg [25:0] victim_w_tag;
+    reg [25:0] victim_w_tag_buf = 0;
+    reg        victim_flush_miss = 0;
+    reg [25:0] victim_w_tag = 0;
+    reg miss_flush_flag = 0;
     always @(posedge clk) begin
         if(!rstn) begin
             victim_w_tag <= 0;
@@ -382,7 +383,6 @@ module icache #(
         end
     end
         // stage 2: output
-    reg miss_flush_flag;
     always @(posedge clk) begin
         if(!rstn)
             miss_flush_flag <= 0;
@@ -525,13 +525,13 @@ module icache #(
         endcase
     end
 
-    reg i_rready_reg;
-    always @(posedge clk) begin
-        if(!rstn)
-            i_rready_reg <= 0;
-        else
-            i_rready_reg <= i_rready;
-    end
+    // reg i_rready_reg;
+    // always @(posedge clk) begin
+    //     if(!rstn)
+    //         i_rready_reg <= 0;
+    //     else
+    //         i_rready_reg <= i_rready;
+    // end
 
     always @(*) begin
         req_buf_we              = 0;

@@ -61,6 +61,7 @@ module core_top(
     output [ 4:0] t_debug1_wb_rf_wnum,
     output [31:0] t_debug1_wb_rf_wdata,
     `endif
+    `ifndef SIMUTEST
     //debug
     output [31:0] debug0_wb_pc,
     output [ 3:0] debug0_wb_rf_wen,
@@ -72,6 +73,7 @@ module core_top(
     output [ 3:0] debug1_wb_rf_wen,
     output [ 4:0] debug1_wb_rf_wnum,
     output [31:0] debug1_wb_rf_wdata,
+    `endif
 
     input  break_point,
     input  infor_flag, 
@@ -156,7 +158,7 @@ idle_clk idle_clk1
     wire flush_from_reg;
     wire flush_from_id;
     wire flush_from_if1;
-    wire flush_from_if1_fifo;
+    // wire flush_from_if1_fifo;
 
     wire flush_to_ex2_wb;  
     wire flush_to_ex1_ex2; 
@@ -195,7 +197,7 @@ idle_clk idle_clk1
     wire set_pc_from_WB;
     assign set_pc_from_WB =ex2_wb_excp_flag ;
     wire [31:0]pc_from_WB;
-    wire set_pc_from_PRIV;//from if1_fifo
+    // wire set_pc_from_PRIV;//from if1_fifo
     wire [31:0]pc_from_PRIV;
     wire flush_by_priv;
 
@@ -231,7 +233,7 @@ idle_clk idle_clk1
         .pc_from_EX          ( fact_tpc            ),
         .set_pc_from_WB      ( ex2_wb_excp_flag |  set_by_priv  ),
         .pc_from_WB          ( ex2_wb_excp_flag?pc_from_WB : pc_set_by_priv          ),
-        .set_pc_from_PRIV    ( set_pc_from_PRIV    ),
+        // .set_pc_from_PRIV    ( set_pc_from_PRIV    ),
         .pc_from_PRIV        ( pc_from_PRIV        ),
         .pred_pc             ( pred_pc             ),
         .pred_taken          ( pred_taken          ),
@@ -349,16 +351,16 @@ idle_clk idle_clk1
         .icache_pc_next             ( icache_pc_next             ), // ?
         .icache_inst0               ( icache_rdata[31:0]         ),
         .icache_inst1               ( icache_rdata[63:32]        ),
-        .ibar_flag                  ( ibar_flag                  ),
-        .ibar_flag_from_ex          ( ibar                       ),
-        .csr_flag                   ( csr_flag                   ),
-        .csr_flag_from_ex           ( csr_flag_from_ex           ),
-        .tlb_flag                   ( tlb_flag                   ),
-        .tlb_flag_from_ex           ( tlb_flag_from_ex           ),
-        .priv_flag                  ( priv_flag                  ),
+        // .ibar_flag                  ( ibar_flag                  ),
+        // .ibar_flag_from_ex          ( ibar                       ),
+        // .csr_flag                   ( csr_flag                   ),
+        // .csr_flag_from_ex           ( csr_flag_from_ex           ),
+        // .tlb_flag                   ( tlb_flag                   ),
+        // .tlb_flag_from_ex           ( tlb_flag_from_ex           ),
+        // .priv_flag                  ( priv_flag                  ),
         //.pc_from_PRIV               ( pc_from_PRIV               ),
-        .set_pc_from_PRIV           ( set_pc_from_PRIV           ),
-        .flush_from_if1_fifo        ( flush_from_if1_fifo        ),
+        // .set_pc_from_PRIV           ( set_pc_from_PRIV           ),
+        // .flush_from_if1_fifo        ( flush_from_if1_fifo        ),
         .icache_idle                ( i_idle                     ),
         .dcache_idle                ( d_idle                     ),
         .csr_done                   ( csr_done                   ),

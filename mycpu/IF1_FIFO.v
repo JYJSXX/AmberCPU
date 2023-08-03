@@ -36,16 +36,16 @@ module IF1_FIFO(
     
 
 
-    input  [1:0]        ibar_flag,//from pre-decoder
-    input               ibar_flag_from_ex,
-    input  [1:0]        csr_flag,
-    input               csr_flag_from_ex,
-    input  [1:0]        tlb_flag,
-    input               tlb_flag_from_ex,
-    input  [1:0]        priv_flag,
+    // input  [1:0]        ibar_flag,//from pre-decoder
+    // input               ibar_flag_from_ex,
+    // input  [1:0]        csr_flag,
+    // input               csr_flag_from_ex,
+    // input  [1:0]        tlb_flag,
+    // input               tlb_flag_from_ex,
+    // input  [1:0]        priv_flag,
     // output [31:0]       pc_from_PRIV,
-    output              set_pc_from_PRIV,
-    output              flush_from_if1_fifo,
+    // output              set_pc_from_PRIV,
+    // output              flush_from_if1_fifo,
     input               icache_idle,
     input               dcache_idle,
     input               csr_done,

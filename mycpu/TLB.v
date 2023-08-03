@@ -1048,9 +1048,9 @@ module TLB#(
 
     //Priv      
     input                               TLBSRCH_valid,
-    output reg                          TLBSRCH_ready,
-    output reg                          TLBSRCH_hit,
-    output reg  [4:0]                   TLBSRCH_INDEX,
+    output                              TLBSRCH_ready,
+    output                              TLBSRCH_hit,
+    output      [4:0]                   TLBSRCH_INDEX,
 
     input       [4:0]                   TLBRD_INDEX,
     input                               TLBRD_valid,
@@ -1085,6 +1085,12 @@ module TLB#(
     // output     [6:0]                    tlb_exception_code_d,
     input      [4:0]                    stable_counter
 );
+
+assign TLBSRCH_ready = 0, TLBSRCH_hit = 0, TLBSRCH_INDEX = 0;
+assign TLBRD_ready = 0, TLBRD_hit = 0, TLB_CPR = 0, TLB_TRANS_1 = 0, TLB_TRANS_2 = 0;
+assign TLBWR_ready = 0;
+assign TLBFILL_ready = 0;
+assign TLBINVLD_ready = 0;
 
 reg [`TLB_VPPN_LEN : 0] VA_I_reg2 = 0;
 reg [`TLB_VPPN_LEN : 0] VA_D_reg2 = 0;
@@ -1170,7 +1176,7 @@ always @(posedge clk)begin
         exception_flag_out<= 0;
         exception_out<= 0;
         exception_out_i <= 0;
-        // TAG_OFFSET_D_reg3 <= 0;
+        // TAG_OFFSET_D_reg3 <= 0;flush_from_if1_fifo
         // TAG_OFFSET_I_reg3 <= 0;
     end
     else begin 

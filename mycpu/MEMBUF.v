@@ -250,6 +250,7 @@ always @ (posedge clk)begin
     else begin
         quotient_reg <= quotient;
         remainder_reg <= remainder;
+
     end
 end
 

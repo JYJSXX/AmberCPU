@@ -16,7 +16,7 @@ module IF0 (
     input [31:0]pc_from_EX,
     input set_pc_from_WB,
     input [31:0]pc_from_WB,
-    input set_pc_from_PRIV,//from if1_fifo
+    // input set_pc_from_PRIV,//from if1_fifo
     input [31:0]pc_from_PRIV,
     // input [31:0]fact_tpc,
 
@@ -76,9 +76,9 @@ module IF0 (
         else if(set_pc_from_ID)begin
             pc<=pc_from_ID;
         end 
-        else if(set_pc_from_PRIV)begin
-            pc<=pc_from_PRIV;
-        end
+        // else if(set_pc_from_PRIV)begin
+        //     pc<=pc_from_PRIV;
+        // end
         else if (if0_readygo&&if0_allowin) begin
             // if(branch_stat)begin
             //     pc<={pc_next[31:3],3'b000};

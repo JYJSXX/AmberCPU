@@ -227,78 +227,78 @@ always@(*)begin
     else stall = 0;
 end
 
-reg forward_flag_j0_ps = 0;
-reg forward_flag_j1_ps = 0;
-reg forward_flag_k0_ps = 0;
-reg forward_flag_k1_ps = 0;
-always@(posedge clk) begin
-    if(~aresetn || !stall_D) 
-        forward_flag_j0_ps<=0;
-    else if(forward_flag_j0)
-        forward_flag_j0_ps <= 1;
-    else
-        forward_flag_j0_ps <= forward_flag_j0_ps;
-end
-always@(posedge clk) begin
-    if(~aresetn || !stall_D) 
-        forward_flag_j1_ps<=0;
-    else if(forward_flag_j1)
-        forward_flag_j1_ps <= 1;
-    else
-        forward_flag_j1_ps <= forward_flag_j1_ps;
-end
+// reg forward_flag_j0_ps = 0;
+// reg forward_flag_j1_ps = 0;
+// reg forward_flag_k0_ps = 0;
+// reg forward_flag_k1_ps = 0;
+// always@(posedge clk) begin
+//     if(~aresetn || !stall_D) 
+//         forward_flag_j0_ps<=0;
+//     else if(forward_flag_j0)
+//         forward_flag_j0_ps <= 1;
+//     else
+//         forward_flag_j0_ps <= forward_flag_j0_ps;
+// end
+// always@(posedge clk) begin
+//     if(~aresetn || !stall_D) 
+//         forward_flag_j1_ps<=0;
+//     else if(forward_flag_j1)
+//         forward_flag_j1_ps <= 1;
+//     else
+//         forward_flag_j1_ps <= forward_flag_j1_ps;
+// end
 
-always@(posedge clk) begin
-    if(~aresetn || !stall_D) 
-        forward_flag_k0_ps<=0;
-    else if(forward_flag_k0)
-        forward_flag_k0_ps <= 1;
-    else
-        forward_flag_k0_ps <= forward_flag_k0_ps;
-end
+// always@(posedge clk) begin
+//     if(~aresetn || !stall_D) 
+//         forward_flag_k0_ps<=0;
+//     else if(forward_flag_k0)
+//         forward_flag_k0_ps <= 1;
+//     else
+//         forward_flag_k0_ps <= forward_flag_k0_ps;
+// end
 
-always@(posedge clk) begin
-    if(~aresetn || !stall_D) 
-        forward_flag_k1_ps<=0;
-    else if(forward_flag_k1)
-        forward_flag_k1_ps <= 1;
-    else
-        forward_flag_k1_ps <= forward_flag_k1_ps;
-end
-always@(posedge clk) begin
-    if(~aresetn || ex_allowin) 
-        forward_flag_j0_ps<=0;
-    else if(forward_flag_j0)
-        forward_flag_j0_ps <= 1;
-    else
-        forward_flag_j0_ps <= forward_flag_j0_ps;
-end
-always@(posedge clk) begin
-    if(~aresetn || ex_allowin) 
-        forward_flag_j1_ps<=0;
-    else if(forward_flag_j1)
-        forward_flag_j1_ps <= 1;
-    else
-        forward_flag_j1_ps <= forward_flag_j1_ps;
-end
+// always@(posedge clk) begin
+//     if(~aresetn || !stall_D) 
+//         forward_flag_k1_ps<=0;
+//     else if(forward_flag_k1)
+//         forward_flag_k1_ps <= 1;
+//     else
+//         forward_flag_k1_ps <= forward_flag_k1_ps;
+// end
+// always@(posedge clk) begin
+//     if(~aresetn || ex_allowin) 
+//         forward_flag_j0_ps<=0;
+//     else if(forward_flag_j0)
+//         forward_flag_j0_ps <= 1;
+//     else
+//         forward_flag_j0_ps <= forward_flag_j0_ps;
+// end
+// always@(posedge clk) begin
+//     if(~aresetn || ex_allowin) 
+//         forward_flag_j1_ps<=0;
+//     else if(forward_flag_j1)
+//         forward_flag_j1_ps <= 1;
+//     else
+//         forward_flag_j1_ps <= forward_flag_j1_ps;
+// end
 
-always@(posedge clk) begin
-    if(~aresetn || ex_allowin) 
-        forward_flag_k0_ps<=0;
-    else if(forward_flag_k0)
-        forward_flag_k0_ps <= 1;
-    else
-        forward_flag_k0_ps <= forward_flag_k0_ps;
-end
+// always@(posedge clk) begin
+//     if(~aresetn || ex_allowin) 
+//         forward_flag_k0_ps<=0;
+//     else if(forward_flag_k0)
+//         forward_flag_k0_ps <= 1;
+//     else
+//         forward_flag_k0_ps <= forward_flag_k0_ps;
+// end
 
-always@(posedge clk) begin
-    if(~aresetn || ex_allowin) 
-        forward_flag_k1_ps<=0;
-    else if(forward_flag_k1)
-        forward_flag_k1_ps <= 1;
-    else
-        forward_flag_k1_ps <= forward_flag_k1_ps;
-end
+// always@(posedge clk) begin
+//     if(~aresetn || ex_allowin) 
+//         forward_flag_k1_ps<=0;
+//     else if(forward_flag_k1)
+//         forward_flag_k1_ps <= 1;
+//     else
+//         forward_flag_k1_ps <= forward_flag_k1_ps;
+// end
 // reg priv_flag;
 always@(posedge clk)begin
     if(~aresetn | flush_by_priv | (flush & ex_allowin) | (~reg_readygo & ex_allowin & ex_readygo) | (~reg_allowin & ex_allowin & ex_readygo)) begin

@@ -166,16 +166,16 @@ end
 //             mem_count <= 1;
 //     end
 
-reg [`WIDTH_UOP-1:0] uop0_reg=0;
-reg [`WIDTH_UOP-1:0] uop1_reg=0;
-always@(posedge clk) begin
-    uop0_reg <= uop0;
-    uop1_reg <= uop1;
-end
-wire [3:0] cond0;
-wire [3:0] cond1;
-assign cond0 = uop0_reg[`UOP_COND];
-assign cond1 = uop1_reg[`UOP_COND];
+// reg [`WIDTH_UOP-1:0] uop0_reg=0;
+// reg [`WIDTH_UOP-1:0] uop1_reg=0;
+// always@(posedge clk) begin
+//     uop0_reg <= uop0;
+//     uop1_reg <= uop1;
+// end
+// wire [3:0] cond0;
+// wire [3:0] cond1;
+// assign cond0 = uop0_reg[`UOP_COND];
+// assign cond1 = uop1_reg[`UOP_COND];
 reg [1:0] unwrite =0;
 always@(posedge clk) begin
     if(|d_exception || exception_flag_in) unwrite<=3;
