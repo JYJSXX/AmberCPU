@@ -1065,7 +1065,7 @@ wire [31:0]     remainder_reg ;
         .clk                     ( clk                     ),
         .aresetn                 ( aresetn                 ),
         .flush                   ( flush_to_ex1_ex2        ),
-        .forward_stall           ( forward_stall           ),
+        // .forward_stall           ( forward_stall           ),
         .flush_by_exception           ( flush_by_exception           ),
         .tlb_readygo             ( tlb_readygo             ),
         .tlb_allowin             ( tlb_allowin             ),

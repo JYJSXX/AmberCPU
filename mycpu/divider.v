@@ -272,7 +272,7 @@ endmodule
 //     output                          stall_divider,
 //     output                          ready
 // );
-module div(
+module divider(
     input [0:0]         clk,
     input [0:0]         rstn,
     input flush_exception,
