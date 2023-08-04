@@ -30,4 +30,5 @@
 `define VA_D          31:31-19+1
 `define PA_I         31:31-17+1
 `define PA_D         31:31-19+1
-`define OFFSET     14:0
+`define OFFSET_D   16:0
+`define OFFSET_I   14:0

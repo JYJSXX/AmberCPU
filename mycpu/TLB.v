@@ -1029,8 +1029,8 @@ module TLB#(
     input      [TLB_COOKIE_WIDTH-1:0]   tlb_cookie_in,
     output     [TLB_COOKIE_WIDTH-1:0]   tlb_cookie_out,
     input       [4:0]                   rd,
-    input       [`TLB_OFFSET_I:0]                  TAG_OFFSET_I,
-    input       [`TLB_OFFSET_D:0]                  TAG_OFFSET_D,
+    input       [`OFFSET_I]                  TAG_OFFSET_I,
+    input       [`OFFSET_D]                  TAG_OFFSET_D,
     //TO CACHE
     output reg  [`TLB_PPN_LEN_I - 1:0]    PA_I,
     output reg  [`TLB_PPN_LEN_D - 1:0]    PA_D,
@@ -1042,10 +1042,10 @@ module TLB#(
     output      [`TLB_VPPN_LEN_D : 0]     VA_D_OUT,
     output      [31:0]                  WDATA_D_OUT,
     output      [3:0]                   WSTRB_D_OUT,
-    output      [`TLB_OFFSET_I:0]                  VA_TAG_OFFSET_I_OUT,
-    output      [`TLB_OFFSET_D:0]                  VA_TAG_OFFSET_D_OUT,
-    output      [`TLB_OFFSET_I:0]                  PA_TAG_OFFSET_I_OUT,
-    output      [`TLB_OFFSET_D:0]                  PA_TAG_OFFSET_D_OUT,
+    output      [`OFFSET_I]                  VA_TAG_OFFSET_I_OUT,
+    output      [`OFFSET_D]                  VA_TAG_OFFSET_D_OUT,
+    output      [`OFFSET_I]                  PA_TAG_OFFSET_I_OUT,
+    output      [`OFFSET_D]                  PA_TAG_OFFSET_D_OUT,
     output                              signed_ext_out,
     output                              atom_out,
     output      [4:0]                   rd_out,
@@ -1102,8 +1102,8 @@ reg [`TLB_VPPN_LEN_D : 0] VA_D_reg2 = 0;
 reg [TLB_COOKIE_WIDTH-1:0] tlb_cookie_reg2=0;
 reg                     en_i_reg2 = 0;
 reg                     en_d_reg2 = 0;
-reg [`TLB_OFFSET_I:0]              TAG_OFFSET_I_reg2 = 0;
-reg [`TLB_OFFSET_D:0]              TAG_OFFSET_D_reg2 = 0;
+reg [`OFFSET_I]              TAG_OFFSET_I_reg2 = 0;
+reg [`OFFSET_D]              TAG_OFFSET_D_reg2 = 0;
 reg                     signed_ext_reg2 = 0;
 reg                     atom_reg2 = 0;
 // reg                     rd_reg2 = 0;
@@ -1111,8 +1111,8 @@ reg                     SOL_reg2 = 0;
 reg      [31 : 0]       WDATA_D_reg2 = 0;
 reg      [3 : 0]        WSTRB_D_reg2 = 0;
 reg [4 : 0]             rd_reg2 = 0;
-reg [`TLB_OFFSET_I:0]              TAG_OFFSET_I_reg3 = 0;
-reg [`TLB_OFFSET_D:0]              TAG_OFFSET_D_reg3 = 0;
+reg [`OFFSET_I]              TAG_OFFSET_I_reg3 = 0;
+reg [`OFFSET_D]              TAG_OFFSET_D_reg3 = 0;
 
 
 assign en_VA_I_OUT = en_i_reg2;
