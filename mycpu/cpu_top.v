@@ -378,11 +378,9 @@ idle_clk idle_clk1
     );
 
     
-    wire    [1 :0]      inst_btype;
     wire    [1 :0]      branch_flag;
-    // wire                inst_bpos;
-    // wire    [1 :0]      inst_btype;
-    wire    [7 :0]      inst_index;
+    wire    [1 :0]      inst_btype;
+    wire    [31 :0]      inst_pc;
 
 
 
@@ -395,7 +393,7 @@ idle_clk idle_clk1
         // .csr_flag       ( csr_flag       ),
         // .tlb_flag       ( tlb_flag       ),
         // .branch_flag    ( 0  ), //TODO
-        .inst_index     ( inst_index     ),
+        .inst_pc        ( inst_pc        ),
         .inst_btype     ( inst_btype     )
         //.inst_bpos      ( inst_bpos      )
     );
@@ -1743,7 +1741,7 @@ wire [31:0]     remainder_reg ;
         .if0_allowin      ( if0_allowin      ),
         .clk              ( clk              ),
         .inst_btype       ( inst_btype       ),
-        .inst_index       ( inst_index       ),
+        .inst_pc          ( inst_pc          ),
         .fetch_pc         ( fetch_pc         ),
         .pred_pc          ( pred_pc          ),
         .pred_taken       ( pred_taken       ),
