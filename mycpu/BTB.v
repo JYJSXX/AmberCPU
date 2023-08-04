@@ -134,6 +134,7 @@ module BTB #(
         reg [31:0] tot_cnt=0;
         reg [31:0] fal_dir_cnt=0;
         reg [31:0] fal_add_cnt=0;
+        reg [31:0] br_tot=0;
 
         reg [31:0] last_pc;
         always @(posedge clk or negedge rstn) begin
@@ -146,8 +147,10 @@ module BTB #(
                 last_pc<=0;
             end else if(last_pc!=fetch_pc)begin
                 tot_cnt<=tot_cnt+1;
+                br_tot<=fact_taken?br_tot+1:br_tot;
                 fal_add_cnt<=predict_add_fail?fal_add_cnt+1:fal_add_cnt;
                 fal_dir_cnt<=predict_dir_fail?fal_dir_cnt+1:fal_dir_cnt;
+                suc_cnt<=(fact_taken&&!predict_add_fail&&!predict_dir_fail)?suc_cnt+1:suc_cnt;
             end
         end
 
@@ -179,10 +182,7 @@ module BTB #(
     //     .pred_taken ( local_taken)
     // );
 
-    BTB_advance#(
-        .INDEX_WIDTH ( 7 ),
-        .TAG_WIDTH   ( 7 )
-    )u_BTB_advance(
+    BTB_advance u_BTB_advance(
         .rstn           ( rstn        ),
         .clk            ( clk         ),
         .fetch_pc       ( fetch_pc    ),
