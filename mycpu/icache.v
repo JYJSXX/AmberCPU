@@ -448,7 +448,7 @@ module icache #(
     //     end
     // end
     
-    victim_cache victim_cache (
+    victim_icache victim_cache (
         .clk        (clk),
         .rstn       (rstn),
         .r_tag      (victim_rtag),

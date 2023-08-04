@@ -48,7 +48,7 @@ module ID_REG(
     output  [31:0] iq_pc1,
     output  [31:0] iq_pc_next,
     output         CMT,
-    output         iq_pc_taken,
+    output   [1:0] iq_pc_taken,
     output  [31:0] iq_inst0,
     output  [31:0] iq_inst1,
     output  [31:0] iq_badv,

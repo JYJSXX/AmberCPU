@@ -50,7 +50,7 @@ module IQ (
     output  reg [31:0] iq_pc1,
     output              CMT,//1单发0双发   
     output  reg [31:0] iq_pc_next,
-    output  reg        iq_pc_taken,
+    output  reg [1 :0] iq_pc_taken,
     output  reg [31:0] iq_inst0,
     output  reg [31:0] iq_inst1,
     output  reg [31:0] iq_badv,
@@ -89,11 +89,17 @@ module IQ (
                         (id_reg_inst1==`INST_NOP)?1:0;
 
     always @(*) begin//logic for single_en
-        if (id_reg_is_ALU_0&&id_reg_is_ALU_1&&
+        if (
+            ((id_reg_is_ALU_0&&id_reg_is_ALU_1)
+            ||
+            (id_reg_inst0[30]&&id_reg_is_ALU_1)
+            ||
+            (id_reg_inst1[30]&&id_reg_is_ALU_0))
+            &&
             (
                 (id_reg_rd0!=id_reg_rj1)&&(id_reg_rd0!=id_reg_rk1)&&
                 (id_reg_rd1!=id_reg_rj0)&&(id_reg_rd1!=id_reg_rk0)||
-                (id_reg_rd0==0)         ||(id_reg_rd1==0)
+                (id_reg_rd0==0)         ||(id_reg_is_ALU_1 && id_reg_rd1==0)
             )&&id_reg_excp_flag==2'b00
         ) begin
             single_en=0;
@@ -124,7 +130,7 @@ module IQ (
                 iq_pc0=id_reg_pc0;
                 iq_pc1=id_reg_pc1;
                 iq_pc_next=0;
-                iq_pc_taken=0;
+                iq_pc_taken=2'b00;
                 iq_inst0=`INST_NOP;
                 iq_inst1=`INST_NOP;
                 iq_badv=0;
@@ -153,7 +159,7 @@ module IQ (
                 iq_pc0=id_reg_pc1;
                 iq_pc1=`PC_RESET;
                 iq_pc_next=id_reg_pc_next;
-                iq_pc_taken=id_reg_pc_taken[1];
+                iq_pc_taken={1'b0,id_reg_pc_taken[1]};
                 iq_inst0=id_reg_inst1;
                 iq_inst1=`INST_NOP;
                 iq_badv=id_reg_badv;
@@ -214,7 +220,7 @@ module IQ (
 
                 iq_pc0  = id_reg_pc0;
                 iq_pc_next=id_reg_pc_next;
-                iq_pc_taken=id_reg_pc_taken;
+                iq_pc_taken={1'b0,id_reg_pc_taken[0]};
                 iq_inst0  = id_reg_inst0;
                 iq_badv  = id_reg_badv;
                 iq_exception  = iq_excp_flag?id_reg_exception:0;

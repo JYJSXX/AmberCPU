@@ -178,6 +178,7 @@ idle_clk idle_clk1
     wire predict_dir_fail; //分支预测跳不跳失败的信号
     wire predict_add_fail; //分支预测往哪跳失败的信号
     wire fact_taken; //实际跳不跳
+    wire fact_taken0;
     wire [31:0] fact_pc; //分支指令的pc
     wire [31:0] fact_tpc; //目标地址pc
 
@@ -582,7 +583,7 @@ idle_clk idle_clk1
     wire [31:0] iq_pc0;
     wire [31:0] iq_pc1;
     wire [31:0] iq_pc_next;
-    wire iq_pc_taken;
+    wire [1:0] iq_pc_taken;
     wire [31:0] iq_inst0;
     wire [31:0] iq_inst1;
     wire [31:0] iq_badv;
@@ -690,7 +691,7 @@ idle_clk idle_clk1
     wire [31:0] reg_ex_pc1;
     wire        reg_ex_CMT;
     wire [31:0] reg_ex_pc_next;
-    wire        reg_ex_pc_taken;
+    wire  [1:0]      reg_ex_pc_taken;
     wire [31:0] reg_ex_inst0;
     wire [31:0] reg_ex_inst1;
     wire reg_ex_branch_flag;
@@ -796,10 +797,13 @@ wire is_rdtimel0 = debug0_wb_inst[31:5] == 'b0000_0000_0000_0000_0110_0000_000;
 wire is_rdtimeh0 = debug0_wb_inst[31:5] == 'b0000_0000_0000_0000_0110_0100_000;
 wire is_rdtimel1 = debug1_wb_inst[31:5] == 'b0000_0000_0000_0000_0110_0000_000;    
 wire is_rdtimeh1 = debug1_wb_inst[31:5] == 'b0000_0000_0000_0000_0110_0100_000;
+
+wire [4:0] ex0_rd0_out;
+wire [4:0] ex0_rd1_out;
     REG_EX1 u_REG_EX1(
         .clk                     ( clk                     ),
         .aresetn                 ( aresetn                 ),
-        .flush                   ( flush_to_reg_ex1        ),
+        .flush                   ( flush_to_reg_ex1 & (~forward_stall)       ),
         .flush_by_exception      ( flush_by_exception      ),
         .forward_stall           ( forward_stall          ),
         .reg_readygo             ( reg_readygo             ),
@@ -1076,7 +1080,7 @@ wire [31:0]     remainder_reg ;
         .reg_ex_pc0              ( reg_ex_pc0              ),
         .reg_ex_pc1              ( reg_ex_pc1              ),
         .reg_ex_pc_next          ( reg_ex_pc_next          ),
-        .reg_ex_pc_taken         ( reg_ex_pc_taken         ),
+        .fact_taken0             ( fact_taken0        ),
         .reg_ex_inst0            ( reg_ex_inst0            ),
         .reg_ex_inst1            ( reg_ex_inst1            ),
         .reg_ex_branch_flag      ( reg_ex_branch_flag      ),
@@ -1104,8 +1108,8 @@ wire [31:0]     remainder_reg ;
         .reg_ex_rj1              ( reg_ex_rj1              ),
         .reg_ex_rk0              ( reg_ex_rk0              ),
         .reg_ex_rk1              ( reg_ex_rk1              ),
-        .reg_ex_rd0              ( reg_ex_rd0              ),
-        .reg_ex_rd1              ( reg_ex_rd1              ),
+        .reg_ex_rd0              ( ex0_rd0_out              ),
+        .reg_ex_rd1              ( ex0_rd1_out             ),
         .csr_rd_data             ( csr_rd_data             ),
         .ex0_ex1_csr_data       ( ex0_ex1_csr_data       ),
 
@@ -1236,6 +1240,8 @@ wire [31:0]     remainder_reg ;
         .CMT                   ( reg_ex_CMT                 ),
         .inst0                ( reg_ex_inst0                ),
         .inst1                ( reg_ex_inst1                ),
+        .reg_ex_rd0           ( reg_ex_rd0           ),
+        .reg_ex_rd1           ( reg_ex_rd1           ),
         .is_ALU_0             ( reg_ex_is_ALU_0             ),
         .is_ALU_1             ( reg_ex_is_ALU_1             ),
         .is_syscall_0         ( reg_ex_is_syscall_0         ),
@@ -1256,6 +1262,8 @@ wire [31:0]     remainder_reg ;
         .ex_rj1               ( reg_ex_rj1               ),
         .ex_rk0               ( reg_ex_rk0               ),
         .ex_rk1               ( reg_ex_rk1               ),
+        .ex0_rd0_out          ( ex0_rd0_out          ),
+        .ex0_rd1_out          ( ex0_rd1_out          ),
         .priv_jump            ( priv_jump            ),
         .ibar                 ( ibar                 ),
         .csr_flag_from_ex     ( csr_flag_from_ex     ),
@@ -1265,6 +1273,7 @@ wire [31:0]     remainder_reg ;
         .predict_dir_fail     ( predict_dir_fail     ),
         .predict_addr_fail    ( predict_add_fail     ),
         .fact_taken           ( fact_taken           ),
+        .fact_taken0          ( fact_taken0          ),
         .fact_pc              ( fact_pc              ),
         .fact_tpc             ( fact_tpc             ),
         .tid                  ( tid                  ),
@@ -2208,7 +2217,18 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         end
 `endif 
 `ifdef DIFFTEST
+    reg [63:0] cmt_count1,cmt_count2;
     reg cmt_valid0,cmt_valid1;
+    always@(posedge clk) begin
+        if(cmt_valid0) begin
+            cmt_count1<=cmt_count1+1;
+        end
+        if(cmt_valid1) begin
+            cmt_count2<=cmt_count2+1;
+        end
+    end
+    
+
     reg [31:0] cmt_pc0,cmt_pc1;
     reg [31:0] cmt_inst0,cmt_inst1;
     reg cmt_wen0,cmt_wen1;
