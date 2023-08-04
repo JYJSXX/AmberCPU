@@ -234,7 +234,7 @@ end
 
 always @(posedge clk)begin
     if (~aresetn | !ex_allowin) priv_jump <= 0;
-    else if (flush_by_priv) priv_jump <= 0;
+    else if (flush_by_priv) priv_jump <= 1;
 end
 
 // reg forward_flag_j0_ps = 0;
