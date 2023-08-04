@@ -106,7 +106,7 @@ module BTB #(
     assign we       = fact_taken;
     assign hash_we  = 1'b1;
     assign local_we = predict_add_fail;
-    assign adv_we   = fact_taken&&(predict_add_fail||predict_dir_fail);
+    assign adv_we   = (predict_add_fail||predict_dir_fail);
 
     assign INDEX=fetch_pc[PC_INDEX_WIDTH+2:3];
     assign HASH_INDEX={fetch_pc[12],fetch_pc[10],fetch_pc[8:3]};

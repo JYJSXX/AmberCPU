@@ -220,25 +220,24 @@ idle_clk idle_clk1
     wire    [1:0]flush_cause;
     wire    [31:0]tlb_pc_next;
     wire    [1 :0]tlb_pc_taken;
+    wire    [31:0]nex_pc;
     IF0 u_IF0(
         .clk                 ( clk                 ),
         .rstn                ( aresetn             ),
         .if0_readygo         ( if0_readygo         ),
         .if0_allowin         ( if0_allowin         ),
         .flush               ( flush_to_if0        ),
-        // .flush_cause         ( flush_cause         ),
         .set_pc_from_ID      ( set_pc_from_ID      ),
         .pc_from_ID          ( pc_from_ID          ),
         .set_pc_from_EX      ( predict_dir_fail|predict_add_fail    ),
         .pc_from_EX          ( fact_tpc            ),
         .set_pc_from_WB      ( ex2_wb_excp_flag |  flush_by_priv  ),
         .pc_from_WB          ( ex2_wb_excp_flag?pc_from_WB : pc_set_by_priv          ),
-        // .set_pc_from_PRIV    ( set_pc_from_PRIV    ),
-        .pc_from_PRIV        ( pc_from_PRIV        ),
         .pred_pc             ( pred_pc             ),
         .pred_taken          ( pred_taken          ),
         .fetch_pc            ( fetch_pc            ),
         .raddr               ( tlb_raddr           ),
+        .nex_pc              ( nex_pc              ),
         .pc_next             ( pc_next             ),
         .pc_taken            ( pc_taken            ),
         .pc_in_stall         ( pc_in_stall         )
@@ -1742,6 +1741,7 @@ wire [31:0]     remainder_reg ;
         .clk              ( clk              ),
         .inst_btype       ( inst_btype       ),
         .inst_pc          ( inst_pc          ),
+        .nex_pc           ( nex_pc           ),
         .fetch_pc         ( fetch_pc         ),
         .pred_pc          ( pred_pc          ),
         .pred_taken       ( pred_taken       ),
