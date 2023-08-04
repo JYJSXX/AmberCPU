@@ -863,7 +863,6 @@ module dcache #(
             hit2_flag <= hit2_flag;
     end
 
-
     always @(*) begin
         // default assignments
         req_buf_we           = 0;
@@ -967,8 +966,8 @@ module dcache #(
             lru_we                    = 1;
             way_visit                 = lru_sel[1];
             // clear dirty
-            dirty_we                  = lru_sel;
-            dirty_wdata               = 0;
+            dirty_we                   = lru_sel;
+            dirty_wdata               = (op_buf == WRITE_OP);
         end
         WAIT_WRITE: begin
             wfsm_reset      = 1;
