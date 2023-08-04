@@ -67,7 +67,7 @@ module regfile(
 	output [31:0] reg_diff30,
 	output [31:0] reg_diff31,
 	input [31:0] debug0_wb_inst,
-	input [31:0] debug1_wb_inst,
+	input [31:0] debug1_wb_inst
 	`endif
 	
 );

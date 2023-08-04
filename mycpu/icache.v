@@ -294,23 +294,23 @@ module icache #(
 
     /* 2-way tagv memory: the highest bit is the valid bit */
     wire valid[1:0];
-    // reg  valid_buf[1:0];
+    reg  valid_buf[1:0];
     wire [TAG_WIDTH:0] tag_in;
     assign valid[0] = tag_rdata[0][TAG_WIDTH];
     assign valid[1] = tag_rdata[1][TAG_WIDTH];
-    // always @(*)begin
-    //     if(!rstn) begin
-    //         valid_buf[0] = 0;
-    //         valid_buf[1] = 0;
-    //     end
-    //     else if(req_buf_we) begin
-    //         valid_buf[0] = valid[0];
-    //         valid_buf[1] = valid[1];
-    //     end
-    //     else
-    //         valid_buf[0] = valid_buf[0];
-    //         valid_buf[1] = valid_buf[1];
-    // end
+    always @(posedge clk)begin
+        if(!rstn) begin
+            valid_buf[0] <= 0;
+            valid_buf[1] <= 0;
+        end
+        else if(pbuf_we) begin
+            valid_buf[0] <= valid[0];
+            valid_buf[1] <= valid[1];
+        end
+        else 
+            valid_buf[0] <= valid_buf[0];
+            valid_buf[1] <= valid_buf[1];
+    end
     // the tag ready to be written to tagv table
     assign w_tag = paddr_buf[31:32-TAG_WIDTH];
     assign tag_in = tagv_clear ? 0 : {1'b1, w_tag};
@@ -348,7 +348,7 @@ module icache #(
     wire victim_sel;
     assign victim_sel = lru_sel[0] ? 0 : 1;
     wire victim_we;
-    assign victim_we = missbuf_we && valid[victim_sel] && flush_valid;  //&& !miss_flush_flag
+    assign victim_we = missbuf_we && ((valid[victim_sel] && (state == LOOKUP)) || (valid_buf[victim_sel] && (state == MISS)))&& flush_valid;  //&& !miss_flush_flag
     reg [25:0] victim_w_tag_buf = 0;
     reg        victim_flush_miss = 0;
     reg [25:0] victim_w_tag = 0;
@@ -416,10 +416,17 @@ module icache #(
     end
     wire [25:0] victim_rtag;
     assign victim_rtag = miss_state ? {victim_rtag_buf,req_buf[11:6]}: {tag,req_buf[11:6]};
+    // reg [25:0] victim_wtag;
+    // always @(posedge clk) begin
+    //     if(!rstn) begin
+    //         victim_wtag <= 0;
+    //     end
+    //     else begin
+    //         victim_wtag <= victim_flush_miss? victim_w_tag_buf : victim_w_tag;
+    //     end
+    // end
     
-    victim_cache #(
-        .CAPACITY(8)
-    ) victim_cache (
+    victim_cache victim_cache (
         .clk        (clk),
         .rstn       (rstn),
         .r_tag      (victim_rtag),
@@ -439,12 +446,12 @@ module icache #(
     assign hit[0]       = valid[0] && (tag_rdata[0][TAG_WIDTH-1:0] == tag); // hit in way 0
     assign hit[1]       = valid[1] && (tag_rdata[1][TAG_WIDTH-1:0] == tag); // hit in way 1
     assign hit_way      = hit[0] ? 0 : 1;           
-    // assign cache_hit    = |hit || victim_hit;
-    assign cache_hit    = |hit ;
+    assign cache_hit    = |hit || victim_hit;
+    // assign cache_hit    = |hit ;
     // only when cache_hit, hit_way is valid
     wire hit_way_valid;
-    // assign hit_way_valid = cache_hit && ~victim_hit ? hit_way : 0;
-    assign hit_way_valid = cache_hit ? hit_way : 0;
+    assign hit_way_valid = cache_hit && ~victim_hit ? hit_way : 0;
+    // assign hit_way_valid = cache_hit ? hit_way : 0;
     
 
     /* read control */
@@ -452,8 +459,8 @@ module icache #(
     // 双发射因此一次读取64位
     wire [BIT_NUM-1:0] o_rdata;
     reg [63:0]        rdata_cache;
-    // assign o_rdata = victim_hit ? victim_data : data_from_mem ? mem_rdata[hit_way_valid] : ret_buf; 
-    assign o_rdata =  data_from_mem ? mem_rdata[hit_way_valid] : ret_buf;
+    assign o_rdata = victim_hit ? victim_data : data_from_mem ? mem_rdata[hit_way_valid] : ret_buf; 
+    // assign o_rdata =  data_from_mem ? mem_rdata[hit_way_valid] : ret_buf;
     always @(*) begin
         case(req_buf[5:3])
         3'd0: rdata_cache = o_rdata[63:0];

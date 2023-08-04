@@ -412,7 +412,8 @@ module dcache #(
     `endif
 
     /* 2-way data memory */
-    assign r_index = ((way0 || way1)&&ibar_state) ? dirty_index :addr[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
+    // assign r_index = ((way0 || way1)&&ibar_state) ? dirty_index :addr[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
+    assign r_index = addr[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
     assign w_index = address[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
 
     BRAM_bytewrite #(
@@ -473,7 +474,12 @@ module dcache #(
       .waddr    (tag_index),
       .din      (tag_in),
       .we       (tagv_we[0]),
+      `ifdef IBAR
       .ibar     (ibar_complete),
+       `endif
+       `ifndef IBAR
+      .ibar     (0),
+       `endif
       .dout     (tag_rdata[0])
     );
     BRAM_tagv #(
@@ -485,7 +491,12 @@ module dcache #(
       .waddr    (tag_index),
       .din      (tag_in),
       .we       (tagv_we[1]),
+      `ifdef IBAR
       .ibar     (ibar_complete),
+       `endif
+       `ifndef IBAR
+      .ibar     (0),
+       `endif
       .dout     (tag_rdata[1])
     );
 
@@ -539,9 +550,7 @@ module dcache #(
     assign victim_hit = !op_buf ? victim_hit_temp && (hit == 0) : 0;
 
 
-    victim_cache #(
-        .CAPACITY(8)
-    ) victim_cache (
+    victim_cache victim_cache (
         .clk        (clk),
         .rstn       (rstn),
         .r_tag      (victim_rtag),
@@ -687,9 +696,12 @@ module dcache #(
             wbuf <= 0;
         end
         else if(wbuf_we) begin
+            `ifdef IBAR
             if(ibar_valid)          // 要写入的数据来自于ibar
                 wbuf <= mem_rdata[dirty_way];
-            else if(uncache_buf)     // 要写入的数据来自于uncache
+            else 
+            `endif
+            if(uncache)     // 要写入的数据来自于uncache
                 wbuf <= {{(BIT_NUM-32){1'b0}}, wdata_pipe};
             else
                 wbuf <= lru_sel[1] ? mem_rdata[1] : mem_rdata[0];
@@ -713,6 +725,7 @@ module dcache #(
     `ifdef IBAR
     assign d_waddr  = ibar_valid ? dirty_addr[dirty_way] : uncache_buf ? paddr_buf : m_buf;
     `endif 
+
     `ifndef IBAR
     assign d_waddr  = uncache_buf ? paddr_buf : m_buf;
     `endif 
@@ -939,7 +952,7 @@ module dcache #(
             end
         end
         MISS: begin
-            mbuf_we = 1;
+            // mbuf_we = 1;
             d_rvalid = 1;
             if(uncache_buf) begin
                 d_rlen = 8'd0;
@@ -993,6 +1006,7 @@ module dcache #(
                 end
             end
         end
+        `ifdef IBAR
         IBAR: begin
             ibar_ready = 1;
             if(ibar_valid) begin
@@ -1008,6 +1022,7 @@ module dcache #(
         end
         IBAR_WAIT: 
             wfsm_reset      = 1;
+        `endif
         default:;
         endcase
     end

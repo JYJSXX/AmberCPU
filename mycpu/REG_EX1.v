@@ -6,6 +6,7 @@ module  REG_EX1(
     input   flush,
     input   forward_stall,
     input   flush_by_priv,
+    input   flush_by_exception,
     input   reg_readygo,
     output  reg reg_allowin,
     input   ex_allowin,
@@ -89,7 +90,8 @@ module  REG_EX1(
     output  reg [4:0] reg_ex_rk0,
     output  reg [4:0] reg_ex_rk1,
     output  reg [4:0] reg_ex_rd0,
-    output  reg [4:0] reg_ex_rd1
+    output  reg [4:0] reg_ex_rd1,
+    output  reg priv_jump
 
     `ifdef DIFFTEST
     ,output [31:0] reg_diff0,
@@ -127,7 +129,7 @@ module  REG_EX1(
     input  [63:0] stable_counter,
     input [31:0] debug0_wb_inst,
     input [31:0] debug1_wb_inst,
-    output reg [63:0] stable_counter_diff,
+    output reg [63:0] stable_counter_diff
     `endif
 );
 `ifdef DIFFTEST
@@ -230,6 +232,11 @@ always@(*)begin
     else stall = 0;
 end
 
+always @(posedge clk)begin
+    if (~aresetn | !ex_allowin) priv_jump <= 0;
+    else if (flush_by_priv) priv_jump <= 0;
+end
+
 // reg forward_flag_j0_ps = 0;
 // reg forward_flag_j1_ps = 0;
 // reg forward_flag_k0_ps = 0;
@@ -304,7 +311,7 @@ end
 // end
 // reg priv_flag;
 always@(posedge clk)begin
-    if(~aresetn | flush_by_priv | (flush & ex_allowin) | (~reg_readygo & ex_allowin & ex_readygo) | (~reg_allowin & ex_allowin & ex_readygo)) begin
+    if(~aresetn | flush_by_exception | (flush & ex_allowin) | (~reg_readygo & ex_allowin & ex_readygo) | (~reg_allowin & ex_allowin & ex_readygo)) begin
         reg_ex_pc0 <= 0;
         reg_ex_pc1 <= 0;
         reg_ex_pc_next <= 0;

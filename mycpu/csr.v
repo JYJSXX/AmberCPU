@@ -214,10 +214,10 @@ wire [13:0] addr = waddr_reg;
 
         //ESTAT
         reg reg_soft_interrupt;
-always@(posedge clk)
-    reg_soft_interrupt<=|estat_is_soft;
-
     reg [`ESTAT_IS_SOFT] estat_is_soft=0;
+    always@(posedge clk)
+        reg_soft_interrupt<=|estat_is_soft;
+
     reg [`ESTAT_IS_HARD] estat_is_hard=0;
     reg [`ESTAT_IS_TI] estat_is_ti=0;
     //reg [`ESTAT_IS_IPI] estat_is_ipi;  
@@ -928,7 +928,7 @@ assign rdata[31:0] = {32{addr_in==`CSR_CRMD}} & csr_crmd |
     wen&&addr==`CSR_TLBEHI ? wdata :csr_tlbehi,
     wen&&addr==`CSR_TLBELO0 ? wdata :csr_tlbelo0,
     wen&&addr==`CSR_TLBELO1 ? wdata :csr_tlbelo1,
-    wen&&addr==`CSR_ASID ? wdata :csr_asid,
+    wen&&addr==`CSR_ASID ? (wdata & 32'h0000_03ff) | csr_asid  :csr_asid,
     wen&&addr==`CSR_PGDL ? wdata :csr_pgdl,
     wen&&addr==`CSR_PGDH ? wdata :csr_pgdh,
     wen&&addr==`CSR_SAVE0 ? wdata :csr_save0,
