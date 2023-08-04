@@ -1,0 +1,57 @@
+[*]
+[*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
+[*] Fri Aug  4 06:26:15 2023
+[*]
+[dumpfile] "/home/vmware/Desktop/chiplab/sims/verilator/run_prog/log/coremark_log/simu_trace.fst"
+[dumpfile_mtime] "Fri Aug  4 06:14:12 2023"
+[dumpfile_size] 138253874
+[savefile] "/home/vmware/Desktop/AmberCPU/victim.gtkw"
+[timestart] 1540550
+[size] 1846 814
+[pos] -139 -139
+*-12.000000 1552261 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] TOP.
+[treeopen] TOP.simu_top.
+[treeopen] TOP.simu_top.soc.
+[treeopen] TOP.simu_top.soc.cpu.
+[treeopen] TOP.simu_top.soc.cpu.u_dcache.
+[treeopen] TOP.simu_top.soc.cpu.u_EX0.
+[treeopen] TOP.simu_top.soc.cpu.u_icache.
+[sst_width] 336
+[signals_width] 193
+[sst_expanded] 1
+[sst_vpaned_height] 219
+@22
+TOP.simu_top.soc.cpu.u_EX0.pc0[31:0]
+TOP.simu_top.soc.cpu.u_EX0.inst0[31:0]
+@200
+-icache
+@28
+TOP.simu_top.soc.cpu.u_icache.uncache
+TOP.simu_top.soc.cpu.u_icache.rready
+TOP.simu_top.soc.cpu.u_icache.hit[1:0]
+TOP.simu_top.soc.cpu.u_icache.rvalid
+TOP.simu_top.soc.cpu.u_icache.victim_hit
+@24
+TOP.simu_top.soc.cpu.u_icache.victim_cache.hit_index[1:0]
+@800022
+TOP.simu_top.soc.cpu.u_icache.victim_cache.hit[3:0]
+@28
+(0)TOP.simu_top.soc.cpu.u_icache.victim_cache.hit[3:0]
+(1)TOP.simu_top.soc.cpu.u_icache.victim_cache.hit[3:0]
+(2)TOP.simu_top.soc.cpu.u_icache.victim_cache.hit[3:0]
+(3)TOP.simu_top.soc.cpu.u_icache.victim_cache.hit[3:0]
+@1001200
+-group_end
+@200
+-dcache
+@28
+TOP.simu_top.soc.cpu.u_dcache.uncache
+TOP.simu_top.soc.cpu.u_dcache.hit[1:0]
+TOP.simu_top.soc.cpu.u_dcache.victim_hit
+TOP.simu_top.soc.cpu.u_dcache.wvalid
+TOP.simu_top.soc.cpu.u_dcache.wready
+TOP.simu_top.soc.cpu.u_dcache.rvalid
+TOP.simu_top.soc.cpu.u_dcache.rready
+[pattern_trace] 1
+[pattern_trace] 0

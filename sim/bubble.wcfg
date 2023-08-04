@@ -1,0 +1,425 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="tb_top_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="glbl" />
+            <top_module name="tb_top" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="72.953781 us"></ZoomStartTime>
+      <ZoomEndTime time="407.953782 us"></ZoomEndTime>
+      <Cursor1Time time="92.453781 us"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="193"></NameColumnWidth>
+      <ValueColumnWidth column_width="66"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="50" />
+   <wave_markers>
+      <marker label="" time="180147857" />
+      <marker label="" time="207562143" />
+      <marker label="" time="235119286" />
+      <marker label="" time="262705000" />
+      <marker label="" time="290462143" />
+      <marker label="" time="318133572" />
+      <marker label="" time="345605000" />
+      <marker label="" time="373490715" />
+      <marker label="" time="401147857" />
+      <marker label="" time="428890715" />
+      <marker label="" time="456705000" />
+      <marker label="" time="484376429" />
+      <marker label="" time="512062143" />
+      <marker label="" time="539647857" />
+      <marker label="" time="567262143" />
+      <marker label="" time="595119286" />
+      <marker label="" time="622890715" />
+      <marker label="" time="650433572" />
+      <marker label="" time="678005000" />
+      <marker label="" time="705519286" />
+      <marker label="" time="733147857" />
+      <marker label="" time="760662143" />
+      <marker label="" time="788019286" />
+      <marker label="" time="815619286" />
+      <marker label="" time="843076429" />
+      <marker label="" time="870462143" />
+      <marker label="" time="897790715" />
+      <marker label="" time="924962143" />
+      <marker label="" time="952076429" />
+      <marker label="" time="979105000" />
+      <marker label="" time="1005990715" />
+      <marker label="" time="1032890715" />
+      <marker label="" time="1059719286" />
+      <marker label="" time="1086476429" />
+      <marker label="" time="1113005000" />
+      <marker label="" time="1139462143" />
+      <marker label="" time="1165776429" />
+      <marker label="" time="1192062143" />
+      <marker label="" time="1218033572" />
+      <marker label="" time="1244176429" />
+      <marker label="" time="1270090715" />
+      <marker label="" time="1295947857" />
+      <marker label="" time="1321662143" />
+      <marker label="" time="1347462143" />
+      <marker label="" time="1373262143" />
+      <marker label="" time="1399062143" />
+      <marker label="" time="1424562143" />
+      <marker label="" time="1450076429" />
+      <marker label="" time="1475505000" />
+      <marker label="" time="1500705000" />
+      <marker label="" time="1525747857" />
+      <marker label="" time="1550819286" />
+      <marker label="" time="1575833572" />
+      <marker label="" time="1600762143" />
+      <marker label="" time="1625690715" />
+      <marker label="" time="1650633572" />
+      <marker label="" time="1675433572" />
+      <marker label="" time="1700005000" />
+      <marker label="" time="1724505000" />
+      <marker label="" time="1749005000" />
+      <marker label="" time="1773276429" />
+      <marker label="" time="1797376429" />
+      <marker label="" time="1821247857" />
+      <marker label="" time="1845219286" />
+      <marker label="" time="1869047857" />
+      <marker label="" time="1892947857" />
+      <marker label="" time="1916690715" />
+      <marker label="" time="1940205000" />
+      <marker label="" time="1963747857" />
+      <marker label="" time="1987033572" />
+      <marker label="" time="2010005000" />
+      <marker label="" time="2033076429" />
+      <marker label="" time="2056005000" />
+      <marker label="" time="2078776429" />
+      <marker label="" time="2101319286" />
+      <marker label="" time="2123633572" />
+      <marker label="" time="2145790715" />
+      <marker label="" time="2167776429" />
+      <marker label="" time="2189447857" />
+      <marker label="" time="2211133572" />
+      <marker label="" time="2232590715" />
+      <marker label="" time="2253905000" />
+      <marker label="" time="2274990715" />
+      <marker label="" time="2295990715" />
+      <marker label="" time="2316762143" />
+      <marker label="" time="2337505000" />
+      <marker label="" time="2358019286" />
+      <marker label="" time="2378619286" />
+      <marker label="" time="2399162143" />
+      <marker label="" time="2419562143" />
+      <marker label="" time="2439733572" />
+      <marker label="" time="2459762143" />
+      <marker label="" time="2479647857" />
+      <marker label="" time="2499276429" />
+      <marker label="" time="2518590715" />
+      <marker label="" time="2537919286" />
+      <marker label="" time="2557019286" />
+      <marker label="" time="2575976429" />
+      <marker label="" time="2594705000" />
+      <marker label="" time="2613205000" />
+      <marker label="" time="2631805000" />
+      <marker label="" time="2650305000" />
+      <marker label="" time="2668562143" />
+      <marker label="" time="2686833572" />
+      <marker label="" time="2704876429" />
+      <marker label="" time="2722762143" />
+      <marker label="" time="2740419286" />
+      <marker label="" time="2757847857" />
+      <marker label="" time="2775047857" />
+      <marker label="" time="2792076429" />
+      <marker label="" time="2808790715" />
+      <marker label="" time="2825519286" />
+      <marker label="" time="2842019286" />
+      <marker label="" time="2858376429" />
+      <marker label="" time="2874505000" />
+      <marker label="" time="2890405000" />
+      <marker label="" time="2906076429" />
+      <marker label="" time="2921490715" />
+      <marker label="" time="2936662143" />
+      <marker label="" time="2951919286" />
+      <marker label="" time="2966947857" />
+      <marker label="" time="2981819286" />
+      <marker label="" time="2996462143" />
+      <marker label="" time="3010876429" />
+      <marker label="" time="3025062143" />
+      <marker label="" time="3039062143" />
+      <marker label="" time="3052919286" />
+      <marker label="" time="3066862143" />
+      <marker label="" time="3080719286" />
+      <marker label="" time="3094419286" />
+      <marker label="" time="3107890715" />
+      <marker label="" time="3121133572" />
+      <marker label="" time="3134147857" />
+      <marker label="" time="3146905000" />
+      <marker label="" time="3159433572" />
+      <marker label="" time="3171976429" />
+      <marker label="" time="3184290715" />
+      <marker label="" time="3196447857" />
+      <marker label="" time="3208376429" />
+      <marker label="" time="3220162143" />
+      <marker label="" time="3231719286" />
+      <marker label="" time="3243019286" />
+      <marker label="" time="3254005000" />
+      <marker label="" time="3265005000" />
+      <marker label="" time="3275776429" />
+      <marker label="" time="3286319286" />
+      <marker label="" time="3296633572" />
+      <marker label="" time="3306719286" />
+      <marker label="" time="3316662143" />
+      <marker label="" time="3326347857" />
+      <marker label="" time="3335790715" />
+      <marker label="" time="3345247857" />
+      <marker label="" time="3354476429" />
+      <marker label="" time="3363562143" />
+      <marker label="" time="3372419286" />
+      <marker label="" time="3381133572" />
+      <marker label="" time="3389619286" />
+      <marker label="" time="3397847857" />
+      <marker label="" time="3405762143" />
+      <marker label="" time="3413690715" />
+      <marker label="" time="3428947857" />
+      <marker label="" time="3436276429" />
+      <marker label="" time="3443376429" />
+      <marker label="" time="3450247857" />
+      <marker label="" time="3456862143" />
+      <marker label="" time="3463319286" />
+      <marker label="" time="3469790715" />
+      <marker label="" time="3476033572" />
+      <marker label="" time="3482047857" />
+      <marker label="" time="3487833572" />
+      <marker label="" time="3493390715" />
+      <marker label="" time="3498805000" />
+      <marker label="" time="3503962143" />
+      <marker label="" time="3421390715" />
+      <marker label="" time="3508819286" />
+      <marker label="" time="3513690715" />
+      <marker label="" time="3518333572" />
+      <marker label="" time="3522747857" />
+      <marker label="" time="3526933572" />
+      <marker label="" time="3530890715" />
+      <marker label="" time="3534705000" />
+      <marker label="" time="3538333572" />
+      <marker label="" time="3541647857" />
+      <marker label="" time="3544976429" />
+      <marker label="" time="3548076429" />
+      <marker label="" time="3550947857" />
+      <marker label="" time="3553590715" />
+      <marker label="" time="3556076429" />
+      <marker label="" time="3558333572" />
+      <marker label="" time="3560333572" />
+      <marker label="" time="3562233572" />
+      <marker label="" time="3564147857" />
+      <marker label="" time="3565833572" />
+      <marker label="" time="3567290715" />
+      <marker label="" time="3568519286" />
+      <marker label="" time="3569519286" />
+      <marker label="" time="3570290715" />
+      <marker label="" time="3570619286" />
+      <marker label="" time="124819286" />
+      <marker label="" time="152747857" />
+   </wave_markers>
+   <wvobject type="logic" fp_name="/tb_top/resetn">
+      <obj_property name="ElementShortName">resetn</obj_property>
+      <obj_property name="ObjectShortName">resetn</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top/clk">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/led">
+      <obj_property name="ElementShortName">led[15:0]</obj_property>
+      <obj_property name="ObjectShortName">led[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/led_rg0">
+      <obj_property name="ElementShortName">led_rg0[1:0]</obj_property>
+      <obj_property name="ObjectShortName">led_rg0[1:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/led_rg1">
+      <obj_property name="ElementShortName">led_rg1[1:0]</obj_property>
+      <obj_property name="ObjectShortName">led_rg1[1:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/num_csn">
+      <obj_property name="ElementShortName">num_csn[7:0]</obj_property>
+      <obj_property name="ObjectShortName">num_csn[7:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/num_a_g">
+      <obj_property name="ElementShortName">num_a_g[6:0]</obj_property>
+      <obj_property name="ObjectShortName">num_a_g[6:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/switch">
+      <obj_property name="ElementShortName">switch[7:0]</obj_property>
+      <obj_property name="ObjectShortName">switch[7:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/btn_key_col">
+      <obj_property name="ElementShortName">btn_key_col[3:0]</obj_property>
+      <obj_property name="ObjectShortName">btn_key_col[3:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/btn_key_row">
+      <obj_property name="ElementShortName">btn_key_row[3:0]</obj_property>
+      <obj_property name="ObjectShortName">btn_key_row[3:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/btn_step">
+      <obj_property name="ElementShortName">btn_step[1:0]</obj_property>
+      <obj_property name="ObjectShortName">btn_step[1:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top/cpu_clk">
+      <obj_property name="ElementShortName">cpu_clk</obj_property>
+      <obj_property name="ObjectShortName">cpu_clk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top/sys_clk">
+      <obj_property name="ElementShortName">sys_clk</obj_property>
+      <obj_property name="ObjectShortName">sys_clk</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/debug0_wb_pc">
+      <obj_property name="ElementShortName">debug0_wb_pc[31:0]</obj_property>
+      <obj_property name="ObjectShortName">debug0_wb_pc[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/debug0_wb_rf_we">
+      <obj_property name="ElementShortName">debug0_wb_rf_we[3:0]</obj_property>
+      <obj_property name="ObjectShortName">debug0_wb_rf_we[3:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/debug0_wb_rf_wnum">
+      <obj_property name="ElementShortName">debug0_wb_rf_wnum[4:0]</obj_property>
+      <obj_property name="ObjectShortName">debug0_wb_rf_wnum[4:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/debug0_wb_rf_wdata">
+      <obj_property name="ElementShortName">debug0_wb_rf_wdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">debug0_wb_rf_wdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/debug1_wb_pc">
+      <obj_property name="ElementShortName">debug1_wb_pc[31:0]</obj_property>
+      <obj_property name="ObjectShortName">debug1_wb_pc[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/debug1_wb_rf_we">
+      <obj_property name="ElementShortName">debug1_wb_rf_we[3:0]</obj_property>
+      <obj_property name="ObjectShortName">debug1_wb_rf_we[3:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/debug1_wb_rf_wnum">
+      <obj_property name="ElementShortName">debug1_wb_rf_wnum[4:0]</obj_property>
+      <obj_property name="ObjectShortName">debug1_wb_rf_wnum[4:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/debug1_wb_rf_wdata">
+      <obj_property name="ElementShortName">debug1_wb_rf_wdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">debug1_wb_rf_wdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/trace_ref">
+      <obj_property name="ElementShortName">trace_ref[31:0]</obj_property>
+      <obj_property name="ObjectShortName">trace_ref[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top/trace0_cmp_flag">
+      <obj_property name="ElementShortName">trace0_cmp_flag</obj_property>
+      <obj_property name="ObjectShortName">trace0_cmp_flag</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top/trace1_cmp_flag">
+      <obj_property name="ElementShortName">trace1_cmp_flag</obj_property>
+      <obj_property name="ObjectShortName">trace1_cmp_flag</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/ref0_wb_pc">
+      <obj_property name="ElementShortName">ref0_wb_pc[31:0]</obj_property>
+      <obj_property name="ObjectShortName">ref0_wb_pc[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/ref0_wb_rf_wnum">
+      <obj_property name="ElementShortName">ref0_wb_rf_wnum[4:0]</obj_property>
+      <obj_property name="ObjectShortName">ref0_wb_rf_wnum[4:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/ref0_wb_rf_wdata">
+      <obj_property name="ElementShortName">ref0_wb_rf_wdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">ref0_wb_rf_wdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/ref1_wb_pc">
+      <obj_property name="ElementShortName">ref1_wb_pc[31:0]</obj_property>
+      <obj_property name="ObjectShortName">ref1_wb_pc[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/ref1_wb_rf_wnum">
+      <obj_property name="ElementShortName">ref1_wb_rf_wnum[4:0]</obj_property>
+      <obj_property name="ObjectShortName">ref1_wb_rf_wnum[4:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/ref1_wb_rf_wdata">
+      <obj_property name="ElementShortName">ref1_wb_rf_wdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">ref1_wb_rf_wdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/debug0_wb_rf_wdata_v">
+      <obj_property name="ElementShortName">debug0_wb_rf_wdata_v[31:0]</obj_property>
+      <obj_property name="ObjectShortName">debug0_wb_rf_wdata_v[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/ref0_wb_rf_wdata_v">
+      <obj_property name="ElementShortName">ref0_wb_rf_wdata_v[31:0]</obj_property>
+      <obj_property name="ObjectShortName">ref0_wb_rf_wdata_v[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/debug1_wb_rf_wdata_v">
+      <obj_property name="ElementShortName">debug1_wb_rf_wdata_v[31:0]</obj_property>
+      <obj_property name="ObjectShortName">debug1_wb_rf_wdata_v[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/ref1_wb_rf_wdata_v">
+      <obj_property name="ElementShortName">ref1_wb_rf_wdata_v[31:0]</obj_property>
+      <obj_property name="ObjectShortName">ref1_wb_rf_wdata_v[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top/debug_wb_err">
+      <obj_property name="ElementShortName">debug_wb_err</obj_property>
+      <obj_property name="ObjectShortName">debug_wb_err</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/err_count">
+      <obj_property name="ElementShortName">err_count[7:0]</obj_property>
+      <obj_property name="ObjectShortName">err_count[7:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/confreg_num_reg">
+      <obj_property name="ElementShortName">confreg_num_reg[31:0]</obj_property>
+      <obj_property name="ObjectShortName">confreg_num_reg[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/confreg_num_reg_r">
+      <obj_property name="ElementShortName">confreg_num_reg_r[31:0]</obj_property>
+      <obj_property name="ObjectShortName">confreg_num_reg_r[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top/uart_display">
+      <obj_property name="ElementShortName">uart_display</obj_property>
+      <obj_property name="ObjectShortName">uart_display</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/uart_data">
+      <obj_property name="ElementShortName">uart_data[7:0]</obj_property>
+      <obj_property name="ObjectShortName">uart_data[7:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top/global_err">
+      <obj_property name="ElementShortName">global_err</obj_property>
+      <obj_property name="ObjectShortName">global_err</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top/test_end">
+      <obj_property name="ElementShortName">test_end</obj_property>
+      <obj_property name="ObjectShortName">test_end</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top/soc_lite/u_cpu/u_icache/i_rvalid">
+      <obj_property name="ElementShortName">i_rvalid</obj_property>
+      <obj_property name="ObjectShortName">i_rvalid</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top/soc_lite/u_cpu/u_dcache/d_rvalid">
+      <obj_property name="ElementShortName">d_rvalid</obj_property>
+      <obj_property name="ObjectShortName">d_rvalid</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top/soc_lite/u_cpu/u_dcache/d_rready">
+      <obj_property name="ElementShortName">d_rready</obj_property>
+      <obj_property name="ObjectShortName">d_rready</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top/soc_lite/u_cpu/u_dcache/d_wvalid">
+      <obj_property name="ElementShortName">d_wvalid</obj_property>
+      <obj_property name="ObjectShortName">d_wvalid</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top/soc_lite/u_cpu/u_dcache/d_wready">
+      <obj_property name="ElementShortName">d_wready</obj_property>
+      <obj_property name="ObjectShortName">d_wready</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/soc_lite/u_cpu/u_EX0/pc0">
+      <obj_property name="ElementShortName">pc0[31:0]</obj_property>
+      <obj_property name="ObjectShortName">pc0[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/soc_lite/u_cpu/u_REG_EX1/regfile1/regs[14]">
+      <obj_property name="ElementShortName">[14][31:0]</obj_property>
+      <obj_property name="ObjectShortName">[14][31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/soc_lite/u_cpu/u_REG_EX1/regfile1/regs[16]">
+      <obj_property name="ElementShortName">[16][31:0]</obj_property>
+      <obj_property name="ObjectShortName">[16][31:0]</obj_property>
+   </wvobject>
+</wave_config>
