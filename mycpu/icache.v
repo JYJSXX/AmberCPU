@@ -4,7 +4,7 @@
 `include "exception.vh"
 `include "define.vh"
 module icache #(
-    parameter INDEX_WIDTH       = 6,
+    parameter INDEX_WIDTH       = 9,
     parameter WORD_OFFSET_WIDTH = 4,
     parameter COOKIE_WIDTH      = 33
 )(

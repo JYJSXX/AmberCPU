@@ -18,12 +18,13 @@ module victim_icache
     input we,
     input [511:0] data_in
 );
-    localparam COUNTER_WIDTH = 4;
-    localparam CAPACITY = 16; // 容量
+    localparam COUNTER_WIDTH = 2;
+    localparam CAPACITY = 4; // 容量
     //读，类似于Dram，组合逻辑
     wire [CAPACITY-1:0] hit;
     wire [COUNTER_WIDTH-1:0] hit_index;
-    assign hit_index = hit[0] ? 0 : (hit[1] ? 1 : (hit[2] ? 2 : (hit[3] ? 3 : (hit[4] ? 4 : (hit[5] ? 5 : (hit[6] ? 6 : (hit[7] ? 7 : (hit[8] ? 8 : (hit[9] ? 9 : (hit[10] ? 10 : (hit[11] ? 11 : (hit[12] ? 12 : (hit[13] ? 13 : (hit[14] ? 14 : (hit[15] ? 15 : 0)))))))))))))));
+    assign hit_index = hit[0] ? 0 : (hit[1] ? 1 : (hit[2] ? 2 : (hit[3] ? 3 : 0)));
+    // assign hit_index = hit[0] ? 0 : (hit[1] ? 1 : (hit[2] ? 2 : (hit[3] ? 3 : (hit[4] ? 4 : (hit[5] ? 5 : (hit[6] ? 6 : (hit[7] ? 7 : (hit[8] ? 8 : (hit[9] ? 9 : (hit[10] ? 10 : (hit[11] ? 11 : (hit[12] ? 12 : (hit[13] ? 13 : (hit[14] ? 14 : (hit[15] ? 15 : 0)))))))))))))));
     wire [5:0] windex;
     wire [19:0] wtag;
     wire victim_valid;

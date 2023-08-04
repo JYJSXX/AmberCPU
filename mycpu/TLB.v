@@ -992,7 +992,12 @@
 
 
 `timescale 1ns/1ps
+`include "config.vh"
+`ifdef BIG_CACHE
+`include "BIG_TLB.vh"
+`else
 `include "TLB.vh"
+`endif 
 `include "csr.vh"
 `include "exception.vh"
 module TLB#(
@@ -1015,8 +1020,8 @@ module TLB#(
     input                               stall_i,//读使能
     input                               stall_d,
     input                               en_d,
-    input       [`TLB_VPPN_LEN : 0]     VA_I,
-    input       [`TLB_VPPN_LEN : 0]     VA_D,
+    input       [`TLB_VPPN_LEN_I : 0]     VA_I,
+    input       [`TLB_VPPN_LEN_D : 0]     VA_D,
     input       [31 : 0]                  WDATA_D,
     input       [3 : 0]                    WSTRB_D,
     input                               signed_ext,
@@ -1024,23 +1029,23 @@ module TLB#(
     input      [TLB_COOKIE_WIDTH-1:0]   tlb_cookie_in,
     output     [TLB_COOKIE_WIDTH-1:0]   tlb_cookie_out,
     input       [4:0]                   rd,
-    input       [11:0]                  TAG_OFFSET_I,
-    input       [11:0]                  TAG_OFFSET_D,
+    input       [`TLB_OFFSET_I:0]                  TAG_OFFSET_I,
+    input       [`TLB_OFFSET_D:0]                  TAG_OFFSET_D,
     //TO CACHE
-    output reg  [`TLB_PPN_LEN - 1:0]    PA_I,
-    output reg  [`TLB_PPN_LEN - 1:0]    PA_D,
+    output reg  [`TLB_PPN_LEN_I - 1:0]    PA_I,
+    output reg  [`TLB_PPN_LEN_D - 1:0]    PA_D,
     output reg                          is_cached_I,
     output reg                          is_cached_D,
     output                              en_VA_I_OUT,
     output                              en_VA_D_OUT,
-    output      [`TLB_VPPN_LEN : 0]     VA_I_OUT,
-    output      [`TLB_VPPN_LEN : 0]     VA_D_OUT,
+    output      [`TLB_VPPN_LEN_I : 0]     VA_I_OUT,
+    output      [`TLB_VPPN_LEN_D : 0]     VA_D_OUT,
     output      [31:0]                  WDATA_D_OUT,
     output      [3:0]                   WSTRB_D_OUT,
-    output      [11:0]                  VA_TAG_OFFSET_I_OUT,
-    output      [11:0]                  VA_TAG_OFFSET_D_OUT,
-    output      [11:0]                  PA_TAG_OFFSET_I_OUT,
-    output      [11:0]                  PA_TAG_OFFSET_D_OUT,
+    output      [`TLB_OFFSET_I:0]                  VA_TAG_OFFSET_I_OUT,
+    output      [`TLB_OFFSET_D:0]                  VA_TAG_OFFSET_D_OUT,
+    output      [`TLB_OFFSET_I:0]                  PA_TAG_OFFSET_I_OUT,
+    output      [`TLB_OFFSET_D:0]                  PA_TAG_OFFSET_D_OUT,
     output                              signed_ext_out,
     output                              atom_out,
     output      [4:0]                   rd_out,
