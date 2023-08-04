@@ -75,8 +75,11 @@ module BTB #(
 
 
     wire                            we;
+    wire                            local_we;
     wire [31:0]                     PCAdd;
     wire [31:0]                     guess_pc;
+    wire [PC_INDEX_WIDTH-1:0]       HASH_INDEX;
+    wire [PC_INDEX_WIDTH-1:0]       HASH_FACT_INDEX;
     wire [PC_INDEX_WIDTH-1:0]       INDEX;
     wire [PC_INDEX_WIDTH-1:0]       FACT_INDEX;
     wire                            pred_valid;
@@ -84,17 +87,23 @@ module BTB #(
     wire [31:0]                     pred_pc_hang;
     wire                            local_taken;
     wire                            hit;
-    wire                            Bhit;//from predecoder
+    wire                            Bhit;//from IF0
     wire                            Uhit;
-    wire                            check_Bhit;
+    wire                            check_Bhit;//from pre_decoder
     wire                            check_Uhit;
 
 
 
     assign we = fact_taken;
-    assign INDEX={fetch_pc[19],fetch_pc[16:12],fetch_pc[5:4]};
+    assign local_we = predict_add_fail;
+    assign INDEX=fetch_pc[10:3];
+    assign HASH_INDEX={fetch_pc[12],fetch_pc[10],fetch_pc[8:3]};
+
     // assign FACT_INDEX=fact_pc[PC_INDEX_WIDTH+2:3];
-    assign FACT_INDEX={fact_pc[19],fact_pc[16:12],fact_pc[5:4]};
+    assign FACT_INDEX=fact_pc[10:3];
+    assign HASH_FACT_INDEX={fact_pc[12],fact_pc[10],fact_pc[8:3]};
+
+
     assign hit=taken==fact_taken;//全局检查
     assign Bhit=BMASK[INDEX];
     assign Uhit=UMASK[INDEX];
@@ -142,8 +151,8 @@ module BTB #(
     )u_DualPortRAM(
         .clk         ( clk         ),
         .readAddrA   ( INDEX       ),
-        .readAddrB   ( FACT_INDEX  ),
-        .writeAddr   ( FACT_INDEX  ),
+        .readAddrB   ( HASH_FACT_INDEX  ),
+        .writeAddr   ( HASH_FACT_INDEX  ),
         .writeData   ( fact_tpc    ),
         .writeEnable ( we          ),
         .readDataA   ( guess_pc    ),
@@ -154,8 +163,9 @@ module BTB #(
         .clk        ( clk        ),
         .rstn       ( rstn       ),
         .fetch_pc   ( fetch_pc   ),
-        .fact_tpc   ( fact_tpc   ),
+        .fact_pc    ( fact_pc   ),
         .fact_taken ( fact_taken ),
+        .we         ( local_we   ),
         .pred_taken ( local_taken)
     );
 
