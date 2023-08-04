@@ -79,7 +79,6 @@ module BTB #(
     wire                            hash_we;
     wire                            adv_we;
     wire                            local_we;
-    wire                            adv_valid;
 
     wire [31:0]                     PCAdd;
     wire [PC_INDEX_WIDTH-1:0]       HASH_INDEX;
@@ -97,6 +96,7 @@ module BTB #(
     wire                            hit;
     wire                            Bhit;//from IF0
     wire                            Uhit;
+    wire                            adv_hit;
     wire                            check_Bhit;//from pre_decoder
     wire                            check_Uhit;
     wire [1:0]                      check_taken;
@@ -106,13 +106,13 @@ module BTB #(
     assign we       = fact_taken;
     assign hash_we  = 1'b1;
     assign local_we = predict_add_fail;
-    assign adv_we   = (predict_add_fail||predict_dir_fail);
+    assign adv_we   = fact_taken&&(predict_add_fail||predict_dir_fail);
 
     assign INDEX=fetch_pc[PC_INDEX_WIDTH+2:3];
-    assign HASH_INDEX={fetch_pc[12],fetch_pc[10],fetch_pc[8:3]};
+    // assign HASH_INDEX={fetch_pc[12],fetch_pc[10],fetch_pc[8:3]};
 
     assign FACT_INDEX=fact_pc[PC_INDEX_WIDTH+2:3];
-    assign HASH_FACT_INDEX={fact_pc[12],fact_pc[10],fact_pc[8:3]};
+    // assign HASH_FACT_INDEX={fact_pc[12],fact_pc[10],fact_pc[8:3]};
 
     assign hit=taken==check_taken;//全局检查
     assign Bhit=BMASK[INDEX];
@@ -126,7 +126,7 @@ module BTB #(
     //                                     Bhit?taken:2'b00;
     // assign      pred_pc   = (pred_taken!=2'b00)?guess_pc:PCAdd;
 
-    assign         pred_taken= adv_valid?adv_taken:2'b00;
+    assign         pred_taken= adv_hit?adv_taken:2'b00;
     assign         pred_pc   = (pred_taken!=2'b00)?adv_pred_pc:PCAdd;
     
     `ifdef BTB_LOG
@@ -153,31 +153,31 @@ module BTB #(
 
     `endif
     
-    DualPortRAM #(
-        //write after read,for conditional branch(btype =10)
-        //for PC colloct
-        .DATA_WIDTH  ( 32 ),
-        .ADDR_WIDTH  ( PC_INDEX_WIDTH )
-    )u_DualPortRAM(
-        .clk         ( clk         ),
-        .readAddrA   ( INDEX       ),
-        .readAddrB   ( HASH_FACT_INDEX  ),
-        .writeAddr   ( HASH_FACT_INDEX  ),
-        .writeData   ( fact_tpc    ),
-        .writeEnable ( hash_we     ),
-        .readDataA   ( hash_pred_pc    ),
-        .readDataB   ( pred_pc_hang)
-    );
+    // DualPortRAM #(
+    //     //write after read,for conditional branch(btype =10)
+    //     //for PC colloct
+    //     .DATA_WIDTH  ( 32 ),
+    //     .ADDR_WIDTH  ( PC_INDEX_WIDTH )
+    // )u_DualPortRAM(
+    //     .clk         ( clk         ),
+    //     .readAddrA   ( INDEX       ),
+    //     .readAddrB   ( HASH_FACT_INDEX  ),
+    //     .writeAddr   ( HASH_FACT_INDEX  ),
+    //     .writeData   ( fact_tpc    ),
+    //     .writeEnable ( hash_we     ),
+    //     .readDataA   ( hash_pred_pc    ),
+    //     .readDataB   ( pred_pc_hang)
+    // );
 
-    BTB_local u_BTB_local(//for local taken predict
-        .clk        ( clk        ),
-        .rstn       ( rstn       ),
-        .fetch_pc   ( fetch_pc   ),
-        .fact_pc    ( fact_pc    ),
-        .fact_taken ( fact_taken ),
-        .we         ( local_we   ),
-        .pred_taken ( local_taken)
-    );
+    // BTB_local u_BTB_local(//for local taken predict
+    //     .clk        ( clk        ),
+    //     .rstn       ( rstn       ),
+    //     .fetch_pc   ( fetch_pc   ),
+    //     .fact_pc    ( fact_pc    ),
+    //     .fact_taken ( fact_taken ),
+    //     .we         ( local_we   ),
+    //     .pred_taken ( local_taken)
+    // );
 
     BTB_advance#(
         .INDEX_WIDTH ( 7 ),
@@ -185,7 +185,7 @@ module BTB #(
     )u_BTB_advance(
         .rstn           ( rstn        ),
         .clk            ( clk         ),
-        .nex_pc         ( nex_pc      ),
+        .fetch_pc       ( fetch_pc    ),
         .pred_pc        ( adv_pred_pc ),
         .pred_taken     ( adv_taken   ),
         .fact_taken     ( fact_taken  ),
@@ -193,8 +193,7 @@ module BTB #(
         .fact_tpc       ( fact_tpc    ),
         .predict_dir_fail(predict_dir_fail),
         .predict_add_fail(predict_add_fail),
-        .update_en      ( adv_we      ),
-        .btb_cache_hit  ( adv_valid   )
+        .hit            ( adv_hit)
     );
 
 
