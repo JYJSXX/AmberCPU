@@ -29,12 +29,8 @@ module regfile(
 	
 	//读端口4
 	input wire[4:0]   		raddr4,
-	output reg[31:0]        rdata4,
+	output reg[31:0]        rdata4
 
-	//写端口3
-	input               we3,
-	input[4:0]    		waddr3,
-	input[31:0]     	wdata3
 	
 	//output wire[31:0] reg1 //存放BL指令的返回地址
 	`ifdef DIFFTEST
@@ -70,12 +66,20 @@ module regfile(
 	output [31:0] reg_diff29,
 	output [31:0] reg_diff30,
 	output [31:0] reg_diff31,
-	input [31:0] debug0_wb_inst
+	input [31:0] debug0_wb_inst,
+	input [31:0] debug1_wb_inst
 	`endif
 	
 );
 
     reg[31:0]  regs[0:31];
+	integer j;
+
+initial begin
+    for(j = 0; j < 32; j = j + 1)begin
+        regs[j] = 0;
+    end
+end
     //assign reg1 = regs[1];
 `ifdef DIFFTEST
 // assign reg_diff0  = (we3 && (waddr3 == 0)) ? wdata3: (debug0_wb_inst[30:28] =='b010 && ~debug0_wb_inst[ 24] &&we1 && (waddr1 == 0)) ? wdata1 : regs[0];
@@ -149,37 +153,42 @@ assign reg_diff31 = regs[31];
     always @ (posedge clk) begin
 
         
-        case ({we2, we1, we3})
-		3'b010: if (waddr1 != 0) regs[waddr1] <= wdata1;
-		3'b100: if (waddr2 != 0) regs[waddr2] <= wdata2;
-		3'b001: if(waddr3 != 0) regs[waddr3] <= wdata3;
-		3'b110: begin
-		     if (waddr2 != 0) regs[waddr2] <= wdata2;
+        case ({we2, we1})
+		2'b01: if (waddr1 != 0) begin
+			`ifdef DIFF_TEST
+			if(debug0_wb_inst[31:4]==27'b0000_0000_0000_0000_0000_1100_000)
+				regs[waddr1] <= wdata1+2;
+			else 
+		    `endif
+			regs[waddr1] <= wdata1;
+		end
+		2'b10: if (waddr2 != 0) begin
+			`ifdef DIFF_TEST
+			if(debug1_wb_inst[31:4]==27'b0000_0000_0000_0000_0000_1100_000)
+				regs[waddr2] <= wdata2+2;
+			else 
+		    `endif
+			regs[waddr2] <= wdata2;
+		end
+		2'b11: begin
+		     if (waddr2 != 0) begin
+				`ifdef DIFF_TEST
+			if(debug1_wb_inst[31:4]==27'b0000_0000_0000_0000_0000_1100_000)
+				regs[waddr2] <= wdata2+2;
+			else 
+		    `endif
+				regs[waddr2] <= wdata2;
+			 end
 		     if (waddr1 != waddr2 && waddr1 != 0) begin // 没有发生“写后写”（WAW）相关
+			 `ifdef DIFF_TEST
+			if(debug0_wb_inst[31:4]==27'b0000_0000_0000_0000_0000_1100_000)
+				regs[waddr1] <= wdata1+2;
+			else 
+		    `endif
 		         regs[waddr1] <= wdata1;
 		     end
 		 end
-		 3'b101: begin
-		     if (waddr1 != 0) regs[waddr1] <= wdata1;
-		     if (waddr3 != waddr1 && waddr3 != 0) begin // 没有发生“写后写”（WAW）相关
-		         regs[waddr3] <= wdata3;
-		     end
-		 end
-		 3'b011: begin
-		     if (waddr2 != 0) regs[waddr2] <= wdata2;
-		     if (waddr3 != waddr2 && waddr3 != 0) begin // 没有发生“写后写”（WAW）相关
-		         regs[waddr3] <= wdata3;
-		     end
-		 end
-		 3'b111: begin
-		     if (waddr1 != 0) regs[waddr1] <= wdata1;
-		     if (waddr2 != waddr1 && waddr2 != 0) begin // 没有发生“写后写”（WAW）相关
-		         regs[waddr2] <= wdata2;
-		     end
-		     if (waddr3 != waddr1 && waddr3 != waddr2 && waddr3 != 0) begin // 没有发生“写后写”（WAW）相关
-		         regs[waddr3] <= wdata3;
-		     end
-		 end
+		 
 		 default: ;
         endcase
     end
@@ -191,31 +200,15 @@ assign reg_diff31 = regs[31];
         end else if (raddr1 == 5'h0) begin
             rdata1 = `zero;
         end else begin
-            case ({we2, we1, we3})
-			 3'b010: rdata1 = (raddr1 == waddr1) ? wdata1 : regs[raddr1];
-			 3'b100: rdata1 = (raddr1 == waddr2) ? wdata2 : regs[raddr1];
-			 3'b001: rdata1 = (raddr1 == waddr3) ? wdata3 : regs[raddr1];
-			 3'b110: begin
+            case ({we2, we1})
+			 2'b01: rdata1 = (raddr1 == waddr1) ? wdata1 : regs[raddr1];
+			 2'b10: rdata1 = (raddr1 == waddr2) ? wdata2 : regs[raddr1];
+			 2'b11: begin
 			     if (raddr1 == waddr2) rdata1 = wdata2;
 			     else if (raddr1 == waddr1) rdata1 = wdata1;
 			     else rdata1 = regs[raddr1];
 			 end
-			 3'b101: begin
-			     if (raddr1 == waddr1) rdata1 = wdata1;
-			     else if (raddr1 == waddr3) rdata1 = wdata3;
-			     else rdata1 = regs[raddr1];
-			 end
-			 3'b011: begin
-			     if (raddr1 == waddr2) rdata1 = wdata2;
-			     else if (raddr1 == waddr3) rdata1 = wdata3;
-			     else rdata1 = regs[raddr1];
-			 end
-			 3'b111: begin
-			     if (raddr1 == waddr1) rdata1 = wdata1;
-			     else if (raddr1 == waddr2) rdata1 = wdata2;
-			     else if (raddr1 == waddr3) rdata1 = wdata3;
-			     else rdata1 = regs[raddr1];
-			 end
+			 
 			 default: rdata1 = regs[raddr1];
             endcase
         end
@@ -227,31 +220,15 @@ assign reg_diff31 = regs[31];
         end else if (raddr2 == 5'h0) begin
             rdata2 = `zero;
         end else begin
-            case ({we2, we1, we3})
-			 3'b010: rdata2 = (raddr2 == waddr1) ? wdata1 : regs[raddr2];
-			 3'b100: rdata2 = (raddr2 == waddr2) ? wdata2 : regs[raddr2];
-			 3'b001: rdata2 = (raddr2 == waddr3) ? wdata3 : regs[raddr2];
-			 3'b110: begin
+            case ({we2, we1})
+			 2'b01: rdata2 = (raddr2 == waddr1) ? wdata1 : regs[raddr2];
+			 2'b10: rdata2 = (raddr2 == waddr2) ? wdata2 : regs[raddr2];
+			 2'b11: begin
 			     if (raddr2 == waddr2) rdata2 = wdata2;
 			     else if (raddr2 == waddr1) rdata2 = wdata1;
 			     else rdata2 = regs[raddr2];
 			 end
-			 3'b011: begin
-			     if (raddr2 == waddr2) rdata2 = wdata2;
-			     else if (raddr2 == waddr3) rdata2 = wdata3;
-			     else rdata2 = regs[raddr2];
-			 end
-			 3'b101: begin
-			     if (raddr2 == waddr1) rdata2 = wdata1;
-			     else if (raddr2 == waddr3) rdata2 = wdata3;
-			     else rdata2 = regs[raddr2];
-			 end
-			 3'b111: begin
-			     if (raddr2 == waddr1) rdata2 = wdata1;
-			     else if (raddr2 == waddr2) rdata2 = wdata2;
-			     else if (raddr2 == waddr3) rdata2 = wdata3;
-			     else rdata2 = regs[raddr2];
-			 end
+			 
 
 			 default: rdata2 = regs[raddr2];
             endcase
@@ -264,31 +241,15 @@ assign reg_diff31 = regs[31];
         end else if (raddr3 == 5'h0) begin
             rdata3 = `zero;
         end else begin
-            case ({we2, we1, we3})
-			 3'b010: rdata3 = (raddr3 == waddr1) ? wdata1 : regs[raddr3];
-			 3'b100: rdata3 = (raddr3 == waddr2) ? wdata2 : regs[raddr3];
-			 3'b001: rdata3 = (raddr3 == waddr3) ? wdata3 : regs[raddr3];
-			 3'b110: begin
+            case ({we2, we1})
+			 2'b01: rdata3 = (raddr3 == waddr1) ? wdata1 : regs[raddr3];
+			 2'b10: rdata3 = (raddr3 == waddr2) ? wdata2 : regs[raddr3];
+			 2'b11: begin
 			     if (raddr3 == waddr2) rdata3 = wdata2;
 			     else if (raddr3 == waddr1) rdata3 = wdata1;
 			     else rdata3 = regs[raddr3];
 			 end
-			 3'b011: begin
-			     if (raddr3 == waddr2) rdata3 = wdata2;
-			     else if (raddr3 == waddr3) rdata3 = wdata3;
-			     else rdata3 = regs[raddr3];
-			 end
-			 3'b101: begin
-			     if (raddr3 == waddr1) rdata3 = wdata1;
-			     else if (raddr3 == waddr3) rdata3 = wdata3;
-			     else rdata3 = regs[raddr3];
-			 end
-			 3'b111: begin
-			     if (raddr3 == waddr2) rdata3 = wdata2;
-			     else if (raddr3 == waddr1) rdata3 = wdata1;
-			     else if (raddr3 == waddr3) rdata3 = wdata3;
-			     else rdata3 = regs[raddr3];
-			 end
+			 
 			 default: rdata3 = regs[raddr3];
             endcase
         end
@@ -300,31 +261,15 @@ assign reg_diff31 = regs[31];
         end else if (raddr4 == 5'h0) begin
             rdata4 = `zero;
         end else begin
-            case ({we2, we1, we3})
-			 3'b010: rdata4 = (raddr4 == waddr1) ? wdata1 : regs[raddr4];
-			 3'b100: rdata4 = (raddr4 == waddr2) ? wdata2 : regs[raddr4];
-			 3'b001: rdata4 = (raddr4 == waddr3) ? wdata3 : regs[raddr4];
-			 3'b110: begin
+            case ({we2, we1})
+			 2'b01: rdata4 = (raddr4 == waddr1) ? wdata1 : regs[raddr4];
+			 2'b10: rdata4 = (raddr4 == waddr2) ? wdata2 : regs[raddr4];
+			 2'b11: begin
 			     if (raddr4 == waddr2) rdata4 = wdata2;
 			     else if (raddr4 == waddr1) rdata4 = wdata1;
 			     else rdata4 = regs[raddr4];
 			 end
-			 3'b011: begin
-			     if (raddr4 == waddr2) rdata4 = wdata2;
-			     else if (raddr4 == waddr3) rdata4 = wdata3;
-			     else rdata4 = regs[raddr4];
-			 end
-			 3'b101: begin
-			     if (raddr4 == waddr1) rdata4 = wdata1;
-			     else if (raddr4 == waddr3) rdata4 = wdata3;
-			     else rdata4 = regs[raddr4];
-			 end
-			 3'b111: begin
-			     if (raddr4 == waddr2) rdata4 = wdata2;
-			     else if (raddr4 == waddr1) rdata4 = wdata1;
-			     else if (raddr4 == waddr3) rdata4 = wdata3;
-			     else rdata4 = regs[raddr4];
-			 end
+			 
 			 default: rdata4 = regs[raddr4];
             endcase
         end

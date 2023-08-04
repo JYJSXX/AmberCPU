@@ -3,7 +3,7 @@
 `include "exception.vh"
 
 module dcache #(
-    parameter INDEX_WIDTH       = 6,
+    parameter INDEX_WIDTH       = 8,
     parameter WORD_OFFSET_WIDTH = 4,
     parameter COOKIE_WIDTH = 5
 )(
@@ -134,7 +134,7 @@ module dcache #(
     reg                         data_from_mem;
 
     // LRU replace
-    reg  [64-1:0]      lru; //0: way0, 1: way1
+    reg  [SET_NUM-1:0]      lru; //0: way0, 1: way1
     wire [1:0]                  lru_sel;
     reg                         lru_we;
     //reg                         missbuf_we;
@@ -159,6 +159,37 @@ module dcache #(
     reg     [63:0]              total_request;
     reg     [63:0]              miss_time;
     reg     [63:0]              write_time;
+
+    /* main FSM */
+    localparam 
+        IDLE        = 4'd0,
+        LOOKUP      = 4'd1,
+        MISS        = 4'd2,
+        REFILL      = 4'd3,
+        WAIT_WRITE  = 4'd4,
+        CACOP       = 4'd5,
+        IBAR        = 4'd6,     //处理uncache写
+        IBAR_EXTRA  = 4'd7,
+        IBAR_WAIT   = 4'd8;
+
+    reg [3:0] state, next_state;
+    assign idle = (state == IDLE) && !ibar;
+    always @(posedge clk) begin
+        if(!rstn) begin
+            state <= IDLE;
+        end
+        else begin
+            state <= next_state;
+        end
+    end
+
+    /* write fsm */
+    localparam 
+        INIT    = 3'd0,
+        WRITE   = 3'd1,
+        FINISH  = 3'd2;
+    reg [2:0] wfsm_state, wfsm_next_state;
+    
     always @(posedge clk) begin
         if(!rstn) begin
             total_time <= 0;
@@ -206,11 +237,11 @@ module dcache #(
     reg                         hit2_flag;
     wire                        ibar_state;
     assign ibar_state = (state==IBAR) && (state == IBAR_EXTRA) && (state == IBAR_WAIT);
-    wire [5:0] dirty_index;
+    wire [INDEX_WIDTH-1:0] dirty_index;
     wire way0, way1;
 
-    assign dirty_addr[0] = {tag_rdata[0][19:0], dirty_index, 6'b0};
-    assign dirty_addr[1] = {tag_rdata[1][19:0], dirty_index, 6'b0};
+    assign dirty_addr[0] = {tag_rdata[0][TAG_WIDTH-1:0], dirty_index, 6'b0};
+    assign dirty_addr[1] = {tag_rdata[1][TAG_WIDTH-1:0], dirty_index, 6'b0};
 
     /* cookie */ 
     reg [COOKIE_WIDTH-1 : 0] cookie_buf;
@@ -269,18 +300,26 @@ module dcache #(
         default: exception_temp1 = 0;
         endcase
     end
-    assign exception_cache = ({7{!(op_buf && !llbit_buf && is_atom_buf)}} | {7{~cacop_en_buf}}) & exception_temp1;
-    assign exception_temp  = exception_flag ? forward_exception : ({7{!((cacop_en_buf && hit_invalid) || (op_buf && is_atom_buf && !llbit_buf))}} 
-                            & (tlb_exception == `EXP_ADEM ? tlb_exception : (exception_cache == 0 ? tlb_exception : exception_cache)));
-    assign exception_obuf = {7{((rready || wready) || cacop_en_buf)}} & (exception_sel ? exception_buf : exception_temp);
-    //assign d_exception_flag = exception_flag ? 1 : exception_obuf != 0;
-    reg  [6:0] exception_old;
-    wire [6:0] exception_new;
-    assign exception_new = exception_obuf;
-    always @(posedge clk) 
-        if(~rstn) exception_old <= 0;
-        else exception_old <= exception_new;
-    assign exception = ~exception_old & exception_new;
+    assign exception_temp = ({7{!(op_buf && !llbit_buf && is_atom_buf)}} | {7{~cacop_en_buf}}) & exception_temp1;
+    always @(posedge clk) begin
+        if(!rstn) begin
+            // dirty_mbuf <= 0;
+            exception_buf <= 0;
+        end
+        else if(req_buf_we) begin
+            // dirty_mbuf <= dirty_rdata;
+            exception_buf <= forward_exception;
+        end
+    end
+        reg exception_flag_buf;
+    always @(posedge clk) begin
+        if(!rstn)
+            exception_flag_buf <= 0;
+        else
+            exception_flag_buf <= exception_flag;
+    end
+    assign exception = exception_flag_buf ? exception_buf : (state != IDLE) ? exception_temp : 0;
+
 
     /* request buffer : lock the read request addr */
     // [31:0] addr, [63:32] wdata [67:64] wstrb
@@ -325,7 +364,7 @@ module dcache #(
         if(!rstn) begin
             uncache_buf <= 0;
         end
-        else if(req_buf_we) begin
+        else if(pbuf_we) begin
             uncache_buf <= uncache;
         end
     end
@@ -349,9 +388,14 @@ module dcache #(
         if(flush || !rstn) begin
             flush_valid <= 0;
         end
-        else if(req_buf_we) begin
-            flush_valid <= rvalid;
+        else if(flush) begin
+            flush_valid <= 0;
         end
+        else if(rvalid || wvalid) begin
+            flush_valid <= 1;
+        end
+        else
+            flush_valid <= flush_valid;
 
     `ifdef DIFFTEST
         assign paddr_diff = paddr_buf;
@@ -368,7 +412,8 @@ module dcache #(
     `endif
 
     /* 2-way data memory */
-    assign r_index = ((way0 || way1)&&ibar_state) ? dirty_index :addr[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
+    // assign r_index = ((way0 || way1)&&ibar_state) ? dirty_index :addr[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
+    assign r_index = addr[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
     assign w_index = address[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
 
     BRAM_bytewrite #(
@@ -429,7 +474,12 @@ module dcache #(
       .waddr    (tag_index),
       .din      (tag_in),
       .we       (tagv_we[0]),
+      `ifdef IBAR
       .ibar     (ibar_complete),
+       `endif
+       `ifndef IBAR
+      .ibar     (0),
+       `endif
       .dout     (tag_rdata[0])
     );
     BRAM_tagv #(
@@ -441,13 +491,18 @@ module dcache #(
       .waddr    (tag_index),
       .din      (tag_in),
       .we       (tagv_we[1]),
+      `ifdef IBAR
       .ibar     (ibar_complete),
+       `endif
+       `ifndef IBAR
+      .ibar     (0),
+       `endif
       .dout     (tag_rdata[1])
     );
 
      /* victim cache */
     wire victim_hit;
-    wire [511:0] victim_data;
+    wire [BIT_NUM-1:0] victim_data;
     wire victim_sel;
     assign victim_sel = lru_sel[0] ? 0 : 1;
     wire victim_we;
@@ -457,8 +512,10 @@ module dcache #(
         if(!rstn) begin
             victim_w_tag <= 0;
         end
+        if(state == MISS)
+            victim_w_tag <= victim_w_tag;
         else begin
-            victim_w_tag <= {tag_rdata[victim_sel][TAG_WIDTH-1:0], req_buf[11:6]};
+            victim_w_tag <= {tag_rdata[victim_sel][TAG_WIDTH-1:0], w_index};
         end
     end
     reg [BIT_NUM - 1 : 0] victim_data_in;
@@ -466,12 +523,14 @@ module dcache #(
         if(!rstn) begin
             victim_data_in <= 0;
         end
+        if(state == MISS)
+            victim_w_tag <= victim_w_tag;
         else begin
             victim_data_in <= mem_rdata[victim_sel];
         end
     end
 
-    reg [19:0] victim_rtag_buf;
+    reg [TAG_WIDTH-1:0] victim_rtag_buf;
     reg miss_state;
     always @(posedge clk)
     begin
@@ -482,20 +541,23 @@ module dcache #(
         end
         else begin
             victim_rtag_buf <= tag;
-            miss_state <= (state == MISS) ;
+            miss_state <= (state == MISS) || (state == REFILL) ;
         end
     end
     wire [25:0] victim_rtag;
-    assign victim_rtag = miss_state ? {victim_rtag_buf,req_buf[11:6]}: {tag,req_buf[11:6]};
+    assign victim_rtag = miss_state ? {victim_rtag_buf,w_index}: {tag,w_index};
+    wire victim_hit_temp;
+    assign victim_hit = !op_buf ? victim_hit_temp && (hit == 0) : 0;
 
 
-    victim_cache #(
-        .CAPACITY(8)
+    victim_dcache#(
+        .TAG_WIDTH(TAG_WIDTH),
+        .INDEX_WIDTH(INDEX_WIDTH)
     ) victim_cache (
         .clk        (clk),
         .rstn       (rstn),
         .r_tag      (victim_rtag),
-        .victim_hit (victim_hit),
+        .victim_hit (victim_hit_temp),
         .data_out   (victim_data),
         .w_tag      (victim_w_tag),
         .we         (victim_we), // missbuf_we && valid[victim_sel] && victim_hit
@@ -503,13 +565,15 @@ module dcache #(
     );
 
     /* hit */
-    assign tag          = (state == MISS) ? paddr_buf[31:32-TAG_WIDTH]:p_addr[31:32-TAG_WIDTH]; // the tag of the request
+    assign tag          = (state == MISS) || (state == REFILL) ? paddr_buf[31:32-TAG_WIDTH]:p_addr[31:32-TAG_WIDTH]; // the tag of the request
     assign hit[0]       = valid[0] && (tag_rdata[0][TAG_WIDTH-1:0] == tag); // hit in way 0
     assign hit[1]       = valid[1] && (tag_rdata[1][TAG_WIDTH-1:0] == tag); // hit in way 1
     assign cache_hit    = |hit || victim_hit;
+    // assign cache_hit    = |hit;
     assign hit_way      = hit[0] ? 0 : 1; // 0 for way 0, 1 for way 1
     wire hit_way_valid;
     assign hit_way_valid = cache_hit && ~victim_hit ? hit_way : 0;
+    // assign hit_way_valid = cache_hit ? hit_way : 0;
     
     /* write control */
     assign wdata_pipe_512 = ({{(BIT_NUM-32){1'b0}}, wdata_pipe} << {address[1:0],3'b0}) << {address[BYTE_OFFSET_WIDTH-1:2], 5'b0};
@@ -521,7 +585,7 @@ module dcache #(
             mem_wdata = wdata_pipe_512;
         end
         else begin
-            mem_wdata = ret_buf & ~wstrb_pipe_512 | wdata_pipe_512 & wstrb_pipe_512;
+            mem_wdata = op_buf == WRITE_OP ? ret_buf & ~wstrb_pipe_512 | wdata_pipe_512 & wstrb_pipe_512 : ret_buf;
         end
     end
 
@@ -530,6 +594,7 @@ module dcache #(
     wire [BIT_NUM-1:0] o_rdata;
     reg [31:0]        rdata_cache;
     assign o_rdata = victim_hit ? victim_data : data_from_mem ? mem_rdata[hit_way_valid] : ret_buf; 
+    // assign o_rdata = data_from_mem ? mem_rdata[hit_way_valid] : ret_buf; 
     always @(*) begin
         case(req_buf[5:2])
         4'd0:  rdata_cache = o_rdata[31:0];
@@ -552,7 +617,7 @@ module dcache #(
     end
     // uncached read
     wire [31:0] rdata_temp;
-    assign rdata_temp = uncache_buf ? ret_buf[511:480] : rdata_cache;
+    assign rdata_temp = (uncache_buf && state == WAIT_WRITE) ? ret_buf[511:480] : rdata_cache;
     // 根据掩码和符号位拓展，给出最终的读数据
     always @(*) begin
         case(wstrb_pipe)
@@ -606,7 +671,11 @@ module dcache #(
     // end
     wire dirty_hit2;
     assign dirty_hit2 = way0 && way1;
-    dirty_table diety_table(
+    dirty_table #(
+    .TAG_WIDTH(TAG_WIDTH),
+    .INDEX_WIDTH(INDEX_WIDTH)
+    )
+     diety_table(
         .clk(clk),
         .rstn(rstn),
         .we(dirty_we),
@@ -614,8 +683,9 @@ module dcache #(
         .r_addr(w_index),
         .w_addr(w_index),
         .w_data(dirty_wdata),
-        .r_data(dirty_rdata),
-        .ibar(ibar),
+        .r_data(dirty_rdata)
+        `ifdef IBAR
+        ,.ibar(ibar),
         .ibar_ready(ibar_ready),
         .ibar_valid(ibar_valid),
         .ibar_complete(ibar_complete),
@@ -623,6 +693,7 @@ module dcache #(
         .dirty_addr(dirty_index),
         .way0(way0),
         .way1(way1)
+        `endif
     );
 
 
@@ -632,9 +703,12 @@ module dcache #(
             wbuf <= 0;
         end
         else if(wbuf_we) begin
+            `ifdef IBAR
             if(ibar_valid)          // 要写入的数据来自于ibar
                 wbuf <= mem_rdata[dirty_way];
-            else if(uncache_buf)     // 要写入的数据来自于uncache
+            else 
+            `endif
+            if(uncache)     // 要写入的数据来自于uncache
                 wbuf <= {{(BIT_NUM-32){1'b0}}, wdata_pipe};
             else
                 wbuf <= lru_sel[1] ? mem_rdata[1] : mem_rdata[0];
@@ -648,36 +722,22 @@ module dcache #(
             m_buf <= 0;
         end
         else if(mbuf_we) begin
-            m_buf <= {tag_rdata[lru_sel[1]][19:0], w_index, 6'b0};
+            m_buf <= {tag_rdata[lru_sel[1]][TAG_WIDTH-1:0], w_index, 6'b0};
         end
     end
-    always @(posedge clk) begin
-        if(!rstn) begin
-            // dirty_mbuf <= 0;
-            exception_buf <= 0;
-        end
-        else if(mbuf_we) begin
-            // dirty_mbuf <= dirty_rdata;
-            exception_buf <= exception_temp;
-        end
-    end
+
     
     /* memory visit settings*/
-    assign d_raddr  = uncache_buf ? paddr_buf : {paddr_buf[31:12], req_buf[11:6],6'b0};
+    assign d_raddr  = uncache_buf ? paddr_buf : {paddr_buf[31:32-TAG_WIDTH], w_index, 6'b0};
+    `ifdef IBAR
     assign d_waddr  = ibar_valid ? dirty_addr[dirty_way] : uncache_buf ? paddr_buf : m_buf;
+    `endif 
+
+    `ifndef IBAR
+    assign d_waddr  = uncache_buf ? paddr_buf : m_buf;
+    `endif 
     assign d_wdata  = wbuf;
 
-    /* main FSM */
-    localparam 
-        IDLE        = 4'd0,
-        LOOKUP      = 4'd1,
-        MISS        = 4'd2,
-        REFILL      = 4'd3,
-        WAIT_WRITE  = 4'd4,
-        CACOP       = 4'd5,
-        IBAR        = 4'd6,     //处理uncache写
-        IBAR_EXTRA  = 4'd7,
-        IBAR_WAIT   = 4'd8;
     
     reg [2:0] uncache_rwsize;
     always @(*) begin
@@ -689,16 +749,7 @@ module dcache #(
         endcase
     end
 
-    reg [3:0] state, next_state;
-    assign idle = (state == IDLE) && !ibar;
-    always @(posedge clk) begin
-        if(!rstn) begin
-            state <= IDLE;
-        end
-        else begin
-            state <= next_state;
-        end
-    end
+    
     always @(*) begin
         case(state)
         IDLE: begin
@@ -716,11 +767,11 @@ module dcache #(
             end
         end
         LOOKUP: begin
-            if(exception_temp != 0 || flush)
+            if(exception != 0 || flush)
                 next_state = IDLE;
             else if(ibar)
                 next_state = IBAR;
-            else if(uncache_buf) begin
+            else if(uncache) begin
                 if(op_buf == READ_OP)
                     next_state = MISS;
                 else 
@@ -777,6 +828,7 @@ module dcache #(
             else                    
                 next_state = WAIT_WRITE;
         end
+        `ifdef IBAR
         IBAR: begin
             if(ibar_complete)
                 next_state = IDLE;
@@ -801,6 +853,7 @@ module dcache #(
                 next_state = IBAR_WAIT;
             end
         end
+        `endif
         default: begin
             next_state = IDLE;
         end
@@ -851,13 +904,18 @@ module dcache #(
         case(state)
         IDLE: begin
             req_buf_we = 1;
-            lru_we     = 1;
+            // lru_we     = 1;
             pbuf_we   = 1;
             if(cacop_en)
                 cacop_ready = 1;
+            if(exception!=0) begin
+                rready = !we_pipe;
+                wready = we_pipe;
+            end
         end
         LOOKUP: begin
-            if(exception_temp == 0) begin
+            exception_sel = ~exception_flag_buf;
+            if(exception == 0) begin
                 pbuf_we = 1;
                 lru_we  = 0;
                 if(cacop_en)
@@ -869,7 +927,7 @@ module dcache #(
                     llbit_clear = 1;
                 end
                 if(!cacop_en_buf) begin
-                    if(cache_hit && !uncache_buf) begin //命中
+                    if(cache_hit && !uncache) begin //命中
                         //读
                         way_visit               = hit_way;
                         lru_we                  = 1;
@@ -889,7 +947,7 @@ module dcache #(
                         wfsm_en = 1;
                     end
                 end
-                if(uncache_buf && op_buf == WRITE_OP) begin
+                if(uncache && op_buf == WRITE_OP) begin
                     wbuf_we = 1;
                     wfsm_en = 1;
                 end
@@ -900,7 +958,7 @@ module dcache #(
             end
         end
         MISS: begin
-            mbuf_we = 1;
+            // mbuf_we = 1;
             d_rvalid = 1;
             if(uncache_buf) begin
                 d_rlen = 8'd0;
@@ -915,8 +973,8 @@ module dcache #(
             lru_we                    = 1;
             way_visit                 = lru_sel[1];
             // clear dirty
-            dirty_we                  = lru_sel;
-            dirty_wdata               = 0;
+            dirty_we                   = lru_sel;
+            dirty_wdata               = (op_buf == WRITE_OP);
         end
         WAIT_WRITE: begin
             wfsm_reset      = 1;
@@ -930,7 +988,7 @@ module dcache #(
                 cacop_complete  = 1;
         end
         CACOP: begin
-            if(exception_temp != 0) cacop_complete = 1;
+            if(exception_buf != 0) cacop_complete = 1;
             else if(store_tag || index_invalid) begin
                 tagv_clear = 1;
                 tagv_we    = tagv_way_sel;
@@ -954,6 +1012,7 @@ module dcache #(
                 end
             end
         end
+        `ifdef IBAR
         IBAR: begin
             ibar_ready = 1;
             if(ibar_valid) begin
@@ -969,16 +1028,11 @@ module dcache #(
         end
         IBAR_WAIT: 
             wfsm_reset      = 1;
+        `endif
         default:;
         endcase
     end
 
-    /* write fsm */
-    localparam 
-        INIT    = 3'd0,
-        WRITE   = 3'd1,
-        FINISH  = 3'd2;
-    reg [2:0] wfsm_state, wfsm_next_state;
     /* stage 1 */
     always @(posedge clk) begin
         if(!rstn) begin
@@ -993,7 +1047,7 @@ module dcache #(
         case(wfsm_state)
         INIT: begin
             if(wfsm_en) begin
-                wfsm_next_state = (uncache_buf && (op_buf == WRITE_OP)) ? WRITE : dirty_rdata ? WRITE : FINISH;
+                wfsm_next_state = (uncache && (op_buf == WRITE_OP)) ? WRITE : dirty_rdata ? WRITE : FINISH;
             end
             else begin
                 wfsm_next_state = INIT;

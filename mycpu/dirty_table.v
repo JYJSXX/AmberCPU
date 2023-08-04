@@ -1,24 +1,36 @@
-module dirty_table(
+module dirty_table#(
+    parameter TAG_WIDTH = 20,
+    parameter INDEX_WIDTH = 6
+)
+(
     input clk,
     input rstn,
     input [1:0] we,
     input [1:0] re,
-    input [5:0] r_addr,
-    input [5:0] w_addr,
+    input [INDEX_WIDTH-1:0] r_addr,
+    input [INDEX_WIDTH-1:0] w_addr,
     input w_data,
     input ibar,
     input ibar_ready,       // ibar发送完当前的脏行后置为1
     output r_data,
    // output dirty_signal,        // 当前是否有dirty block
-    output reg [5:0] dirty_addr,
+    output reg [INDEX_WIDTH-1:0] dirty_addr,
     output way0, 
     output way1,
     output reg ibar_complete,   // ibar处理完
     output reg ibar_valid       // 找到脏块后置1，ibar_ready置1后置0
 );
-    reg [6:0] dirty_num;        // dirty block number, max = 128
-    reg [1:0] dirty_table [0:63];
-    reg [6:0] crt_num;
+    reg [INDEX_WIDTH:0] dirty_num;        // dirty block number, max = 128
+    reg [1:0] dirty_table [0:(1<<INDEX_WIDTH)-1];
+    reg [INDEX_WIDTH:0] crt_num;
+    reg [5:0] crt_addr;
+    reg [1:0] csr, nsr;
+    reg hit2;
+    localparam
+        IDLE = 2'b00,
+        SEARCH = 2'b01,
+        WRITE = 2'b10,
+        DONE = 2'b11;
     integer i;
     initial begin
         for (i = 0; i < 64; i = i + 1) begin
@@ -54,14 +66,7 @@ module dirty_table(
     ibar状态机得到数据并写回后，发回ibar_ready信号，此时ibar_valid置为0, 从当前addr开始继续遍历
     重复上述过程直到dirty_num为0，结束ibar处理
     */
-    reg [5:0] crt_addr;
-    reg [1:0] csr, nsr;
-    reg hit2;
-    localparam
-        IDLE = 2'b00,
-        SEARCH = 2'b01,
-        WRITE = 2'b10,
-        DONE = 2'b11;
+    `ifdef IBAR
     always @(posedge clk) begin
         if(!rstn) begin
             csr <= IDLE;
@@ -148,7 +153,7 @@ module dirty_table(
             end
         endcase
     end
-
+    `endif 
 
 
 endmodule

@@ -25,21 +25,17 @@ module EX2_WB(
     input ex2_result1_valid,
     // input EN_VA_D,
     input reg_ex1_is_priviledeged_0,
-    input ex1_ex2_is_priviledged_1,
+    // input ex1_ex2_is_priviledged_1,
     input [31:0] reg_ex1_pc0,
     output reg [31:0] ex2_wb_data_0,
     output reg [31:0] ex2_wb_data_1,
-    output reg [31:0] ex2_wb_data_2,
     output reg ex2_wb_data_0_valid,
     output reg ex2_wb_data_1_valid,
-    output reg ex2_wb_data_2_valid,
     output reg [4:0] ex2_wb_rd0,
     output reg [4:0] ex2_wb_rd1,
-    output reg [4:0] ex2_wb_rd2,
     input        [4:0] rd_dcache_out,
     output reg ex2_wb_we0,
     output reg ex2_wb_we1,
-    output reg ex2_wb_we2,
     // output ld_stall_flag,
 
 
@@ -47,7 +43,8 @@ module EX2_WB(
     input [31:0] dcache_data,
     input dcache_ready,
     input dcache_w_ready,
-
+    input [6:0] d_exception,
+    input [31:0] d_badv,
     //csr 三条读写csr的指令都要写
     input [31:0] csr_data_in,
     input csr_ready,
@@ -88,12 +85,12 @@ module EX2_WB(
     output reg [18:0] vppn_out,
     output reg wen_vppn,
     output  [31:0] pc_from_WB,
-    output set_by_priv,
     output flush_by_exception,
     output flush_to_priv_wr_csr,
     input  [31:0] eentry,
     input  [31:0] tlbrentry
 );
+    wire set_by_priv;
 // wire ld_stall_flag;
 assign pc_from_WB = (tlb_exception) ? tlbrentry : eentry;
 assign set_by_priv = tlb_exception | exception_flag_out;
@@ -112,7 +109,10 @@ assign flush_by_exception = set_by_priv;
 wire set_badv;
 assign set_badv = (ecode_in == `EXP_PIL) || (ecode_in == `EXP_PIS) 
 || (ecode_in == `EXP_PIF) || (ecode_in == `EXP_PME) || (ecode_in == `EXP_PPI)
- || (ecode_in == `EXP_ADEF)  || (ecode_in == `EXP_ALE) || (ecode_in == `EXP_TLBR);
+ || (ecode_in == `EXP_ADEF)  || (ecode_in == `EXP_ALE) || (ecode_in == `EXP_TLBR)||
+ (d_exception == `EXP_PIL) || (d_exception == `EXP_PIS) 
+|| (d_exception == `EXP_PIF) || (d_exception == `EXP_PME) || (d_exception == `EXP_PPI)
+ || (d_exception == `EXP_ADEF)  || (d_exception == `EXP_ALE) || (d_exception == `EXP_TLBR);
 wire set_vppn;
 assign set_vppn = (ecode_in == `EXP_PIL) || (ecode_in == `EXP_PIS) 
 || (ecode_in == `EXP_PIF) || (ecode_in == `EXP_PME) || (ecode_in == `EXP_PPI)
@@ -131,15 +131,15 @@ always@(posedge clk)begin
         exception_cpu_interrupt <= 0;
     end
     else begin
-        exception_flag_out <= exception_flag_in | cpu_interrupt;
-        ecode_out <= ecode_in;
-        badv_out <= badv_in;
-        wen_badv <= exception_flag_in && set_badv;
-        tlb_exception <= exception_flag_in && (ecode_in == `EXP_TLBR);
+        exception_flag_out <= exception_flag_in | cpu_interrupt | (|d_exception);
+        ecode_out <= exception_flag_in? ecode_in: d_exception;
+        badv_out <= exception_flag_in ? badv_in : d_badv;
+        wen_badv <= (exception_flag_in | (|d_exception) )&& set_badv;
+        tlb_exception <= exception_flag_in  && (ecode_in == `EXP_TLBR);
         if(era_in!=0 && exception_cpu_interrupt) era_out <= era_in;
         else if (era_in !=0) era_out <= pc0;
         else era_out <= era_out;
-        wen_era <= exception_flag_in | cpu_interrupt;
+        wen_era <= exception_flag_in | cpu_interrupt | (|d_exception);
         vppn_out <= badv_in[18:0];
         wen_vppn <= exception_flag_in && set_vppn;
         exception_cpu_interrupt <= cpu_interrupt;
@@ -166,51 +166,52 @@ end
 //             mem_count <= 1;
 //     end
 
-reg [`WIDTH_UOP-1:0] uop0_reg=0;
-reg [`WIDTH_UOP-1:0] uop1_reg=0;
+// reg [`WIDTH_UOP-1:0] uop0_reg=0;
+// reg [`WIDTH_UOP-1:0] uop1_reg=0;
+// always@(posedge clk) begin
+//     uop0_reg <= uop0;
+//     uop1_reg <= uop1;
+// end
+// wire [3:0] cond0;
+// wire [3:0] cond1;
+// assign cond0 = uop0_reg[`UOP_COND];
+// assign cond1 = uop1_reg[`UOP_COND];
+reg [1:0] unwrite =0;
 always@(posedge clk) begin
-    uop0_reg <= uop0;
-    uop1_reg <= uop1;
+    if(|d_exception || exception_flag_in) unwrite<=3;
+    else if(unwrite!=0) unwrite<=unwrite-1;
 end
-wire [3:0] cond0;
-wire [3:0] cond1;
-assign cond0 = uop0_reg[`UOP_COND];
-assign cond1 = uop1_reg[`UOP_COND];
     always@(posedge clk)begin
         if(~aresetn)begin
             ex2_wb_data_0 <= 0;
             ex2_wb_data_1 <= 0;
             ex2_wb_data_0_valid <= 0;
             ex2_wb_data_1_valid <= 0;
-            ex2_wb_data_2_valid <= 0;
             ex2_wb_rd0 <= 0;
             ex2_wb_rd1 <= 0;
-            ex2_wb_rd2 <= 0;
             ex2_wb_we0 <= 0;
             ex2_wb_we1 <= 0;
-            ex2_wb_we2 <= 0;
         end
         else begin
             if(ex2_result0_valid) begin
                 //ex2_wb_data_0 <= (ex1_ex2_inst0[30:26]=='b10011 | ex1_ex2_inst0[30:26] == 'b10101)?ex2_result0+4:ex2_result0;
-                //ex2_wb_data_0 <= (ex1_ex2_inst0[30:26]=='b10011)?ex2_result0+4:ex2_result0;
                 ex2_wb_data_0 <= ex2_result0;
                 ex2_wb_data_0_valid <= 1;
                 ex2_wb_rd0 <= ex_rd0;
-                ex2_wb_we0 <= 1;
+                ex2_wb_we0 <= 1 & (~((|d_exception) || (|unwrite)) );
             end
             else if (uop0[`INS_MEM])begin
                 if(dcache_ready)begin
                     ex2_wb_data_0 <= dcache_data;
                     ex2_wb_rd0 <= rd_dcache_out;
-                    ex2_wb_data_2_valid <= 1;
-                    ex2_wb_we2 <= 1;
+                    ex2_wb_data_0_valid <= 1;
+                    ex2_wb_we0 <= 1 & (~((|d_exception) || (|unwrite))); //exception from dcache , don`t write
                 end
                 else begin
                     ex2_wb_data_0 <= 0;
                     ex2_wb_rd0 <= 0;
-                    ex2_wb_data_2_valid <= 0;
-                    ex2_wb_we2 <= 0;
+                    ex2_wb_data_0_valid <= 0;
+                    ex2_wb_we0 <= 0;
                 end
             end
             else if(reg_ex1_is_priviledeged_0 ) begin
@@ -251,7 +252,7 @@ assign cond1 = uop1_reg[`UOP_COND];
                 ex2_wb_data_1 <= ex2_result1;
                 ex2_wb_data_1_valid <= 1;
                 ex2_wb_rd1 <= ex_rd1;
-                ex2_wb_we1 <= 1;
+                ex2_wb_we1 <= 1& (~((|d_exception) || (|unwrite)));
             end
             
             else begin

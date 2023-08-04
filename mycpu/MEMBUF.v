@@ -3,7 +3,7 @@ module MEMBUF(
     input clk,
     input aresetn,
     input flush,
-    input forward_stall,
+    // input forward_stall,
     input flush_by_exception,
     input tlb_readygo,
     output tlb_allowin,
@@ -15,6 +15,7 @@ module MEMBUF(
     input reg_ex_pc_taken,
     input [31:0] reg_ex_inst0,
     input [31:0] reg_ex_inst1,
+    input fact_taken0,
     input reg_ex_branch_flag,
     input reg_ex_excp_flag,
     input [6:0] reg_ex_exception,
@@ -61,6 +62,11 @@ module MEMBUF(
     input [31:0]    tlb_badv_out,
     input [0:0]     tlb_excp_flag,
     input [6:0]     tlb_exception,
+    input           div_ready,
+    input [31:0]    quotient,
+    input [31:0]    remainder,
+    output reg  [31:0]    quotient_reg,
+    output reg  [31:0]    remainder_reg,
     output reg  [31:0]    ex0_ex1_csr_data,
     output reg  [31:0]    ex1_alu_result0,
     output reg  [31:0]    ex1_alu_result1,
@@ -128,7 +134,7 @@ assign is_atom_dcache = reg_ex_uop0[`UOP_MEM_ATM];
 // assign w_data_dcache = reg_ex_rk0_data;
 
 always @ (posedge clk)begin
-    if(~aresetn | flush & (ex_allowin) | flush_by_exception)begin
+    if(~aresetn | flush & (ex_allowin) | flush_by_exception | (ex_allowin & ex_readygo & (~tlb_allowin | ~tlb_readygo)))begin
         tlb_ex_pc0 <= 0;
         tlb_ex_pc1 <= 0;
         tlb_ex_pc_next <= 0;
@@ -178,6 +184,8 @@ always @ (posedge clk)begin
         ex1_excp_flag <= 0;
         ex1_exception <= 0;
         ex0_ex1_csr_data <= 0;
+        quotient_reg <= 0;
+        remainder_reg <= 0;
     end
     else if (tlb_readygo && tlb_allowin && ex_allowin)begin
         tlb_ex_pc0 <= reg_ex_pc0;
@@ -185,7 +193,7 @@ always @ (posedge clk)begin
         tlb_ex_pc_next <= reg_ex_pc_next;
         tlb_ex_pc_taken <= reg_ex_pc_taken;
         tlb_ex_inst0 <= reg_ex_inst0;
-        tlb_ex_inst1 <= reg_ex_inst1;
+        tlb_ex_inst1 <= fact_taken0 ? `INST_NOP : reg_ex_inst1;
         tlb_ex_branch_flag <= reg_ex_branch_flag;
         tlb_ex_excp_flag <= reg_ex_excp_flag;
         tlb_ex_exception <= reg_ex_exception != 0 ? reg_ex_exception : tlb_exception;
@@ -229,7 +237,8 @@ always @ (posedge clk)begin
         ex1_excp_flag <= tlb_excp_flag;
         ex1_exception <= tlb_exception;
         ex0_ex1_csr_data <= csr_rd_data;
-
+        quotient_reg <= quotient;
+        remainder_reg <= remainder;
 
     end
 end
@@ -245,7 +254,8 @@ end
 
 // assign tlb_forward_stall = forward_stall1 | forward_stall2;
 
-assign ex_readygo = ~forward_stall;
-assign tlb_allowin = ex_allowin & ~(reg_ex_is_priviledged_0 & ~privilege_ready) & ~(|ex1_exception || exception_tobedone);
+// assign ex_readygo = ~forward_stall;
+assign ex_readygo = 1;
+assign tlb_allowin = ex_allowin & ~(reg_ex_is_priviledged_0 & ~privilege_ready) & ~(|ex1_exception || exception_tobedone) & ~(reg_ex_uop0[`INS_DIV] & ~div_ready);
 
 endmodule

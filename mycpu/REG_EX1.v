@@ -6,6 +6,7 @@ module  REG_EX1(
     input   flush,
     input   forward_stall,
     input   flush_by_priv,
+    input   flush_by_exception,
     input   reg_readygo,
     output  reg reg_allowin,
     input   ex_allowin,
@@ -14,7 +15,7 @@ module  REG_EX1(
     input   [31:0] id_reg_pc1,
     input           CMT,
     input   [31:0] id_reg_pc_next,
-    input   id_reg_pc_taken,
+    input   [1:0] id_reg_pc_taken,
     input   [31:0] id_reg_inst0,
     input   [31:0] id_reg_inst1,
     input   [6:0] id_reg_exception,
@@ -35,13 +36,10 @@ module  REG_EX1(
     input   [31:0] id_reg_imm1,
     input   [4:0] wb_rd0,
     input   [4:0] wb_rd1,
-    input   [4:0] wb_rd2,
     input   we_0,
     input   we_1,
-    input   we_2,
     input  [31:0] rd0_data,
     input  [31:0] rd1_data,
-    input  [31:0] rd2_data,
     input   [4:0] id_reg_rj0,
     input   [4:0] id_reg_rj1,
     input   [4:0] id_reg_rk0,
@@ -63,7 +61,7 @@ module  REG_EX1(
     output  reg [31:0] reg_ex_pc1,
     output  reg         reg_ex_CMT,
     output  reg [31:0] reg_ex_pc_next,
-    output  reg reg_ex_pc_taken,
+    output  reg [1:0] reg_ex_pc_taken,
     output  reg [31:0] reg_ex_inst0,
     output  reg [31:0] reg_ex_inst1,
     output  reg reg_ex_branch_flag,
@@ -92,7 +90,8 @@ module  REG_EX1(
     output  reg [4:0] reg_ex_rk0,
     output  reg [4:0] reg_ex_rk1,
     output  reg [4:0] reg_ex_rd0,
-    output  reg [4:0] reg_ex_rd1
+    output  reg [4:0] reg_ex_rd1,
+    output  reg priv_jump
 
     `ifdef DIFFTEST
     ,output [31:0] reg_diff0,
@@ -128,8 +127,9 @@ module  REG_EX1(
     output [31:0] reg_diff30,
     output [31:0] reg_diff31,
     input  [63:0] stable_counter,
-    output reg [63:0] stable_counter_diff,
-    input [31:0] debug0_wb_inst
+    input [31:0] debug0_wb_inst,
+    input [31:0] debug1_wb_inst,
+    output reg [63:0] stable_counter_diff
     `endif
 );
 `ifdef DIFFTEST
@@ -159,12 +159,12 @@ regfile regfile1( //内部自带写优先
     .raddr3(id_reg_rk0),
     .rdata3(rk0_data),
     .raddr4(id_reg_rk1),
-    .rdata4(rk1_data),
-    .we3(we_2),
-    .waddr3(wb_rd2),
-    .wdata3(rd2_data)
+    .rdata4(rk1_data)
     `ifdef DIFFTEST
-    ,.reg_diff0(reg_diff0),
+
+    ,.debug0_wb_inst(debug0_wb_inst),
+    .debug1_wb_inst(debug1_wb_inst),
+    .reg_diff0(reg_diff0),
     .reg_diff1(reg_diff1),
     .reg_diff2(reg_diff2),
     .reg_diff3(reg_diff3),
@@ -195,8 +195,7 @@ regfile regfile1( //内部自带写优先
     .reg_diff28(reg_diff28),
     .reg_diff29(reg_diff29),
     .reg_diff30(reg_diff30),
-    .reg_diff31(reg_diff31),
-    .debug0_wb_inst(debug0_wb_inst)
+    .reg_diff31(reg_diff31)
     `endif
 );
 
@@ -233,81 +232,86 @@ always@(*)begin
     else stall = 0;
 end
 
-reg forward_flag_j0_ps = 0;
-reg forward_flag_j1_ps = 0;
-reg forward_flag_k0_ps = 0;
-reg forward_flag_k1_ps = 0;
-always@(posedge clk) begin
-    if(~aresetn || !stall_D) 
-        forward_flag_j0_ps<=0;
-    else if(forward_flag_j0)
-        forward_flag_j0_ps <= 1;
-    else
-        forward_flag_j0_ps <= forward_flag_j0_ps;
-end
-always@(posedge clk) begin
-    if(~aresetn || !stall_D) 
-        forward_flag_j1_ps<=0;
-    else if(forward_flag_j1)
-        forward_flag_j1_ps <= 1;
-    else
-        forward_flag_j1_ps <= forward_flag_j1_ps;
+always @(posedge clk)begin
+    if (~aresetn | !ex_allowin) priv_jump <= 0;
+    else if (flush_by_priv) priv_jump <= 0;
 end
 
-always@(posedge clk) begin
-    if(~aresetn || !stall_D) 
-        forward_flag_k0_ps<=0;
-    else if(forward_flag_k0)
-        forward_flag_k0_ps <= 1;
-    else
-        forward_flag_k0_ps <= forward_flag_k0_ps;
-end
+// reg forward_flag_j0_ps = 0;
+// reg forward_flag_j1_ps = 0;
+// reg forward_flag_k0_ps = 0;
+// reg forward_flag_k1_ps = 0;
+// always@(posedge clk) begin
+//     if(~aresetn || !stall_D) 
+//         forward_flag_j0_ps<=0;
+//     else if(forward_flag_j0)
+//         forward_flag_j0_ps <= 1;
+//     else
+//         forward_flag_j0_ps <= forward_flag_j0_ps;
+// end
+// always@(posedge clk) begin
+//     if(~aresetn || !stall_D) 
+//         forward_flag_j1_ps<=0;
+//     else if(forward_flag_j1)
+//         forward_flag_j1_ps <= 1;
+//     else
+//         forward_flag_j1_ps <= forward_flag_j1_ps;
+// end
 
-always@(posedge clk) begin
-    if(~aresetn || !stall_D) 
-        forward_flag_k1_ps<=0;
-    else if(forward_flag_k1)
-        forward_flag_k1_ps <= 1;
-    else
-        forward_flag_k1_ps <= forward_flag_k1_ps;
-end
-always@(posedge clk) begin
-    if(~aresetn || ex_allowin) 
-        forward_flag_j0_ps<=0;
-    else if(forward_flag_j0)
-        forward_flag_j0_ps <= 1;
-    else
-        forward_flag_j0_ps <= forward_flag_j0_ps;
-end
-always@(posedge clk) begin
-    if(~aresetn || ex_allowin) 
-        forward_flag_j1_ps<=0;
-    else if(forward_flag_j1)
-        forward_flag_j1_ps <= 1;
-    else
-        forward_flag_j1_ps <= forward_flag_j1_ps;
-end
+// always@(posedge clk) begin
+//     if(~aresetn || !stall_D) 
+//         forward_flag_k0_ps<=0;
+//     else if(forward_flag_k0)
+//         forward_flag_k0_ps <= 1;
+//     else
+//         forward_flag_k0_ps <= forward_flag_k0_ps;
+// end
 
-always@(posedge clk) begin
-    if(~aresetn || ex_allowin) 
-        forward_flag_k0_ps<=0;
-    else if(forward_flag_k0)
-        forward_flag_k0_ps <= 1;
-    else
-        forward_flag_k0_ps <= forward_flag_k0_ps;
-end
+// always@(posedge clk) begin
+//     if(~aresetn || !stall_D) 
+//         forward_flag_k1_ps<=0;
+//     else if(forward_flag_k1)
+//         forward_flag_k1_ps <= 1;
+//     else
+//         forward_flag_k1_ps <= forward_flag_k1_ps;
+// end
+// always@(posedge clk) begin
+//     if(~aresetn || ex_allowin) 
+//         forward_flag_j0_ps<=0;
+//     else if(forward_flag_j0)
+//         forward_flag_j0_ps <= 1;
+//     else
+//         forward_flag_j0_ps <= forward_flag_j0_ps;
+// end
+// always@(posedge clk) begin
+//     if(~aresetn || ex_allowin) 
+//         forward_flag_j1_ps<=0;
+//     else if(forward_flag_j1)
+//         forward_flag_j1_ps <= 1;
+//     else
+//         forward_flag_j1_ps <= forward_flag_j1_ps;
+// end
 
-always@(posedge clk) begin
-    if(~aresetn || ex_allowin) 
-        forward_flag_k1_ps<=0;
-    else if(forward_flag_k1)
-        forward_flag_k1_ps <= 1;
-    else
-        forward_flag_k1_ps <= forward_flag_k1_ps;
-end
+// always@(posedge clk) begin
+//     if(~aresetn || ex_allowin) 
+//         forward_flag_k0_ps<=0;
+//     else if(forward_flag_k0)
+//         forward_flag_k0_ps <= 1;
+//     else
+//         forward_flag_k0_ps <= forward_flag_k0_ps;
+// end
+
+// always@(posedge clk) begin
+//     if(~aresetn || ex_allowin) 
+//         forward_flag_k1_ps<=0;
+//     else if(forward_flag_k1)
+//         forward_flag_k1_ps <= 1;
+//     else
+//         forward_flag_k1_ps <= forward_flag_k1_ps;
+// end
 // reg priv_flag;
 always@(posedge clk)begin
-    if(~aresetn | flush_by_priv | (flush & ex_allowin) | (~reg_readygo & ex_allowin & ex_readygo) | (~reg_allowin & ex_allowin & ex_readygo)) begin
+    if(~aresetn | flush_by_exception | (flush & ex_allowin) | (~reg_readygo & ex_allowin & ex_readygo) | (~reg_allowin & ex_allowin & ex_readygo)) begin
         reg_ex_pc0 <= 0;
         reg_ex_pc1 <= 0;
         reg_ex_pc_next <= 0;

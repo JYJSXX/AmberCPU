@@ -1,0 +1,70 @@
+[*]
+[*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
+[*] Fri Aug  4 07:01:17 2023
+[*]
+[dumpfile] "/home/vmware/Desktop/chiplab/sims/verilator/run_prog/log/coremark_log/simu_trace.fst"
+[dumpfile_mtime] "Fri Aug  4 06:14:12 2023"
+[dumpfile_size] 138253874
+[savefile] "/home/vmware/Desktop/AmberCPU/victim.gtkw"
+[timestart] 8194
+[size] 1848 1016
+[pos] -139 -139
+*-5.000000 8245 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] TOP.
+[treeopen] TOP.simu_top.
+[treeopen] TOP.simu_top.soc.
+[treeopen] TOP.simu_top.soc.cpu.
+[treeopen] TOP.simu_top.soc.cpu.u_dcache.
+[treeopen] TOP.simu_top.soc.cpu.u_EX0.
+[treeopen] TOP.simu_top.soc.cpu.u_icache.
+[sst_width] 336
+[signals_width] 193
+[sst_expanded] 1
+[sst_vpaned_height] 289
+@22
+TOP.simu_top.soc.cpu.u_EX0.pc0[31:0]
+TOP.simu_top.soc.cpu.u_EX0.inst0[31:0]
+@200
+-icache
+@22
+TOP.simu_top.soc.cpu.u_icache.raddr[31:0]
+@28
+TOP.simu_top.soc.cpu.u_icache.uncache
+TOP.simu_top.soc.cpu.u_icache.hit[1:0]
+@29
+[color] 3
+TOP.simu_top.soc.cpu.u_icache.state[2:0]
+@28
+[color] 3
+TOP.simu_top.soc.cpu.u_icache.rvalid
+[color] 3
+TOP.simu_top.soc.cpu.u_icache.rready
+TOP.simu_top.soc.cpu.u_icache.victim_hit
+@24
+TOP.simu_top.soc.cpu.u_icache.victim_cache.hit_index[1:0]
+@c00022
+TOP.simu_top.soc.cpu.u_icache.victim_cache.hit[3:0]
+@28
+(0)TOP.simu_top.soc.cpu.u_icache.victim_cache.hit[3:0]
+(1)TOP.simu_top.soc.cpu.u_icache.victim_cache.hit[3:0]
+(2)TOP.simu_top.soc.cpu.u_icache.victim_cache.hit[3:0]
+(3)TOP.simu_top.soc.cpu.u_icache.victim_cache.hit[3:0]
+@1401200
+-group_end
+@22
+TOP.simu_top.soc.cpu.u_icache.tag[19:0]
+TOP.simu_top.soc.cpu.u_icache.tag_index[5:0]
+@28
+TOP.simu_top.soc.cpu.u_icache.hit_way
+@200
+-dcache
+@28
+TOP.simu_top.soc.cpu.u_dcache.uncache
+TOP.simu_top.soc.cpu.u_dcache.hit[1:0]
+TOP.simu_top.soc.cpu.u_dcache.victim_hit
+TOP.simu_top.soc.cpu.u_dcache.wvalid
+TOP.simu_top.soc.cpu.u_dcache.wready
+TOP.simu_top.soc.cpu.u_dcache.rvalid
+TOP.simu_top.soc.cpu.u_dcache.rready
+[pattern_trace] 1
+[pattern_trace] 0

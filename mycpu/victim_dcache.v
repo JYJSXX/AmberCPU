@@ -4,33 +4,41 @@
 采用全相连的方式
 采用计数器替换策略
 */
-module victim_cache#(
-    CAPACITY = 8 // 容量
+module victim_dcache#(
+    parameter TAG_WIDTH = 20,
+    parameter INDEX_WIDTH = 6
 )
 (
     input clk,
     input rstn,
     // 20位tag+6位index
-    //读
-    input [25:0] r_tag,
+     //读
+    input [TAG_WIDTH+INDEX_WIDTH-1:0] r_tag,
     output victim_hit,
     output [511:0] data_out,
     //写
-    input [25:0] w_tag,
+    input [TAG_WIDTH+INDEX_WIDTH-1:0] w_tag,
     input we,
     input [511:0] data_in
 );
-    wire [5:0] windex;
-    wire [19:0] wtag;
+    localparam COUNTER_WIDTH = 1;
+    localparam CAPACITY = 2; // 容量
+    //读，类似于Dram，组合逻辑
+    wire [CAPACITY-1:0] hit;
+    wire [COUNTER_WIDTH-1:0] hit_index;
+    assign hit_index = hit[0] ? 0 : (hit[1] ? 1 : 0);
+    wire [INDEX_WIDTH-1:0] windex;
+    wire [TAG_WIDTH-1:0] wtag;
     wire victim_valid;
     // assign victim_valid = w_tag[25];
-    assign wtag = w_tag[25:6];
-    assign windex = w_tag[5:0];
+    assign wtag = w_tag[TAG_WIDTH+INDEX_WIDTH-1:INDEX_WIDTH];
+    assign windex = w_tag[INDEX_WIDTH-1:0];
 
-    wire [5:0] rindex;
-    wire [19:0] rtag;
-    assign rtag = r_tag[25:6];
-    assign rindex = r_tag[5:0];
+    wire [INDEX_WIDTH-1:0] rindex;
+    wire [TAG_WIDTH-1:0] rtag;
+    assign rtag = r_tag[TAG_WIDTH+INDEX_WIDTH-1:INDEX_WIDTH];
+    assign rindex = r_tag[INDEX_WIDTH-1:0];
+
 
 
     //tag寄存器，最高位为有效位
@@ -47,12 +55,8 @@ module victim_cache#(
         end
     endgenerate
     //计数器，每次有写入时加1，不断循环
-    localparam COUNTER_WIDTH = funclog2(CAPACITY);
     reg [COUNTER_WIDTH-1:0] counter;
 
-    //读，类似于Dram，组合逻辑
-    wire [CAPACITY-1:0] hit;
-    wire [COUNTER_WIDTH-1:0] hit_index;
     generate
         for(i = 0; i < CAPACITY; i = i + 1) begin: hit_gen
             assign hit[i] = valid[i] && (tag[i][25:0] == r_tag[25:0]);
@@ -60,8 +64,8 @@ module victim_cache#(
     endgenerate
     assign victim_hit = |hit;
     //找到最早的hit
-    assign hit_index = hit[0] ? 0 : (hit[1] ? 1 : (hit[2] ? 2 : (hit[3] ? 3 : (hit[4] ? 4 : (hit[5] ? 5 : (hit[6] ? 6 : (hit[7] ? 7 : 0)))))));
-    assign data_out = data[hit_index];
+    // assign hit_index = hit[0] ? 0 : (hit[1] ? 1 : (hit[2] ? 2 : (hit[3] ? 3 : (hit[4] ? 4 : (hit[5] ? 5 : (hit[6] ? 6 : (hit[7] ? 7 : 0)))))));
+    assign data_out = |hit ? data[hit_index] : 0;
 
     //对we信号取边沿
     reg we_pre;

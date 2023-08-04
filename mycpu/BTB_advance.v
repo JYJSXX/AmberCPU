@@ -1,0 +1,69 @@
+/*
+[2:0] discard
+[5:3] index
+[31:6] tag
+*/
+`include "config.vh"
+module BTB_advance #(
+    parameter   INDEX_WIDTH = 8,
+                TAG_WIDTH   = 8
+) (
+    input               rstn,
+    input               clk,
+    input   [31:0]      fetch_pc,
+    output  [31:0]      pred_pc,
+    output  [1 :0]      pred_taken,
+    output              hit,
+
+    //below signal from the same stage
+    input   [31:0]      fact_pc,
+    input   [31:0]      fact_tpc,//target pc from ex0
+    input               fact_taken,
+    input               predict_dir_fail,
+    input               predict_add_fail
+);
+   
+    // reg [INDEX_WIDTH-1:0]                  cnt;
+    reg [1:0]   taken_table     [(1<<INDEX_WIDTH)-1:0];
+    reg [TAG_WIDTH-1:0]tag_table[(1<<INDEX_WIDTH)-1:0];
+    reg [31:0]  guess_table     [(1<<INDEX_WIDTH)-1:0];
+    wire[INDEX_WIDTH-1:0]       hash_index;
+    wire[INDEX_WIDTH-1:0]       fact_hash_index;
+    wire[TAG_WIDTH-1  :0]       tag,fact_tag;
+    wire[1:0]                   wtaken;
+    wire                        we;
+
+    // assign hash_index        =   fetch_pc[INDEX_WIDTH-1:0]^fetch_pc[INDEX_WIDTH*2-1:INDEX_WIDTH];
+    // assign fact_hash_index   =   fact_pc[INDEX_WIDTH-1:0]^fact_pc[INDEX_WIDTH*2-1:INDEX_WIDTH];
+    assign hash_index        =   fetch_pc[INDEX_WIDTH+2:3];
+    assign fact_hash_index   =   fact_pc[INDEX_WIDTH+2:3];
+    assign tag               =   fetch_pc[TAG_WIDTH+INDEX_WIDTH+2:INDEX_WIDTH+3];
+    assign fact_tag          =   fact_pc [TAG_WIDTH+INDEX_WIDTH+2:INDEX_WIDTH+3];
+    assign wtaken            =   fact_taken?(fact_pc[2]?2'b10:2'b01):2'b00;
+    assign we                =   (predict_dir_fail|predict_add_fail);
+    assign pred_pc           =   guess_table[hash_index];
+    assign pred_taken        =   taken_table[hash_index];
+    assign hit               =   tag_table[hash_index]==tag;
+    // assign adv_hit           =   pred_pc!=0;
+    // always @(posedge clk) begin
+    //     if(!rstn)begin
+    //         cnt<=0;
+    //     end begin
+    //         cnt<=cnt+1;
+    //     end
+    // end
+    integer i;
+    initial begin
+        for(i=0; i<(1<<INDEX_WIDTH); i=i+1) begin
+            taken_table[i] = 0;
+            guess_table[i] = 0;
+        end
+    end
+    always @(posedge clk) begin
+        if(we)begin
+            taken_table[fact_hash_index]<=wtaken;
+            guess_table[fact_hash_index]<=fact_tpc;
+            tag_table  [fact_hash_index]<=fact_tag;
+        end
+    end
+endmodule

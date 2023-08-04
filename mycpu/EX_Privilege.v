@@ -337,6 +337,8 @@ module EX_Privilege(
                     cacop_d_en <= 0;
                     if (en & pr_type[`INS_CSR])
                         csr_rdata_reg <= csr_rdata;
+                    if (PR_next_state == PR_CACOP_I_CALL) cacop_i_en <= 1;
+                    else if (PR_next_state == PR_CACOP_D_CALL) cacop_d_en <= 1;
                 end
                 PR_CACOP_I_CALL:
                 begin

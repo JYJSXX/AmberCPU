@@ -1,4 +1,5 @@
 `timescale 1ns/1ps
+`include "config.vh"
 module BRAM_tagv #(
     parameter DATA_WIDTH = 21,
               ADDR_WIDTH = 6
@@ -22,10 +23,12 @@ module BRAM_tagv #(
     always @(posedge clk) begin
         addr_r <= raddr == waddr ? waddr : raddr;
         if(we) ram[waddr] <= din;
+        `ifdef IBAR
         if(ibar) // 无效化
             for (i = 0; i < (1 << ADDR_WIDTH); i = i + 1) begin
                 ram[i] <= 0;
             end
+        `endif
     end
     assign dout = ram[addr_r]; 
 

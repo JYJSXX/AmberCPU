@@ -1,0 +1,127 @@
+[*]
+[*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
+[*] Thu Aug  3 14:39:43 2023
+[*]
+[dumpfile] "/home/yiran/Desktop/chiplab/sims/verilator/run_prog/log/coremark_log/simu_trace.fst"
+[dumpfile_mtime] "Thu Aug  3 14:30:59 2023"
+[dumpfile_size] 204188294
+[savefile] "/home/yiran/Desktop/AmberCPU/sim/victim.gtkw"
+[timestart] 1
+[size] 1842 850
+[pos] -1 -1
+*-20.000000 2298503 63635 375155 374950 92908 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] TOP.
+[treeopen] TOP.simu_top.
+[treeopen] TOP.simu_top.soc.
+[treeopen] TOP.simu_top.soc.cpu.
+[treeopen] TOP.simu_top.soc.cpu.u_dcache.
+[treeopen] TOP.simu_top.soc.cpu.u_EX0.
+[treeopen] TOP.simu_top.soc.cpu.u_EX1.
+[treeopen] TOP.simu_top.soc.cpu.u_EX2_WB.
+[treeopen] TOP.simu_top.soc.cpu.u_FIFO.
+[treeopen] TOP.simu_top.soc.cpu.u_icache.
+[treeopen] TOP.simu_top.soc.cpu.u_ID_REG.
+[treeopen] TOP.simu_top.soc.cpu.u_IF0.
+[treeopen] TOP.simu_top.soc.cpu.u_IF1_FIFO.
+[treeopen] TOP.simu_top.soc.cpu.u_MEMBUF.
+[treeopen] TOP.simu_top.soc.cpu.u_REG_EX1.
+[treeopen] TOP.simu_top.soc.cpu.u_REG_EX1.regfile1.
+[treeopen] TOP.simu_top.soc.cpu.u_TLB.
+[sst_width] 264
+[signals_width] 312
+[sst_expanded] 1
+[sst_vpaned_height] 217
+@22
+TOP.simu_top.soc.cpu.u_icache.raddr[31:0]
+@24
+TOP.simu_top.soc.cpu.u_icache.state[2:0]
+@22
+TOP.simu_top.soc.cpu.u_icache.p_addr[31:0]
+TOP.simu_top.soc.cpu.u_icache.raddr[31:0]
+@28
+TOP.simu_top.soc.cpu.u_icache.victim_cache.victim_hit
+@22
+TOP.simu_top.soc.cpu.u_EX0.pc0[31:0]
+TOP.simu_top.soc.cpu.u_EX0.inst0[31:0]
+TOP.simu_top.soc.cpu.u_icache.pc_out[31:0]
+@24
+[color] 3
+TOP.simu_top.soc.cpu.u_icache.state[2:0]
+@22
+TOP.simu_top.soc.cpu.u_icache.raddr[31:0]
+TOP.simu_top.soc.cpu.u_icache.r_index[5:0]
+TOP.simu_top.soc.cpu.u_icache.paddr_buf[31:0]
+TOP.simu_top.soc.cpu.u_icache.w_index[5:0]
+@28
+TOP.simu_top.soc.cpu.u_icache.victim_hit
+TOP.simu_top.soc.cpu.u_icache.hit[1:0]
+@22
+[color] 3
+TOP.simu_top.soc.cpu.u_icache.r_index[5:0]
+TOP.simu_top.soc.cpu.u_icache.tag[19:0]
+TOP.simu_top.soc.cpu.u_icache.victim_cache.rtag[19:0]
+TOP.simu_top.soc.cpu.u_icache.victim_cache.rindex[5:0]
+@23
+TOP.simu_top.soc.cpu.u_icache.tag_rdata[0][20:0]
+@22
+TOP.simu_top.soc.cpu.u_icache.tag_rdata[1][20:0]
+TOP.simu_top.soc.cpu.u_icache.mem_rdata[0][511:0]
+TOP.simu_top.soc.cpu.u_icache.mem_rdata[1][511:0]
+TOP.simu_top.soc.cpu.u_icache.victim_cache.wtag[19:0]
+TOP.simu_top.soc.cpu.u_icache.victim_cache.windex[5:0]
+TOP.simu_top.soc.cpu.u_icache.victim_cache.data_in[511:0]
+@28
+TOP.simu_top.soc.cpu.u_icache.victim_sel
+#{TOP.simu_top.soc.cpu.u_icache.valid_buf[0:1]} TOP.simu_top.soc.cpu.u_icache.valid_buf[0] TOP.simu_top.soc.cpu.u_icache.valid_buf[1]
+#{TOP.simu_top.soc.cpu.u_icache.valid[0:1]} TOP.simu_top.soc.cpu.u_icache.valid[0] TOP.simu_top.soc.cpu.u_icache.valid[1]
+TOP.simu_top.soc.cpu.u_icache.missbuf_we
+TOP.simu_top.soc.cpu.u_icache.flush_valid
+#{TOP.simu_top.soc.cpu.u_icache.valid[0:1]} TOP.simu_top.soc.cpu.u_icache.valid[0] TOP.simu_top.soc.cpu.u_icache.valid[1]
+#{TOP.simu_top.soc.cpu.u_icache.valid_buf[0:1]} TOP.simu_top.soc.cpu.u_icache.valid_buf[0] TOP.simu_top.soc.cpu.u_icache.valid_buf[1]
+TOP.simu_top.soc.cpu.u_icache.victim_we
+TOP.simu_top.soc.cpu.u_icache.victim_cache.counter_we
+@24
+TOP.simu_top.soc.cpu.u_icache.victim_cache.counter[1:0]
+@22
+TOP.simu_top.soc.cpu.u_icache.r_index[5:0]
+@28
+TOP.simu_top.soc.cpu.u_icache.way_visit
+@c00028
+[color] 3
+TOP.simu_top.soc.cpu.u_icache.hit[1:0]
+@28
+[color] 3
+(0)TOP.simu_top.soc.cpu.u_icache.hit[1:0]
+[color] 3
+(1)TOP.simu_top.soc.cpu.u_icache.hit[1:0]
+@1401200
+-group_end
+@22
+TOP.simu_top.soc.cpu.u_icache.w_index[5:0]
+@c00028
+TOP.simu_top.soc.cpu.u_icache.lru_sel[1:0]
+@28
+(0)TOP.simu_top.soc.cpu.u_icache.lru_sel[1:0]
+(1)TOP.simu_top.soc.cpu.u_icache.lru_sel[1:0]
+@1401200
+-group_end
+@c00028
+TOP.simu_top.soc.cpu.u_icache.victim_cache.hit_index[1:0]
+@28
+(0)TOP.simu_top.soc.cpu.u_icache.victim_cache.hit_index[1:0]
+(1)TOP.simu_top.soc.cpu.u_icache.victim_cache.hit_index[1:0]
+@1401200
+-group_end
+@800022
+TOP.simu_top.soc.cpu.u_icache.victim_cache.hit[3:0]
+@28
+(0)TOP.simu_top.soc.cpu.u_icache.victim_cache.hit[3:0]
+(1)TOP.simu_top.soc.cpu.u_icache.victim_cache.hit[3:0]
+(2)TOP.simu_top.soc.cpu.u_icache.victim_cache.hit[3:0]
+(3)TOP.simu_top.soc.cpu.u_icache.victim_cache.hit[3:0]
+@1001200
+-group_end
+@28
+TOP.simu_top.soc.cpu.u_icache.victim_cache.victim_hit
+[pattern_trace] 1
+[pattern_trace] 0

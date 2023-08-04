@@ -1,0 +1,274 @@
+[*]
+[*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
+[*] Fri Aug  4 13:34:35 2023
+[*]
+[dumpfile] "/home/yiran/Desktop/chiplab/sims/verilator/run_prog/log/dhrystone_log/simu_trace.fst"
+[dumpfile_mtime] "Fri Aug  4 13:02:10 2023"
+[dumpfile_size] 22402727
+[savefile] "/home/yiran/Desktop/AmberCPU/sim/dcache_dirty.gtkw"
+[timestart] 242907
+[size] 1848 1016
+[pos] -1 -1
+*-5.000000 242975 546597 879716 155258 190316 315617 305937 242975 232636 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] TOP.
+[treeopen] TOP.simu_top.
+[treeopen] TOP.simu_top.soc.
+[treeopen] TOP.simu_top.soc.cpu.
+[treeopen] TOP.simu_top.soc.cpu.u_dcache.
+[treeopen] TOP.simu_top.soc.cpu.u_EX0.
+[treeopen] TOP.simu_top.soc.cpu.u_EX1.
+[treeopen] TOP.simu_top.soc.cpu.u_EX2_WB.
+[treeopen] TOP.simu_top.soc.cpu.u_FIFO.
+[treeopen] TOP.simu_top.soc.cpu.u_icache.
+[treeopen] TOP.simu_top.soc.cpu.u_ID_REG.
+[treeopen] TOP.simu_top.soc.cpu.u_IF0.
+[treeopen] TOP.simu_top.soc.cpu.u_IF1_FIFO.
+[treeopen] TOP.simu_top.soc.cpu.u_MEMBUF.
+[treeopen] TOP.simu_top.soc.cpu.u_REG_EX1.
+[treeopen] TOP.simu_top.soc.cpu.u_REG_EX1.regfile1.
+[treeopen] TOP.simu_top.soc.cpu.u_TLB.
+[sst_width] 325
+[signals_width] 257
+[sst_expanded] 1
+[sst_vpaned_height] 548
+@22
+TOP.simu_top.soc.cpu.u_EX0.pc0[31:0]
+TOP.simu_top.soc.cpu.u_EX0.inst0[31:0]
+@28
+TOP.simu_top.soc.cpu.u_dcache.rvalid
+TOP.simu_top.soc.cpu.u_dcache.wvalid
+@c00022
+TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+@28
+(0)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+(1)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+(2)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+(3)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+(4)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+(5)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+(6)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+(7)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+(8)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+(9)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+(10)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+(11)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+(12)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+(13)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+(14)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+(15)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+(16)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+(17)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+(18)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+(19)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+(20)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+(21)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+(22)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+(23)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+(24)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+(25)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+(26)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+(27)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+(28)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+(29)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+(30)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+(31)TOP.simu_top.soc.cpu.u_dcache.addr[31:0]
+@1401200
+-group_end
+@22
+TOP.simu_top.soc.cpu.u_dcache.state[3:0]
+TOP.simu_top.soc.cpu.u_dcache.address[31:0]
+@28
+TOP.simu_top.soc.cpu.u_dcache.rvalid
+TOP.simu_top.soc.cpu.u_dcache.rready
+@22
+TOP.simu_top.soc.cpu.u_dcache.rdata[31:0]
+@28
+TOP.simu_top.soc.cpu.u_dcache.wvalid
+TOP.simu_top.soc.cpu.u_dcache.wready
+@22
+TOP.simu_top.soc.cpu.u_dcache.wdata[31:0]
+@28
+TOP.simu_top.soc.cpu.u_dcache.victim_cache.counter_we
+@24
+#{counter[1:0]} TOP.simu_top.soc.cpu.u_dcache.victim_cache.counter[0]
+#{hit_index[1:0]} TOP.simu_top.soc.cpu.u_dcache.victim_cache.hit_index[0]
+@28
+TOP.simu_top.soc.cpu.u_dcache.victim_hit
+@c00022
+TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+@28
+(0)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(1)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(2)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(3)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(4)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(5)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(6)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(7)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(8)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(9)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(10)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(11)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(12)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(13)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(14)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(15)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(16)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(17)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(18)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(19)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(20)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(21)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(22)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(23)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(24)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(25)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(26)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(27)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(28)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(29)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(30)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(31)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(32)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(33)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(34)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(35)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(36)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(37)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(38)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(39)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(40)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(41)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(42)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(43)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(44)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(45)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(46)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(47)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(48)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(49)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(50)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(51)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(52)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(53)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(54)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(55)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(56)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(57)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(58)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(59)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(60)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(61)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(62)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(63)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(64)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(65)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(66)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(67)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(68)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(69)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(70)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(71)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(72)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(73)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(74)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(75)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(76)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(77)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(78)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(79)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(80)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(81)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(82)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(83)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(84)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(85)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(86)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(87)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(88)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(89)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(90)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(91)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(92)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(93)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(94)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(95)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(96)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(97)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(98)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(99)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(100)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(101)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(102)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(103)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(104)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(105)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(106)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(107)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(108)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(109)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(110)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(111)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(112)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(113)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(114)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(115)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(116)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(117)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(118)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(119)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(120)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(121)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(122)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(123)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(124)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(125)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(126)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+(127)TOP.simu_top.soc.cpu.u_dcache.lru[127:0]
+@1401200
+-group_end
+@22
+TOP.simu_top.soc.cpu.u_dcache.mem_rdata[0][511:0]
+TOP.simu_top.soc.cpu.u_dcache.mem_rdata[1][511:0]
+TOP.simu_top.soc.cpu.u_dcache.mem_wdata[511:0]
+@800022
+TOP.simu_top.soc.cpu.u_dcache.r_index[6:0]
+@28
+(0)TOP.simu_top.soc.cpu.u_dcache.r_index[6:0]
+(1)TOP.simu_top.soc.cpu.u_dcache.r_index[6:0]
+(2)TOP.simu_top.soc.cpu.u_dcache.r_index[6:0]
+(3)TOP.simu_top.soc.cpu.u_dcache.r_index[6:0]
+(4)TOP.simu_top.soc.cpu.u_dcache.r_index[6:0]
+(5)TOP.simu_top.soc.cpu.u_dcache.r_index[6:0]
+(6)TOP.simu_top.soc.cpu.u_dcache.r_index[6:0]
+@1001200
+-group_end
+@22
+TOP.simu_top.soc.cpu.u_dcache.tag_rdata[0][19:0]
+TOP.simu_top.soc.cpu.u_dcache.tag_rdata[1][19:0]
+TOP.simu_top.soc.cpu.u_dcache.tag_in[19:0]
+@28
+TOP.simu_top.soc.cpu.u_dcache.dirty_wdata
+TOP.simu_top.soc.cpu.u_dcache.dirty_we[1:0]
+TOP.simu_top.soc.cpu.u_dcache.tagv_we[1:0]
+@22
+TOP.simu_top.soc.cpu.u_dcache.w_index[6:0]
+@28
+TOP.simu_top.soc.cpu.u_dcache.d_wvalid
+TOP.simu_top.soc.cpu.u_dcache.wfsm_en
+@24
+TOP.simu_top.soc.cpu.u_dcache.wfsm_state[2:0]
+@28
+TOP.simu_top.soc.cpu.u_dcache.dirty_rdata
+@22
+TOP.simu_top.soc.cpu.u_dcache.diety_table.r_addr[6:0]
+@28
+TOP.simu_top.soc.cpu.u_dcache.diety_table.re[1:0]
+@22
+[color] 3
+TOP.simu_top.soc.cpu.u_dcache.diety_table.w_addr[6:0]
+@28
+TOP.simu_top.soc.cpu.u_dcache.diety_table.we[1:0]
+TOP.simu_top.soc.cpu.u_dcache.diety_table.w_data
+[pattern_trace] 1
+[pattern_trace] 0

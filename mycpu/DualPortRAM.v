@@ -7,17 +7,24 @@ module DualPortRAM
    input wire [ADDR_WIDTH-1:0] writeAddr,
    input wire [DATA_WIDTH-1:0] writeData,
    input wire writeEnable,
-   output reg [DATA_WIDTH-1:0] readDataA,
-   output reg [DATA_WIDTH-1:0] readDataB);
+   output  [DATA_WIDTH-1:0] readDataA,
+   output  [DATA_WIDTH-1:0] readDataB);
 
   reg [DATA_WIDTH-1:0] memory [(1<<ADDR_WIDTH)-1:0];
+
+  integer i;
+  initial begin
+    for(i=0; i<(1<<ADDR_WIDTH); i=i+1) begin
+      memory[i] = 0;
+    end
+  end
 
   always @(posedge clk) begin
     if (writeEnable) begin
       memory[writeAddr] <= writeData;
     end
-    readDataA = memory[readAddrA];
-    readDataB = memory[readAddrB];
   end
+  assign readDataA = memory[readAddrA];
+  assign readDataB = memory[readAddrB];
 
 endmodule

@@ -12,7 +12,10 @@ module EX0(
     input   [31:0] pc1,
     input   [31:0] inst0,
     input   [31:0] inst1,
+    input   [4:0] reg_ex_rd0,
+    input   [4:0] reg_ex_rd1,
     input   CMT,
+    input   priv_jump,
     input   is_ALU_0,
     input   is_ALU_1,
     input   is_syscall_0,
@@ -34,9 +37,11 @@ module EX0(
     input   [4:0] ex_rk0,
     input   [4:0] ex_rk1,
     input         dcache_ready,
-    input         ex_allowin,
+    // input         ex_allowin, //TODO
     //input   [4:0] ex_rd0,
     //input   [4:0] ex_rd1,
+    output [4:0] ex0_rd0_out,
+    output [4:0] ex0_rd1_out,
     output forward_flag_j0,
     output forward_flag_k0,
     output forward_flag_j1,
@@ -72,13 +77,10 @@ module EX0(
     //从ex2_wb段间输入
     input [4:0] ex2_wb_rd0,
     input [4:0] ex2_wb_rd1,
-    input [4:0] ex2_wb_rd2,
     input [31:0] ex2_wb_data_0,
     input [31:0] ex2_wb_data_1,
-    input [31:0] ex2_wb_data_2,
     input ex2_wb_data_0_valid,
     input ex2_wb_data_1_valid,
-    input ex2_wb_data_2_valid,
     output forward_stall, //需要前递，但还没算出来，给段间寄存器ready信号用
     //csr
     input [31:0] tid, //读时钟id的指令RDCNTID用到
@@ -87,14 +89,14 @@ module EX0(
     //input [63:0] stable_counter,
 
     //分支预测
-    input predict_to_branch, //分支预测的信号
+    input [1:0] predict_to_branch, //分支预测的信号
     input [31:0] pc0_predict,
     output predict_dir_fail, //分支预测跳不跳失败的信号
     output predict_addr_fail, //分支预测往哪跳失败的信号
     output fact_taken, //实际跳不跳
     output [31:0] fact_pc, //分支指令的pc
     output [31:0] fact_tpc, //目标地址pc
-
+    output fact_taken0,
     //给cache
     // output rvalid_dcache,
     // output wvalid_dcache,
@@ -175,9 +177,8 @@ module EX0(
     output [18:0] invtlb_va,
 
     //priv
-    output reg set_by_priv,
     output reg [31:0] pc_set_by_priv,
-    output reg flush_by_priv,
+    output     flush_by_priv,
     //exception
     input  plv, //从csr_crmd[0]
     input excp_flag_in,
@@ -200,6 +201,15 @@ module EX0(
 
 
 );
+reg set_by_priv = 0;
+assign flush_by_priv = set_by_priv & ~priv_jump;
+wire [31:0] rj0_data_o;
+wire [31:0] rk0_data_o;
+wire [31:0] rk1_data_o;
+wire [31:0] rj1_data_o;
+assign ex0_rd0_out = reg_ex_rd0;
+wire fact_taken1;
+assign ex0_rd1_out = reg_ex_rd1 & {5{~fact_taken0}};
 assign dcache_wdata = rk0_data_o;
 assign csr_flag_from_ex = uop0[`INS_CSR];
 assign tlb_flag_from_ex = uop0[`INS_TLB] && (inst0[11:10] == 2'b00 || inst0[11:10] ==2'b01 || inst0[15]);
@@ -222,14 +232,12 @@ assign tlb_flag_from_ex = uop0[`INS_TLB] && (inst0[11:10] == 2'b00 || inst0[11:1
 
     always@(*) begin
         if(is_priviledged_0 & privilege_ready) begin
-            set_by_priv = 1;
             pc_set_by_priv = uop0[`INS_ERTN] ? csr_era : (privilege_ready ? pc0 +4 : pc0);
-            flush_by_priv = 1;
+            set_by_priv = 1;
         end
         else begin
             set_by_priv = 0;
             pc_set_by_priv = 0;
-            flush_by_priv = 0;
         end
         
     end
@@ -272,18 +280,16 @@ wire [3:0] cond1;
 wire [31:0] a_2;
 wire [31:0] b_2;
 wire [31:0] y_2;
-wire [31:0] pc_add_4; //根据控制信号判断要写入pc+4还是y
-assign pc_add_4 = pc0 + 4;
+wire [31:0] pc0_add_4; //根据控制信号判断要写入pc+4还是y
+wire [31:0] pc1_add_4;
+assign pc0_add_4 = pc0 + 4;
+assign pc1_add_4 = pc1 + 4;
 assign cond0 = uop0[`UOP_COND];
 assign cond1 = uop1[`UOP_COND];
 assign alu_result0_valid = is_ALU_0 || uop0[`INS_BR] || inst0 == 32'b0;
 assign alu_result1_valid = is_ALU_1 || uop1[`INS_BR] || inst1 == 32'b0; //beq之类的就向r0写，应该也没什么问题
-assign alu_result0 = uop0[`INS_BR]? pc_add_4:y_1;
-assign alu_result1 = y_2; //跳转指令单发，只在0号，1号alu不发射跳转
-wire [31:0] rj0_data_o;
-wire [31:0] rk0_data_o;
-wire [31:0] rk1_data_o;
-wire [31:0] rj1_data_o;
+assign alu_result0 = uop0[`INS_BR]? pc0_add_4:y_1;
+assign alu_result1 = uop1[`INS_BR]? pc1_add_4:y_2 ; //跳转指令单发，只在0号，1号alu不发射跳转
 wire forward_stall1;
 wire forward_stall2;
 EX1_FORWARD ex1_forward1(
@@ -304,13 +310,10 @@ EX1_FORWARD ex1_forward1(
     .ex1_ex2_rd1(ex1_ex2_rd1),
     .ex2_wb_data_0_valid(ex2_wb_data_0_valid),
     .ex2_wb_data_1_valid(ex2_wb_data_1_valid),
-    .ex2_wb_data_2_valid(ex2_wb_data_2_valid),
     .ex2_wb_data_0(ex2_wb_data_0),
     .ex2_wb_data_1(ex2_wb_data_1),
-    .ex2_wb_data_2(ex2_wb_data_2),
     .ex2_wb_rd0(ex2_wb_rd0),
     .ex2_wb_rd1(ex2_wb_rd1),
-    .ex2_wb_rd2(ex2_wb_rd2),
     .ex1_rj_data(rj0_data),
     .ex1_rk_data(rk0_data),
     .ex1_rj_data_o(rj0_data_o),
@@ -327,7 +330,7 @@ assign a_1 = uop0[`UOP_SRC1] == `CTRL_SRC1_RF ? rj0_data_o :
             uop0[`UOP_SRC1] == `CTRL_SRC1_ZERO ? 0 :tid;
 assign b_1= uop0[`UOP_SRC2] == `CTRL_SRC2_RF ? rk0_data_o : 
             uop0[`UOP_SRC2] == `CTRL_SRC2_IMM ? imm0 :
-            uop0[`UOP_SRC2] == `CTRL_SRC2_CNTL ? stable_counter[31:0] : stable_counter[63:32];
+            uop0[`UOP_SRC2] == `CTRL_SRC2_CNTL ? stable_counter[31:0] + 3 : stable_counter[63:32];
 EX_ALU ex_alu1(
     .ctrl(cond0),
     .a(a_1),
@@ -353,13 +356,10 @@ EX1_FORWARD ex1_forward2(
     .ex1_ex2_rd1(ex1_ex2_rd1),
     .ex2_wb_data_0_valid(ex2_wb_data_0_valid),
     .ex2_wb_data_1_valid(ex2_wb_data_1_valid),
-    .ex2_wb_data_2_valid(ex2_wb_data_2_valid),
     .ex2_wb_data_0(ex2_wb_data_0),
     .ex2_wb_data_1(ex2_wb_data_1),
-    .ex2_wb_data_2(ex2_wb_data_2),
     .ex2_wb_rd0(ex2_wb_rd0),
     .ex2_wb_rd1(ex2_wb_rd1),
-    .ex2_wb_rd2(ex2_wb_rd2),
     .ex1_rj_data(rj1_data),
     .ex1_rk_data(rk1_data),
     .ex1_rj_data_o(rj1_data_o),
@@ -375,7 +375,7 @@ assign a_2 = uop1[`UOP_SRC1] == `CTRL_SRC1_RF ? rj1_data_o :
             uop1[`UOP_SRC1] == `CTRL_SRC1_ZERO ? 0 :tid;
 assign b_2= uop1[`UOP_SRC2] == `CTRL_SRC2_RF ? rk1_data_o : 
             uop1[`UOP_SRC2] == `CTRL_SRC2_IMM ? imm1:
-            uop1[`UOP_SRC2] == `CTRL_SRC2_CNTL ? stable_counter[31:0] : stable_counter[63:32];
+            uop1[`UOP_SRC2] == `CTRL_SRC2_CNTL ? stable_counter[31:0] + 3: stable_counter[63:32];
 EX_ALU ex_alu2(
     .ctrl(cond1),
     .a(a_2),
@@ -383,21 +383,48 @@ EX_ALU ex_alu2(
     .y(y_2)
 );
 assign dcache_addr = rj0_data_o + imm0;
+wire predict_addr_fail0, predict_dir_fail0, predict_dir_fail1, predict_addr_fail1;
+
+assign predict_addr_fail = predict_addr_fail0 | predict_addr_fail1;
+assign predict_dir_fail = predict_dir_fail0 | predict_dir_fail1;
+assign fact_taken = fact_taken0 | fact_taken1;
+wire [31:0] fact_pc0, fact_pc1;
+wire [31:0] fact_tpc0, fact_tpc1;
+assign fact_pc = fact_taken1 ? fact_pc1 : fact_pc0;
+assign fact_tpc = fact_taken1 ? fact_tpc1 : fact_tpc0;
 EX_BRANCH ex_branch(
     .pc(pc0),
     .inst(inst0),
-    .predict_to_branch(predict_to_branch),
+    .way(0),
+    .predict_to_branch(predict_to_branch[0]),
     .pc_predict(pc0_predict),
     .imm(imm0),
     .CMT(CMT),
     .br_sr1(rj0_data_o),
     .br_sr2(rk0_data_o),
     .uop(uop0),
-    .predict_dir_fail(predict_dir_fail),
-    .predict_addr_fail(predict_addr_fail),
-    .fact_taken(fact_taken),
-    .fact_pc(fact_pc),
-    .fact_tpc(fact_tpc)
+    .predict_dir_fail(predict_dir_fail0),
+    .predict_addr_fail(predict_addr_fail0),
+    .fact_taken(fact_taken0),
+    .fact_pc(fact_pc0),
+    .fact_tpc(fact_tpc0)
+);
+EX_BRANCH ex_branch1(
+    .pc(pc1),
+    .inst(inst1),
+    .way(1),
+    .predict_to_branch(predict_to_branch[1]),
+    .pc_predict(pc0_predict), //only one predict result
+    .imm(imm1),
+    .CMT(CMT),
+    .br_sr1(rj1_data_o),
+    .br_sr2(rk1_data_o),
+    .uop(uop1),
+    .predict_dir_fail(predict_dir_fail1),
+    .predict_addr_fail(predict_addr_fail1),
+    .fact_taken(fact_taken1),
+    .fact_pc(fact_pc1),
+    .fact_tpc(fact_tpc1)
 );
 EX_Privilege ex_privilege(
     .clk(clk),
@@ -456,15 +483,21 @@ Mul_Stage_1 mul_1(
 divider divider1(
     .clk(clk),
     .rstn(aresetn),
-    .dividend(rj0_data_o),
-    .divisor(rk0_data_o),
+    // .dividend(rj0_data_o),
+    // .divisor(rk0_data_o),
+    .div_sr0(rj0_data_o),
+    .div_sr1(rk0_data_o),
     .en(uop0[`INS_DIV]),
     .flush_exception(flush_by_exception),
     .sign(uop0[`UOP_SIGN]),
-    .quotient(quotient),
+    // .quotient(quotient),
+    // .remainder(remainder),
+    // .stall_divider(stall_divider),
+    // .ready(div_ready)
+    .div_result(quotient),
     .remainder(remainder),
-    .stall_divider(stall_divider),
-    .ready(div_ready)
+    .stall_by_div(stall_divider),
+    .div_en_out(div_ready)
 );
 // assign rvalid_dcache=uop0[`INS_MEM] & ~cond0[2] & ~forward_stall;
 // assign wvalid_dcache=uop0[`INS_MEM] & cond0[2] & ~forward_stall;
