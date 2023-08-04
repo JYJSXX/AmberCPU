@@ -1,11 +1,11 @@
 [*]
 [*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
-[*] Fri Aug  4 13:34:07 2023
+[*] Fri Aug  4 13:34:35 2023
 [*]
 [dumpfile] "/home/yiran/Desktop/chiplab/sims/verilator/run_prog/log/dhrystone_log/simu_trace.fst"
 [dumpfile_mtime] "Fri Aug  4 13:02:10 2023"
 [dumpfile_size] 22402727
-[savefile] "/home/yiran/Desktop/AmberCPU/sim/dvictim.gtkw"
+[savefile] "/home/yiran/Desktop/AmberCPU/sim/dcache_dirty.gtkw"
 [timestart] 242907
 [size] 1848 1016
 [pos] -1 -1
