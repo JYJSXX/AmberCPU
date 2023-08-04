@@ -4,17 +4,20 @@
 采用全相连的方式
 采用计数器替换策略
 */
-module victim_dcache
+module victim_dcache#(
+    parameter TAG_WIDTH = 20,
+    parameter INDEX_WIDTH = 6
+)
 (
     input clk,
     input rstn,
     // 20位tag+6位index
-    //读
-    input [25:0] r_tag,
+     //读
+    input [TAG_WIDTH+INDEX_WIDTH-1:0] r_tag,
     output victim_hit,
     output [511:0] data_out,
     //写
-    input [25:0] w_tag,
+    input [TAG_WIDTH+INDEX_WIDTH-1:0] w_tag,
     input we,
     input [511:0] data_in
 );
@@ -24,17 +27,18 @@ module victim_dcache
     wire [CAPACITY-1:0] hit;
     wire [COUNTER_WIDTH-1:0] hit_index;
     assign hit_index = hit[0] ? 0 : (hit[1] ? 1 : 0);
-    wire [5:0] windex;
-    wire [19:0] wtag;
+    wire [INDEX_WIDTH-1:0] windex;
+    wire [TAG_WIDTH-1:0] wtag;
     wire victim_valid;
     // assign victim_valid = w_tag[25];
-    assign wtag = w_tag[25:6];
-    assign windex = w_tag[5:0];
+    assign wtag = w_tag[TAG_WIDTH+INDEX_WIDTH-1:INDEX_WIDTH];
+    assign windex = w_tag[INDEX_WIDTH-1:0];
 
-    wire [5:0] rindex;
-    wire [19:0] rtag;
-    assign rtag = r_tag[25:6];
-    assign rindex = r_tag[5:0];
+    wire [INDEX_WIDTH-1:0] rindex;
+    wire [TAG_WIDTH-1:0] rtag;
+    assign rtag = r_tag[TAG_WIDTH+INDEX_WIDTH-1:INDEX_WIDTH];
+    assign rindex = r_tag[INDEX_WIDTH-1:0];
+
 
 
     //tag寄存器，最高位为有效位

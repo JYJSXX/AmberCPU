@@ -1,6 +1,11 @@
 `include "define.vh"
-`include "TLB.vh"
 `include "config.vh"
+
+`ifdef BIG_CACHE
+`include "BIG_TLB.vh"
+`else
+`include "TLB.vh"
+`endif 
 `timescale 1ns/1ps
 module core_top(
     input           aclk,
@@ -1797,7 +1802,7 @@ wire [31:0]     remainder_reg ;
     // end
     wire [6:0] exception_out_i;
     icache#(
-        .INDEX_WIDTH       ( 6 ),
+        .INDEX_WIDTH       ( 9 ),
         .WORD_OFFSET_WIDTH ( 4 ),
         .COOKIE_WIDTH      ( 32+1+1 )
     )u_icache(
@@ -1833,7 +1838,7 @@ wire [31:0]     remainder_reg ;
     wire [2:0] d_rsize, d_wsize;
 
     dcache#(
-        .INDEX_WIDTH                       ( 6 ),
+        .INDEX_WIDTH                       ( 7 ),
         .WORD_OFFSET_WIDTH                 ( 4 ),
         .COOKIE_WIDTH                      ( 5+64 )
     )u_dcache(
@@ -1912,8 +1917,8 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .stall_i        ( pc_in_stall        ),
         .stall_d        ( ~ex2_allowin       ),
         .en_d           ( reg_ex_uop0[`INS_MEM] && tlb_readygo && tlb_allowin     ),//todo: flush
-        .VA_I           ( fetch_pc[31:12]   ),
-        .VA_D           ( addr_dcache[31:12]           ),
+        .VA_I           ( fetch_pc[`VA_I]   ),
+        .VA_D           ( addr_dcache[`VA_D]           ),
         .signed_ext     (reg_ex_uop0[`UOP_SIGN] ),
         .signed_ext_out ( signed_ext    ),
         .atom           ( is_atom_dcache),
@@ -1928,20 +1933,20 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         .WDATA_D_OUT       ( w_data_dcache),
         .WSTRB_D           ( write_type_tlb),
         .WSTRB_D_OUT       ( write_type_dcache),
-        .TAG_OFFSET_I   ( fetch_pc[11:0] ),
-        .TAG_OFFSET_D   (addr_dcache[11:0]),
-        .PA_I           ( PA_I[31:12]           ),
-        .PA_D           ( PA_D[31:12]          ),
+        .TAG_OFFSET_I   ( fetch_pc[`OFFSET_I] ),
+        .TAG_OFFSET_D   (addr_dcache[`OFFSET_D]),
+        .PA_I           ( PA_I[`PA_I]           ),
+        .PA_D           ( PA_D[`PA_D]          ),
         .is_cached_I    ( is_cached_I    ),
         .is_cached_D    ( is_cached_D    ),
         .en_VA_I_OUT    ( icache_rvalid  ),
         .en_VA_D_OUT    ( dcache_valid   ),
-        .VA_I_OUT       ( icache_raddr[31:12]   ),
-        .VA_D_OUT       ( dcache_addr[31:12]    ),
-        .VA_TAG_OFFSET_I_OUT(icache_raddr[11:0]),
-        .VA_TAG_OFFSET_D_OUT( dcache_addr[11:0]),
-        .PA_TAG_OFFSET_I_OUT(PA_I[11:0]),
-        .PA_TAG_OFFSET_D_OUT(PA_D[11:0]),
+        .VA_I_OUT       ( icache_raddr[`VA_I]   ),
+        .VA_D_OUT       ( dcache_addr[`VA_D]    ),
+        .VA_TAG_OFFSET_I_OUT(icache_raddr[`OFFSET_I]),
+        .VA_TAG_OFFSET_D_OUT( dcache_addr[`OFFSET_D]),
+        .PA_TAG_OFFSET_I_OUT(PA_I[`OFFSET_I]),
+        .PA_TAG_OFFSET_D_OUT(PA_D[`OFFSET_D]),
         .SOL_D_OUT      ( SOL_D_OUT        ),
         .TLBSRCH_valid  ( tlbsrch_valid    ),
         .TLBSRCH_ready  ( tlbsrch_ready    ),

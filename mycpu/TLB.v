@@ -992,7 +992,12 @@
 
 
 `timescale 1ns/1ps
+`include "config.vh"
+`ifdef BIG_CACHE
+`include "BIG_TLB.vh"
+`else
 `include "TLB.vh"
+`endif 
 `include "csr.vh"
 `include "exception.vh"
 module TLB#(
@@ -1015,8 +1020,8 @@ module TLB#(
     input                               stall_i,//读使能
     input                               stall_d,
     input                               en_d,
-    input       [`TLB_VPPN_LEN : 0]     VA_I,
-    input       [`TLB_VPPN_LEN : 0]     VA_D,
+    input       [`TLB_VPPN_LEN_I : 0]     VA_I,
+    input       [`TLB_VPPN_LEN_D : 0]     VA_D,
     input       [31 : 0]                  WDATA_D,
     input       [3 : 0]                    WSTRB_D,
     input                               signed_ext,
@@ -1024,23 +1029,23 @@ module TLB#(
     input      [TLB_COOKIE_WIDTH-1:0]   tlb_cookie_in,
     output     [TLB_COOKIE_WIDTH-1:0]   tlb_cookie_out,
     input       [4:0]                   rd,
-    input       [11:0]                  TAG_OFFSET_I,
-    input       [11:0]                  TAG_OFFSET_D,
+    input       [`OFFSET_I]                  TAG_OFFSET_I,
+    input       [`OFFSET_D]                  TAG_OFFSET_D,
     //TO CACHE
-    output reg  [`TLB_PPN_LEN - 1:0]    PA_I,
-    output reg  [`TLB_PPN_LEN - 1:0]    PA_D,
+    output reg  [`TLB_PPN_LEN_I - 1:0]    PA_I,
+    output reg  [`TLB_PPN_LEN_D - 1:0]    PA_D,
     output reg                          is_cached_I,
     output reg                          is_cached_D,
     output                              en_VA_I_OUT,
     output                              en_VA_D_OUT,
-    output      [`TLB_VPPN_LEN : 0]     VA_I_OUT,
-    output      [`TLB_VPPN_LEN : 0]     VA_D_OUT,
+    output      [`TLB_VPPN_LEN_I : 0]     VA_I_OUT,
+    output      [`TLB_VPPN_LEN_D : 0]     VA_D_OUT,
     output      [31:0]                  WDATA_D_OUT,
     output      [3:0]                   WSTRB_D_OUT,
-    output      [11:0]                  VA_TAG_OFFSET_I_OUT,
-    output      [11:0]                  VA_TAG_OFFSET_D_OUT,
-    output      [11:0]                  PA_TAG_OFFSET_I_OUT,
-    output      [11:0]                  PA_TAG_OFFSET_D_OUT,
+    output      [`OFFSET_I]                  VA_TAG_OFFSET_I_OUT,
+    output      [`OFFSET_D]                  VA_TAG_OFFSET_D_OUT,
+    output      [`OFFSET_I]                  PA_TAG_OFFSET_I_OUT,
+    output      [`OFFSET_D]                  PA_TAG_OFFSET_D_OUT,
     output                              signed_ext_out,
     output                              atom_out,
     output      [4:0]                   rd_out,
@@ -1092,13 +1097,13 @@ assign TLBWR_ready = 0;
 assign TLBFILL_ready = 0;
 assign TLBINVLD_ready = 0;
 
-reg [`TLB_VPPN_LEN : 0] VA_I_reg2 = 0;
-reg [`TLB_VPPN_LEN : 0] VA_D_reg2 = 0;
+reg [`TLB_VPPN_LEN_I : 0] VA_I_reg2 = 0;
+reg [`TLB_VPPN_LEN_D : 0] VA_D_reg2 = 0;
 reg [TLB_COOKIE_WIDTH-1:0] tlb_cookie_reg2=0;
 reg                     en_i_reg2 = 0;
 reg                     en_d_reg2 = 0;
-reg [11:0]              TAG_OFFSET_I_reg2 = 0;
-reg [11:0]              TAG_OFFSET_D_reg2 = 0;
+reg [`OFFSET_I]              TAG_OFFSET_I_reg2 = 0;
+reg [`OFFSET_D]              TAG_OFFSET_D_reg2 = 0;
 reg                     signed_ext_reg2 = 0;
 reg                     atom_reg2 = 0;
 // reg                     rd_reg2 = 0;
@@ -1106,8 +1111,8 @@ reg                     SOL_reg2 = 0;
 reg      [31 : 0]       WDATA_D_reg2 = 0;
 reg      [3 : 0]        WSTRB_D_reg2 = 0;
 reg [4 : 0]             rd_reg2 = 0;
-reg [11:0]              TAG_OFFSET_I_reg3 = 0;
-reg [11:0]              TAG_OFFSET_D_reg3 = 0;
+reg [`OFFSET_I]              TAG_OFFSET_I_reg3 = 0;
+reg [`OFFSET_D]              TAG_OFFSET_D_reg3 = 0;
 
 
 assign en_VA_I_OUT = en_i_reg2;
@@ -1146,11 +1151,11 @@ wire [6:0] exception0_tmp;
 wire [6:0] exception1_tmp;
 wire [6:0] exception0;
 wire [6:0] exception1;
-assign exception0_tmp[6:0] = {7{plv_1bit && VA_I[`TLB_VPPN_LEN]}} & `EXP_ADEF;
+assign exception0_tmp[6:0] = {7{plv_1bit && VA_I[`TLB_VPPN_LEN_I]}} & `EXP_ADEF;
 //assign exception0 = exception0_tmp[6:0] ;
 assign exception0 = 0;
 //assign tlbexception_flag0 = |exception0[6:0] & en0;
-assign exception1_tmp[6:0] = {7{plv_1bit && VA_D[`TLB_VPPN_LEN]}} & `EXP_ADEM;
+assign exception1_tmp[6:0] = {7{plv_1bit && VA_D[`TLB_VPPN_LEN_D]}} & `EXP_ADEM;
 // assign exception1 = exception1_tmp[6:0] & {7{en_d}};
 assign exception1 = 0;
 //assign tlbexception_flag1 = |exception1[6:0] & en1;
@@ -1257,14 +1262,14 @@ always @(posedge clk)begin
 end
 
 
-wire        DMW0_JUDGE_I = VA_I_reg2[`TLB_VPPN_LEN : `TLB_VPPN_LEN - 2] == CSR_DMW0[`DMW0_VSEG];
-wire [`TLB_VPPN_LEN:0] DMW0_PPN_I = {CSR_DMW0[`DMW0_PSEG], VA_I_reg2[`TLB_VPPN_LEN - 3:0]};
-wire        DMW1_JUDGE_I = VA_I_reg2[`TLB_VPPN_LEN : `TLB_VPPN_LEN - 2] == CSR_DMW1[`DMW0_VSEG];
-wire [`TLB_VPPN_LEN:0] DMW1_PPN_I = {CSR_DMW1[`DMW1_PSEG], VA_I_reg2[`TLB_VPPN_LEN - 3:0]};
-wire        DMW0_JUDGE_D = VA_D_reg2[`TLB_VPPN_LEN : `TLB_VPPN_LEN - 2] == CSR_DMW0[`DMW0_VSEG];
-wire [`TLB_VPPN_LEN:0] DMW0_PPN_D = {CSR_DMW0[`DMW0_PSEG], VA_D_reg2[`TLB_VPPN_LEN - 3:0]};
-wire        DMW1_JUDGE_D = VA_D_reg2[`TLB_VPPN_LEN : `TLB_VPPN_LEN - 2] == CSR_DMW1[`DMW0_VSEG];
-wire [`TLB_VPPN_LEN:0] DMW1_PPN_D = {CSR_DMW1[`DMW1_PSEG], VA_D_reg2[`TLB_VPPN_LEN - 3:0]};
+wire        DMW0_JUDGE_I = VA_I_reg2[`TLB_VPPN_LEN_I : `TLB_VPPN_LEN_I - 2] == CSR_DMW0[`DMW0_VSEG];
+wire [`TLB_VPPN_LEN_I:0] DMW0_PPN_I = {CSR_DMW0[`DMW0_PSEG], VA_I_reg2[`TLB_VPPN_LEN_I - 3:0]};
+wire        DMW1_JUDGE_I = VA_I_reg2[`TLB_VPPN_LEN_I : `TLB_VPPN_LEN_I - 2] == CSR_DMW1[`DMW0_VSEG];
+wire [`TLB_VPPN_LEN_I:0] DMW1_PPN_I = {CSR_DMW1[`DMW1_PSEG], VA_I_reg2[`TLB_VPPN_LEN_I - 3:0]};
+wire        DMW0_JUDGE_D = VA_D_reg2[`TLB_VPPN_LEN_D : `TLB_VPPN_LEN_D - 2] == CSR_DMW0[`DMW0_VSEG];
+wire [`TLB_VPPN_LEN_D:0] DMW0_PPN_D = {CSR_DMW0[`DMW0_PSEG], VA_D_reg2[`TLB_VPPN_LEN_D - 3:0]};
+wire        DMW1_JUDGE_D = VA_D_reg2[`TLB_VPPN_LEN_D : `TLB_VPPN_LEN_D - 2] == CSR_DMW1[`DMW0_VSEG];
+wire [`TLB_VPPN_LEN_D:0] DMW1_PPN_D = {CSR_DMW1[`DMW1_PSEG], VA_D_reg2[`TLB_VPPN_LEN_D - 3:0]};
 
 always @(posedge clk or negedge rstn)begin
     if (~rstn) begin
