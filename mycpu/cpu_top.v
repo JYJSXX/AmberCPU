@@ -2210,7 +2210,18 @@ assign reg_ex_cond0=reg_ex_uop0[`UOP_COND];
         end
 `endif 
 `ifdef DIFFTEST
+    reg [63:0] cmt_count1,cmt_count2;
     reg cmt_valid0,cmt_valid1;
+    always@(posedge clk) begin
+        if(cmt_valid0) begin
+            cmt_count1<=cmt_count1+1;
+        end
+        if(cmt_valid1) begin
+            cmt_count2<=cmt_count2+1;
+        end
+    end
+    
+
     reg [31:0] cmt_pc0,cmt_pc1;
     reg [31:0] cmt_inst0,cmt_inst1;
     reg cmt_wen0,cmt_wen1;
