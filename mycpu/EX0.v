@@ -96,7 +96,7 @@ module EX0(
     output fact_taken, //实际跳不跳
     output [31:0] fact_pc, //分支指令的pc
     output [31:0] fact_tpc, //目标地址pc
-
+    output fact_taken0,
     //给cache
     // output rvalid_dcache,
     // output wvalid_dcache,
@@ -208,6 +208,7 @@ wire [31:0] rk0_data_o;
 wire [31:0] rk1_data_o;
 wire [31:0] rj1_data_o;
 assign ex0_rd0_out = reg_ex_rd0;
+wire fact_taken1;
 assign ex0_rd1_out = reg_ex_rd1 & {5{~fact_taken0}};
 assign dcache_wdata = rk0_data_o;
 assign csr_flag_from_ex = uop0[`INS_CSR];
@@ -279,14 +280,16 @@ wire [3:0] cond1;
 wire [31:0] a_2;
 wire [31:0] b_2;
 wire [31:0] y_2;
-wire [31:0] pc_add_4; //根据控制信号判断要写入pc+4还是y
-assign pc_add_4 = pc0 + 4;
+wire [31:0] pc0_add_4; //根据控制信号判断要写入pc+4还是y
+wire [31:0] pc1_add_4;
+assign pc0_add_4 = pc0 + 4;
+assign pc1_add_4 = pc1 + 4;
 assign cond0 = uop0[`UOP_COND];
 assign cond1 = uop1[`UOP_COND];
 assign alu_result0_valid = is_ALU_0 || uop0[`INS_BR] || inst0 == 32'b0;
 assign alu_result1_valid = is_ALU_1 || uop1[`INS_BR] || inst1 == 32'b0; //beq之类的就向r0写，应该也没什么问题
-assign alu_result0 = uop0[`INS_BR]? pc_add_4:y_1;
-assign alu_result1 = y_2 ; //跳转指令单发，只在0号，1号alu不发射跳转
+assign alu_result0 = uop0[`INS_BR]? pc0_add_4:y_1;
+assign alu_result1 = uop1[`INS_BR]? pc1_add_4:y_2 ; //跳转指令单发，只在0号，1号alu不发射跳转
 wire forward_stall1;
 wire forward_stall2;
 EX1_FORWARD ex1_forward1(
@@ -381,7 +384,7 @@ EX_ALU ex_alu2(
 );
 assign dcache_addr = rj0_data_o + imm0;
 wire predict_addr_fail0, predict_dir_fail0, predict_dir_fail1, predict_addr_fail1;
-wire fact_taken0, fact_taken1;
+
 assign predict_addr_fail = predict_addr_fail0 | predict_addr_fail1;
 assign predict_dir_fail = predict_dir_fail0 | predict_dir_fail1;
 assign fact_taken = fact_taken0 | fact_taken1;
@@ -392,6 +395,7 @@ assign fact_tpc = fact_taken1 ? fact_tpc1 : fact_tpc0;
 EX_BRANCH ex_branch(
     .pc(pc0),
     .inst(inst0),
+    .way(0),
     .predict_to_branch(predict_to_branch[0]),
     .pc_predict(pc0_predict),
     .imm(imm0),
@@ -406,8 +410,9 @@ EX_BRANCH ex_branch(
     .fact_tpc(fact_tpc0)
 );
 EX_BRANCH ex_branch1(
-    .pc(pc0),
+    .pc(pc1),
     .inst(inst1),
+    .way(1),
     .predict_to_branch(predict_to_branch[1]),
     .pc_predict(pc0_predict), //only one predict result
     .imm(imm1),

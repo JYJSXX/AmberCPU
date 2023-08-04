@@ -92,14 +92,14 @@ module IQ (
         if (
             ((id_reg_is_ALU_0&&id_reg_is_ALU_1)
             ||
-            (id_reg_branch_flag[0]&&id_reg_is_ALU_1)
+            (id_reg_inst0[30]&&id_reg_is_ALU_1)
             ||
-            (id_reg_branch_flag[1]&&id_reg_is_ALU_0))
+            (id_reg_inst1[30]&&id_reg_is_ALU_0))
             &&
             (
                 (id_reg_rd0!=id_reg_rj1)&&(id_reg_rd0!=id_reg_rk1)&&
                 (id_reg_rd1!=id_reg_rj0)&&(id_reg_rd1!=id_reg_rk0)||
-                (id_reg_rd0==0)         ||(id_reg_rd1==0)
+                (id_reg_rd0==0)         ||(id_reg_is_ALU_1 && id_reg_rd1==0)
             )&&id_reg_excp_flag==2'b00
         ) begin
             single_en=0;

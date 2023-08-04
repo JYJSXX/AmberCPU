@@ -178,6 +178,7 @@ idle_clk idle_clk1
     wire predict_dir_fail; //分支预测跳不跳失败的信号
     wire predict_add_fail; //分支预测往哪跳失败的信号
     wire fact_taken; //实际跳不跳
+    wire fact_taken0;
     wire [31:0] fact_pc; //分支指令的pc
     wire [31:0] fact_tpc; //目标地址pc
 
@@ -805,7 +806,7 @@ wire [4:0] ex0_rd1_out;
     REG_EX1 u_REG_EX1(
         .clk                     ( clk                     ),
         .aresetn                 ( aresetn                 ),
-        .flush                   ( flush_to_reg_ex1        ),
+        .flush                   ( flush_to_reg_ex1 & (~forward_stall)       ),
         .flush_by_exception      ( flush_by_exception      ),
         .forward_stall           ( forward_stall          ),
         .reg_readygo             ( reg_readygo             ),
@@ -1082,7 +1083,7 @@ wire [31:0]     remainder_reg ;
         .reg_ex_pc0              ( reg_ex_pc0              ),
         .reg_ex_pc1              ( reg_ex_pc1              ),
         .reg_ex_pc_next          ( reg_ex_pc_next          ),
-        .reg_ex_pc_taken         ( reg_ex_pc_taken         ),
+        .fact_taken0             ( fact_taken0        ),
         .reg_ex_inst0            ( reg_ex_inst0            ),
         .reg_ex_inst1            ( reg_ex_inst1            ),
         .reg_ex_branch_flag      ( reg_ex_branch_flag      ),
@@ -1275,6 +1276,7 @@ wire [31:0]     remainder_reg ;
         .predict_dir_fail     ( predict_dir_fail     ),
         .predict_addr_fail    ( predict_add_fail     ),
         .fact_taken           ( fact_taken           ),
+        .fact_taken0          ( fact_taken0          ),
         .fact_pc              ( fact_pc              ),
         .fact_tpc             ( fact_tpc             ),
         .tid                  ( tid                  ),

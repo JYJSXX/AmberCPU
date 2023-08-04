@@ -15,6 +15,7 @@ module MEMBUF(
     input reg_ex_pc_taken,
     input [31:0] reg_ex_inst0,
     input [31:0] reg_ex_inst1,
+    input fact_taken0,
     input reg_ex_branch_flag,
     input reg_ex_excp_flag,
     input [6:0] reg_ex_exception,
@@ -192,7 +193,7 @@ always @ (posedge clk)begin
         tlb_ex_pc_next <= reg_ex_pc_next;
         tlb_ex_pc_taken <= reg_ex_pc_taken;
         tlb_ex_inst0 <= reg_ex_inst0;
-        tlb_ex_inst1 <= reg_ex_inst1;
+        tlb_ex_inst1 <= fact_taken0 ? `INST_NOP : reg_ex_inst1;
         tlb_ex_branch_flag <= reg_ex_branch_flag;
         tlb_ex_excp_flag <= reg_ex_excp_flag;
         tlb_ex_exception <= reg_ex_exception;
