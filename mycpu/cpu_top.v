@@ -585,7 +585,7 @@ idle_clk idle_clk1
     wire [31:0] iq_pc0;
     wire [31:0] iq_pc1;
     wire [31:0] iq_pc_next;
-    wire iq_pc_taken;
+    wire [1:0] iq_pc_taken;
     wire [31:0] iq_inst0;
     wire [31:0] iq_inst1;
     wire [31:0] iq_badv;
@@ -693,7 +693,7 @@ idle_clk idle_clk1
     wire [31:0] reg_ex_pc1;
     wire        reg_ex_CMT;
     wire [31:0] reg_ex_pc_next;
-    wire        reg_ex_pc_taken;
+    wire  [1:0]      reg_ex_pc_taken;
     wire [31:0] reg_ex_inst0;
     wire [31:0] reg_ex_inst1;
     wire reg_ex_branch_flag;
@@ -799,6 +799,9 @@ wire is_rdtimel0 = debug0_wb_inst[31:5] == 'b0000_0000_0000_0000_0110_0000_000;
 wire is_rdtimeh0 = debug0_wb_inst[31:5] == 'b0000_0000_0000_0000_0110_0100_000;
 wire is_rdtimel1 = debug1_wb_inst[31:5] == 'b0000_0000_0000_0000_0110_0000_000;    
 wire is_rdtimeh1 = debug1_wb_inst[31:5] == 'b0000_0000_0000_0000_0110_0100_000;
+
+wire [4:0] ex0_rd0_out;
+wire [4:0] ex0_rd1_out;
     REG_EX1 u_REG_EX1(
         .clk                     ( clk                     ),
         .aresetn                 ( aresetn                 ),
@@ -1107,8 +1110,8 @@ wire [31:0]     remainder_reg ;
         .reg_ex_rj1              ( reg_ex_rj1              ),
         .reg_ex_rk0              ( reg_ex_rk0              ),
         .reg_ex_rk1              ( reg_ex_rk1              ),
-        .reg_ex_rd0              ( reg_ex_rd0              ),
-        .reg_ex_rd1              ( reg_ex_rd1              ),
+        .reg_ex_rd0              ( ex0_rd0_out              ),
+        .reg_ex_rd1              ( ex0_rd1_out             ),
         .csr_rd_data             ( csr_rd_data             ),
         .ex0_ex1_csr_data       ( ex0_ex1_csr_data       ),
 
@@ -1239,6 +1242,8 @@ wire [31:0]     remainder_reg ;
         .CMT                   ( reg_ex_CMT                 ),
         .inst0                ( reg_ex_inst0                ),
         .inst1                ( reg_ex_inst1                ),
+        .reg_ex_rd0           ( reg_ex_rd0           ),
+        .reg_ex_rd1           ( reg_ex_rd1           ),
         .is_ALU_0             ( reg_ex_is_ALU_0             ),
         .is_ALU_1             ( reg_ex_is_ALU_1             ),
         .is_syscall_0         ( reg_ex_is_syscall_0         ),
@@ -1259,6 +1264,8 @@ wire [31:0]     remainder_reg ;
         .ex_rj1               ( reg_ex_rj1               ),
         .ex_rk0               ( reg_ex_rk0               ),
         .ex_rk1               ( reg_ex_rk1               ),
+        .ex0_rd0_out          ( ex0_rd0_out          ),
+        .ex0_rd1_out          ( ex0_rd1_out          ),
         .priv_jump            ( priv_jump            ),
         .ibar                 ( ibar                 ),
         .csr_flag_from_ex     ( csr_flag_from_ex     ),
