@@ -27,8 +27,8 @@
 `define TLB_OFFSET_D   11+1
 
 `define VA_I          31:31-17+1 
-`define VA_D          31:31-19+1
+`define VA_D          31:31-15+1
 `define PA_I         31:31-17+1
-`define PA_D         31:31-19+1
+`define PA_D         31:31-15+1
 `define OFFSET_D   16:0
 `define OFFSET_I   14:0
