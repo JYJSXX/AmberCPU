@@ -18,8 +18,8 @@ module victim_dcache
     input we,
     input [511:0] data_in
 );
-    localparam COUNTER_WIDTH = 2;
-    localparam CAPACITY = 4; // 容量
+    localparam COUNTER_WIDTH = 1;
+    localparam CAPACITY = 2; // 容量
     //读，类似于Dram，组合逻辑
     wire [CAPACITY-1:0] hit;
     wire [COUNTER_WIDTH-1:0] hit_index;
