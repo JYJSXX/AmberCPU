@@ -93,12 +93,12 @@ begin
         R_IDLE:
         begin
             if(d_rvalid) 
-                // if(ar_ready) r_next_state = R_DDATA;
-                // else 
+                if(ar_ready) r_next_state = R_DDATA;
+                else 
                 r_next_state = R_DADDR;
             else if(i_rvalid)
-                // if(ar_ready) r_next_state = R_IDATA;
-                // else 
+                if(ar_ready) r_next_state = R_IDATA;
+                else 
                 r_next_state = R_IADDR;
         end
         R_IADDR:
@@ -161,18 +161,18 @@ begin
         begin
             if(d_rvalid)
             begin
-                // ar_valid = 1'b1;
-                // ar_addr = d_raddr;
+                ar_valid = 1'b1;
+                ar_addr = d_raddr;
                 ar_id = 4'b0001;
-                // ar_len = d_rlen;
-                // ar_size = d_rsize;
+                ar_len = d_rlen;
+                ar_size = d_rsize;
             end
             else if(i_rvalid)
             begin
                 ;
-                // ar_valid = 1'b1;
-                // ar_len = i_rlen;
-                // ar_addr = i_raddr;
+                ar_valid = 1'b1;
+                ar_len = i_rlen;
+                ar_addr = i_raddr;
             end
         end
         R_IADDR:
@@ -383,4 +383,5 @@ begin
     
 end
 
+endmodule
 endmodule
