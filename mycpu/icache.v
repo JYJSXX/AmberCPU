@@ -105,7 +105,8 @@ module icache #(
         REFILL  = 3'b011,
         //extra
         CACOP   = 3'b100,
-        MISS_FLUSH = 3'b101;
+        MISS_FLUSH = 3'b101,
+        MISS_FLUSH_REFILL = 3'b110;
     reg [2:0] state, next_state;
     assign idle = (state == IDLE);
     // stage 1
@@ -248,6 +249,7 @@ module icache #(
     assign i_exception_flag = exception != 0 ? 3 : 0;
 
     /* flush signal */
+    reg miss_flush_flag = 0;
     wire miss_flush_counter_new;
     assign miss_flush_counter_new = missbuf_we ? (raddr != 0) : 0;
     reg miss_flush_counter_old;
@@ -269,13 +271,34 @@ module icache #(
     // write index 
     assign w_index = req_buf[BYTE_OFFSET_WIDTH+INDEX_WIDTH-1:BYTE_OFFSET_WIDTH];
 
+    /* flush miss reg*/
+    reg [INDEX_WIDTH-1:0] flush_miss_index;
+    reg [TAG_WIDTH-1:0] flush_miss_tag;
+    reg [1:0] flush_miss_sel;
+    always @(posedge clk) begin
+        if(!rstn) begin
+            flush_miss_index <= 0;
+            flush_miss_tag <= 0;
+            flush_miss_sel <= 0;
+            // miss_flush_refill_flag <= 0;
+        end
+        else if(flush_valid) begin
+            flush_miss_index <= w_index;
+            flush_miss_tag <= w_tag;
+            flush_miss_sel <= lru_sel;
+        end
+    end
+
+    wire [INDEX_WIDTH-1:0] t_w_index;
+    assign t_w_index = miss_flush_flag ? flush_miss_index : w_index;
+
     BRAM_common #(
         .DATA_WIDTH(BIT_NUM),
         .ADDR_WIDTH (INDEX_WIDTH)
     ) data_mem0 (
         .clk      (clk ),
         .raddr    (r_index),
-        .waddr    (w_index),
+        .waddr    (t_w_index),
         .din      (ret_buf),
         .we       (mem_we[0]),
         .dout     (mem_rdata[0])
@@ -286,7 +309,7 @@ module icache #(
     ) data_mem1 (
         .clk      (clk ),
         .raddr    (r_index),
-        .waddr    (w_index),
+        .waddr    (t_w_index),
         .din      (ret_buf),
         .we       (mem_we[1]),
         .dout     (mem_rdata[1])
@@ -312,11 +335,11 @@ module icache #(
             valid_buf[1] <= valid_buf[1];
     end
     // the tag ready to be written to tagv table
-    assign w_tag = paddr_buf[31:32-TAG_WIDTH];
+    assign w_tag = miss_flush_flag ? flush_miss_tag : paddr_buf[31:32-TAG_WIDTH];
     assign tag_in = tagv_clear ? 0 : {1'b1, w_tag};
     wire [INDEX_WIDTH-1:0] tag_index;
     // assign tag_index = tagv_clear ? req_buf[INDEX_WIDTH+BYTE_OFFSET_WIDTH-1:BYTE_OFFSET_WIDTH] : paddr_buf[INDEX_WIDTH+BYTE_OFFSET_WIDTH-1:BYTE_OFFSET_WIDTH];
-    assign tag_index = w_index;
+    assign tag_index = t_w_index;
     BRAM_tagv #(
       .DATA_WIDTH(TAG_WIDTH+1),
       .ADDR_WIDTH (INDEX_WIDTH)
@@ -352,7 +375,6 @@ module icache #(
     reg [25:0] victim_w_tag_buf = 0;
     reg        victim_flush_miss = 0;
     reg [25:0] victim_w_tag = 0;
-    reg miss_flush_flag = 0;
     always @(posedge clk) begin
         if(!rstn) begin
             victim_w_tag <= 0;
@@ -446,7 +468,9 @@ module icache #(
     assign hit[0]       = valid[0] && (tag_rdata[0][TAG_WIDTH-1:0] == tag); // hit in way 0
     assign hit[1]       = valid[1] && (tag_rdata[1][TAG_WIDTH-1:0] == tag); // hit in way 1
     assign hit_way      = hit[0] ? 0 : 1;           
-    assign cache_hit    = |hit || victim_hit;
+    wire miss_flush_hit;
+    assign miss_flush_hit = (miss_flush_flag) && (flush_miss_tag == tag) && (flush_miss_index == w_index);
+    assign cache_hit    = (|hit || victim_hit || miss_flush_hit) && !uncache;
     // assign cache_hit    = |hit ;
     // only when cache_hit, hit_way is valid
     wire hit_way_valid;
@@ -517,6 +541,9 @@ module icache #(
                 if(i_rready)            next_state = LOOKUP;
                 else                    next_state = MISS_FLUSH;
             end
+            // MISS_FLUSH_REFILL: begin
+            //     next_state = LOOKUP;
+            // end
             REFILL: begin
                 if(ibar || flush)           next_state = IDLE;
                 else if(cacop_en)       next_state = CACOP;
@@ -576,7 +603,13 @@ module icache #(
                 pbuf_we                = ((miss_flush_flag && !cache_hit) ? 0 : 1) || (miss_flush_counter_old && !miss_flush_counter_old_buf);
                 // pbuf_we                = 1;         //寻找两全之策！！！！
                 req_buf_we             =  miss_flush_flag && miss_flush_counter_new && !miss_flush_counter_old;
-                lru_we                  = 0;
+                if(miss_flush_flag && !uncache_buf) begin
+                    data_from_mem = !miss_flush_hit;
+                    tagv_we = flush_miss_sel;
+                    mem_we  = flush_miss_sel;
+                    way_visit = flush_miss_sel[1];
+                    lru_we  = 1;
+                end
                 if(cacop_en)
                     cacop_ready         = 1;
                 if(!cache_hit || uncache_buf) missbuf_we = 1;
@@ -609,6 +642,12 @@ module icache #(
                 i_rlen = 8'd1;
             end
         end
+        // MISS_FLUSH_REFILL: begin
+        //     tagv_we = flush_miss_sel;
+        //     mem_we  = flush_miss_sel;
+        //     way_visit = flush_miss_sel[1];
+        //     lru_we  = 1;
+        // end
         // ! 这里存在一个问题，lru_sel在miss的情况下是否需要缓存？
         REFILL: begin
             if(!uncache_buf && !cacop_en_buf) begin
