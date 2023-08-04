@@ -232,9 +232,6 @@ wire [13:0] addr = waddr_reg;
     assign csr_estat[`ESTAT_ECODE]  = estat_ecode;
     assign csr_estat[`ESTAT_ESUBCODE] = estat_subecode;
     assign csr_estat[`ESTAT_ZERO_1] = 0;
-reg reg_soft_interrupt;
-always@(posedge clk)
-    reg_soft_interrupt<=|estat_is_soft;
     //EENTRY
     reg [`EENTRY_VA] eentry_va=0;
     assign csr_eentry[`EENTRY_ZERO] = 0;
