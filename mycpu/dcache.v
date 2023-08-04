@@ -3,7 +3,7 @@
 `include "exception.vh"
 
 module dcache #(
-    parameter INDEX_WIDTH       = 7,
+    parameter INDEX_WIDTH       = 8,
     parameter WORD_OFFSET_WIDTH = 4,
     parameter COOKIE_WIDTH = 5
 )(
@@ -134,7 +134,7 @@ module dcache #(
     reg                         data_from_mem;
 
     // LRU replace
-    reg  [64-1:0]      lru; //0: way0, 1: way1
+    reg  [SET_NUM-1:0]      lru; //0: way0, 1: way1
     wire [1:0]                  lru_sel;
     reg                         lru_we;
     //reg                         missbuf_we;
@@ -237,11 +237,11 @@ module dcache #(
     reg                         hit2_flag;
     wire                        ibar_state;
     assign ibar_state = (state==IBAR) && (state == IBAR_EXTRA) && (state == IBAR_WAIT);
-    wire [5:0] dirty_index;
+    wire [INDEX_WIDTH-1:0] dirty_index;
     wire way0, way1;
 
-    assign dirty_addr[0] = {tag_rdata[0][19:0], dirty_index, 6'b0};
-    assign dirty_addr[1] = {tag_rdata[1][19:0], dirty_index, 6'b0};
+    assign dirty_addr[0] = {tag_rdata[0][TAG_WIDTH-1:0], dirty_index, 6'b0};
+    assign dirty_addr[1] = {tag_rdata[1][TAG_WIDTH-1:0], dirty_index, 6'b0};
 
     /* cookie */ 
     reg [COOKIE_WIDTH-1 : 0] cookie_buf;
@@ -502,7 +502,7 @@ module dcache #(
 
      /* victim cache */
     wire victim_hit;
-    wire [511:0] victim_data;
+    wire [BIT_NUM-1:0] victim_data;
     wire victim_sel;
     assign victim_sel = lru_sel[0] ? 0 : 1;
     wire victim_we;
@@ -515,7 +515,7 @@ module dcache #(
         if(state == MISS)
             victim_w_tag <= victim_w_tag;
         else begin
-            victim_w_tag <= {tag_rdata[victim_sel][TAG_WIDTH-1:0], req_buf[11:6]};
+            victim_w_tag <= {tag_rdata[victim_sel][TAG_WIDTH-1:0], w_index};
         end
     end
     reg [BIT_NUM - 1 : 0] victim_data_in;
@@ -530,7 +530,7 @@ module dcache #(
         end
     end
 
-    reg [19:0] victim_rtag_buf;
+    reg [TAG_WIDTH-1:0] victim_rtag_buf;
     reg miss_state;
     always @(posedge clk)
     begin
@@ -545,12 +545,15 @@ module dcache #(
         end
     end
     wire [25:0] victim_rtag;
-    assign victim_rtag = miss_state ? {victim_rtag_buf,req_buf[11:6]}: {tag,req_buf[11:6]};
+    assign victim_rtag = miss_state ? {victim_rtag_buf,w_index}: {tag,w_index};
     wire victim_hit_temp;
     assign victim_hit = !op_buf ? victim_hit_temp && (hit == 0) : 0;
 
 
-    victim_dcache victim_cache (
+    victim_dcache#(
+        .TAG_WIDTH(TAG_WIDTH),
+        .INDEX_WIDTH(INDEX_WIDTH)
+    ) victim_cache (
         .clk        (clk),
         .rstn       (rstn),
         .r_tag      (victim_rtag),
@@ -668,7 +671,11 @@ module dcache #(
     // end
     wire dirty_hit2;
     assign dirty_hit2 = way0 && way1;
-    dirty_table diety_table(
+    dirty_table #(
+    .TAG_WIDTH(TAG_WIDTH),
+    .INDEX_WIDTH(INDEX_WIDTH)
+    )
+     diety_table(
         .clk(clk),
         .rstn(rstn),
         .we(dirty_we),
@@ -715,13 +722,13 @@ module dcache #(
             m_buf <= 0;
         end
         else if(mbuf_we) begin
-            m_buf <= {tag_rdata[lru_sel[1]][19:0], w_index, 6'b0};
+            m_buf <= {tag_rdata[lru_sel[1]][TAG_WIDTH-1:0], w_index, 6'b0};
         end
     end
 
     
     /* memory visit settings*/
-    assign d_raddr  = uncache_buf ? paddr_buf : {paddr_buf[31:12], req_buf[11:6],6'b0};
+    assign d_raddr  = uncache_buf ? paddr_buf : {paddr_buf[31:32-TAG_WIDTH], w_index, 6'b0};
     `ifdef IBAR
     assign d_waddr  = ibar_valid ? dirty_addr[dirty_way] : uncache_buf ? paddr_buf : m_buf;
     `endif 
