@@ -21,7 +21,7 @@ module dirty_table#(
     output reg ibar_valid       // 找到脏块后置1，ibar_ready置1后置0
 );
     reg [INDEX_WIDTH:0] dirty_num;        // dirty block number, max = 128
-    reg [1:0] dirty_table [0:1<<INDEX_WIDTH-1];
+    reg [1:0] dirty_table [0:(1<<INDEX_WIDTH)-1];
     reg [INDEX_WIDTH:0] crt_num;
     reg [5:0] crt_addr;
     reg [1:0] csr, nsr;
