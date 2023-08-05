@@ -52,7 +52,7 @@ module BTB_advance #(
             tag_table  [i] = 0;
         end
     end
-    always @(posedge clk) begin
+    always @(posedge clk) begin 
         if(we)begin
             taken_table[fact_hash_index]<=wtaken;
             guess_table[fact_hash_index]<=fact_tpc;
