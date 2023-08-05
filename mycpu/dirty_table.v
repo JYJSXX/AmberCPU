@@ -23,7 +23,7 @@ module dirty_table#(
     reg [INDEX_WIDTH:0] dirty_num;        // dirty block number, max = 128
     reg [1:0] dirty_table [0:(1<<INDEX_WIDTH)-1];
     reg [INDEX_WIDTH:0] crt_num;
-    reg [5:0] crt_addr;
+    reg [INDEX_WIDTH-1:0] crt_addr;
     reg [1:0] csr, nsr;
     reg hit2;
     localparam
@@ -33,14 +33,14 @@ module dirty_table#(
         DONE = 2'b11;
     integer i;
     initial begin
-        for (i = 0; i < 64; i = i + 1) begin
+        for (i = 0; i < (1<<INDEX_WIDTH); i = i + 1) begin
             dirty_table[i] = 0;
         end
         dirty_num = 0;
     end
     always @(posedge clk) begin
         if (ibar_complete) begin
-            for (i = 0; i < 64; i = i + 1) begin
+            for (i = 0; i < (1<<INDEX_WIDTH); i = i + 1) begin
                 dirty_table[i] <= 0;
             end
             dirty_num <= 0;
