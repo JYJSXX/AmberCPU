@@ -24,7 +24,7 @@
 `define TLB_NUM         32                  //TLB项数
 
 `define TLB_OFFSET_I   14 //////////////  14:0
-`define TLB_OFFSET_D   12 /////////////   12:0
+`define TLB_OFFSET_D   13 /////////////   12:0
 
 `define VA_I          31:`TLB_OFFSET_I+1
 `define VA_D          31:`TLB_OFFSET_D+1
