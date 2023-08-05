@@ -214,11 +214,17 @@ assign dcache_wdata = rk0_data_o;
 assign csr_flag_from_ex = uop0[`INS_CSR];
 assign tlb_flag_from_ex = uop0[`INS_TLB] && (inst0[11:10] == 2'b00 || inst0[11:10] ==2'b01 || inst0[15]);
     reg [63:0] stable_counter_reg;
-    assign flush=  predict_addr_fail || predict_dir_fail || uop0[`INS_ERTN];
+    assign flush=  /*~predict_wrong_reg&&*/(predict_addr_fail || predict_dir_fail) || uop0[`INS_ERTN];
     always @(posedge aclk)
         if(~aresetn) stable_counter_reg<=0;
         else stable_counter_reg <= stable_counter_reg+1;
     assign stable_counter = stable_counter_reg;   
+    /*reg predict_wrong_reg = 0;
+    always @(posedge clk)begin
+        if(~aresetn | flush_by_exception) predict_wrong_reg <= 0;
+        else predict_wrong_reg <= predict_addr_fail || predict_dir_fail;
+    end*/
+
 `ifdef DIFFTEST      
     always@(posedge clk)begin
         if(ex1_allowin) begin
@@ -388,8 +394,8 @@ EX_ALU ex_alu2(
 assign dcache_addr = rj0_data_o + imm0;
 wire predict_addr_fail0, predict_dir_fail0, predict_dir_fail1, predict_addr_fail1;
 
-assign predict_addr_fail = predict_addr_fail0 | predict_addr_fail1;
-assign predict_dir_fail = predict_dir_fail0 | predict_dir_fail1;
+assign predict_addr_fail = (predict_addr_fail0 | predict_addr_fail1) && ~forward_stall;
+assign predict_dir_fail = (predict_dir_fail0 | predict_dir_fail1) && ~forward_stall ;
 assign fact_taken = fact_taken0 | fact_taken1;
 wire [31:0] fact_pc0, fact_pc1;
 wire [31:0] fact_tpc0, fact_tpc1;
