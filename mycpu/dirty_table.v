@@ -20,12 +20,12 @@ module dirty_table#(
     output reg ibar_complete,   // ibar处理完
     output reg ibar_valid       // 找到脏块后置1，ibar_ready置1后置0
 );
-    reg [INDEX_WIDTH:0] dirty_num;        // dirty block number, max = 128
+    reg [INDEX_WIDTH:0] dirty_num=0;        // dirty block number, max = 128
     reg [1:0] dirty_table [0:(1<<INDEX_WIDTH)-1];
-    reg [INDEX_WIDTH:0] crt_num;
-    reg [INDEX_WIDTH-1:0] crt_addr;
-    reg [1:0] csr, nsr;
-    reg hit2;
+    reg [INDEX_WIDTH:0] crt_num=0;
+    reg [5:0] crt_addr=0;
+    reg [1:0] csr=0, nsr=0;
+    reg hit2=0;
     localparam
         IDLE = 2'b00,
         SEARCH = 2'b01,
@@ -45,7 +45,7 @@ module dirty_table#(
         //     end
         //     dirty_num <= 0;
         // end
-        // else i
+        // else 
         if(|we) begin
             if(we[0]) dirty_table[w_addr][0] <= w_data;
             if(we[1]) dirty_table[w_addr][1] <= w_data;

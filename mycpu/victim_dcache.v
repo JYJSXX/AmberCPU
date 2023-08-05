@@ -48,6 +48,13 @@ module victim_dcache#(
     reg [511:0] data [0:CAPACITY-1];
     //有效位
     wire [CAPACITY-1:0] valid;
+    integer j;
+    initial begin
+        for(j = 0; j < CAPACITY; j = j + 1) begin
+            tag[j] = 0;
+            data[j] = 0;
+        end
+    end
     genvar i;
     generate
         for (i = 0; i < CAPACITY; i = i + 1) begin: tag_reg
@@ -55,7 +62,7 @@ module victim_dcache#(
         end
     endgenerate
     //计数器，每次有写入时加1，不断循环
-    reg [COUNTER_WIDTH-1:0] counter;
+    reg [COUNTER_WIDTH-1:0] counter=0;
 
     generate
         for(i = 0; i < CAPACITY; i = i + 1) begin: hit_gen
@@ -68,8 +75,8 @@ module victim_dcache#(
     assign data_out = |hit ? data[hit_index] : 0;
 
     //对we信号取边沿
-    reg we_pre;
-    reg we_now;
+    reg we_pre=0;
+    reg we_now=0;
     wire counter_we;
     always @(posedge clk) begin
         if(!rstn) begin
