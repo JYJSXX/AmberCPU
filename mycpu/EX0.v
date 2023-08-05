@@ -396,7 +396,7 @@ wire predict_addr_fail0, predict_dir_fail0, predict_dir_fail1, predict_addr_fail
 
 assign predict_addr_fail = (predict_addr_fail0 | predict_addr_fail1) && ~forward_stall;
 assign predict_dir_fail = (predict_dir_fail0 | predict_dir_fail1) && ~forward_stall ;
-assign fact_taken = fact_taken0 | fact_taken1;
+assign fact_taken = {fact_taken1,fact_taken0};
 wire [31:0] fact_pc0, fact_pc1;
 wire [31:0] fact_tpc0, fact_tpc1;
 assign fact_pc = fact_taken1 ? fact_pc1 : fact_pc0;
