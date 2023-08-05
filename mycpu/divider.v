@@ -32,7 +32,6 @@ module divider(
     reg             sign_reg = 0;
     wire    [31:0]  quotient_nxt = {quotient[30:0], ~minus[63]};              //商的下一个值
     // reg             result_prepare = 0;
-    wire result_prepare = (div_next_state == DIV_RESULT_PREPARE);
 
     clog2 dividend_clog2(
         .in(dividend_abs),
@@ -89,6 +88,7 @@ module divider(
             div_state <= div_next_state;
     end
 
+    wire result_prepare = (div_next_state == DIV_RESULT_PREPARE);
     always @(*)
     begin
         div_next_state = div_state;
@@ -119,6 +119,7 @@ module divider(
             begin
                 div_next_state = DIV_IDLE;
             end
+            default:;
         endcase
     end
 
@@ -254,6 +255,7 @@ module divider(
                     dividend_sign <= 0;
                     divisor_sign <= 0;
                 end
+                default:;
             endcase
     end
 
