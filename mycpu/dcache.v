@@ -568,12 +568,12 @@ module dcache #(
     assign tag          = (state == MISS) || (state == REFILL) ? paddr_buf[31:32-TAG_WIDTH]:p_addr[31:32-TAG_WIDTH]; // the tag of the request
     assign hit[0]       = valid[0] && (tag_rdata[0][TAG_WIDTH-1:0] == tag); // hit in way 0
     assign hit[1]       = valid[1] && (tag_rdata[1][TAG_WIDTH-1:0] == tag); // hit in way 1
-    assign cache_hit    = |hit || victim_hit;
-    // assign cache_hit    = |hit;
+    // assign cache_hit    = |hit || victim_hit;
+    assign cache_hit    = |hit;
     assign hit_way      = hit[0] ? 0 : 1; // 0 for way 0, 1 for way 1
     wire hit_way_valid;
-    assign hit_way_valid = cache_hit && ~victim_hit ? hit_way : 0;
-    // assign hit_way_valid = cache_hit ? hit_way : 0;
+    // assign hit_way_valid = cache_hit && ~victim_hit ? hit_way : 0;
+    assign hit_way_valid = cache_hit ? hit_way : 0;
     
     /* write control */
     assign wdata_pipe_512 = ({{(BIT_NUM-32){1'b0}}, wdata_pipe} << {address[1:0],3'b0}) << {address[BYTE_OFFSET_WIDTH-1:2], 5'b0};
@@ -593,8 +593,8 @@ module dcache #(
     // choose data from mem or return buffer 
     wire [BIT_NUM-1:0] o_rdata;
     reg [31:0]        rdata_cache=0;
-    assign o_rdata = victim_hit ? victim_data : data_from_mem ? mem_rdata[hit_way_valid] : ret_buf; 
-    // assign o_rdata = data_from_mem ? mem_rdata[hit_way_valid] : ret_buf; 
+    // assign o_rdata = victim_hit ? victim_data : data_from_mem ? mem_rdata[hit_way_valid] : ret_buf; 
+    assign o_rdata = data_from_mem ? mem_rdata[hit_way_valid] : ret_buf; 
     always @(*) begin
         case(req_buf[5:2])
         4'd0:  rdata_cache = o_rdata[31:0];
@@ -677,23 +677,23 @@ module dcache #(
     )
      diety_table(
         .clk(clk),
-        .rstn(rstn),
+        // .rstn(rstn),
         .we(dirty_we),
         .re(lru_sel),
         .r_addr(w_index),
         .w_addr(w_index),
         .w_data(dirty_wdata),
         .r_data(dirty_rdata)
-        `ifdef IBAR
-        ,.ibar(ibar),
-        .ibar_ready(ibar_ready),
-        .ibar_valid(ibar_valid),
-        .ibar_complete(ibar_complete),
-        // .dirty_signal(dirty_signal),
-        .dirty_addr(dirty_index),
-        .way0(way0),
-        .way1(way1)
-        `endif
+        // `ifdef IBAR
+        // ,.ibar(ibar),
+        // .ibar_ready(ibar_ready),
+        // .ibar_valid(ibar_valid),
+        // .ibar_complete(ibar_complete),
+        // // .dirty_signal(dirty_signal),
+        // .dirty_addr(dirty_index),
+        // .way0(way0),
+        // .way1(way1)
+        // `endif
     );
 
 
@@ -767,7 +767,7 @@ module dcache #(
             end
         end
         LOOKUP: begin
-            if(exception != 0 || flush)
+            if(exception != 0 || (flush && !cacop_en))
                 next_state = IDLE;
             else if(ibar)
                 next_state = IBAR;
@@ -918,8 +918,10 @@ module dcache #(
             if(exception == 0) begin
                 pbuf_we = 1;
                 lru_we  = 0;
-                if(cacop_en)
+                if(cacop_en) begin
                     cacop_ready = 1;
+                    req_buf_we  = 1;
+                end
                 if(is_atom_buf)begin
                     if( op_buf == READ_OP)
                     llbit_set = 1;

@@ -18,28 +18,19 @@ module FIFO_generator
 
   reg [DATA_WIDTH-1:0] mem [DEPTH-1:0];
   // reg [DATA_WIDTH-1:0] readDataReg;
-  reg [LOG_DEPTH-1:0] readPtr;
-  reg [LOG_DEPTH-1:0] writePtr;
-  reg [LOG_DEPTH:0] count;
+  reg [LOG_DEPTH-1:0] readPtr=0;
+  reg [LOG_DEPTH-1:0] writePtr=0;
+  reg [LOG_DEPTH:0] count=0;
   integer i;
 
-  always @(posedge clk or negedge rstn) begin
+  always @(posedge clk) begin
     if (~rstn) begin
       readPtr <= 0;
       writePtr <= 0;
-      // count <= 0;
-      for (i = 0; i < DEPTH; i = i + 1) begin
-        mem[i] <= 0;
-      end
       // readDataReg <= 0;
     end else if (flush) begin
       readPtr <= 0;
       writePtr <= 0;
-      // count <= 0;
-      for (i = 0; i < DEPTH; i = i + 1) begin
-        mem[i] <= 0;
-      end
-      // readDataReg <= 0;
     end 
     else begin
       // 读操作
@@ -56,16 +47,9 @@ module FIFO_generator
         // count <= count + 1;
       end
 
-      // if(write_en&&pop_en)begin
-      //   count<=count;
-      // end else if(write_en&&!full)begin
-      //   count<=count+1;
-      // end else if(pop_en&&!empty)begin
-      //   count<=count-1;
-      // end
     end
   end
-  always @(posedge clk or negedge rstn) begin
+  always @(posedge clk) begin
       if(~rstn)begin
         count<=0;
       end else if(flush)begin
@@ -77,6 +61,8 @@ module FIFO_generator
           count<=count-1;
         end else if(write_en&&!full)begin
           count<=count+1;
+        end else begin
+          count<=count;
         end
       end
   end
@@ -87,6 +73,5 @@ module FIFO_generator
   assign empty = (count == 0);
   assign nearly_empty=(count==1);
   assign dout = empty?0:mem[readPtr];
-  // assign dout = empty?0:mem[readPtr];
 
 endmodule

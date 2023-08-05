@@ -840,7 +840,7 @@ always @(posedge clk)
             time_out <= 0;
             //计时器的初始值比标准大1，否则给定时器设置0无法触发中断
             //if(tcfg_periodic|| set_timer) csr_tval<={tcfg_initval[`TCFG_INITVAL],2'd1};
-            if(tcfg_periodic|| set_timer) csr_tval<= {2'b00,tcfg_initval[`TCFG_INITVAL]} + 100;
+            if(tcfg_periodic|| set_timer) csr_tval<= {2'b00,tcfg_initval[`TCFG_INITVAL]} + 1000;
         end else if(tcfg_en) begin
             csr_tval<=csr_tval-1;
             time_out<=csr_tval==1;
@@ -918,7 +918,7 @@ assign rdata[31:0] = {32{addr_in==`CSR_CRMD}} & csr_crmd |
     {
     wen&&addr==`CSR_CRMD ?  wdata  : pos_signal_excp ? {csr_crmd[31:3], 3'b000} :
                      ertn ? {csr_crmd[31:3],csr_prmd[2:0]}: csr_crmd,
-    wen&&addr==`CSR_PRMD ? wdata  : pos_signal_excp ? {csr_prmd[31:3],csr_crmd[2:0]}:csr_prmd,
+    wen&&addr==`CSR_PRMD ? {csr_prmd[31:3],wdata[2:0]}   : pos_signal_excp ? {csr_prmd[31:3],csr_crmd[2:0]}:csr_prmd,
     wen&&addr==`CSR_ECFG ? wdata & 32'b1_1011_1111_1111 :csr_ecfg & 32'b1_1011_1111_1111 ,
     wen&&addr==`CSR_ESTAT ? (wdata & 32'b11 | csr_estat & ~32'b11) : pos_signal_excp ? {csr_estat[31:23], expcode_in[6:0], csr_estat[15:0]} :csr_estat,
     wen&&addr==`CSR_ERA ? wdata : pos_signal_excp ? era_in : csr_era,

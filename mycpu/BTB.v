@@ -42,8 +42,24 @@ module BTB #(
 
 );
     `ifdef BTB_CLOSE
-        assign pred_pc=fetch_pc+8;  
-        assign pred_taken=0;
+
+        `ifndef BTB_SHOUT
+            assign pred_pc=fetch_pc+8;  
+            assign pred_taken=0;
+        `endif
+
+        `ifdef BTB_SHOUT
+            reg [5:0] cnt;
+            always @(posedge clk) begin
+                if(!rstn)begin
+                    cnt<=0;
+                end else begin
+                    cnt<=cnt+1;
+                end
+            end
+            assign pred_pc=fetch_pc+(cnt<<2);
+            assign pred_taken=cnt[0];
+        `endif
 
     `endif
 
@@ -137,7 +153,7 @@ module BTB #(
         reg [31:0] br_tot=0;
 
         reg [31:0] last_pc;
-        always @(posedge clk or negedge rstn) begin
+        always @(posedge clk) begin
             last_pc<=fetch_pc;
             if(!rstn)begin
                 suc_cnt<=0;
@@ -199,7 +215,7 @@ module BTB #(
 
 
 
-    always @(posedge clk or negedge rstn) begin
+    always @(posedge clk) begin
         if(!rstn)begin
             btype<=0;
             bindex<=0;
@@ -208,7 +224,7 @@ module BTB #(
             bindex<=inst_pc[PC_INDEX_WIDTH+2:3];
         end
     end
-    always @(posedge clk or negedge rstn) begin
+    always @(posedge clk) begin
         if(!rstn)begin
             UMASK<=0;
         end else begin
@@ -218,7 +234,7 @@ module BTB #(
             end
         end
     end
-    always @(posedge clk or negedge rstn) begin
+    always @(posedge clk) begin
         if(!rstn)begin
             BMASK<=0;
         end else begin

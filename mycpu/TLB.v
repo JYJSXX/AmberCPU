@@ -1271,7 +1271,7 @@ wire [`TLB_VPPN_LEN_D:0] DMW0_PPN_D = {CSR_DMW0[`DMW0_PSEG], VA_D_reg2[`TLB_VPPN
 wire        DMW1_JUDGE_D = VA_D_reg2[`TLB_VPPN_LEN_D : `TLB_VPPN_LEN_D - 2] == CSR_DMW1[`DMW0_VSEG];
 wire [`TLB_VPPN_LEN_D:0] DMW1_PPN_D = {CSR_DMW1[`DMW1_PSEG], VA_D_reg2[`TLB_VPPN_LEN_D - 3:0]};
 
-always @(posedge clk or negedge rstn)begin
+always @(posedge clk)begin
     if (~rstn) begin
         PA_I <= 0;
         PA_D <= 0;

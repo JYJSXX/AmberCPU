@@ -167,7 +167,7 @@ always@(posedge aclk) begin
         id_reg_rk1  <= rk1;
     
     end
-    else if(~reg_allowin||~id_allowin) begin
+    else  begin
         id_reg_pc0  <= id_reg_pc0;
         id_reg_pc1  <= id_reg_pc1;
         id_reg_pc_next<=id_reg_pc_next;
@@ -199,10 +199,10 @@ always@(posedge aclk) begin
         id_reg_rk1  <= id_reg_rk1;
 
     end
-    else begin
-        id_reg_is_priviledged_0  <= 0;
-        id_reg_is_priviledged_1  <= 0;
-    end
+    // else begin
+    //     id_reg_is_priviledged_0  <= 0;
+    //     id_reg_is_priviledged_1  <= 0;
+    // end
 
 end
     IQ u_IQ(

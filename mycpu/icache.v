@@ -472,15 +472,16 @@ module icache #(
     assign hit[0]       = valid[0] && (tag_rdata[0][TAG_WIDTH-1:0] == tag); // hit in way 0
     assign hit[1]       = valid[1] && (tag_rdata[1][TAG_WIDTH-1:0] == tag); // hit in way 1
     assign hit_way      = hit[0] ? 0 : 1;           
-    wire miss_flush_hit;
     // TODO tobe modified
+    // wire miss_flush_hit;
     // assign miss_flush_hit = (miss_flush_flag) && (flush_miss_tag == tag) && (flush_miss_index == w_index) && !uncache_buf;
-    assign cache_hit    = |hit || victim_hit;
-    // assign cache_hit    = |hit ;
+    // assign cache_hit    = (|hit || victim_hit || miss_flush_hit) && !uncache;
+    // assign cache_hit    = |hit || victim_hit;
+    assign cache_hit    = |hit ;
     // only when cache_hit, hit_way is valid
     wire hit_way_valid;
-    assign hit_way_valid = cache_hit && ~victim_hit ? hit_way : 0;
-    // assign hit_way_valid = cache_hit ? hit_way : 0;
+    // assign hit_way_valid = cache_hit && ~victim_hit ? hit_way : 0;
+    assign hit_way_valid = cache_hit ? hit_way : 0;
     
 
     /* read control */
@@ -488,8 +489,8 @@ module icache #(
     // 双发射因此一次读取64位
     wire [BIT_NUM-1:0] o_rdata;
     reg [63:0]        rdata_cache=0;
-    assign o_rdata = victim_hit ? victim_data : data_from_mem ? mem_rdata[hit_way_valid] : ret_buf; 
-    // assign o_rdata =  data_from_mem ? mem_rdata[hit_way_valid] : ret_buf;
+    // assign o_rdata = victim_hit ? victim_data : data_from_mem ? mem_rdata[hit_way_valid] : ret_buf; 
+    assign o_rdata =  data_from_mem ? mem_rdata[hit_way_valid] : ret_buf;
     always @(*) begin
         case(req_buf[5:3])
         3'd0: rdata_cache = o_rdata[63:0];
@@ -528,7 +529,7 @@ module icache #(
             end
             LOOKUP: begin
                 if((exception != 0) || ibar || flush)      next_state = IDLE;
-                else if(uncache_buf)    next_state = flush || ~flush_valid ? MISS_FLUSH : MISS;
+                else if(uncache)    next_state = flush || ~flush_valid ? MISS_FLUSH : MISS;
                 else if(cacop_en)       next_state = CACOP;
                 else if(cache_hit) begin
                     if(rvalid)          next_state = LOOKUP;
@@ -615,8 +616,10 @@ module icache #(
                     way_visit = flush_miss_sel[1];
                     lru_we  = 1;
                 end
-                if(cacop_en)
+                if(cacop_en) begin
                     cacop_ready         = 1;
+                    req_buf_we          = 1;
+                end
                 if(!cache_hit || uncache_buf) missbuf_we = 1;
                 else begin
                     rready_temp              = 1;

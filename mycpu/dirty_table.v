@@ -1,24 +1,27 @@
+`include "config.vh"
 module dirty_table#(
     parameter TAG_WIDTH = 20,
     parameter INDEX_WIDTH = 6
 )
 (
     input clk,
-    input rstn,
+    // input rstn,
     input [1:0] we,
     input [1:0] re,
     input [INDEX_WIDTH-1:0] r_addr,
     input [INDEX_WIDTH-1:0] w_addr,
     input w_data,
-    input ibar,
-    input ibar_ready,       // ibar发送完当前的脏行后置为1
-    output r_data,
+    output r_data
    // output dirty_signal,        // 当前是否有dirty block
-    output reg [INDEX_WIDTH-1:0] dirty_addr,
-    output way0, 
-    output way1,
-    output reg ibar_complete,   // ibar处理完
-    output reg ibar_valid       // 找到脏块后置1，ibar_ready置1后置0
+    // `ifdef IBAR
+    // ,input ibar,
+    // input ibar_ready,       // ibar发送完当前的脏行后置为1
+    // output reg [INDEX_WIDTH-1:0] dirty_addr,
+    // output way0, 
+    // output way1,
+    // output reg ibar_complete,   // ibar处理完
+    // output reg ibar_valid       // 找到脏块后置1，ibar_ready置1后置0
+    // `endif
 );
     reg [INDEX_WIDTH:0] dirty_num=0;        // dirty block number, max = 128
     reg [1:0] dirty_table [0:(1<<INDEX_WIDTH)-1];
@@ -39,13 +42,6 @@ module dirty_table#(
         dirty_num = 0;
     end
     always @(posedge clk) begin
-        // if (ibar_complete) begin
-        //     for (i = 0; i < (1<<INDEX_WIDTH); i = i + 1) begin
-        //         dirty_table[i] <= 0;
-        //     end
-        //     dirty_num <= 0;
-        // end
-        // else 
         if(|we) begin
             if(we[0]) dirty_table[w_addr][0] <= w_data;
             if(we[1]) dirty_table[w_addr][1] <= w_data;

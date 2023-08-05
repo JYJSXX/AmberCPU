@@ -96,10 +96,10 @@ module IF1_FIFO(
     reg             if1_fifo_valid=0;
 
 
-    reg [(WIDTH+1)*32-1:0] if1_fifo_pc_buf=0;
+    // reg [(WIDTH+1)*32-1:0] if1_fifo_pc_buf=0;
     reg [BUF_W:0]    icache_rvalid_buf=0;
     
-    always @(posedge clk or negedge rstn) begin
+    always @(posedge clk) begin
         if(!rstn)begin
             tmp<=0;//就绪
         end else if(flush)begin
@@ -114,7 +114,7 @@ module IF1_FIFO(
             tmp<=tmp;
         end
     end
-    wire [31:0]                     cmp_pc;
+    wire [31:0]                    cmp_pc;
     wire                            pc_ins_full;
     wire                            pc_ins_empty;
     wire                            pc_inst_nearly_full;
@@ -150,7 +150,7 @@ module IF1_FIFO(
                                 
 
 
-    always @(posedge clk or negedge rstn) begin
+    always @(posedge clk) begin
         if(!rstn)begin
             icache_rvalid_buf<=0;
         end 
@@ -164,7 +164,7 @@ module IF1_FIFO(
     
 
     always @ (posedge clk) begin
-        if (~rstn || flush||(!icache_rready&&fifo_allowin&&fifo_readygo)||(tmp==1&&write_en)) begin
+        if ((~rstn) || flush||(!icache_rready&&fifo_allowin&&fifo_readygo)||(tmp==1&&write_en)) begin
             //clear stage-stage reg
             if1_fifo_valid<=0;
             if1_fifo_pc     <=  0;
@@ -182,7 +182,7 @@ module IF1_FIFO(
             if1_fifo_valid<=1;
             if1_fifo_pc     <=  pc_out;
             if1_fifo_pc_next<=  icache_pc_next;
-            if1_fifo_pc_taken<=  pc_out[2]?{(pc_taken_out!=2'b00)?2'b11:2'b00}:pc_taken_out;
+            if1_fifo_pc_taken<=  pc_taken_out;
 
             if1_fifo_inst0  <=  pc_out[2]? icache_inst1[31:0]:icache_inst0[31:0];
             if1_fifo_inst1  <=  pc_out[2]? `INST_NOP:icache_inst1[31:0];

@@ -262,6 +262,7 @@ module EX_Privilege(
                 block_clock = 1;
                 block_cache = 1;
             end
+            default:;
         endcase
     end
 
@@ -320,7 +321,7 @@ module EX_Privilege(
         endcase
     end
 
-    always @(posedge clk or negedge rstn)
+    always @(posedge clk)
     begin
         if (~rstn)
         begin

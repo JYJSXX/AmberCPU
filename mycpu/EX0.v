@@ -93,7 +93,7 @@ module EX0(
     input [31:0] pc0_predict,
     output predict_dir_fail, //分支预测跳不跳失败的信号
     output predict_addr_fail, //分支预测往哪跳失败的信号
-    output fact_taken, //实际跳不跳
+    output [1:0] fact_taken, //实际跳不跳
     output [31:0] fact_pc, //分支指令的pc
     output [31:0] fact_tpc, //目标地址pc
     output fact_taken0,
@@ -214,11 +214,17 @@ assign dcache_wdata = rk0_data_o;
 assign csr_flag_from_ex = uop0[`INS_CSR];
 assign tlb_flag_from_ex = uop0[`INS_TLB] && (inst0[11:10] == 2'b00 || inst0[11:10] ==2'b01 || inst0[15]);
     reg [63:0] stable_counter_reg;
-    assign flush=  predict_addr_fail || predict_dir_fail || uop0[`INS_ERTN];
+    assign flush=  /*~predict_wrong_reg&&*/(predict_addr_fail || predict_dir_fail) || uop0[`INS_ERTN];
     always @(posedge aclk)
         if(~aresetn) stable_counter_reg<=0;
         else stable_counter_reg <= stable_counter_reg+1;
     assign stable_counter = stable_counter_reg;   
+    /*reg predict_wrong_reg = 0;
+    always @(posedge clk)begin
+        if(~aresetn | flush_by_exception) predict_wrong_reg <= 0;
+        else predict_wrong_reg <= predict_addr_fail || predict_dir_fail;
+    end*/
+
 `ifdef DIFFTEST      
     always@(posedge clk)begin
         if(ex1_allowin) begin
@@ -388,9 +394,9 @@ EX_ALU ex_alu2(
 assign dcache_addr = rj0_data_o + imm0;
 wire predict_addr_fail0, predict_dir_fail0, predict_dir_fail1, predict_addr_fail1;
 
-assign predict_addr_fail = predict_addr_fail0 | predict_addr_fail1;
-assign predict_dir_fail = predict_dir_fail0 | predict_dir_fail1;
-assign fact_taken = fact_taken0 | fact_taken1;
+assign predict_addr_fail = (predict_addr_fail0 | predict_addr_fail1) && ~forward_stall;
+assign predict_dir_fail = (predict_dir_fail0 | predict_dir_fail1) && ~forward_stall ;
+assign fact_taken = {fact_taken1,fact_taken0};
 wire [31:0] fact_pc0, fact_pc1;
 wire [31:0] fact_tpc0, fact_tpc1;
 assign fact_pc = fact_taken1 ? fact_pc1 : fact_pc0;
@@ -486,21 +492,21 @@ Mul_Stage_1 mul_1(
 divider divider1(
     .clk(clk),
     .rstn(aresetn),
-    // .dividend(rj0_data_o),
-    // .divisor(rk0_data_o),
-    .div_sr0(rj0_data_o),
-    .div_sr1(rk0_data_o),
+    .dividend(rj0_data_o),
+    .divisor(rk0_data_o),
+    // .div_sr0(rj0_data_o),
+    // .div_sr1(rk0_data_o),
     .en(uop0[`INS_DIV]),
     .flush_exception(flush_by_exception),
     .sign(uop0[`UOP_SIGN]),
-    // .quotient(quotient),
-    // .remainder(remainder),
-    // .stall_divider(stall_divider),
-    // .ready(div_ready)
-    .div_result(quotient),
+    .quotient(quotient),
     .remainder(remainder),
-    .stall_by_div(stall_divider),
-    .div_en_out(div_ready)
+    .stall_divider(stall_divider),
+    .ready(div_ready)
+    // .div_result(quotient),
+    // .remainder(remainder),
+    // .stall_by_div(stall_divider),
+    // .div_en_out(div_ready)
 );
 // assign rvalid_dcache=uop0[`INS_MEM] & ~cond0[2] & ~forward_stall;
 // assign wvalid_dcache=uop0[`INS_MEM] & cond0[2] & ~forward_stall;

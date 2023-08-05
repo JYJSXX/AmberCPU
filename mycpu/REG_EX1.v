@@ -217,7 +217,7 @@ wire is_load;
 wire [3:0] cond;
 assign cond=reg_ex_uop0[`UOP_COND];
 assign is_load = !cond[2] & reg_ex_uop0[`INS_MEM];
-always @ (posedge clk or negedge aresetn)begin
+always @ (posedge clk)begin
     if(~aresetn) rj_shift <= 0;
     else if(ex_allowin && ex_readygo) rj_shift <={rj_shift[4:0], {5{is_load}} & reg_ex_rd0};
 end
@@ -234,7 +234,7 @@ end
 
 always @(posedge clk)begin
     if (~aresetn | !ex_allowin) priv_jump <= 0;
-    else if (flush_by_priv) priv_jump <= 0;
+    else if (flush_by_priv) priv_jump <= 1;
 end
 
 // reg forward_flag_j0_ps = 0;
