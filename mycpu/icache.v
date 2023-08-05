@@ -317,7 +317,7 @@ module icache #(
 
     /* 2-way tagv memory: the highest bit is the valid bit */
     wire valid[1:0];
-    reg  valid_buf[1:0]=0;
+    reg  valid_buf[1:0];
     wire [TAG_WIDTH:0] tag_in;
     assign valid[0] = tag_rdata[0][TAG_WIDTH];
     assign valid[1] = tag_rdata[1][TAG_WIDTH];

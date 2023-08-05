@@ -109,7 +109,7 @@ module dcache #(
 
     // data memory
     wire    [INDEX_WIDTH-1:0]   r_index, w_index;
-    reg     [BYTE_NUM-1:0]      mem_we [0:1]=0;
+    reg     [BYTE_NUM-1:0]      mem_we [0:1];
     wire    [BIT_NUM-1:0]       mem_rdata [0:1];
     reg     [BIT_NUM-1:0]       mem_wdata=0;
 
