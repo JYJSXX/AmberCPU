@@ -117,6 +117,19 @@ wire set_vppn;
 assign set_vppn = (ecode_in == `EXP_PIL) || (ecode_in == `EXP_PIS) 
 || (ecode_in == `EXP_PIF) || (ecode_in == `EXP_PME) || (ecode_in == `EXP_PPI)
  || (ecode_in == `EXP_TLBR);
+
+    reg exception_flag_reg=0;
+    reg exception_flag_out_reg=0;
+    reg [6:0] ecode_out_reg=0;
+    reg [31:0] badv_out_reg=0;
+    reg wen_badv_reg=0;
+    reg tlb_exception_reg=0;
+    reg [31:0] era_out_reg=0;
+    reg wen_era_reg=0;
+    reg [18:0] vppn_out_reg=0;
+    reg wen_vppn_reg=0;
+    reg exception_cpu_interrupt_reg=0;
+
 always@(posedge clk)begin
     if(~aresetn)begin
         ecode_out <= 0;
@@ -129,20 +142,98 @@ always@(posedge clk)begin
         vppn_out <= 0;
         wen_vppn <= 0;
         exception_cpu_interrupt <= 0;
+        exception_flag_reg <= 0;
+        exception_flag_out_reg <= 0;
+        ecode_out_reg <= 0;
+        badv_out_reg <= 0;
+        wen_badv_reg <= 0;
+        tlb_exception_reg <= 0;
+        era_out_reg <= 0;
+        wen_era_reg <= 0;
+        vppn_out_reg <= 0;
+        wen_vppn_reg <= 0;
+        exception_cpu_interrupt_reg <= 0;
+
+
     end
     else begin
-        exception_flag_out <= exception_flag_in | cpu_interrupt | (|d_exception);
-        ecode_out <= exception_flag_in? ecode_in: d_exception;
-        badv_out <= exception_flag_in ? badv_in : d_badv;
-        wen_badv <= (exception_flag_in | (|d_exception) )&& set_badv;
-        tlb_exception <= exception_flag_in  && (ecode_in == `EXP_TLBR);
-        if(era_in!=0 && exception_cpu_interrupt) era_out <= era_in;
-        else if (era_in !=0) era_out <= pc0;
-        else era_out <= era_out;
-        wen_era <= exception_flag_in | cpu_interrupt | (|d_exception);
-        vppn_out <= badv_in[18:0];
-        wen_vppn <= exception_flag_in && set_vppn;
-        exception_cpu_interrupt <= cpu_interrupt;
+        if(pc0 != 0 && pc0 != 32'h1c00_0000 && ~exception_flag_reg) begin
+            exception_flag_out <= exception_flag_in | cpu_interrupt | (|d_exception);
+            ecode_out <= exception_flag_in? ecode_in: d_exception;
+            badv_out <= exception_flag_in ? badv_in : d_badv;
+            wen_badv <= (exception_flag_in | (|d_exception) )&& set_badv;
+            tlb_exception <= exception_flag_in  && (ecode_in == `EXP_TLBR);
+            if(era_in!=0 && exception_cpu_interrupt) era_out <= era_in;
+            else if (era_in !=0) era_out <= pc0;
+            else era_out <= era_out;
+            wen_era <= exception_flag_in | cpu_interrupt | (|d_exception);
+            vppn_out <= badv_in[18:0];
+            wen_vppn <= exception_flag_in && set_vppn;
+            exception_cpu_interrupt <= cpu_interrupt;
+            exception_flag_reg <= 0;
+            exception_flag_out_reg <=0;
+            ecode_out_reg <= 0;
+            badv_out_reg <= 0;
+            wen_badv_reg <= 0;
+            tlb_exception_reg <= 0;
+            era_out_reg <= 0;
+            wen_era_reg <= 0;
+            vppn_out_reg <= 0;
+            wen_vppn_reg <= 0;
+            exception_cpu_interrupt_reg <= 0;
+
+        end
+        else if(pc0 == 0 || pc0 == 32'h1c00_0000)  begin
+            exception_flag_out <= 0;
+            ecode_out <= 0;
+            badv_out <= 0;
+            wen_badv <= 0;
+            tlb_exception <= 0;
+            era_out <= 0;
+            wen_era <= 0;
+            vppn_out <= 0;
+            wen_vppn <= 0;
+            exception_cpu_interrupt <= 0;
+
+            exception_flag_reg <= 1; //exception  
+            exception_flag_out_reg <=exception_flag_in | cpu_interrupt | (|d_exception);
+            ecode_out_reg <=  exception_flag_in? ecode_in: d_exception;
+            badv_out_reg <= exception_flag_in ? badv_in : d_badv;
+            wen_badv_reg <= (exception_flag_in | (|d_exception) )&& set_badv;
+            tlb_exception_reg <= exception_flag_in  && (ecode_in == `EXP_TLBR);
+            if(era_in!=0 && exception_cpu_interrupt) era_out_reg <= era_in;
+            else if (era_in !=0) era_out_reg <= pc0;
+            else era_out_reg <= era_out;
+            wen_era_reg <= exception_flag_in | cpu_interrupt | (|d_exception);
+            vppn_out_reg <= badv_in[18:0];
+            wen_vppn_reg <= exception_flag_in && set_vppn;
+            exception_cpu_interrupt_reg <= cpu_interrupt;
+        end
+        
+        else if(pc0 != 0 && pc0 != 32'h1c00_0000 && exception_flag_reg) begin
+            exception_flag_out <= exception_flag_out_reg;
+            ecode_out <= ecode_out_reg;
+            badv_out <= badv_out_reg;
+            wen_badv <= wen_badv_reg;
+            tlb_exception <= tlb_exception_reg;
+            era_out <= era_out_reg;
+            wen_era <= wen_era_reg;
+            vppn_out <= vppn_out_reg;
+            wen_vppn <= wen_vppn_reg;
+            exception_cpu_interrupt <= exception_cpu_interrupt_reg;
+
+            exception_flag_reg <= 0;
+            exception_flag_out_reg <=0;
+            ecode_out_reg <= 0;
+            badv_out_reg <= 0;
+            wen_badv_reg <= 0;
+            tlb_exception_reg <= 0;
+            era_out_reg <= 0;
+            wen_era_reg <= 0;
+            vppn_out_reg <= 0;
+            wen_vppn_reg <= 0;
+            exception_cpu_interrupt_reg <= 0;
+        end
     end
 
 end

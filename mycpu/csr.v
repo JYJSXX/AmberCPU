@@ -68,6 +68,7 @@ module csr
     input     [`TLB_TRANSLEN - 1:0]   tlbrd_trans_2,
     input [7:0] hardware_interrupt,
     input flush_to_priv_wr_csr,
+    input ex2_allowin,
     output  [31:0] tid
 
     // input tlb_index_we,
@@ -179,6 +180,32 @@ end
 wire  wen = (count == 2);
 wire [31:0] wdata = wdata_reg;
 wire [13:0] addr = waddr_reg;
+
+reg wen_ertn_reg = 0;
+reg [1:0]  count_ertn = 0;
+always @(posedge clk)begin
+    if(~aresetn) count_ertn <= 0;
+    // else if (ertn) count_ertn <= 0;
+    else if (d_idle && wen_ertn_reg) 
+        if (count_ertn < 2) count_ertn <= count_ertn + 1;
+        else count_ertn <= 0;
+end
+always @(posedge clk)begin
+    if (~aresetn)begin
+        wen_ertn_reg <= 0;
+    end
+    else if (wen_ertn)begin
+        wen_ertn_reg <= 0;
+    end
+    else if (ertn)begin
+        wen_ertn_reg <= 1;
+    end
+    else if (count_ertn == 2)begin
+        wen_ertn_reg <= 0;
+    end
+end
+wire  wen_ertn = (count_ertn == 2);
+
 
 //CRMD
     reg [`CRMD_PLV]     crmd_plv=0;
@@ -387,7 +414,7 @@ always @(posedge clk)
             crmd_datf <=1; //TODO 
             crmd_datm <= 1;
             `endif
-        end else if(ertn) begin
+        end else if(wen_ertn) begin
             crmd_plv <= prmd_pplv;
             crmd_ie <= prmd_pie;
             if(estat_ecode==6'h3F) begin //之前进入过TLB重新装填例外
@@ -533,7 +560,7 @@ always @(posedge clk)
             llbctl_rollb <= 1;
         end 
         else if(llbit_set) llbctl_rollb<=1;
-        else if(ertn) begin 
+        else if(wen_ertn) begin 
             llbctl_rollb<=llbctl_klo;
             llbctl_klo<=0;
         end 
@@ -916,8 +943,8 @@ assign rdata[31:0] = {32{addr_in==`CSR_CRMD}} & csr_crmd |
             `ifdef DIFFTEST
     wire [32*26-1:0] csr_diff =  
     {
-    wen&&addr==`CSR_CRMD ?  wdata  : pos_signal_excp ? {csr_crmd[31:3], 3'b000} :
-                     ertn ? {csr_crmd[31:3],csr_prmd[2:0]}: csr_crmd,
+    wen&&(addr==`CSR_CRMD) ?  wdata  : (pos_signal_excp ? {csr_crmd[31:3], 3'b000} :
+                     wen_ertn ? {csr_crmd[31:3],csr_prmd[2:0]}: csr_crmd),
     wen&&addr==`CSR_PRMD ? {csr_prmd[31:3],wdata[2:0]}   : pos_signal_excp ? {csr_prmd[31:3],csr_crmd[2:0]}:csr_prmd,
     wen&&addr==`CSR_ECFG ? wdata & 32'b1_1011_1111_1111 :csr_ecfg & 32'b1_1011_1111_1111 ,
     wen&&addr==`CSR_ESTAT ? (wdata & 32'b11 | csr_estat & ~32'b11) : pos_signal_excp ? {csr_estat[31:23], expcode_in[6:0], csr_estat[15:0]} :csr_estat,
@@ -939,7 +966,7 @@ assign rdata[31:0] = {32{addr_in==`CSR_CRMD}} & csr_crmd |
     wen&&addr==`CSR_TCFG ? wdata :csr_tcfg,
     wen&&addr==`CSR_TVAL ? wdata :csr_tval,
     wen&&addr==`CSR_TICLR ? wdata :csr_ticlr,
-    wen&&addr==`CSR_LLBCTL ? wdata : ertn ? {csr_llbctl[31:1], csr_llbctl[2]} :csr_llbctl,
+    wen&&addr==`CSR_LLBCTL ? wdata : wen_ertn ? {csr_llbctl[31:1], csr_llbctl[2]} :csr_llbctl,
     wen&&addr==`CSR_TLBRENTRY ? wdata :csr_tlbrentry,
     wen&&addr==`CSR_DMW0 ? wdata :csr_dmw0,
     wen&&addr==`CSR_DMW1 ? wdata :csr_dmw1};
@@ -950,6 +977,6 @@ assign rdata[31:0] = {32{addr_in==`CSR_CRMD}} & csr_crmd |
         csr_diff_delay0 <= csr_diff;
     end
 
-    assign {crmd_diff,prmd_diff,ectl_diff,estat_diff,era_diff,badv_diff,eentry_diff,tlbidx_diff,tlbehi_diff,tlbelo0_diff,tlbelo1_diff,asid_diff,pgdl_diff,pgdh_diff,save0_diff,save1_diff,save2_diff,save3_diff,tid_diff,tcfg_diff,tval_diff,ticlr_diff,llbctl_diff,tlbrentry_diff,dmw0_diff,dmw1_diff}=csr_diff_delay0;
+    assign {crmd_diff,prmd_diff,ectl_diff,estat_diff,era_diff,badv_diff,eentry_diff,tlbidx_diff,tlbehi_diff,tlbelo0_diff,tlbelo1_diff,asid_diff,pgdl_diff,pgdh_diff,save0_diff,save1_diff,save2_diff,save3_diff,tid_diff,tcfg_diff,tval_diff,ticlr_diff,llbctl_diff,tlbrentry_diff,dmw0_diff,dmw1_diff}=csr_diff;
     `endif
 endmodule
