@@ -93,7 +93,7 @@ module EX0(
     input [31:0] pc0_predict,
     output predict_dir_fail, //分支预测跳不跳失败的信号
     output predict_addr_fail, //分支预测往哪跳失败的信号
-    output fact_taken, //实际跳不跳
+    output [1:0] fact_taken, //实际跳不跳
     output [31:0] fact_pc, //分支指令的pc
     output [31:0] fact_tpc, //目标地址pc
     output fact_taken0,
