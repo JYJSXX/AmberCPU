@@ -3,7 +3,7 @@
 `include "exception.vh"
 
 module dcache #(
-    parameter INDEX_WIDTH       = 8,
+    parameter INDEX_WIDTH       = 7,
     parameter WORD_OFFSET_WIDTH = 4,
     parameter COOKIE_WIDTH = 5
 )(

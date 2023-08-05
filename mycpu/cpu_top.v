@@ -1787,8 +1787,6 @@ wire [31:0]     remainder_reg ;
     // end
     wire [6:0] exception_out_i;
     icache#(
-        .INDEX_WIDTH       ( 9 ),
-        .WORD_OFFSET_WIDTH ( 4 ),
         .COOKIE_WIDTH      ( 32+1+1 )
     )u_icache(
         .clk               ( clk               ),
@@ -1823,8 +1821,6 @@ wire [31:0]     remainder_reg ;
     wire [2:0] d_rsize, d_wsize;
 
     dcache#(
-        .INDEX_WIDTH                       ( 7 ),
-        .WORD_OFFSET_WIDTH                 ( 4 ),
         .COOKIE_WIDTH                      ( 5+64 )
     )u_dcache(
         .clk                               ( clk                               ),
