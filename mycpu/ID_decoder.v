@@ -50,7 +50,7 @@ module ID_decoder
     wire is_alu_sfti = inst[30:20]=='b00000000100&&inst[17:15]=='b001; //逻辑左移和右移，用立即数
     wire is_sra = inst[30:15]=='b0000000000110000; //算术右移
     wire is_time = inst[30:11]=='b00000000000000001100; //三个访问时钟的指令
-    wire is_alu = inst[30:19]=='b000000000010; //add,sub,slt,sltu,nor,and,or,xor， 只有sra不在这里，sra最后两位是11，单独拿出来
+    wire is_alu = inst == `INST_NOP || inst[30:19]=='b000000000010; //add,sub,slt,sltu,nor,and,or,xor， 只有sra不在这里，sra最后两位是11，单独拿出来
     assign type_[`INS_ALU]=is_alu||is_time||is_sra||is_alu_sfti||is_alu_imm||is_pcadd||is_lui; 
     assign type_[`INS_SC_OR_LL] = inst[30:25]=='b0010000; //sc或者ll
     wire is_sc = type_[`INS_SC_OR_LL]&inst[24];
