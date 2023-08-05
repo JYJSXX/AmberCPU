@@ -23,7 +23,7 @@
 `define TLB_TRANSLEN    `TLB_PALEN - 6      //TLB转换部分长度
 `define TLB_NUM         32                  //TLB项数
 
-`define TLB_OFFSET_I   15 //////////////  14:0
+`define TLB_OFFSET_I   14 //////////////  14:0
 `define TLB_OFFSET_D   12 /////////////   12:0
 
 `define VA_I          31:`TLB_OFFSET_I+1

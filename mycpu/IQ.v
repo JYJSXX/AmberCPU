@@ -107,7 +107,7 @@ module IQ (
             single_en=1;
         end
     end
-    always @(posedge clk or negedge rstn) begin
+    always @(posedge clk) begin
         if (!rstn) begin
             id_reg_valid<=0;
         end else if(id_allowin&&!mod)begin
@@ -127,7 +127,7 @@ module IQ (
         if(mod)begin
             // 分支已发射
             if(id_reg_pc_taken[0])begin
-                iq_pc0=id_reg_pc1;
+                iq_pc0=0;
                 iq_pc1=0;
                 iq_pc_next=0;
                 iq_inst0=`INST_NOP;
