@@ -206,7 +206,7 @@ begin
                 d_rready = 1'b1;
             end
         end
-        
+        default:;
     endcase
 end
 

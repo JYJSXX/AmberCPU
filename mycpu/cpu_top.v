@@ -1102,7 +1102,6 @@ wire [31:0]     remainder_reg ;
         .reg_ex_rd1              ( ex0_rd1_out             ),
         .csr_rd_data             ( csr_rd_data             ),
         .ex0_ex1_csr_data       ( ex0_ex1_csr_data       ),
-
         .tlb_alu_result0          ( alu_result0          ),
         .tlb_alu_result1          ( alu_result1          ),
         .tlb_alu_result0_valid    ( alu_result0_valid    ),
