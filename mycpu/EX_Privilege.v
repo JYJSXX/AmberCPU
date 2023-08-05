@@ -262,6 +262,7 @@ module EX_Privilege(
                 block_clock = 1;
                 block_cache = 1;
             end
+            default:;
         endcase
     end
 

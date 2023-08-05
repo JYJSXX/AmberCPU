@@ -684,16 +684,16 @@ module dcache #(
         .w_addr(w_index),
         .w_data(dirty_wdata),
         .r_data(dirty_rdata)
-        `ifdef IBAR
-        ,.ibar(ibar),
-        .ibar_ready(ibar_ready),
-        .ibar_valid(ibar_valid),
-        .ibar_complete(ibar_complete),
-        // .dirty_signal(dirty_signal),
-        .dirty_addr(dirty_index),
-        .way0(way0),
-        .way1(way1)
-        `endif
+        // `ifdef IBAR
+        // ,.ibar(ibar),
+        // .ibar_ready(ibar_ready),
+        // .ibar_valid(ibar_valid),
+        // .ibar_complete(ibar_complete),
+        // // .dirty_signal(dirty_signal),
+        // .dirty_addr(dirty_index),
+        // .way0(way0),
+        // .way1(way1)
+        // `endif
     );
 
 
