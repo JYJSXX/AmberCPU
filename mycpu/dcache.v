@@ -98,23 +98,23 @@ module dcache #(
         HALF              = 4'b0011,
         WORD              = 4'b1111;
     // request buffer
-    reg     [67:0]              req_buf;
-    reg                         req_buf_we;
+    reg     [67:0]              req_buf=0;
+    reg                         req_buf_we=0;
     wire    [31:0]              wdata_pipe, address;
     wire    [3:0]               wstrb_pipe;
     wire                        we_pipe;
 
     // return buffer
-    reg     [BIT_NUM-1:0]       ret_buf;
+    reg     [BIT_NUM-1:0]       ret_buf=0;
 
     // data memory
     wire    [INDEX_WIDTH-1:0]   r_index, w_index;
-    reg     [BYTE_NUM-1:0]      mem_we [0:1];
+    reg     [BYTE_NUM-1:0]      mem_we [0:1]=0;
     wire    [BIT_NUM-1:0]       mem_rdata [0:1];
-    reg     [BIT_NUM-1:0]       mem_wdata;
+    reg     [BIT_NUM-1:0]       mem_wdata=0;
 
     // tagv memory
-    reg     [1:0]               tagv_we;           
+    reg     [1:0]               tagv_we=0;           
     wire    [TAG_WIDTH-1:0]     w_tag;
     wire    [TAG_WIDTH:0]       tag_rdata [0:1]; 
 
@@ -127,38 +127,38 @@ module dcache #(
     // wdata control
     wire    [BIT_NUM-1:0]       wdata_pipe_512;
     wire    [BIT_NUM-1:0]       wstrb_pipe_512;
-    reg                         wdata_from_pipe;
+    reg                         wdata_from_pipe=0;
 
     // rdata control
-    reg     [BIT_NUM-1:0]       rdata_512;
-    reg                         data_from_mem;
+    reg     [BIT_NUM-1:0]       rdata_512=0;
+    reg                         data_from_mem=0;
 
     // LRU replace
-    reg  [SET_NUM-1:0]      lru; //0: way0, 1: way1
+    reg  [SET_NUM-1:0]      lru=0; //0: way0, 1: way1
     wire [1:0]                  lru_sel;
-    reg                         lru_we;
+    reg                         lru_we=0;
     //reg                         missbuf_we;
 
     // dirty table
-    reg  [1:0]                  dirty_we;
+    reg  [1:0]                  dirty_we=0;
     wire                        dirty_rdata;
-    reg                         dirty_wdata;
+    reg                         dirty_wdata=0;
     //wire                        dirty_info;
 
     // write back buffer
-    reg     [BIT_NUM-1:0]       wbuf;
-    reg                         wbuf_we;
+    reg     [BIT_NUM-1:0]       wbuf=0;
+    reg                         wbuf_we=0;
 
     // miss buffer
-    reg     [31:0]              m_buf;
-    reg                         mbuf_we;
+    reg     [31:0]              m_buf=0;
+    reg                         mbuf_we=0;
 
     // statistics
-    reg     [63:0]              total_time;
-    reg     [63:0]              total_hit;
-    reg     [63:0]              total_request;
-    reg     [63:0]              miss_time;
-    reg     [63:0]              write_time;
+    reg     [63:0]              total_time=0;
+    reg     [63:0]              total_hit=0;
+    reg     [63:0]              total_request=0;
+    reg     [63:0]              miss_time=0;
+    reg     [63:0]              write_time=0;
 
     /* main FSM */
     localparam 
@@ -172,7 +172,7 @@ module dcache #(
         IBAR_EXTRA  = 4'd7,
         IBAR_WAIT   = 4'd8;
 
-    reg [3:0] state, next_state;
+    reg [3:0] state=0, next_state=0;
     assign idle = (state == IDLE) && !ibar;
     always @(posedge clk) begin
         if(!rstn) begin
@@ -188,7 +188,7 @@ module dcache #(
         INIT    = 3'd0,
         WRITE   = 3'd1,
         FINISH  = 3'd2;
-    reg [2:0] wfsm_state, wfsm_next_state;
+    reg [2:0] wfsm_state=0, wfsm_next_state=0;
     
     always @(posedge clk) begin
         if(!rstn) begin
@@ -226,15 +226,15 @@ module dcache #(
     end
 
     // communication between write fsm and main fsm
-    reg                         wfsm_en, wfsm_reset, wrt_finish;
+    reg                         wfsm_en=0, wfsm_reset=0, wrt_finish=0;
 
     // ibar
-    reg                         ibar_ready;
+    reg                         ibar_ready=0;
     wire   [31:0]               dirty_addr[0:1];
     wire                        ibar_valid;
     wire                        ibar_complete;
-    reg                         dirty_way;
-    reg                         hit2_flag;
+    reg                         dirty_way=0;
+    reg                         hit2_flag=0;
     wire                        ibar_state;
     assign ibar_state = (state==IBAR) && (state == IBAR_EXTRA) && (state == IBAR_WAIT);
     wire [INDEX_WIDTH-1:0] dirty_index;
@@ -273,9 +273,9 @@ module dcache #(
     end
 
     // cache operation
-    reg tagv_clear;
-    reg [1:0] cacop_code_buf;
-    reg cacop_en_buf;
+    reg tagv_clear=0;
+    reg [1:0] cacop_code_buf=0;
+    reg cacop_en_buf=0;
     wire [1:0] tagv_way_sel;
     //wire [INDEX_WIDTH-1:0] tagv_index;
     wire store_tag, index_invalid, hit_invalid;
@@ -287,8 +287,8 @@ module dcache #(
 
     // exception
     wire [6:0] exception_cache, exception_temp, exception_obuf;
-    reg [6:0] exception_temp1, exception_buf;
-    reg exception_sel;
+    reg [6:0] exception_temp1=0, exception_buf=0;
+    reg exception_sel=0;
     assign badv = (exception != 0) ? address : 0;
 
     /* exception */
@@ -311,7 +311,7 @@ module dcache #(
             exception_buf <= forward_exception;
         end
     end
-        reg exception_flag_buf;
+        reg exception_flag_buf=0;
     always @(posedge clk) begin
         if(!rstn)
             exception_flag_buf <= 0;
@@ -592,7 +592,7 @@ module dcache #(
     /* read control */
     // choose data from mem or return buffer 
     wire [BIT_NUM-1:0] o_rdata;
-    reg [31:0]        rdata_cache;
+    reg [31:0]        rdata_cache=0;
     assign o_rdata = victim_hit ? victim_data : data_from_mem ? mem_rdata[hit_way_valid] : ret_buf; 
     // assign o_rdata = data_from_mem ? mem_rdata[hit_way_valid] : ret_buf; 
     always @(*) begin
@@ -646,7 +646,7 @@ module dcache #(
 
 
     /* LRU replace */
-    reg way_visit;  // 0: way0, 1: way1
+    reg way_visit=0;  // 0: way0, 1: way1
     always @(posedge clk) begin
         if(!rstn) begin
             lru <= 0;
@@ -739,7 +739,7 @@ module dcache #(
     assign d_wdata  = wbuf;
 
     
-    reg [2:0] uncache_rwsize;
+    reg [2:0] uncache_rwsize=0;
     always @(*) begin
         case(wstrb_pipe)
         BYTE: uncache_rwsize = 3'd0;
