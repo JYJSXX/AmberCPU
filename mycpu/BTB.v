@@ -85,6 +85,7 @@ module BTB #(
     wire [PC_INDEX_WIDTH-1:0]       HASH_FACT_INDEX;
     wire [PC_INDEX_WIDTH-1:0]       INDEX;
     wire [PC_INDEX_WIDTH-1:0]       FACT_INDEX;
+    wire [PC_INDEX_WIDTH-1:0]       PRE_INDEX;
     wire                            pred_valid;
     wire                            check=(pred_pc!=PCAdd)&&(pred_taken!=2'b00);
     wire [31:0]                     pred_pc_hang;
@@ -117,14 +118,9 @@ module BTB #(
     assign hit=taken==check_taken;//全局检查
     assign Bhit=BMASK[INDEX];
     assign Uhit=UMASK[INDEX];
-    assign check_Bhit=BMASK[INDEX];
-    assign check_Uhit=UMASK[INDEX];
+    assign check_Bhit=BMASK[PRE_INDEX];
+    assign check_Uhit=UMASK[PRE_INDEX];
     assign PCAdd     =  fetch_pc[2]?fetch_pc+4:fetch_pc+8;
-
-    // assign      pred_taken=guess_pc==0?2'b00:
-    //                                 Uhit?2'b01:
-    //                                     Bhit?taken:2'b00;
-    // assign      pred_pc   = (pred_taken!=2'b00)?guess_pc:PCAdd;
 
     assign         pred_taken= adv_hit?adv_taken:2'b00;
     assign         pred_pc   = (pred_taken!=2'b00)?adv_pred_pc:PCAdd;
@@ -155,32 +151,6 @@ module BTB #(
         end
 
     `endif
-    
-    // DualPortRAM #(
-    //     //write after read,for conditional branch(btype =10)
-    //     //for PC colloct
-    //     .DATA_WIDTH  ( 32 ),
-    //     .ADDR_WIDTH  ( PC_INDEX_WIDTH )
-    // )u_DualPortRAM(
-    //     .clk         ( clk         ),
-    //     .readAddrA   ( INDEX       ),
-    //     .readAddrB   ( HASH_FACT_INDEX  ),
-    //     .writeAddr   ( HASH_FACT_INDEX  ),
-    //     .writeData   ( fact_tpc    ),
-    //     .writeEnable ( hash_we     ),
-    //     .readDataA   ( hash_pred_pc    ),
-    //     .readDataB   ( pred_pc_hang)
-    // );
-
-    // BTB_local u_BTB_local(//for local taken predict
-    //     .clk        ( clk        ),
-    //     .rstn       ( rstn       ),
-    //     .fetch_pc   ( fetch_pc   ),
-    //     .fact_pc    ( fact_pc    ),
-    //     .fact_taken ( fact_taken ),
-    //     .we         ( local_we   ),
-    //     .pred_taken ( local_taken)
-    // );
 
     BTB_advance u_BTB_advance(
         .rstn           ( rstn        ),
