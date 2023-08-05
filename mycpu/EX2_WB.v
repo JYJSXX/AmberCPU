@@ -178,7 +178,8 @@ end
 // assign cond1 = uop1_reg[`UOP_COND];
 reg [1:0] unwrite =0;
 always@(posedge clk) begin
-    if(|d_exception || exception_flag_in) unwrite<=3;
+    if(~aresetn) unwrite<=0;
+    else if(|d_exception || exception_flag_in) unwrite<=3;
     else if(unwrite!=0) unwrite<=unwrite-1;
 end
     always@(posedge clk)begin
