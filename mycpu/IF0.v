@@ -68,21 +68,4 @@ module IF0 (
             pc<=pc;
         end
     end
-    always @(*) begin
-        if(set_pc_from_WB)begin
-            nex_pc=pc_from_WB;
-        end
-        else if(set_pc_from_EX)begin
-            nex_pc=pc_from_EX;
-        end
-        else if(set_pc_from_ID)begin
-            nex_pc=pc_from_ID;
-        end 
-        else if (if0_readygo&&if0_allowin) begin
-            nex_pc=pc_next;
-        end 
-        else begin
-            nex_pc=pc;
-        end
-    end
 endmodule
