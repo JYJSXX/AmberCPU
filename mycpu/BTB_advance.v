@@ -5,8 +5,8 @@
 */
 `include "config.vh"
 module BTB_advance #(
-    parameter   INDEX_WIDTH = 8,
-                TAG_WIDTH   = 8
+    parameter   INDEX_WIDTH = 6,
+                TAG_WIDTH   = 6
 ) (
     input               rstn,
     input               clk,
