@@ -4,7 +4,7 @@
 `include "exception.vh"
 `include "define.vh"
 module icache #(
-    parameter INDEX_WIDTH       = 9,
+    parameter INDEX_WIDTH       = 10,
     parameter WORD_OFFSET_WIDTH = 4,
     parameter COOKIE_WIDTH      = 33
 )(
@@ -474,7 +474,7 @@ module icache #(
     assign hit_way      = hit[0] ? 0 : 1;           
     wire miss_flush_hit;
     // TODO tobe modified
-    // assign miss_flush_hit = (miss_flush_flag) && (flush_miss_tag == tag) && (flush_miss_index == w_index) && !uncache_buf;
+    assign miss_flush_hit = (miss_flush_flag) && (flush_miss_tag == tag) && (flush_miss_index == w_index) && !uncache_buf;
     assign cache_hit    = |hit || victim_hit;
     // assign cache_hit    = |hit ;
     // only when cache_hit, hit_way is valid
