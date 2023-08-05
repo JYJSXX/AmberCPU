@@ -767,8 +767,11 @@ module dcache #(
             end
         end
         LOOKUP: begin
-            if(exception != 0 || flush)
+            if(exception != 0 || (flush && !cacop_en))
                 next_state = IDLE;
+            else if(cacop_en) begin
+                next_state = CACOP;
+            end
             else if(ibar)
                 next_state = IBAR;
             else if(uncache) begin
@@ -779,9 +782,6 @@ module dcache #(
             end
             else if(is_atom_buf && (op_buf == WRITE_OP) && !llbit_buf) begin
                 next_state = WAIT_WRITE;
-            end
-            else if(cacop_en) begin
-                next_state = CACOP;
             end
             else if(cache_hit) begin
                 next_state = (rvalid || wvalid) ? LOOKUP : IDLE;
@@ -918,8 +918,10 @@ module dcache #(
             if(exception == 0) begin
                 pbuf_we = 1;
                 lru_we  = 0;
-                if(cacop_en)
+                if(cacop_en) begin
                     cacop_ready = 1;
+                    req_buf_we  = 1;
+                end
                 if(is_atom_buf)begin
                     if( op_buf == READ_OP)
                     llbit_set = 1;

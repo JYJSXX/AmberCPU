@@ -529,8 +529,8 @@ module icache #(
             end
             LOOKUP: begin
                 if((exception != 0) || ibar || flush)      next_state = IDLE;
-                else if(uncache_buf)    next_state = flush || ~flush_valid ? MISS_FLUSH : MISS;
                 else if(cacop_en)       next_state = CACOP;
+                else if(uncache)    next_state = flush || ~flush_valid ? MISS_FLUSH : MISS;
                 else if(cache_hit) begin
                     if(rvalid)          next_state = LOOKUP;
                     else                next_state = IDLE;
@@ -616,8 +616,10 @@ module icache #(
                     way_visit = flush_miss_sel[1];
                     lru_we  = 1;
                 end
-                if(cacop_en)
+                if(cacop_en) begin
                     cacop_ready         = 1;
+                    req_buf_we          = 1;
+                end
                 if(!cache_hit || uncache_buf) missbuf_we = 1;
                 else begin
                     rready_temp              = 1;
