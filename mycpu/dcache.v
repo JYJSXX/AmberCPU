@@ -677,7 +677,7 @@ module dcache #(
     )
      diety_table(
         .clk(clk),
-        .rstn(rstn),
+        // .rstn(rstn),
         .we(dirty_we),
         .re(lru_sel),
         .r_addr(w_index),

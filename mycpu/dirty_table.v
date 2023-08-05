@@ -5,7 +5,7 @@ module dirty_table#(
 )
 (
     input clk,
-    input rstn,
+    // input rstn,
     input [1:0] we,
     input [1:0] re,
     input [INDEX_WIDTH-1:0] r_addr,
@@ -42,12 +42,7 @@ module dirty_table#(
         dirty_num = 0;
     end
     always @(posedge clk) begin
-        if(rstn) begin
-            for (i = 0; i < (1<<INDEX_WIDTH); i = i + 1) begin
-                dirty_table[i] <= 0;
-            end
-        end
-        else if(|we) begin
+        if(|we) begin
             if(we[0]) dirty_table[w_addr][0] <= w_data;
             if(we[1]) dirty_table[w_addr][1] <= w_data;
             if(w_data) dirty_num <= dirty_num + 1;
