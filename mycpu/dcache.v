@@ -565,7 +565,7 @@ module dcache #(
     );
 
     /* hit */
-    assign tag          = (state == MISS) || (state == REFILL) ? paddr_buf[31:32-TAG_WIDTH]:p_addr[31:32-TAG_WIDTH]; // the tag of the request
+    assign tag          = (state == MISS) || (state == REFILL) || (state == WAIT_WRITE) ? paddr_buf[31:32-TAG_WIDTH]:p_addr[31:32-TAG_WIDTH]; // the tag of the request
     assign hit[0]       = valid[0] && (tag_rdata[0][TAG_WIDTH-1:0] == tag); // hit in way 0
     assign hit[1]       = valid[1] && (tag_rdata[1][TAG_WIDTH-1:0] == tag); // hit in way 1
     assign cache_hit    = |hit || victim_hit;
