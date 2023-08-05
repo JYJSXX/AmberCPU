@@ -69,6 +69,7 @@ module divider(
 
     localparam [2:0]
                     DIV_IDLE = 0,
+                    DIV_REG = 6,
                     DIV_INIT = 1,
                     DIV_CALC = 2,
                     DIV_DONE = 3,
@@ -96,8 +97,9 @@ module divider(
             DIV_IDLE:
             begin
                 if(en)
-                    div_next_state = DIV_INIT;
+                    div_next_state = DIV_REG;
             end
+            DIV_REG: div_next_state = DIV_INIT;
             DIV_INIT:
             begin
                 if(digit_divisor_reg > digit_dividend_reg || (~|digit_divisor_reg))
@@ -163,7 +165,8 @@ module divider(
                         dividend_reg <= {32'b0, dividend_abs};
                         dividend_sign <= dividend[31];
                         divisor_sign <= divisor[31];
-                        shift <= 1;
+                        // shift <= 1;
+                        shift <= 0;
                     end
 
                     else
@@ -177,6 +180,7 @@ module divider(
                         shift <= 0;
                     end
                 end
+                DIV_REG: shift <= 1;
                 DIV_INIT:
                 begin
                     digit_dividend_reg <= digit_dividend_reg;
