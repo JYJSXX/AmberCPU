@@ -14,21 +14,21 @@
 `define TLB_PPN         `TLB_PALEN - 7:6    //物理页号
 
 `define TLB_VPPN_LEN      `TLB_VALEN - 13     //虚拟双页号长度
-`define TLB_VPPN_LEN_I    `TLB_VALEN - 13 - 3    //虚拟双页号长度
-`define TLB_VPPN_LEN_D   `TLB_VALEN - 13 - 1   //虚拟双页号长度
-`define TLB_PPN_LEN_I      `TLB_PALEN - 12 - 3  //物理页号长度
-`define TLB_PPN_LEN_D     `TLB_PALEN - 12 - 1   //物理页号长度
+`define TLB_VPPN_LEN_I    `TLB_VALEN - `TLB_OFFSET_I - 2    //虚拟双页号长度
+`define TLB_VPPN_LEN_D   `TLB_VALEN - `TLB_OFFSET_D - 2   //虚拟双页号长度
+`define TLB_PPN_LEN_I      `TLB_PALEN - `TLB_OFFSET_I - 1  //物理页号长度
+`define TLB_PPN_LEN_D     `TLB_PALEN - `TLB_OFFSET_D - 1   //物理页号长度
 
 `define TLB_CPRLEN      `TLB_VALEN + 5      //TLB比较部分长度
 `define TLB_TRANSLEN    `TLB_PALEN - 6      //TLB转换部分长度
 `define TLB_NUM         32                  //TLB项数
 
-`define TLB_OFFSET_I   11+3
-`define TLB_OFFSET_D   11+1
+`define TLB_OFFSET_I   14 //////////////  14:0
+`define TLB_OFFSET_D   12 /////////////   12:0
 
-`define VA_I          31:15
-`define VA_D          31:13
-`define PA_I         31:15
-`define PA_D         31:13
-`define OFFSET_D   12:0
-`define OFFSET_I   14:0
+`define VA_I          31:`TLB_OFFSET_I+1
+`define VA_D          31:`TLB_OFFSET_D+1
+`define PA_I         31:`TLB_OFFSET_I+1
+`define PA_D         31:`TLB_OFFSET_D+1
+`define OFFSET_D   `TLB_OFFSET_D:0
+`define OFFSET_I   `TLB_OFFSET_I:0
