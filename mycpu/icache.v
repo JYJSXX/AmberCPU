@@ -4,7 +4,7 @@
 `include "exception.vh"
 `include "define.vh"
 module icache #(
-    parameter INDEX_WIDTH       = 10,
+    parameter INDEX_WIDTH       = 9,
     parameter WORD_OFFSET_WIDTH = 4,
     parameter COOKIE_WIDTH      = 33
 )(
@@ -529,8 +529,8 @@ module icache #(
             end
             LOOKUP: begin
                 if((exception != 0) || ibar || flush)      next_state = IDLE;
-                else if(cacop_en)       next_state = CACOP;
                 else if(uncache)    next_state = flush || ~flush_valid ? MISS_FLUSH : MISS;
+                else if(cacop_en)       next_state = CACOP;
                 else if(cache_hit) begin
                     if(rvalid)          next_state = LOOKUP;
                     else                next_state = IDLE;
