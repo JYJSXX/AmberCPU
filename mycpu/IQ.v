@@ -130,7 +130,7 @@ module IQ (
                 iq_pc0=id_reg_pc0;
                 iq_pc1=id_reg_pc1;
                 iq_pc_next=0;
-                iq_pc_taken=2'b00;
+                iq_pc_taken=2'b00;//前面的已经taken，第二条单发无效
                 iq_inst0=`INST_NOP;
                 iq_inst1=`INST_NOP;
                 iq_badv=0;
@@ -159,7 +159,7 @@ module IQ (
                 iq_pc0=id_reg_pc1;
                 iq_pc1=`PC_RESET;
                 iq_pc_next=id_reg_pc_next;
-                iq_pc_taken={1'b0,id_reg_pc_taken[1]};
+                iq_pc_taken={1'b0,id_reg_pc_taken[1]};//第二条被置换到上路
                 iq_inst0=id_reg_inst1;
                 iq_inst1=`INST_NOP;
                 iq_badv=id_reg_badv;
@@ -220,7 +220,7 @@ module IQ (
 
                 iq_pc0  = id_reg_pc0;
                 iq_pc_next=id_reg_pc_next;
-                iq_pc_taken={1'b0,id_reg_pc_taken[0]};
+                iq_pc_taken={1'b0,id_reg_pc_taken[0]};//单发屏蔽掉第二条
                 iq_inst0  = id_reg_inst0;
                 iq_badv  = id_reg_badv;
                 iq_exception  = iq_excp_flag?id_reg_exception:0;
@@ -251,7 +251,7 @@ module IQ (
 
                 iq_pc0  = id_reg_pc0;
                 iq_pc_next=id_reg_pc_next;
-                iq_pc_taken=id_reg_pc_taken;
+                iq_pc_taken=id_reg_pc_taken;//双发正常传递
                 iq_inst0  = id_reg_inst0;
                 iq_badv  = id_reg_badv;
                 iq_exception  = iq_excp_flag?id_reg_exception:0;

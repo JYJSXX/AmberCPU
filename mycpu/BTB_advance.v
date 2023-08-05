@@ -30,6 +30,7 @@ module BTB_advance #(
     wire[INDEX_WIDTH-1:0]       fact_hash_index;
     wire[TAG_WIDTH-1  :0]       tag,fact_tag;
     wire[1:0]                   wtaken;
+    wire[1:0]                   taken;
     wire                        we;
 
     assign hash_index        =   fetch_pc[INDEX_WIDTH+2:3];
@@ -39,7 +40,8 @@ module BTB_advance #(
     assign wtaken            =   fact_taken?(fact_pc[2]?2'b10:2'b01):2'b00;
     assign we                =   (predict_dir_fail|predict_add_fail);
     assign pred_pc           =   guess_table[hash_index];
-    assign pred_taken        =   taken_table[hash_index];
+    assign taken             =   taken_table[hash_index];
+    assign pred_taken        =   (!fetch_pc[2])?taken:{taken[1],1'b0};
     assign hit               =   tag_table[hash_index]==tag;
     integer i;
     initial begin
