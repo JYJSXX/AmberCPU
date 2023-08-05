@@ -51,6 +51,8 @@ parameter  BGEU = 'b1011;
                              (uop[`UOP_COND] == BLTU && br_sr1_lt_sr2_unsign) ||
                              (uop[`UOP_COND] == BGEU && ~br_sr1_lt_sr2_unsign);
     always @(*) begin
+        predict_addr_fail=1'b0;
+        predict_dir_fail=1'b0;
         if((is_branch&ready_to_branch)^predict_to_branch) begin //跳不跳预测错了
             predict_dir_fail=1'b1;
             predict_addr_fail=1'b1;

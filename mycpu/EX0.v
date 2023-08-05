@@ -243,6 +243,9 @@ assign tlb_flag_from_ex = uop0[`INS_TLB] && (inst0[11:10] == 2'b00 || inst0[11:1
     end
 
 always@(*)begin
+    badv_out = 0;
+    excp_flag_out = 0;
+    exception_out = 0;
     if(excp_flag_in) begin
         exception_out = exception_in;
         excp_flag_out = excp_flag_in;
