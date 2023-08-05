@@ -49,7 +49,7 @@ module BTB_advance #(
         for(i=0; i<(1<<INDEX_WIDTH); i=i+1) begin
             taken_table[i] = 0;
             guess_table[i] = 0;
-            tag_table  [i]=0;
+            tag_table  [i] = 0;
         end
     end
     always @(posedge clk) begin

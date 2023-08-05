@@ -12,7 +12,7 @@ module shift_register#(
     input ready
 );
 
-always @ (posedge clk or negedge rstn)
+always @ (posedge clk)
 begin
     if (~rstn)
         data_out <= 0;
@@ -40,7 +40,7 @@ module shift_register_n#(
 
 reg [WIDTH - 1 : 0] data_buffer = 0;
 
-always @ (posedge clk or negedge rstn)
+always @ (posedge clk)
 begin
     if (~rstn)
         data_buffer <= 0;

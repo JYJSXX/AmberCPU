@@ -107,7 +107,7 @@ module IQ (
             single_en=1;
         end
     end
-    always @(posedge clk or negedge rstn) begin
+    always @(posedge clk) begin
         if (!rstn) begin
             id_reg_valid<=0;
         end else if(id_allowin&&!mod)begin

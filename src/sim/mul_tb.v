@@ -68,7 +68,7 @@ Mul_Stage_2 MS2(
     .mul_stage2_res(mul_result)
 );
 
-always @(posedge clk or negedge rstn)begin
+always @(posedge clk)begin
     if (~rstn)begin
         mul_res <= 0;
     end

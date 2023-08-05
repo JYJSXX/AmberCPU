@@ -99,7 +99,7 @@ module IF1_FIFO(
     // reg [(WIDTH+1)*32-1:0] if1_fifo_pc_buf=0;
     reg [BUF_W:0]    icache_rvalid_buf=0;
     
-    always @(posedge clk or negedge rstn) begin
+    always @(posedge clk) begin
         if(!rstn)begin
             tmp<=0;//就绪
         end else if(flush)begin
