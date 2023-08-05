@@ -39,13 +39,14 @@ module dirty_table#(
         dirty_num = 0;
     end
     always @(posedge clk) begin
-        if (ibar_complete) begin
-            for (i = 0; i < (1<<INDEX_WIDTH); i = i + 1) begin
-                dirty_table[i] <= 0;
-            end
-            dirty_num <= 0;
-        end
-        else if(|we) begin
+        // if (ibar_complete) begin
+        //     for (i = 0; i < (1<<INDEX_WIDTH); i = i + 1) begin
+        //         dirty_table[i] <= 0;
+        //     end
+        //     dirty_num <= 0;
+        // end
+        // else i
+        if(|we) begin
             if(we[0]) dirty_table[w_addr][0] <= w_data;
             if(we[1]) dirty_table[w_addr][1] <= w_data;
             if(w_data) dirty_num <= dirty_num + 1;
