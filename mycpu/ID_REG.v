@@ -139,7 +139,7 @@ always@(posedge aclk) begin
         id_reg_pc0  <= fifo_id_pc0;
         id_reg_pc1  <= fifo_id_pc1;
         id_reg_pc_next<=fifo_id_pc_next;
-        id_reg_pc_taken<=(!fifo_id_pc0[2])?fifo_id_pc_taken:{1'b0,fifo_id_pc_taken[1]};
+        id_reg_pc_taken<=fifo_id_pc_taken;
         id_reg_inst0  <= fifo_id_inst0;
         id_reg_inst1  <= fifo_id_inst1;
         id_reg_badv  <= fifo_id_badv;
