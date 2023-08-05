@@ -32,7 +32,7 @@ module TLB_EXP(
 wire [6:0] exception0_tmp;
 wire [6:0] exception1_tmp;
 assign exception0_tmp[6:0] = 
-{7{plv0_1bit==11&&vaddr0}} & `EXP_ADEF |
+{7{plv0_1bit==1'b1&&vaddr0}} & `EXP_ADEF |
  {7{!tlbhit0}} & `EXP_TLBR|
  { 7{is_if_0&&!tlb_v0}}& `EXP_PIF|
  { 7{is_store_0&&!tlb_v0}} & `EXP_PIS|
@@ -42,7 +42,7 @@ assign exception0_tmp[6:0] =
 //assign tlbexception_flag0 = |exception0[6:0] & en0;
 assign exception0 = exception0_tmp[6:0] & {6{en0}};
 assign exception1_tmp[6:0] = 
-{7{plv1_1bit==1&&vaddr1}} & `EXP_ADEF |
+{7{plv1_1bit==1'b1&&vaddr1}} & `EXP_ADEF |
  {7{!tlbhit1}} & `EXP_TLBR|
  { 7{is_if_1&&!tlb_v1}}& `EXP_PIF|
  { 7{is_store_1&&!tlb_v1}} & `EXP_PIS|
