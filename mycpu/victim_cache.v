@@ -38,11 +38,11 @@ module victim_cache
     
     //数据寄存器
     reg [511:0] data [0:CAPACITY-1];
-    integer j;
+    integer k;
     initial begin
-        for(j = 0; j < CAPACITY; j = j + 1) begin
-            tag[j] = 0;
-            data[j] = 0;
+        for(k = 0; k < CAPACITY; k = k + 1) begin
+            tag[k] = 0;
+            data[k] = 0;
         end
     end
     //有效位
