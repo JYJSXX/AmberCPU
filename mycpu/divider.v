@@ -41,7 +41,7 @@ module divider(
         .in(divisor_abs),
         .out(digit_divisor)
     );
-
+    wire result_prepare;
     always @(posedge clk)
     begin
         if (~rstn | flush_exception)
@@ -88,7 +88,7 @@ module divider(
             div_state <= div_next_state;
     end
 
-    wire result_prepare = (div_next_state == DIV_RESULT_PREPARE);
+    assign result_prepare = (div_next_state == DIV_RESULT_PREPARE);
     always @(*)
     begin
         div_next_state = div_state;
