@@ -4,7 +4,7 @@
 `include "exception.vh"
 `include "define.vh"
 module icache #(
-    parameter INDEX_WIDTH       = 6,
+    parameter INDEX_WIDTH       = 9,
     parameter WORD_OFFSET_WIDTH = 4,
     parameter COOKIE_WIDTH      = 33
 )(
@@ -77,7 +77,7 @@ module icache #(
     wire    [TAG_WIDTH-1:0]     tag;
 
     // LRU
-    reg  [63:0]                lru; //0: way0, 1: way1
+    reg  [SET_NUM-1 :0]                lru; //0: way0, 1: way1
     wire [1:0]                  lru_sel;
     reg                         lru_we;
     reg                         missbuf_we;
@@ -367,7 +367,7 @@ module icache #(
 
     /* victim cache */
     wire victim_hit;
-    wire [511:0] victim_data;
+    wire [BIT_NUM -1 :0] victim_data;
     wire victim_sel;
     assign victim_sel = lru_sel[0] ? 0 : 1;
     wire victim_we;
@@ -380,7 +380,7 @@ module icache #(
             victim_w_tag <= 0;
         end
         else begin
-            victim_w_tag <= {tag_rdata[victim_sel][TAG_WIDTH-1:0], req_buf[11:6]};
+            victim_w_tag <= {tag_rdata[victim_sel][TAG_WIDTH-1:0], req_buf[INDEX_WIDTH+BYTE_OFFSET_WIDTH-1:BYTE_OFFSET_WIDTH]};
         end
     end
     always@(posedge clk) begin
@@ -422,7 +422,7 @@ module icache #(
         end
     end
 
-    reg [19:0] victim_rtag_buf;
+    reg [TAG_WIDTH-1:0] victim_rtag_buf;
     reg miss_state;
     always @(posedge clk)
     begin
@@ -437,7 +437,7 @@ module icache #(
         end
     end
     wire [25:0] victim_rtag;
-    assign victim_rtag = miss_state ? {victim_rtag_buf,req_buf[11:6]}: {tag,req_buf[11:6]};
+    assign victim_rtag = miss_state ? {victim_rtag_buf,w_index}: {tag,w_index};
     // reg [25:0] victim_wtag;
     // always @(posedge clk) begin
     //     if(!rstn) begin
@@ -448,7 +448,11 @@ module icache #(
     //     end
     // end
     
-    victim_icache victim_cache (
+    victim_icache#(
+        .TAG_WIDTH(TAG_WIDTH),
+        .INDEX_WIDTH(INDEX_WIDTH)
+    )
+     victim_cache (
         .clk        (clk),
         .rstn       (rstn),
         .r_tag      (victim_rtag),
@@ -461,7 +465,7 @@ module icache #(
     
     /* settings of miss request */
     //assign i_rsize  = 3'h2;                                                         // 2 ^ 2 = 4 bytes per beat
-    assign i_raddr  = uncache_buf ? {paddr_buf[31:3], 3'b0} : {paddr_buf[31:12], req_buf[11:6],6'b0};
+    assign i_raddr  = uncache_buf ? {paddr_buf[31:3], 3'b0} : {paddr_buf[31:32-TAG_WIDTH], req_buf[INDEX_WIDTH+BYTE_OFFSET_WIDTH-1:BYTE_OFFSET_WIDTH],6'b0};
 
     /* hit TODO:*/
     assign tag          = ((state == MISS) || miss_flush_flag) ? paddr_buf[31:32-TAG_WIDTH]:p_addr[31:32-TAG_WIDTH]; // the tag of the request
@@ -537,7 +541,7 @@ module icache #(
                 else if(i_rready)            next_state = REFILL;
                 else                    next_state = MISS;
             end
-            MISS_FLUSH: begin   //TODO flush掉的miss块充填到cache中
+            MISS_FLUSH: begin   
                 if(i_rready)            next_state = LOOKUP;
                 else                    next_state = MISS_FLUSH;
             end
