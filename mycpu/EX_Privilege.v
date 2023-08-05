@@ -321,7 +321,7 @@ module EX_Privilege(
         endcase
     end
 
-    always @(posedge clk or negedge rstn)
+    always @(posedge clk)
     begin
         if (~rstn)
         begin

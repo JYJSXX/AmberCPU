@@ -76,7 +76,7 @@ localparam [2:0]
 
 reg [2:0] r_state = R_IDLE, r_next_state = R_IDLE;
 
-always @(posedge aclk or negedge aresetn)
+always @(posedge aclk )
 begin
     if(~aresetn)
         r_state <= R_IDLE;
@@ -240,7 +240,7 @@ localparam [1:0]
 
 reg [1:0] w_state = W_IDLE, w_next_state = W_IDLE;
 
-always @(posedge aclk or negedge aresetn)
+always @(posedge aclk)
 begin
     if(~aresetn)
         w_state <= W_IDLE;
@@ -290,7 +290,7 @@ shift_register_n INPUT_BUFFER(
 
 reg [4:0] w_count = 5'b0;
 
-always @(posedge aclk or negedge aresetn)
+always @(posedge aclk)
 begin
     if(~aresetn)
         w_count <= 5'b0;

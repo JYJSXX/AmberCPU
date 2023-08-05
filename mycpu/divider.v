@@ -42,7 +42,7 @@ module divider(
         .out(digit_divisor)
     );
 
-    always @(posedge clk or negedge rstn)
+    always @(posedge clk)
     begin
         if (~rstn | flush_exception)
         begin
@@ -78,7 +78,7 @@ module divider(
     assign ready = (div_state == DIV_DONE);
     assign stall_divider = (div_state != DIV_IDLE);
 
-    always @(posedge clk or negedge rstn)
+    always @(posedge clk)
     begin
         if(~rstn)
             div_state <= DIV_IDLE;
@@ -123,7 +123,7 @@ module divider(
         endcase
     end
 
-    always @(posedge clk or negedge rstn)
+    always @(posedge clk)
     begin
         if(~rstn)
         begin

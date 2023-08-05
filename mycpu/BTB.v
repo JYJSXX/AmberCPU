@@ -153,7 +153,7 @@ module BTB #(
         reg [31:0] br_tot=0;
 
         reg [31:0] last_pc;
-        always @(posedge clk or negedge rstn) begin
+        always @(posedge clk) begin
             last_pc<=fetch_pc;
             if(!rstn)begin
                 suc_cnt<=0;
@@ -215,7 +215,7 @@ module BTB #(
 
 
 
-    always @(posedge clk or negedge rstn) begin
+    always @(posedge clk) begin
         if(!rstn)begin
             btype<=0;
             bindex<=0;
@@ -224,7 +224,7 @@ module BTB #(
             bindex<=inst_pc[PC_INDEX_WIDTH+2:3];
         end
     end
-    always @(posedge clk or negedge rstn) begin
+    always @(posedge clk) begin
         if(!rstn)begin
             UMASK<=0;
         end else begin
@@ -234,7 +234,7 @@ module BTB #(
             end
         end
     end
-    always @(posedge clk or negedge rstn) begin
+    always @(posedge clk) begin
         if(!rstn)begin
             BMASK<=0;
         end else begin

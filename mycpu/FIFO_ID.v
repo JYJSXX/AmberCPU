@@ -27,8 +27,8 @@ module FIFO_ID (
     input [1:0]  fifo_priv_flag,
     input [1:0]  fifo_branch_flag,
 
-    output reg[31:0] fifo_id_inst0=0,
-    output reg[31:0] fifo_id_inst1=0,
+    output reg[31:0] fifo_id_inst0=`INST_NOP,
+    output reg[31:0] fifo_id_inst1=`INST_NOP,
     output reg[31:0] fifo_id_pc=0,
     output reg[31:0] fifo_id_pcAdd=0,
     output reg[31:0] fifo_id_pc_next=0,
