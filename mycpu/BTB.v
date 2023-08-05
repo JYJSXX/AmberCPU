@@ -42,8 +42,24 @@ module BTB #(
 
 );
     `ifdef BTB_CLOSE
-        assign pred_pc=fetch_pc+8;  
-        assign pred_taken=0;
+
+        `ifndef BTB_SHOUT
+            assign pred_pc=fetch_pc+8;  
+            assign pred_taken=0;
+        `endif
+
+        `ifdef BTB_SHOUT
+            reg [5:0] cnt;
+            always @(posedge clk or negedge rstn) begin
+                if(!rstn)begin
+                    cnt<=0;
+                end begin
+                    cnt<=cnt+1;
+                end
+            end
+            assign pred_pc=fetch_pc+(cnt<<2);
+            assign pred_taken=cnt[0];
+        `endif
 
     `endif
 

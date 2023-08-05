@@ -486,21 +486,21 @@ Mul_Stage_1 mul_1(
 divider divider1(
     .clk(clk),
     .rstn(aresetn),
-    // .dividend(rj0_data_o),
-    // .divisor(rk0_data_o),
-    .div_sr0(rj0_data_o),
-    .div_sr1(rk0_data_o),
+    .dividend(rj0_data_o),
+    .divisor(rk0_data_o),
+    // .div_sr0(rj0_data_o),
+    // .div_sr1(rk0_data_o),
     .en(uop0[`INS_DIV]),
     .flush_exception(flush_by_exception),
     .sign(uop0[`UOP_SIGN]),
-    // .quotient(quotient),
-    // .remainder(remainder),
-    // .stall_divider(stall_divider),
-    // .ready(div_ready)
-    .div_result(quotient),
+    .quotient(quotient),
     .remainder(remainder),
-    .stall_by_div(stall_divider),
-    .div_en_out(div_ready)
+    .stall_divider(stall_divider),
+    .ready(div_ready)
+    // .div_result(quotient),
+    // .remainder(remainder),
+    // .stall_by_div(stall_divider),
+    // .div_en_out(div_ready)
 );
 // assign rvalid_dcache=uop0[`INS_MEM] & ~cond0[2] & ~forward_stall;
 // assign wvalid_dcache=uop0[`INS_MEM] & cond0[2] & ~forward_stall;

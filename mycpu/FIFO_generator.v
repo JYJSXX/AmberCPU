@@ -27,19 +27,10 @@ module FIFO_generator
     if (~rstn) begin
       readPtr <= 0;
       writePtr <= 0;
-      // count <= 0;
-      for (i = 0; i < DEPTH; i = i + 1) begin
-        mem[i] <= 0;
-      end
       // readDataReg <= 0;
     end else if (flush) begin
       readPtr <= 0;
       writePtr <= 0;
-      // count <= 0;
-      for (i = 0; i < DEPTH; i = i + 1) begin
-        mem[i] <= 0;
-      end
-      // readDataReg <= 0;
     end 
     else begin
       // 读操作

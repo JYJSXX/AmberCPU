@@ -263,18 +263,10 @@ idle_clk idle_clk1
     // wire               if0_if1_tlb_rvalid;
 
     IF0_IF1 u_IF0_IF1(
-        .clk                    ( clk              ),
-        .rstn                   ( aresetn          ),
         .if0_readygo            ( if0_readygo      ),
         .if0_allowin            ( if0_allowin      ),
         .if1_readygo            ( if1_readygo      ),
-        .if1_allowin            ( if1_allowin      ),
-        .flush                  ( flush_to_if0_if1 ),
-        .flush_cause            ( 0                )   // TODO: To be completed
-        // .fetch_pc               ( fetch_pc         ),
-        // .pc_next                ( pc_next          ),
-        // .if0_if1_pc             ( if0_if1_pc       ),
-        // .if0_if1_pc_next        ( if0_if1_pc_next  )
+        .if1_allowin            ( if1_allowin      )
     );
 
     
@@ -284,14 +276,7 @@ idle_clk idle_clk1
     wire [6:0] icache_exception;
     wire [6:0] dcache_exception;
     wire [1:0] icache_excp_flag;
-    // wire [31:0] cookie_out;
-    // wire cacop_ready;
-    // wire cacop_complete;
-
     wire [63:0]       icache_rdata;   //指令cache读数据
-
-
-
     //hand shake signal
     wire               fetch_buf_full;
     wire               fifo_allowin;
@@ -1802,8 +1787,6 @@ wire [31:0]     remainder_reg ;
     // end
     wire [6:0] exception_out_i;
     icache#(
-        .INDEX_WIDTH       ( 9 ),
-        .WORD_OFFSET_WIDTH ( 4 ),
         .COOKIE_WIDTH      ( 32+1+1 )
     )u_icache(
         .clk               ( clk               ),
@@ -1838,8 +1821,6 @@ wire [31:0]     remainder_reg ;
     wire [2:0] d_rsize, d_wsize;
 
     dcache#(
-        .INDEX_WIDTH                       ( 7 ),
-        .WORD_OFFSET_WIDTH                 ( 4 ),
         .COOKIE_WIDTH                      ( 5+64 )
     )u_dcache(
         .clk                               ( clk                               ),
