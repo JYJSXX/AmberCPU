@@ -43,11 +43,13 @@ module BTB_advance #(
     assign taken             =   taken_table[hash_index];
     assign pred_taken        =   (!fetch_pc[2])?taken:{taken[1],1'b0};
     assign hit               =   tag_table[hash_index]==tag;
+
     integer i;
     initial begin
         for(i=0; i<(1<<INDEX_WIDTH); i=i+1) begin
             taken_table[i] = 0;
             guess_table[i] = 0;
+            tag_table  [i]=0;
         end
     end
     always @(posedge clk) begin

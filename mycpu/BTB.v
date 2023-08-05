@@ -50,10 +50,10 @@ module BTB #(
 
         `ifdef BTB_SHOUT
             reg [5:0] cnt;
-            always @(posedge clk or negedge rstn) begin
+            always @(posedge clk) begin
                 if(!rstn)begin
                     cnt<=0;
-                end begin
+                end else begin
                     cnt<=cnt+1;
                 end
             end
