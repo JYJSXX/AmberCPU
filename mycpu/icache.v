@@ -472,11 +472,11 @@ module icache #(
     assign hit[0]       = valid[0] && (tag_rdata[0][TAG_WIDTH-1:0] == tag); // hit in way 0
     assign hit[1]       = valid[1] && (tag_rdata[1][TAG_WIDTH-1:0] == tag); // hit in way 1
     assign hit_way      = hit[0] ? 0 : 1;           
-    wire miss_flush_hit;
     // TODO tobe modified
-    assign miss_flush_hit = (miss_flush_flag) && (flush_miss_tag == tag) && (flush_miss_index == w_index) && !uncache_buf;
-    assign cache_hit    = (|hit || victim_hit || miss_flush_hit) && !uncache;
-    // assign cache_hit    = |hit || victim_hit;
+    // wire miss_flush_hit;
+    // assign miss_flush_hit = (miss_flush_flag) && (flush_miss_tag == tag) && (flush_miss_index == w_index) && !uncache_buf;
+    // assign cache_hit    = (|hit || victim_hit || miss_flush_hit) && !uncache;
+    assign cache_hit    = |hit || victim_hit;
     // assign cache_hit    = |hit ;
     // only when cache_hit, hit_way is valid
     wire hit_way_valid;
@@ -610,7 +610,7 @@ module icache #(
                 // pbuf_we                = 1;         //寻找两全之策！！！！
                 req_buf_we             =  miss_flush_flag && miss_flush_counter_new && !miss_flush_counter_old;
                 if(miss_flush_flag && !uncache_buf) begin
-                    data_from_mem = !miss_flush_hit;
+                    // data_from_mem = !miss_flush_hit;
                     tagv_we = flush_miss_sel;
                     mem_we  = flush_miss_sel;
                     way_visit = flush_miss_sel[1];

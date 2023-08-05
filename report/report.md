@@ -137,7 +137,7 @@ EX1后面的段间寄存器保存段间数据valid信号来确保数据可以正
 
 ```mermaid
 graph LR
-DIV_IDLE --en--> DIV_INIT -- b.digit > a.digit or b.digit == 0-->DIV_HOLD --> DIV_DONE -->DIV_IDLE
+DIV_IDLE --en--> DIV_REG --> DIV_INIT -- b.digit > a.digit or b.digit == 0-->DIV_HOLD --> DIV_DONE -->DIV_IDLE
 DIV_IDLE --!en--> DIV_IDLE
 DIV_INIT -- others-->DIV_CACL -- shift < a.digit - b.digit --> DIV_DONE
 DIV_CACL -- others--> DIV_CACL
@@ -263,7 +263,7 @@ Cache 均采用**两拍式流水线**进行内存访问，保证了连续 Cache 
 * 数据总大小：8KB
 
 * 路数：2 路组相连
-* 单路行数：64 行
+* 单路行数：512 行
 * 单行大小：64 字节
 * 换行算法：LRU 算法
 * 为契合流水线的双发射， ICache 一次将给出 2 个字的数据
@@ -283,6 +283,14 @@ Cache 均采用**两拍式流水线**进行内存访问，保证了连续 Cache 
 
 
 #### Victim Cache设计
+
+基本参数：
+
+* 数据总大小：Icache为16路
+* 路数：多路全相连
+* 单路行数：64 行
+* 单路大小：64 字节
+* 替换策略：计时器
 
 有时候Cache中刚刚被替换掉的数据可能马上又要被使用，例如若一个CPU使用了2路组相连的DCache，而一个程序频繁使用的3个数据又恰好位于同一个Cache Set中，那么就会导致一个way中的数据经常被替换掉，然后又经常被写回Cache，这会导致处理器的执行效率大大下降，而为此增加way的个数通常又是不值得的，因为其它Cache Set未必有这样的特征，因此采用Victim Cache保存最近Cache替换掉的数据。
 
@@ -367,8 +375,7 @@ Cache 均采用**两拍式流水线**进行内存访问，保证了连续 Cache 
 ## 五、参考文献
 
 [^0]: 龙芯中科技术股份有限公司 芯片研发部. *龙芯架构 32 位精简版参考手册*[S/OL]. 北京: 龙芯中科技术股份有限公司. 2023, v1.03. https://www.loongson.cn/FileShow
-
 [^1]: 姚永斌. *超标量处理器设计*[M]. 北京: 清华大学出版社. 2014.
+[^2]: npz7yyk. *clap* [CP/OL]. GitHub. 2022 (20220814). https://github.com/npz7yyk/clap  ↩
 [^3]: 汪文祥 and 刑金璋. *CPU 设计实战*[M]. 北京: 机械工业出版社. 2021.
 [^4]: 胡伟武. *计算机体系结构基础*[M]. 北京: 机械工业出版社. 2021, ed. 3.
-[^2]: npz7yyk. *clap* [CP/OL]. GitHub. 2022 (20220814). https://github.com/npz7yyk/clap 
